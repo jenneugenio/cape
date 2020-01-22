@@ -20,4 +20,6 @@ jobs:
     - name: Build
       run: make
     - name: Test/Lint
-      run: make ci
+      run: |
+        export PATH=$PATH:$HOME/go/bin
+        make ci
