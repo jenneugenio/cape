@@ -7,8 +7,26 @@ on:
 name: Upload Release Asset
 
 jobs:
+  build:
+    name: Build artifacts
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Build project # This would actually build your project, using zip for an example artifact
+        run: |
+          make
+          zip --junk-paths privacyai-${{ matrix.os }} bin/privacy
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: privacyai-${{ matrix.os }}
+          path: privacyai-${{ matrix.os }}.zip
   release:
-    name: Upload Release Asset
+    name: Create release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -23,31 +41,47 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
+      - name: Copy release URL into file
+        run: |
+          mkdir release
+          printf "%s" "${{ steps.create_release.outputs.upload_url }}" > release/url.txt
+      - name: Stash file containing the release URL as an artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: release-url
+          path: ./release
   upload:
+    name: Upload Assets
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-    name: Upload Release Asset
     runs-on: ${{ matrix.os }}
+    needs: [build, release]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@master
-      - name: Build project # This would actually build your project, using zip for an example artifact
-        run: |
-          make
-          zip --junk-paths privacyai README.md bin/privacy
-      - name: Upload Release Asset
+      - name: Download ubuntu artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: privacyai-${{ matrix.os }}
+      - name: Retrieve stashed release URL
+        uses: actions/download-artifact@v1
+        with:
+          name: release-url
+      # Write content of downloaded file (a string which contains the release URL) into a step.outputs variable
+      - name: Read release URL
+        id: get_release_url
+        run: echo ::set-output name=URL::$(cat release-url/url.txt)
+      - name: Upload Ubuntu Release Asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ jobs.release.steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./privacyai-${{ matrix.os }}.zip
+          upload_url: ${{ steps.get_release_url.outputs.URL }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: privacyai-${{ matrix.os }}/privacyai-${{ matrix.os }}.zip
           asset_name: privacyai-${{ matrix.os }}.zip
           asset_content_type: application/zip
   docker:
-    name: Upload Release Asset
+    name: Upload Docker asset
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

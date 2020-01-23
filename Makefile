@@ -45,6 +45,11 @@ ifeq (,$(BYPASS_GO_CHECK))
 endif
 endif
 
+releasecheck:
+ifneq (yes,$(RELEASE_CONFIRM))
+	$(error "Set RELEASE_CONFIRM=yes to really build and push release artifacts")
+endif
+
 golangci-lint-check:
 ifeq (,$(findstring $(GOLINT_REQUIRED_VERSION),$(shell golangci-lint --version)))
 	go get github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLINT_REQUIRED_VERSION)
@@ -53,7 +58,7 @@ endif
 bootstrap:
 	go mod download -json
 
-.PHONY: bootstrap gocheck
+.PHONY: bootstrap gocheck releasecheck
 
 lint: golangci-lint-check
 	golangci-lint run
