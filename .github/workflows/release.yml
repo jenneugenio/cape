@@ -46,3 +46,15 @@ jobs:
           asset_path: ./privacyai-${{ matrix.os }}.zip
           asset_name: privacyai-${{ matrix.os }}.zip
           asset_content_type: application/zip
+  docker:
+    name: Upload Release Asset
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Docker login
+        run: docker login -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }} docker.pkg.github.com
+      - name: Build privacyai docker image
+        run: make docker
+      - name: Push privacyai docker image
+        run: RELEASE_CONFIRM=yes make docker-push
