@@ -57,5 +57,16 @@ ci: test lint
 
 .PHONY: lint build fmt
 
-docker:
-	docker build . --file Dockerfile --tag dropoutlabs/privacyai:$(shell date +%s)
+dockercheck:
+ifeq (,$(DOCKER_PATH))
+ifeq (,$(findstring $(DOCKER_REQUIRED_VERSION),$(shell docker version)))
+ifeq (,$(BYPASS_DOCKER_CHECK))
+	$(error "Docker version $(DOCKER_REQUIRED_VERSION) is required.")
+endif
+endif
+endif
+
+docker: dockercheck
+	docker build . --file Dockerfile --tag dropoutlabs/privacyai:latest
+
+.PHONY: dockercheck docker

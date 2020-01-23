@@ -18,7 +18,7 @@ TODO
 
 ## Development
 
-PrivacyAI required go1.3.X to build and run the executable. You can follow the official instructions to install it [here](https://golang.org/doc/install) or use [gvm] to manage multiple go installations.
+PrivacyAI required go1.13.X to build and run the executable. You can follow the official instructions to install it [here](https://golang.org/doc/install) or use [gvm] to manage multiple go installations.
 
 We're using [Github Actions](https://github.com/features/actions) to automate our CI/CD. To test basic CI locally you can run the following command:
 
