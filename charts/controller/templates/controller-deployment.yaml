@@ -1,0 +1,28 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: controller
+  labels:
+    service: controller
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: controller
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: Always
+        name: controller
+        command: ["./privacy"]
+        ports:
+        - containerPort: 9991
+          hostPort: 9991
+status: {}

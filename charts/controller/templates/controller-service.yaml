@@ -1,0 +1,16 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: controller
+  labels:
+    service: controller
+spec:
+  ports:
+  - name: "controller-api"
+    port: 9991
+    targetPort: 9991
+  selector:
+    service: controller
+  type: NodePort
+status:
+  loadBalancer: {}
