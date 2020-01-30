@@ -21,8 +21,7 @@ spec:
       - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: Always
         name: controller
-        command: ["./privacy"]
+        command: ["./privacy", "controller", "start"]
         ports:
-        - containerPort: 9991
-          hostPort: 9991
+        - containerPort: 8081
 status: {}

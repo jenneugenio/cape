@@ -21,8 +21,7 @@ spec:
       - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: Always
         name: connector
-        command: ["./privacy"]
+        command: ["./privacy", "connector", "start"]
         ports:
-        - containerPort: 9990
-          hostPort: 9990
+        - containerPort: 8080
 status: {}
