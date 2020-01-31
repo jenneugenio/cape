@@ -24,7 +24,7 @@ GOLINT_REQUIRED_VERSION=v1.22.2
 VERSION=$(shell [ -d .git ] && git describe --tags --abbrev=0 2> /dev/null | sed 's/^v//')
 EXACT_TAG=$(shell [ -d .git ] && git describe --exact-match --tags HEAD 2> /dev/null | sed 's/^v//')
 ifeq (,$(VERSION))
-    VERSION=dev
+    VERSION=0.0.1
 endif
 NOT_RC=$(shell git tag --points-at HEAD | grep -v -e -rc)
 
@@ -147,3 +147,23 @@ docker-push-release: docker-push-release-candidate docker-push-latest
 docker-push: docker-push-$(PUSHTYPE)
 
 .PHONY: docker-push docker-push-release docker-push-release-candidate docker-push-master
+
+helm-version-check:
+ifeq (,$(shell grep -e $(VERSION) charts/connector/Chart.yaml))
+	$(error "Version specified in charts/connector/Chart.yaml does not match $(VERSION)")
+endif
+ifeq (,$(shell grep -e $(VERSION) charts/controller/Chart.yaml))
+	$(error "Version specified in charts/controller/Chart.yaml does not match $(VERSION)")
+endif
+
+
+publish: releasecheck helm-version-check
+	mkdir -p local-dir
+	gsutil rsync -d gs://dropout-helm-repo local-dir/
+	helm package charts/connector
+	helm package charts/controller
+	cp *.tgz local-dir
+	helm repo index local-dir/ --url https://dropout-helm-repo.storage.googleapis.com
+	gsutil rsync -d local-dir/ gs://dropout-helm-repo
+
+.PHONY: helm-version-check publish

@@ -92,3 +92,26 @@ jobs:
         run: make docker
       - name: Push privacyai docker image
         run: RELEASE_CONFIRM=yes make docker-push
+
+  publish:
+    name: Publish artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Auth gsutil
+        env:
+          GCS_SERVICE_ACCOUNT: ${{ secrets.GCS_SERVICE_ACCOUNT }}
+        run: |
+          echo $GCS_SERVICE_ACCOUNT > key.json
+          pip install gsutil
+          gcloud config set pass_credentials_to_gsutil false
+          (ls key.json; yes) | gsutil config -e
+      - name: Install helm
+        run: |
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+          chmod 700 get_helm.sh
+          ./get_helm.sh
+      - name: Run publish
+        run: |
+          RELEASE_CONFIRM=yes make publish
