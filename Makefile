@@ -1,18 +1,69 @@
-# Global Variables used across many different rule types
 PREFIX?=
 GOOS_OVERRIDE?=
-DOCKER_REQUIRED_VERSION=18.
-
 SRC=$(shell find . -type f -name '*.go')
-rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) \
-	$(filter $(subst *,%,$2),$d))
 
-all: build
+all: ci
 
 .PHONY: all
 
+# ###############################################
+# Required Binaries & Versioning Checks
+#
+# The following section lists out all of the system dependencies (and their
+# versions) that this Makefile depends upon on-top of standard tooling such as
+# Git.
+# ###############################################
+DOCKER_REQUIRED_VERSION=18.
 GO_REQUIRED_VERSION=1.13.
 GOLINT_REQUIRED_VERSION=v1.22.2
+HELM_REQUIRED_VERSION=v3.0.
+GSUTIL_REQUIRED_VERSION=4.47
+
+CURRENT_GO_VERSION := $(shell go version 2> /dev/null)
+gocheck:
+ifndef CURRENT_GO_VERSION
+ifeq (,$(findstring $(GO_REQUIRED_VERSION),$(CURRENT_GO_VERSION)))
+ifeq (,$(BYPASS_GO_CHECK))
+	$(error "Go Version $(GO_REQUIRED_VERSION) is required, found $(CURRENT_GO_VERSION)")
+endif
+endif
+endif
+
+CURRENT_DOCKER_VERSION := $(shell docker version 2> /dev/null)
+dockercheck:
+ifeq (,$(DOCKER_PATH))
+ifeq (,$(shell command -v docker 2> /dev/null))
+ifeq (,$(findstring $(DOCKER_REQUIRED_VERSION),$(CURRENT_DOCKER_VERSION)))
+ifeq (,$(BYPASS_DOCKER_CHECK))
+	$(error "Docker version $(DOCKER_REQUIRED_VERSION) is required, found $(CURRENT_DOCKER_VERSION)")
+endif
+endif
+endif
+endif
+
+CURRENT_HELM_VERSION := $(shell helm version 2> /dev/null)
+helmcheck:
+ifeq (,$(shell command -v helm 2> /dev/null))
+ifeq (,$(findstring $(HELM_REQUIRED_VERSION),$(CURRENT_HELM_VERSION)))
+ifeq (,$(BYPASS_HELM_CHECK))
+	$(error "Helm version $(HELM_REQUIRED_VERSION) is required, found $(CURRENT_HELM_VERSION).")
+endif
+endif
+endif
+
+CURRENT_GSUTIL_VERSION := $(shell gsutil version 2> /dev/null)
+gsutilcheck:
+ifeq (,$(shell command -v gsutil 2> /dev/null))
+ifeq (,$(findstring $(GSUTIL_REQUIRED_VERSION),$(CURRENT_GSUTIL_VERSION)))
+ifeq (,$(BYPASS_GSUTIL_CHECK))
+	$(error "gsutil version $(GSUTIL_REQUIRED_VERSION) is required, found $(CURRENT_GSUTIL_VERSION)")
+endif
+endif
+endif
+
+
+
+.PHONY: gocheck dockercheck
 
 # ###############################################
 # Version Derivation
@@ -38,60 +89,54 @@ else
     endif
 endif
 
-gocheck:
-ifeq (,$(findstring $(GO_REQUIRED_VERSION),$(shell go version)))
-ifeq (,$(BYPASS_GO_CHECK))
-	$(error "Go Version $(GO_REQUIRED_VERSION) is required.")
-endif
-endif
+# ###############################################
+# Setup and Teardown
+#
+# This section of the makefile focuses on the rules needed to setup an
+# environment to develop with this codebase and then subsequently start from
+# scratch.
+# ###############################################
 
-releasecheck:
-ifneq (yes,$(RELEASE_CONFIRM))
-	$(error "Set RELEASE_CONFIRM=yes to really build and push release artifacts")
-endif
+bootstrap: download install-tools
+	$(info All dependencies and tooling have been installed!)
 
-golangci-lint-check:
-ifeq (,$(findstring $(GOLINT_REQUIRED_VERSION),$(shell golangci-lint --version)))
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLINT_REQUIRED_VERSION)
-endif
+download: gocheck
+	go mod download
 
-bootstrap:
-	go mod download -json
+install-tools: gocheck download tools.go
+	cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
 
-.PHONY: bootstrap gocheck releasecheck
+clean: gocheck
+	go clean
+	rm $(PREFIX)bin/privacy
 
-lint: golangci-lint-check
+.PHONY: bootstrap clean
+
+# ###############################################
+# Testing, Building and Formatting
+#
+# This section of the makefile focuses on the rules needed to test and build
+# code contained within this repository.
+# ###############################################
+
+lint: gocheck
 	golangci-lint run
 
 GO_BUILD=go build -v -i
-
-$(PREFIX)bin/privacy: $(call rwildcard,,*.go)
+$(PREFIX)bin/privacy: gocheck $(SRC)
 	$(GOOS_OVERRIDE) $(GO_BUILD) -o $@
 
 build: $(PREFIX)bin/privacy
 
-test:
+test: gocheck
 	go test -v $$(go list ./...)
 
-fmt:
+fmt: gocheck
 	gofmt -s -l -w $(SRC)
 
-clean:
-	go clean
-	rm $(PREFIX)bin/privacy
+ci: lint build test
 
-ci: test lint
-
-.PHONY: lint build fmt
-
-dockercheck:
-ifeq (,$(DOCKER_PATH))
-ifeq (,$(findstring $(DOCKER_REQUIRED_VERSION),$(shell docker version)))
-ifeq (,$(BYPASS_DOCKER_CHECK))
-	$(error "Docker version $(DOCKER_REQUIRED_VERSION) is required.")
-endif
-endif
-endif
+.PHONY: lint build fmt test ci
 
 # ###############################################
 # Building Docker Image
@@ -124,7 +169,7 @@ docker-push-tag: dockercheck
 docker-push-latest: dockercheck
 	$(call DOCKER_PUSH,latest)
 
-.PHONY: docker-login docker-push-lateset docker-push-tag docker-tag
+.PHONY: docker-login docker-push-latest docker-push-tag docker-tag
 
 # ###############################################
 # Targets for pushing docker images
@@ -148,16 +193,20 @@ docker-push: docker-push-$(PUSHTYPE)
 
 .PHONY: docker-push docker-push-release docker-push-release-candidate docker-push-master
 
+releasecheck:
+ifneq (yes,$(RELEASE_CONFIRM))
+	$(error "Set RELEASE_CONFIRM=yes to really build and push release artifacts")
+endif
+
 helm-version-check:
-ifeq (,$(shell grep -e $(VERSION) charts/connector/Chart.yaml))
+ifeq (,$(shell grep -e $(VERSION) charts/connector/Chart.yaml 2> /dev/null))
 	$(error "Version specified in charts/connector/Chart.yaml does not match $(VERSION)")
 endif
-ifeq (,$(shell grep -e $(VERSION) charts/controller/Chart.yaml))
+ifeq (,$(shell grep -e $(VERSION) charts/controller/Chart.yaml 2> /dev/null))
 	$(error "Version specified in charts/controller/Chart.yaml does not match $(VERSION)")
 endif
 
-
-publish: releasecheck helm-version-check
+publish: releasecheck helmcheck gsutilcheck helm-version-check
 	mkdir -p local-dir
 	gsutil rsync -d gs://dropout-helm-repo local-dir/
 	helm package charts/connector
@@ -166,4 +215,4 @@ publish: releasecheck helm-version-check
 	helm repo index local-dir/ --url https://dropout-helm-repo.storage.googleapis.com
 	gsutil rsync -d local-dir/ gs://dropout-helm-repo
 
-.PHONY: helm-version-check publish
+.PHONY: publish

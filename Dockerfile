@@ -2,11 +2,11 @@ FROM golang:1.13.5
 
 WORKDIR /go/src/github.com/dropoutlabs/privacyai
 
-COPY go.mod go.sum Makefile ./
+COPY go.mod go.sum Makefile tools.go ./
 RUN make bootstrap
 
 COPY . ./
-RUN make
+RUN make build
 
 FROM golang:1.13.5
 
