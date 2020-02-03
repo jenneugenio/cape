@@ -1,14 +1,15 @@
-FROM golang:1.13.5
+FROM golang:1.13.7-alpine
 
 WORKDIR /go/src/github.com/dropoutlabs/privacyai
 
 COPY go.mod go.sum Makefile tools.go ./
-RUN make bootstrap
+RUN apk --no-cache add make gcc musl-dev \
+    && make bootstrap
 
 COPY . ./
 RUN make build
 
-FROM golang:1.13.5
+FROM golang:1.13.7-alpine
 
 WORKDIR /root/
 
