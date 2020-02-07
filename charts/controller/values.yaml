@@ -1,6 +1,4 @@
-db:
-  postgres:
-    addr: postgres-dev-postgresql.default.svc.cluster.local
+
 image:
   repository: dropoutlabs/privacyai
   tag: latest

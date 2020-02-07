@@ -112,25 +112,6 @@ clean: gocheck
 
 .PHONY: bootstrap clean
 
-bootstrap-local-dev: bootstrap-helm
-
-bootstrap-helm: helm-install helm-add-stable helm-update
-
-helm-install:
-ifeq (, $(shell which helm))
-	curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-	chmod 700 get_helm.sh
-	./get_helm.sh
-endif
-
-helm-add-stable: helmcheck
-	helm repo add stable https://kubernetes-charts.storage.googleapis.com
-
-helm-update: helmcheck
-	helm repo update
-
-.PHONY: bootstrap-local-dev
-
 # ###############################################
 # Testing, Building and Formatting
 #

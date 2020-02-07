@@ -16,11 +16,6 @@ TODO
 
 TODO
 
-## Getting Started
-
-You can install everything you need with ```make bootstrap```. We also leverage helm to run the database with tilt (see below).
-If you do not have helm you can install it with ```make bootstrap-local-dev```.
-
 ## Development
 
 PrivacyAI requires go1.13.X to build and run the executable. You can follow the official instructions to install it [here](https://golang.org/doc/install) or use [gvm](https://github.com/moovweb/gvm) to manage multiple go installations.
