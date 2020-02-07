@@ -21,6 +21,11 @@ spec:
       - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: Always
         name: controller
+        env:
+          - name: "DB_BACKEND"
+            value: "{{ .Values.db.backend }}"
+          - name: "POSTGRES_ADDR"
+            value: "{{ .Values.db.postgres.addr }}"
         command: ["./privacy", "controller", "start"]
         ports:
         - containerPort: 8081
