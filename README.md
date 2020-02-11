@@ -63,6 +63,8 @@ tilt up --no-browser
 
 `tilt` detects changes on the source code and automatically rebuilds the docker containers and relaunches the services and deployments so once you've run `tilt up` you shouldn't have to bring it down until you're done testing.
 
+**note:**You will need to create a DB by running the `create db` job in tilt (simply click on that job to do so).
+
 **Resources**
 
 - https://docs.tilt.dev/welcome_to_tilt.html
