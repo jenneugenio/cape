@@ -1,14 +1,11 @@
 package database
 
-// UnsupportedBackendError is raised when you attempt to create a db backened that we do not support
-type UnsupportedBackendError struct {
-	tried string
-}
+import errors "github.com/dropoutlabs/privacyai/partyerrors"
 
-func (e *UnsupportedBackendError) Error() string {
-	return "Attempted to start a " + e.tried + " backend."
-}
+var (
+	// InvalidDBURLCause happens you pass a poorly formatted request string
+	InvalidDBURLCause = errors.NewCause(errors.BadRequestCategory, "invalid_db_url")
 
-func newUnsupportedBackendError(tried string) error {
-	return &UnsupportedBackendError{tried}
-}
+	// NotImplementedDBCause happens when you try to connect to a db we do not support
+	NotImplementedDBCause = errors.NewCause(errors.NotImplementedCategory, "not_implemented")
+)

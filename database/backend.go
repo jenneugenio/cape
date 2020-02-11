@@ -3,6 +3,8 @@ package database
 import (
 	"context"
 	"net/url"
+
+	errors "github.com/dropoutlabs/privacyai/partyerrors"
 )
 
 // Backend represents a storage backend (e.g. Postgres, MySQL, etc).
@@ -22,12 +24,12 @@ var validDbs = map[string]func(string) Backend{
 func New(dbURL string) (Backend, error) {
 	url, err := url.Parse(dbURL)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(InvalidDBURLCause, err)
 	}
 
 	ctor, ok := validDbs[url.Scheme]
 	if !ok {
-		return nil, newUnsupportedBackendError(url.Scheme)
+		return nil, errors.New(NotImplementedDBCause, "database not supported")
 	}
 
 	return ctor(url.Host), nil
