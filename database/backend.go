@@ -16,21 +16,16 @@ type Backend interface {
 	Transaction() (*Transaction, error)
 }
 
-var validDbs = map[string]func(string) Backend{
+var validDbs = map[string]func(*url.URL) Backend{
 	"postgres": NewPostgresBackend,
 }
 
 // New returns a new backend.
-func New(dbURL string) (Backend, error) {
-	url, err := url.Parse(dbURL)
-	if err != nil {
-		return nil, errors.Wrap(InvalidDBURLCause, err)
-	}
-
-	ctor, ok := validDbs[url.Scheme]
+func New(dbURL *url.URL) (Backend, error) {
+	ctor, ok := validDbs[dbURL.Scheme]
 	if !ok {
 		return nil, errors.New(NotImplementedDBCause, "database not supported")
 	}
 
-	return ctor(url.Host), nil
+	return ctor(dbURL), nil
 }

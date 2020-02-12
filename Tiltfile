@@ -12,7 +12,7 @@ delete_cmd = ' && '.join([delete_db_chart, delete_pvc])
 local_resource('create db', cmd=start_db)
 local_resource('delete db', cmd=delete_cmd, trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
 
-k8s_yaml(helm('charts/connector', values=['charts/connector/values.yaml']))
-k8s_yaml(helm('charts/controller', values=['charts/connector/values.yaml']))
+k8s_yaml(helm('charts/connector', values=['charts/local_values/connector_values.yaml']))
+k8s_yaml(helm('charts/controller', values=['charts/local_values/controller_values.yaml']))
 
 docker_build('dropoutlabs/privacyai:latest', '.')

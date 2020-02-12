@@ -1,6 +1,8 @@
-db:
-  type: "postgres"
-  addr: postgres-dev-postgresql.default.svc.cluster.local
 image:
-  repository: dropoutlabs/privacyai
+  repository: docker.pkg.github.com/dropoutlabs/privacyai/privacyai
   tag: latest
+
+dockerSecret: docker-cfg
+
+# db:
+#   addr: postgres://<USERNAME>@<HOST>/<DATABASE>

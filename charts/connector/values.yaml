@@ -1,3 +1,5 @@
 image:
-  repository: dropoutlabs/privacyai
+  repository: docker.pkg.github.com/dropoutlabs/privacyai/privacyai
   tag: latest
+
+dockerSecret: docker-cfg

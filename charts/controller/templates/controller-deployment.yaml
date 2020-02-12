@@ -22,9 +22,20 @@ spec:
         imagePullPolicy: Always
         name: controller
         env:
+          {{ if (.Values.db.passwordSecret )}}
+          - name: "DB_PASSWORD"
+            valueFrom:
+              secretKeyRef:
+                name: db-secret
+                key: password
+          {{ end }}
           - name: "DB_ADDR"
-            value: "postgres://{{ .Values.db.addr }}"
+            value: "{{ .Values.db.addr }}"
         command: ["./privacy", "controller", "start"]
         ports:
         - containerPort: 8081
+      {{ if (.Values.dockerSecret)}}
+      imagePullSecrets:
+      - name: {{ .Values.dockerSecret }}
+      {{ end }}
 status: {}

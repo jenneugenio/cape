@@ -1,14 +1,29 @@
 package database
 
-import "context"
+import (
+	"context"
+	"database/sql"
+	"net/url"
+
+	// postgres driver
+	_ "github.com/lib/pq"
+)
 
 // PostgresBackend implements the backend interface for a pg database
 type PostgresBackend struct {
-	connString string
+	dbURL *url.URL
+	db    *sql.DB
 }
 
 // Open the database
 func (p *PostgresBackend) Open(ctx context.Context) error {
+	db, err := sql.Open("postgres", p.dbURL.String())
+	if err != nil {
+		return err
+	}
+
+	p.db = db
+
 	return nil
 }
 
@@ -23,8 +38,8 @@ func (p *PostgresBackend) Transaction() (*Transaction, error) {
 }
 
 // NewPostgresBackend returns a new postgres backend instance
-func NewPostgresBackend(connString string) Backend {
+func NewPostgresBackend(dbURL *url.URL) Backend {
 	return &PostgresBackend{
-		connString: connString,
+		dbURL: dbURL,
 	}
 }

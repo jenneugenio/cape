@@ -1,6 +1,7 @@
 package database
 
 import (
+	"net/url"
 	"testing"
 
 	errors "github.com/dropoutlabs/privacyai/partyerrors"
@@ -9,19 +10,19 @@ import (
 
 func TestBackend(t *testing.T) {
 	gm.RegisterTestingT(t)
-	t.Run("No backend specified", func(t *testing.T) {
-		// I haven't specified a backend
-		_, err := New("http://192.168.0.%31")
-		gm.Expect(errors.FromCause(err, InvalidDBURLCause)).To(gm.BeTrue())
-	})
-
 	t.Run("Invalid backend specified", func(t *testing.T) {
-		_, err := New("fakedb://fake.db")
+		u, err := url.Parse("fakedb://fake.db")
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = New(u)
 		gm.Expect(errors.FromCause(err, NotImplementedDBCause)).To(gm.BeTrue())
 	})
 
 	t.Run("Valid backend specified", func(t *testing.T) {
-		_, err := New("postgres://fake.db")
+		u, err := url.Parse("postgres://fake.db")
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = New(u)
 		gm.Expect(err).To(gm.BeNil())
 	})
 }
