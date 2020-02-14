@@ -22,4 +22,10 @@ local_resource('delete db', cmd=delete_cmd, trigger_mode=TRIGGER_MODE_MANUAL, au
 k8s_yaml(helm('charts/connector', values=['charts/local_values/connector_values.yaml']))
 k8s_yaml(helm('charts/controller', values=['charts/local_values/controller_values.yaml']))
 
-docker_build('dropoutlabs/privacyai:latest', '.')
+k8s_yaml('manifests/test_job.yaml')
+k8s_resource("test", trigger_mode=TRIGGER_MODE_MANUAL)
+
+docker_build('dropoutlabs/privacyai:latest', '.', dockerfile='dockerfiles/Dockerfile')
+docker_build('dropoutlabs/privacyai-test:latest', '.', dockerfile='dockerfiles/Dockerfile.test')
+docker_build('dropoutlabs/controller:latest', '.', dockerfile='dockerfiles/Dockerfile.controller')
+docker_build('dropoutlabs/connector:latest', '.', dockerfile='dockerfiles/Dockerfile.connector')

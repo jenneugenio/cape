@@ -1,0 +1,5 @@
+FROM dropoutlabs/privacyai:latest
+
+WORKDIR /go/src/github.com/dropoutlabs/privacyai
+
+CMD ["make", "test"]

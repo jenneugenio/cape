@@ -31,7 +31,6 @@ spec:
           {{ end }}
           - name: "DB_ADDR"
             value: "{{ .Values.db.addr }}"
-        command: ["./privacy", "controller", "start"]
         ports:
         - containerPort: 8081
       {{ if (.Values.dockerSecret)}}

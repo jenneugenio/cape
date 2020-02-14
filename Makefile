@@ -163,9 +163,11 @@ ci: lint build test
 # Builds a docker image for TF Encrypted that can be used to deploy and
 # test.
 # ###############################################
-DOCKER_BUILD=docker build -t dropoutlabs/privacyai:$(1) -f Dockerfile $(2) .
+DOCKER_BUILD=docker build -t dropoutlabs/$(1):$(2) -f $(3) .
 docker: Dockerfile dockercheck
-	$(call DOCKER_BUILD,latest,)
+	$(call DOCKER_BUILD,privacyai,latest,dockerfiles/Dockerfile)
+	$(call DOCKER_BUILD,controller,latest,dockerfiles/Dockerfile.controller)
+	$(call DOCKER_BUILD,connector,latest,dockerfiles/Dockerfile.connector)
 
 .PHONY: docker
 
@@ -176,17 +178,23 @@ docker: Dockerfile dockercheck
 # authenticating to docker hub and pushing built docker containers up with the
 # appropriate tags.
 # ###############################################
-DOCKER_TAG=docker tag dropoutlabs/privacyai:$(1) docker.pkg.github.com/dropoutlabs/privacyai/privacyai:$(2)
-DOCKER_PUSH=docker push docker.pkg.github.com/dropoutlabs/privacyai/privacyai:$(1)
+DOCKER_TAG=docker tag dropoutlabs/$(1):$(2) docker.pkg.github.com/dropoutlabs/privacyai/$(1):$(3)
+DOCKER_PUSH=docker push docker.pkg.github.com/dropoutlabs/privacyai/$(1):$(2)
 
 docker-tag: dockercheck
-	$(call DOCKER_TAG,latest,$(VERSION))
+	$(call DOCKER_TAG,privacyai,latest,$(VERSION))
+	$(call DOCKER_TAG,controller,latest,$(VERSION))
+	$(call DOCKER_TAG,connector,latest,$(VERSION))
 
 docker-push-tag: dockercheck
-	$(call DOCKER_PUSH,$(VERSION))
+	$(call DOCKER_PUSH,privacyai,$(VERSION))
+	$(call DOCKER_PUSH,controller,$(VERSION))
+	$(call DOCKER_PUSH,connector,$(VERSION))
 
 docker-push-latest: dockercheck
-	$(call DOCKER_PUSH,latest)
+	$(call DOCKER_PUSH,privacyai,latest)
+	$(call DOCKER_PUSH,controller,latest)
+	$(call DOCKER_PUSH,connector,latest)
 
 .PHONY: docker-login docker-push-latest docker-push-tag docker-tag
 

@@ -1,5 +1,5 @@
 db:
   addr: postgres://postgres:dev@privacy-db-postgresql.default.svc.cluster.local/postgres?sslmode=disable
 image:
-  repository: dropoutlabs/privacyai
+  repository: dropoutlabs/controller
   tag: latest
