@@ -13,3 +13,8 @@ jobs:
     - name: Install postgres in helm
       run: |
         helm install privacy-db stable/postgresql --set postgresqlPassword=dev
+    - name: Test psql
+      run: |
+        export POSTGRES_PASSWORD=$(kubectl get secret --namespace default privacy-db-postgresql -o jsonpath="***.data.postgresql-password***" | base64 --decode)
+        kubectl port-forward --namespace default svc/privacy-db-postgresql 5432:5432 &
+        PGPASSWORD="$POSTGRES_PASSWORD" psql --host 127.0.0.1 -U postgres -d postgres -p 5432 -c "CREATE TABLE test_table ();"
