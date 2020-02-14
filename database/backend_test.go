@@ -1,7 +1,6 @@
 package database
 
 import (
-	"context"
 	"net/url"
 	"testing"
 
@@ -26,30 +25,4 @@ func TestBackend(t *testing.T) {
 		_, err = New(u)
 		gm.Expect(err).To(gm.BeNil())
 	})
-}
-
-// Integration test, testing a real query to a real postgres database
-func TestPostgresQuery(t *testing.T) {
-	gm.RegisterTestingT(t)
-
-	addr := "postgres://postgres:dev@privacy-db-postgresql.default.svc.cluster.local/postgres?sslmode=disable"
-	u, err := url.Parse(addr)
-	gm.Expect(err).To(gm.BeNil())
-
-	pg := &PostgresBackend{dbURL: u}
-
-	err = pg.Open(context.Background())
-	gm.Expect(err).To(gm.BeNil())
-
-	_, err := pg.db.Query(`
-		SELECT
-			*
-		FROM
-			pg_catalog.pg_tables
-		WHERE
-			schemaname != 'pg_catalog'
-		AND schemaname != 'information_schema';
-	`)
-
-	gm.Expect(err).To(gm.BeNil())
 }

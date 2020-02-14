@@ -147,13 +147,18 @@ $(PREFIX)bin/privacy: gocheck $(SRC)
 
 build: $(PREFIX)bin/privacy
 
-test: gocheck
-	go test -v $$(go list ./...)
+unit: gocheck
+	go test -v ./...
+
+integration: gocheck
+	DBHOST=privacy-db-postgresql.default.svc.cluster.local go test -v ./... -tags=integration
+
+test: integration
 
 fmt: gocheck
 	gofmt -s -l -w $(SRC)
 
-ci: lint build test
+ci: lint build unit
 
 .PHONY: lint build fmt test ci
 
@@ -164,8 +169,8 @@ ci: lint build test
 # test.
 # ###############################################
 DOCKER_BUILD=docker build -t dropoutlabs/$(1):$(2) -f $(3) .
-docker: Dockerfile dockercheck
-	$(call DOCKER_BUILD,privacyai,latest,dockerfiles/Dockerfile)
+docker: dockerfiles/Dockerfile.base dockerfiles/Dockerfile.controller dockerfiles/Dockerfile.connector dockercheck
+	$(call DOCKER_BUILD,privacyai,latest,dockerfiles/Dockerfile.base)
 	$(call DOCKER_BUILD,controller,latest,dockerfiles/Dockerfile.controller)
 	$(call DOCKER_BUILD,connector,latest,dockerfiles/Dockerfile.connector)
 
