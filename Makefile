@@ -117,12 +117,10 @@ bootstrap-local-dev: bootstrap-helm
 bootstrap-helm: helm-install helm-add-stable helm-update
 
 helm-install:
-ifeq (,$(shell which helm))
 ifeq (,$(findstring $(HELM_REQUIRED_VERSION),$(CURRENT_HELM_VERSION)))
 	curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
 	chmod 700 get_helm.sh
 	./get_helm.sh
-endif
 endif
 
 helm-add-stable: helmcheck
