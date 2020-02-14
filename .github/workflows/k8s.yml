@@ -1,0 +1,15 @@
+name: "Create cluster using KinD"
+on: [pull_request, push]
+
+jobs:
+  kind:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: engineerd/setup-kind@v0.3.0
+    - name: Install helm
+      run: |
+        make bootstrap-local-dev
+    - name: Install postgres in helm
+      run: |
+        helm install privacy-db stable/postgresql --set postgresqlPassword=dev
