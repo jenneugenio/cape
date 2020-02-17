@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: controller
@@ -9,6 +9,9 @@ spec:
   strategy:
     rollingUpdate:
     type: Recreate
+  selector:
+    matchLabels:
+      service: controller
   template:
     metadata:
       creationTimestamp: null
