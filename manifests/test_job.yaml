@@ -8,4 +8,5 @@ spec:
       containers:
       - name: test
         image: dropoutlabs/privacyai-test:latest
+      backoffLimit: 1
       restartPolicy: Never
