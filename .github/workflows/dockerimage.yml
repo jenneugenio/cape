@@ -1,9 +1,0 @@
-name: Docker Image CI
-on: [push]
-jobs:
-  docker-build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v1
-    - name: Build privacyai docker image
-      run: make docker

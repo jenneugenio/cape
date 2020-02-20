@@ -157,7 +157,7 @@ test: integration
 fmt: gocheck
 	gofmt -s -l -w $(SRC)
 
-ci: lint build unit
+ci: lint build test docker
 
 .PHONY: lint build fmt test ci
 

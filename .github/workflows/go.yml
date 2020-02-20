@@ -2,11 +2,21 @@ name: Go
 on: [push]
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
+    services:
+      postgres:
+        image: postgres:11.7-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: dev
+          POSTGRES_DB: postgres
+        ports:
+        # will assign a random free host port
+        - 5432/tcp
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
     name: Build
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
     - name: Set up Go 1.13
       uses: actions/setup-go@v1
@@ -20,4 +30,5 @@ jobs:
     - name: Test/Lint
       run: |
         export PATH=$PATH:$HOME/go/bin
+        export DB_URL=postgres://postgres:dev@localhost:${{ job.services.postgres.ports[5432] }}/postgres?sslmode=disable
         make ci
