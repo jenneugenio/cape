@@ -14,13 +14,16 @@ var controllerCmd = &cobra.Command{
 	Short: "Control access to your data in PrivacyAI",
 }
 
-// GetDatabaseAddress looks at the environment and generates the
-// database address if needed.
-func GetDatabaseAddress() (*url.URL, error) {
-	addr := os.Getenv("DB_ADDR")
+// getDBURL looks at the environment and generates the database address if
+// needed.
+func getDBURL() (*url.URL, error) {
+	// We support passing the password in separately or as a part of the DB
+	// URL. If the password is contained in the DB_URL then it should be passed
+	// entirely as a secret inside a kubernetes orchestration system.
+	dbURL := os.Getenv("DB_URL")
 	password := os.Getenv("DB_PASSWORD")
 
-	u, err := url.Parse(addr)
+	u, err := url.Parse(dbURL)
 	if err != nil {
 		return nil, errors.Wrap(InvalidURLCause, err)
 	}
@@ -40,7 +43,7 @@ var startControllerCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Launch the PrivacyAI Controller",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		dbURL, err := GetDatabaseAddress()
+		dbURL, err := getDBURL()
 		if err != nil {
 			return err
 		}

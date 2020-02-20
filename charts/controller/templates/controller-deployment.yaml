@@ -29,8 +29,8 @@ spec:
                 name: db-secret
                 key: password
           {{ end }}
-          - name: "DB_ADDR"
-            value: "{{ .Values.db.addr }}"
+          - name: "DB_URL"
+            value: "{{ .Values.db.url }}"
         ports:
         - containerPort: 8081
       {{ if (.Values.dockerSecret)}}

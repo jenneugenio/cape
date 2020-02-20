@@ -61,8 +61,6 @@ endif
 endif
 endif
 
-
-
 .PHONY: gocheck dockercheck
 
 # ###############################################
@@ -150,8 +148,9 @@ build: $(PREFIX)bin/privacy
 unit: gocheck
 	go test -v ./...
 
+DB_URL?="postgres://postgres:dev@localhost:5432/postgres?sslmode=disable"
 integration: gocheck
-	DBHOST=privacy-db-postgresql.default.svc.cluster.local go test -v ./... -tags=integration
+	DB_URL=$(DB_URL) go test -v ./... -tags=integration
 
 test: integration
 

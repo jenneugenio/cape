@@ -5,5 +5,5 @@ image:
 dockerSecret: docker-cfg
 
 # db:
-#   addr: postgres://<USERNAME>@<HOST>/<DATABASE>
+#   url: postgres://<USERNAME>@<HOST>/<DATABASE>
 #   passwordSecrets: db-secret

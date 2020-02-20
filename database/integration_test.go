@@ -4,7 +4,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"os"
 	"testing"
@@ -16,17 +15,18 @@ import (
 func TestPostgresQuery(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	host := os.Getenv("DBHOST")
-	addr := fmt.Sprintf("postgres://postgres:dev@%s/postgres?sslmode=disable", host)
-	u, err := url.Parse(addr)
+	dbURL := os.Getenv("DB_URL")
+	u, err := url.Parse(dbURL)
 	gm.Expect(err).To(gm.BeNil())
 
-	pg := &PostgresBackend{dbURL: u}
-
-	err = pg.Open(context.Background())
+	db, err := New(u)
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = pg.db.Query(`
+	err = db.Open(context.Background())
+	gm.Expect(err).To(gm.BeNil())
+
+	// TODO: Refactor this once we support _any_ database functionality at all
+	_, err = db.(*PostgresBackend).db.Query(`
 		SELECT
 			*
 		FROM
