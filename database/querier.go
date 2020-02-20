@@ -9,7 +9,6 @@ import (
 // Querier represents various backend queries you can perform
 type Querier interface {
 	Create(context.Context, *primitives.Primitive) error
-	Query(context.Context, Query, []interface{}) error
 	Get(context.Context, primitives.ID) (*primitives.Primitive, error)
 	Delete(context.Context, *primitives.Primitive) error
 	Update(context.Context, *primitives.Primitive) error
