@@ -16,13 +16,16 @@ type Backend interface {
 	Transaction() (*Transaction, error)
 }
 
-var validDbs = map[string]func(*url.URL) Backend{
+// NewBackendFunc represents a constructor of a Backend implementation
+type NewBackendFunc func(*url.URL) Backend
+
+var validDBs = map[string]NewBackendFunc{
 	"postgres": NewPostgresBackend,
 }
 
 // New returns a new backend.
 func New(dbURL *url.URL) (Backend, error) {
-	ctor, ok := validDbs[dbURL.Scheme]
+	ctor, ok := validDBs[dbURL.Scheme]
 	if !ok {
 		return nil, errors.New(NotImplementedDBCause, "database not supported")
 	}
