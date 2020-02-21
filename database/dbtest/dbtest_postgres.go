@@ -3,6 +3,7 @@ package dbtest
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"net/url"
 
 	_ "github.com/lib/pq"
@@ -48,7 +49,7 @@ func NewTestPostgres(rootURL string) (TestDatabase, error) {
 	}, nil
 }
 
-// Setup creates a database and migrates it to the appropriate state.
+// Setup creates a randomly named database for testing
 func (t *TestPostgres) Setup(ctx context.Context) error {
 	// First connect to the root database so we can create a database
 	db, err := sql.Open("postgres", t.rootURL.String())
@@ -60,7 +61,7 @@ func (t *TestPostgres) Setup(ctx context.Context) error {
 	// TODO: Apply migrations after creating the database. The migrator may
 	// actually create the database as well. If it does, then that should
 	// happen in there.
-	_, err = db.ExecContext(ctx, "CREATE DATABASE "+t.dbName)
+	_, err = db.ExecContext(ctx, fmt.Sprintf("CREATE DATABASE %s", t.dbName))
 	if err != nil {
 		return err
 	}

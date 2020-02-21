@@ -8,7 +8,7 @@ import (
 	errors "github.com/dropoutlabs/privacyai/partyerrors"
 )
 
-// TestDatabase represents a test sotrage backend (e.g. Postgres, MySQL,
+// TestDatabase represents a test storage backend (e.g. Postgres, MySQL,
 // SQLite, etc). Implementations are responsible for providing functionality
 // for setting up and tearing down test environments for integration testing.
 type TestDatabase interface {

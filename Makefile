@@ -152,12 +152,10 @@ CAPE_DB_URL?="postgres://postgres:dev@localhost:5432/postgres?sslmode=disable"
 integration: gocheck
 	CAPE_DB_URL=$(CAPE_DB_URL) go test -v ./... -tags=integration
 
-test: integration
-
 fmt: gocheck
 	gofmt -s -l -w $(SRC)
 
-ci: lint build test docker
+ci: lint build test docker integration
 
 .PHONY: lint build fmt test ci
 

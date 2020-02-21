@@ -16,7 +16,7 @@ func TestTestPostgres(t *testing.T) {
 	t.Run("creates a database that can be queried (and destroyed)", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		testDB, err := NewTestPostgres(os.Getenv("DB_URL"))
+		testDB, err := NewTestPostgres(os.Getenv("CAPE_DB_URL"))
 		gm.Expect(err).To(gm.BeNil())
 
 		err = testDB.Setup(ctx)
@@ -32,7 +32,7 @@ func TestTestPostgres(t *testing.T) {
 	t.Run("will truncate tables", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		testDB, err := NewTestPostgres(os.Getenv("DB_URL"))
+		testDB, err := NewTestPostgres(os.Getenv("CAPE_DB_URL"))
 		gm.Expect(err).To(gm.BeNil())
 
 		err = testDB.Setup(ctx)

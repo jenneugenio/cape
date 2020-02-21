@@ -5,9 +5,9 @@ import (
 	"sync"
 )
 
-// Wrapper is a wrapper a TestDatabase providing a singleton-style experience
-// allowing more than one test to use the same database. The purpose is to save
-// time on how long it takes to setup a database between tests.
+// Wrapper is a TestDatabase providing a singleton-style experience allowing
+// more than one test to use the same underlying database. The purpose is to
+// save time on how long it takes to setup a database between tests.
 //
 // Wrappers are kept in a centralized managed by the New function.
 type Wrapper struct {
