@@ -17,6 +17,7 @@ type PostgresBackend struct {
 
 // Open the database
 func (p *PostgresBackend) Open(ctx context.Context) error {
+	// XXX: We should look into the pgx driver
 	db, err := sql.Open("postgres", p.dbURL.String())
 	if err != nil {
 		return err
