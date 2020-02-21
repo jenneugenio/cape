@@ -25,7 +25,7 @@ func TestPostgresQuery(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	// TODO: Refactor this once we support _any_ database functionality at all
-	_, err = testDB.(*dbtest.TestPostgres).RawQuery(ctx, `
+	_, err = testDB.(*dbtest.Wrapper).Database().(*dbtest.TestPostgres).RawQuery(ctx, `
 		SELECT
 			*
 		FROM

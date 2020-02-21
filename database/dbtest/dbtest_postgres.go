@@ -17,9 +17,10 @@ var ConnectionError = errors.NewCause(errors.BadRequestCategory, "connection_err
 // TestPostgres implements the TestDatabase providing functionality for setting
 // up a test enviornment for integration testing.
 type TestPostgres struct {
-	dbURL  *url.URL
-	dbName string
-	db     *sql.DB
+	rootURL *url.URL // the root database (e.g. template1)
+	dbURL   *url.URL // database this instance manages
+	dbName  string
+	db      *sql.DB
 }
 
 // NewTestPostgres returns an instance of a TestPostgres struct
@@ -30,7 +31,11 @@ func NewTestPostgres(dbURL string) (TestDatabase, error) {
 	}
 
 	// TODO: Generate a random name for the test database
-	return &TestPostgres{dbURL: u, dbName: "test"}, nil
+	return &TestPostgres{
+		dbURL:   u,
+		rootURL: u,
+		dbName:  "test",
+	}, nil
 }
 
 // Setup creates a database and migrates it to the appropriate state.

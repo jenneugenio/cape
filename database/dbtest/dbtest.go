@@ -25,6 +25,9 @@ var validDBs = map[string]NewTestDatabaseFunc{
 	"postgres": NewTestPostgres,
 }
 
+// Registry for storing global test databases that are shared across tests
+var existingDBs = map[string]TestDatabase{}
+
 // New returns an instance of a testing database for use in integration tests.
 func New(dbURL string) (TestDatabase, error) {
 	u, err := url.Parse(dbURL)
@@ -37,5 +40,16 @@ func New(dbURL string) (TestDatabase, error) {
 		return nil, errors.New(errors.UnsupportedErrorCause, "test database type not supported")
 	}
 
-	return ctor(dbURL)
+	if testDB, ok := existingDBs[u.String()]; ok {
+		return testDB, nil
+	}
+
+	testDB, err := ctor(dbURL)
+	if err != nil {
+		return nil, err
+	}
+
+	testDB = Wrap(testDB) // Wrap it up!
+	existingDBs[u.String()] = testDB
+	return testDB, nil
 }
