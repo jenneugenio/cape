@@ -26,13 +26,13 @@ spec:
         name: controller
         env:
           {{ if (.Values.db.passwordSecret )}}
-          - name: "DB_PASSWORD"
+          - name: "CAPE_DB_PASSWORD"
             valueFrom:
               secretKeyRef:
                 name: db-secret
                 key: password
           {{ end }}
-          - name: "DB_URL"
+          - name: "CAPE_DB_URL"
             value: "{{ .Values.db.url }}"
         ports:
         - containerPort: 8081

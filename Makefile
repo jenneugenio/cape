@@ -148,9 +148,9 @@ build: $(PREFIX)bin/privacy
 unit: gocheck
 	go test -v ./...
 
-DB_URL?="postgres://postgres:dev@localhost:5432/postgres?sslmode=disable"
+CAPE_DB_URL?="postgres://postgres:dev@localhost:5432/postgres?sslmode=disable"
 integration: gocheck
-	DB_URL=$(DB_URL) go test -v ./... -tags=integration
+	CAPE_DB_URL=$(CAPE_DB_URL) go test -v ./... -tags=integration
 
 test: integration
 

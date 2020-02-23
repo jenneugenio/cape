@@ -18,10 +18,10 @@ var controllerCmd = &cobra.Command{
 // needed.
 func getDBURL() (*url.URL, error) {
 	// We support passing the password in separately or as a part of the DB
-	// URL. If the password is contained in the DB_URL then it should be passed
-	// entirely as a secret inside a kubernetes orchestration system.
-	dbURL := os.Getenv("DB_URL")
-	password := os.Getenv("DB_PASSWORD")
+	// URL. If the password is contained in the CAPE_DB_URL then it should be
+	// passed entirely as a secret inside a kubernetes orchestration system.
+	dbURL := os.Getenv("CAPE_DB_URL")
+	password := os.Getenv("CAPE_DB_PASSWORD")
 
 	u, err := url.Parse(dbURL)
 	if err != nil {

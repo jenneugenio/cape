@@ -15,7 +15,7 @@ import (
 func TestPostgresQuery(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	dbURL := os.Getenv("DB_URL")
+	dbURL := os.Getenv("CAPE_DB_URL")
 	u, err := url.Parse(dbURL)
 	gm.Expect(err).To(gm.BeNil())
 

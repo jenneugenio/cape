@@ -9,7 +9,7 @@ spec:
       - name: test
         image: dropoutlabs/privacyai-test:latest
         env:
-          - name: DB_URL
+          - name: CAPE_DB_URL
             value: "postgres://postgres:dev@privacy-db-postgresql.default.svc.cluster.local:5432/postgres?sslmode=disable"
       backoffLimit: 1
       restartPolicy: Never
