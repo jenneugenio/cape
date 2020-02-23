@@ -54,14 +54,6 @@ var ErrUnknownType = errors.New("Cannot decode, encountered an unknown type")
 // entity. If it doesn't fit within an existing category create a new one. Each
 // category should have room for approximately 100 types.
 var (
-	// Core System Primitives (users, services, etc)
-	User       Type = 0x000
-	Service    Type = 0x001
-	Token      Type = 0x002
-	Role       Type = 0x003
-	Policy     Type = 0x004
-	Attachment Type = 0x005
-
 	// Everything greater than 0x100 is reserved for testing
 	Reserved    Type = 0xD00
 	Test        Type = 0xD01
@@ -131,12 +123,6 @@ func Decode(in uint16) (Type, error) {
 }
 
 func init() {
-	Register(User, "user", false)
-	Register(Service, "service", false)
-	Register(Token, "token", true)
-	Register(Role, "role", true)
-	Register(Policy, "policy", true)
-	Register(Attachment, "attachment", true)
 	Register(Test, "test", false)
 	Register(TestMutable, "test_mutable", true)
 }
