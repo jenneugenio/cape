@@ -43,12 +43,13 @@ var startControllerCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Launch the PrivacyAI Controller",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		serviceID := getServiceID()
 		dbURL, err := getDBURL()
 		if err != nil {
 			return err
 		}
 
-		c, err := controller.New(dbURL)
+		c, err := controller.New(dbURL, serviceID)
 		if err != nil {
 			return err
 		}

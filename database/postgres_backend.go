@@ -2,23 +2,21 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"net/url"
 
-	// postgres driver
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 // PostgresBackend implements the backend interface for a pg database
 type PostgresBackend struct {
 	dbURL *url.URL
-	db    *sql.DB
+	db    *pgxpool.Pool
+	cfg   *pgxpool.Config
 }
 
 // Open the database
 func (p *PostgresBackend) Open(ctx context.Context) error {
-	// XXX: We should look into the pgx driver
-	db, err := sql.Open("postgres", p.dbURL.String())
+	db, err := pgxpool.ConnectConfig(ctx, p.cfg)
 	if err != nil {
 		return err
 	}
@@ -30,6 +28,9 @@ func (p *PostgresBackend) Open(ctx context.Context) error {
 
 // Close the database
 func (p *PostgresBackend) Close() error {
+	p.db.Close()
+	p.db = nil
+
 	return nil
 }
 
@@ -39,8 +40,20 @@ func (p *PostgresBackend) Transaction() (*Transaction, error) {
 }
 
 // NewPostgresBackend returns a new postgres backend instance
-func NewPostgresBackend(dbURL *url.URL) Backend {
+func NewPostgresBackend(dbURL *url.URL, name string) (Backend, error) {
+	c, err := pgxpool.ParseConfig(dbURL.String())
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the application name which can be used for identifying which service
+	// is connecting to postgres
+	c.ConnConfig.RuntimeParams = map[string]string{
+		"application_name": name,
+	}
+
 	return &PostgresBackend{
 		dbURL: dbURL,
-	}
+		cfg:   c,
+	}, nil
 }

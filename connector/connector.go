@@ -1,10 +1,14 @@
 package connector
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // Connector is the central brain of PrivacyAI.  It keeps track of system
 // users, policy, etc
 type Connector struct {
+	name string
 }
 
 // Start the connector
@@ -13,6 +17,8 @@ func (c *Connector) Start() {
 }
 
 // New returns a pointer to a controller instance
-func New() *Connector {
-	return &Connector{}
+func New(serviceID string) *Connector {
+	return &Connector{
+		name: fmt.Sprintf("cape-connector-%s", serviceID),
+	}
 }

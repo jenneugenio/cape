@@ -14,6 +14,7 @@ import (
 // users, policy, etc
 type Controller struct {
 	backend database.Backend
+	name    string
 }
 
 // Start the controller
@@ -33,8 +34,9 @@ func (c *Controller) Stop() {
 }
 
 // New returns a pointer to a controller instance
-func New(dbURL *url.URL) (*Controller, error) {
-	backend, err := database.New(dbURL)
+func New(dbURL *url.URL, serviceID string) (*Controller, error) {
+	name := fmt.Sprintf("cape-controller-%s", serviceID)
+	backend, err := database.New(dbURL, name)
 
 	if err != nil {
 		return nil, err
@@ -42,5 +44,6 @@ func New(dbURL *url.URL) (*Controller, error) {
 
 	return &Controller{
 		backend: backend,
+		name:    name,
 	}, nil
 }

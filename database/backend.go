@@ -17,18 +17,18 @@ type Backend interface {
 }
 
 // NewBackendFunc represents a constructor of a Backend implementation
-type NewBackendFunc func(*url.URL) Backend
+type NewBackendFunc func(*url.URL, string) (Backend, error)
 
 var validDBs = map[string]NewBackendFunc{
 	"postgres": NewPostgresBackend,
 }
 
-// New returns a new backend.
-func New(dbURL *url.URL) (Backend, error) {
+// New returns a new backend for the given application name
+func New(dbURL *url.URL, appName string) (Backend, error) {
 	ctor, ok := validDBs[dbURL.Scheme]
 	if !ok {
 		return nil, errors.New(NotImplementedDBCause, "database not supported")
 	}
 
-	return ctor(dbURL), nil
+	return ctor(dbURL, appName)
 }

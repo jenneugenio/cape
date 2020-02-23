@@ -2,11 +2,12 @@ package dbtest
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"net/url"
 
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgconn"
+	pgx "github.com/jackc/pgx/v4"
+	pgxpool "github.com/jackc/pgx/v4/pgxpool"
 
 	errors "github.com/dropoutlabs/privacyai/partyerrors"
 )
@@ -21,7 +22,7 @@ type TestPostgres struct {
 	rootURL *url.URL
 	dbURL   *url.URL // database this instance manages
 	dbName  string
-	db      *sql.DB
+	db      *pgxpool.Pool
 }
 
 // NewTestPostgres returns an instance of a TestPostgres struct
@@ -51,23 +52,22 @@ func NewTestPostgres(rootURL string) (TestDatabase, error) {
 
 // Setup creates a randomly named database for testing
 func (t *TestPostgres) Setup(ctx context.Context) error {
-	// First connect to the root database so we can create a database
-	db, err := sql.Open("postgres", t.rootURL.String())
+	db, err := pgxpool.Connect(ctx, t.rootURL.String())
 	if err != nil {
 		return err
 	}
-	defer db.Close() //nolint: errcheck
+	defer db.Close()
 
 	// TODO: Apply migrations after creating the database. The migrator may
 	// actually create the database as well. If it does, then that should
 	// happen in there.
-	_, err = db.ExecContext(ctx, fmt.Sprintf("CREATE DATABASE %s", t.dbName))
+	_, err = db.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s", t.dbName))
 	if err != nil {
 		return err
 	}
 
 	// okay now we can create our long lasting connection
-	db, err = sql.Open("postgres", t.dbURL.String())
+	db, err = pgxpool.Connect(ctx, t.dbURL.String())
 	if err != nil {
 		return err
 	}
@@ -84,19 +84,16 @@ func (t *TestPostgres) Teardown(ctx context.Context) error {
 		return nil
 	}
 
-	err := t.db.Close()
-	if err != nil {
-		return err
-	}
-
+	t.db.Close()
 	t.db = nil
-	db, err := sql.Open("postgres", t.rootURL.String())
+
+	db, err := pgxpool.Connect(ctx, t.rootURL.String())
 	if err != nil {
 		return err
 	}
 	defer db.Close() //nolint: errcheck
 
-	_, err = db.ExecContext(ctx, "DROP DATABASE "+t.dbName)
+	_, err = db.Exec(ctx, "DROP DATABASE "+t.dbName)
 	if err != nil {
 		return err
 	}
@@ -107,14 +104,14 @@ func (t *TestPostgres) Teardown(ctx context.Context) error {
 // Truncate truncates all tables inside the database resetting them back to
 // empty while retaining any triggers or tables.
 func (t *TestPostgres) Truncate(ctx context.Context) error {
-	tx, err := t.db.BeginTx(ctx, nil)
+	tx, err := t.db.Begin(ctx)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback() //nolint: errcheck
+	defer tx.Rollback(ctx) //nolint: errcheck
 
 	// TODO: Check that the migrations table is actually called 'migrations'
-	rows, err := tx.QueryContext(ctx, `
+	rows, err := tx.Query(ctx, `
 		SELECT
 			tablename
 		FROM
@@ -140,31 +137,31 @@ func (t *TestPostgres) Truncate(ctx context.Context) error {
 	}
 
 	for _, name := range tables {
-		_, err = tx.ExecContext(ctx, "TRUNCATE TABLE "+name)
+		_, err = tx.Exec(ctx, "TRUNCATE TABLE "+name)
 		if err != nil {
 			return err
 		}
 	}
 
-	return tx.Commit()
+	return tx.Commit(ctx)
 }
 
 // Query exposes a method for querying the test database directly
-func (t *TestPostgres) Query(ctx context.Context, q string, args ...interface{}) (*sql.Rows, error) {
+func (t *TestPostgres) Query(ctx context.Context, q string, args ...interface{}) (pgx.Rows, error) {
 	if t.db == nil {
 		return nil, errors.New(ConnectionError, "must setup the database to query")
 	}
 
-	return t.db.QueryContext(ctx, q, args...)
+	return t.db.Query(ctx, q, args...)
 }
 
 // Exec exposes a method for executing a query against the database
-func (t *TestPostgres) Exec(ctx context.Context, q string, args ...interface{}) (sql.Result, error) {
+func (t *TestPostgres) Exec(ctx context.Context, q string, args ...interface{}) (pgconn.CommandTag, error) {
 	if t.db == nil {
 		return nil, errors.New(ConnectionError, "must setup the database to exec a statement")
 	}
 
-	return t.db.ExecContext(ctx, q, args...)
+	return t.db.Exec(ctx, q, args...)
 }
 
 // URL returns the connection string for the underlying test database.

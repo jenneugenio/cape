@@ -14,7 +14,8 @@ var startConnectorCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Launch the PrivacyAI Data Connector",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := connector.New()
+		serviceID := getServiceID()
+		c := connector.New(serviceID)
 		c.Start()
 
 		return nil
