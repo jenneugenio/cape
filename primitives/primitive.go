@@ -8,8 +8,6 @@ import (
 
 // Primitive a low level object that can be inherited from for getting access
 // to common values and methods.
-//
-// Primitives _must_ implement their own `GetType` value.
 type Primitive struct {
 	ID        ID         `json:"id"`
 	Type      types.Type `json:"type"`
@@ -21,6 +19,11 @@ type Primitive struct {
 // GetID satisifes the Entity interface to return an ID
 func (p *Primitive) GetID() ID {
 	return p.ID
+}
+
+// GetType satisfies the Entity interface to return the type of the struct
+func (p *Primitive) GetType() types.Type {
+	return p.Type
 }
 
 // GetVersion satisfies the Entity interface to return a Version.
@@ -40,6 +43,30 @@ func (p *Primitive) GetUpdatedAt() time.Time {
 	return p.UpdatedAt
 }
 
+// newPrimitive returns a new primitive entity object
+//
+// If the type is mutable then this function will also generate an ID. For
+// immutable types the caller must manually lock the struct by deriving an ID.
+func newPrimitive(t types.Type) (*Primitive, error) {
+	p := &Primitive{
+		Version:   1,
+		Type:      t,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	if t.Mutable() {
+		ID, err := GenerateID(p)
+		if err != nil {
+			return nil, err
+		}
+
+		p.ID = ID
+	}
+
+	return p, nil
+}
+
 var (
 	// The following types represent the core primitives in the system
 	UserType       types.Type = 0x000
@@ -54,7 +81,7 @@ func init() {
 	types.Register(UserType, "user", false)
 	types.Register(ServiceType, "service", false)
 	types.Register(TokenType, "token", true)
-	types.Register(RoleType, "role", true)
-	types.Register(PolicyType, "policy", true)
+	types.Register(RoleType, "role", false)
+	types.Register(PolicyType, "policy", false)
 	types.Register(AttachmentType, "attachment", true)
 }
