@@ -3,6 +3,7 @@ module github.com/dropoutlabs/privacyai
 go 1.13
 
 require (
+	github.com/dchest/blake2b v1.0.0
 	github.com/golangci/golangci-lint v1.23.1
 	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/jackc/pgconn v1.3.2

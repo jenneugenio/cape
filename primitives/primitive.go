@@ -6,16 +6,6 @@ import (
 	"github.com/dropoutlabs/privacyai/primitives/types"
 )
 
-// Entity represents any primitive data structure stored inside the Controller.
-// All primitives must satisfy this interface to be stored in the ata layer.
-type Entity interface {
-	GetID() ID
-	GetType() types.Type
-	GetVersion() int
-	GetCreatedAt() time.Time
-	GetUpdatedAt() time.Time
-}
-
 // Primitive a low level object that can be inherited from for getting access
 // to common values and methods.
 //
@@ -23,7 +13,7 @@ type Entity interface {
 type Primitive struct {
 	ID        ID         `json:"id"`
 	Type      types.Type `json:"type"`
-	Version   int        `json:"version"`
+	Version   uint8      `json:"version"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 }
@@ -33,9 +23,11 @@ func (p *Primitive) GetID() ID {
 	return p.ID
 }
 
-// GetVersion satisfies the Entity interface to return a Version
-func (p *Primitive) GetVersion() int {
-	return p.Version
+// GetVersion satisfies the Entity interface to return a Version.
+//
+// If a primitive has a non-1 version it should implement this version itself
+func (p *Primitive) GetVersion() uint8 {
+	return 1
 }
 
 // GetCreatedAt returns the CreatedAt value for this struct
@@ -44,7 +36,7 @@ func (p *Primitive) GetCreatedAt() time.Time {
 }
 
 // GetUpdatedAt returns the UpdateAt value for this struct
-func (p *Primitive) GetUpatedAt() time.Time {
+func (p *Primitive) GetUpdatedAt() time.Time {
 	return p.UpdatedAt
 }
 
