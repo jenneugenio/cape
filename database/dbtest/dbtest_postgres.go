@@ -165,6 +165,9 @@ func (t *TestPostgres) Exec(ctx context.Context, q string, args ...interface{}) 
 }
 
 // URL returns the connection string for the underlying test database.
-func (t *TestPostgres) URL() string {
-	return t.dbURL.String()
+func (t *TestPostgres) URL() *url.URL {
+	var n *url.URL = &url.URL{}
+	*n = *(t.dbURL)
+
+	return n
 }

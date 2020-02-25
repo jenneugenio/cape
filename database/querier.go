@@ -8,8 +8,8 @@ import (
 
 // Querier represents various backend queries you can perform
 type Querier interface {
-	Create(context.Context, *primitives.Primitive) error
-	Get(context.Context, primitives.ID) (*primitives.Primitive, error)
-	Delete(context.Context, *primitives.Primitive) error
-	Update(context.Context, *primitives.Primitive) error
+	Create(context.Context, primitives.Entity) error
+	Get(context.Context, primitives.ID, primitives.Entity) error
+	Delete(context.Context, primitives.ID) error
+	Update(context.Context, primitives.Entity) error
 }

@@ -11,6 +11,7 @@ import (
 // See a concrete implementation of this interface (e.g. PostgresBackend) for
 // more details.
 type Backend interface {
+	Querier
 	Open(context.Context) error
 	Close() error
 	Transaction() (*Transaction, error)

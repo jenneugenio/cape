@@ -2,6 +2,7 @@ package dbtest
 
 import (
 	"context"
+	"net/url"
 	"sync"
 )
 
@@ -66,8 +67,11 @@ func (w *Wrapper) Truncate(ctx context.Context) error {
 }
 
 // URL returns the underlying URL of the Test Database
-func (w *Wrapper) URL() string {
-	return w.db.URL()
+func (w *Wrapper) URL() *url.URL {
+	var c *url.URL = &url.URL{}
+	*c = *(w.db.URL())
+
+	return c
 }
 
 // Database returns a reference to the underlying TestDatabase

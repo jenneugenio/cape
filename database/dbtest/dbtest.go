@@ -15,7 +15,7 @@ type TestDatabase interface {
 	Setup(context.Context) error
 	Teardown(context.Context) error
 	Truncate(context.Context) error
-	URL() string
+	URL() *url.URL
 }
 
 // NewTestDatabaseFunc represents a constructor of a TestDatabase

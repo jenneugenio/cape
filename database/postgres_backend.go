@@ -9,27 +9,27 @@ import (
 
 // PostgresBackend implements the backend interface for a pg database
 type PostgresBackend struct {
+	*postgresQuerier
 	dbURL *url.URL
-	db    *pgxpool.Pool
 	cfg   *pgxpool.Config
 }
 
 // Open the database
 func (p *PostgresBackend) Open(ctx context.Context) error {
-	db, err := pgxpool.ConnectConfig(ctx, p.cfg)
+	c, err := pgxpool.ConnectConfig(ctx, p.cfg)
 	if err != nil {
 		return err
 	}
 
-	p.db = db
+	p.conn = c // inherited from postgresQuerier
 
 	return nil
 }
 
 // Close the database
 func (p *PostgresBackend) Close() error {
-	p.db.Close()
-	p.db = nil
+	p.conn.Close()
+	p.conn = nil
 
 	return nil
 }
@@ -41,19 +41,20 @@ func (p *PostgresBackend) Transaction() (*Transaction, error) {
 
 // NewPostgresBackend returns a new postgres backend instance
 func NewPostgresBackend(dbURL *url.URL, name string) (Backend, error) {
-	c, err := pgxpool.ParseConfig(dbURL.String())
+	cfg, err := pgxpool.ParseConfig(dbURL.String())
 	if err != nil {
 		return nil, err
 	}
 
 	// Set the application name which can be used for identifying which service
 	// is connecting to postgres
-	c.ConnConfig.RuntimeParams = map[string]string{
+	cfg.ConnConfig.RuntimeParams = map[string]string{
 		"application_name": name,
 	}
 
 	return &PostgresBackend{
-		dbURL: dbURL,
-		cfg:   c,
+		postgresQuerier: &postgresQuerier{},
+		dbURL:           dbURL,
+		cfg:             cfg,
 	}, nil
 }
