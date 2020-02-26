@@ -51,8 +51,8 @@ func newPrimitive(t types.Type) (*Primitive, error) {
 	p := &Primitive{
 		Version:   1,
 		Type:      t,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
 	}
 
 	if t.Mutable() {
