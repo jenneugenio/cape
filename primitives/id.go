@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/dchest/blake2b"
 	"github.com/manifoldco/go-base32"
+	"golang.org/x/crypto/blake2b"
 
 	"github.com/dropoutlabs/privacyai/primitives/types"
 )
@@ -31,7 +31,7 @@ var EmptyID = ID{}
 
 // DeriveID returns a content-addressable ID for the given Entity
 func DeriveID(e Entity) (ID, error) {
-	h, err := blake2b.New(&blake2b.Config{Size: byteLength - 2})
+	h, err := blake2b.New(byteLength-2, nil)
 	if err != nil {
 		return EmptyID, err
 	}
