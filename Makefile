@@ -170,6 +170,7 @@ docker: dockerfiles/Dockerfile.base dockerfiles/Dockerfile.controller dockerfile
 	$(call DOCKER_BUILD,privacyai,latest,dockerfiles/Dockerfile.base)
 	$(call DOCKER_BUILD,controller,latest,dockerfiles/Dockerfile.controller)
 	$(call DOCKER_BUILD,connector,latest,dockerfiles/Dockerfile.connector)
+	$(call DOCKER_BUILD,update,latest,dockerfiles/Dockerfile.update)
 
 .PHONY: docker
 
@@ -187,16 +188,19 @@ docker-tag: dockercheck
 	$(call DOCKER_TAG,privacyai,latest,$(VERSION))
 	$(call DOCKER_TAG,controller,latest,$(VERSION))
 	$(call DOCKER_TAG,connector,latest,$(VERSION))
+	$(call DOCKER_TAG,update,latest,$(VERSION))
 
 docker-push-tag: dockercheck
 	$(call DOCKER_PUSH,privacyai,$(VERSION))
 	$(call DOCKER_PUSH,controller,$(VERSION))
 	$(call DOCKER_PUSH,connector,$(VERSION))
+	$(call DOCKER_PUSH,update,$(VERSION))
 
 docker-push-latest: dockercheck
 	$(call DOCKER_PUSH,privacyai,latest)
 	$(call DOCKER_PUSH,controller,latest)
 	$(call DOCKER_PUSH,connector,latest)
+	$(call DOCKER_PUSH,update,latest)
 
 .PHONY: docker-login docker-push-latest docker-push-tag docker-tag
 

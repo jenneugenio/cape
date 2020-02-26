@@ -1,11 +1,15 @@
-db_name='privacy-db'
+db_deployment_name='privacy-db'
+db_name='privacyai'
 db_pw='dev'
+
+override_pw = 'postgresqlPassword=' + db_pw
+override_db = 'postgresqlDatabase=' + db_name
 
 fetch_script = "helm fetch stable/postgresql --untar --untardir ./deploy/helm/"
 local(fetch_script + " || true")
-pg_yaml = helm('deploy/helm/postgresql', name=db_name, set=['postgresqlPassword=' + db_pw], values=['./deploy/helm/postgresql/values.yaml'])
+pg_yaml = helm('deploy/helm/postgresql', name=db_deployment_name, set=[override_pw, override_db], values=['./deploy/helm/postgresql/values.yaml'])
 k8s_yaml(pg_yaml)
-k8s_resource(db_name + '-postgresql', port_forwards=5432)
+k8s_resource(db_deployment_name + '-postgresql', port_forwards=5432)
 
 # Deleting the helm chart doesn't delete the PVC that the helm chart creates
 # So, we explicitly delete it here with kubectl
@@ -14,7 +18,7 @@ k8s_resource(db_name + '-postgresql', port_forwards=5432)
 db_resources = [decode_yaml(yaml) for yaml in str(pg_yaml).split('\n---\n')]
 without_secret = [r for r in db_resources if r["kind"] != 'Secret']
 delete_db_chart = 'kubectl delete ' + ' '.join([(r["kind"] + "/" + r["metadata"]["name"]) for r in without_secret])
-delete_pvc = 'kubectl delete pvc/data-' + db_name + '-postgresql-0'
+delete_pvc = 'kubectl delete pvc/data-' + db_deployment_name + '-postgresql-0'
 delete_cmd = ' && '.join([delete_db_chart, delete_pvc])
 
 local_resource('delete db', cmd=delete_cmd, trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)

@@ -24,7 +24,6 @@ spec:
       - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: Always
         name: connector
-        command: ["./privacy", "connector", "start"]
         ports:
         - containerPort: 8080
       {{ if (.Values.dockerSecret)}}

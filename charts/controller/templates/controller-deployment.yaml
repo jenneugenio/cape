@@ -21,7 +21,7 @@ spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       containers:
-      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+      - image: "{{ .Values.image.controller_repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: Always
         name: controller
         env:

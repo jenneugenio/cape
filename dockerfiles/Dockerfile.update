@@ -1,0 +1,9 @@
+FROM golang:1.13.7-alpine
+
+WORKDIR /root/
+
+COPY --from=dropoutlabs/privacyai:latest /go/src/github.com/dropoutlabs/privacyai/bin bin
+COPY --from=dropoutlabs/privacyai:latest /go/src/github.com/dropoutlabs/privacyai/migrations migrations
+
+CMD ["./bin/privacy", "update"]
+
