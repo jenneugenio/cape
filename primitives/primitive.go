@@ -3,6 +3,7 @@ package primitives
 import (
 	"time"
 
+	errors "github.com/dropoutlabs/privacyai/partyerrors"
 	"github.com/dropoutlabs/privacyai/primitives/types"
 )
 
@@ -35,6 +36,20 @@ func (p *Primitive) GetCreatedAt() time.Time {
 // GetUpdatedAt returns the UpdateAt value for this struct
 func (p *Primitive) GetUpdatedAt() time.Time {
 	return p.UpdatedAt
+}
+
+// SetUpatedAt sets the UpdateAt value for this struct
+func (p *Primitive) SetUpdatedAt(t time.Time) error {
+	if t.Before(p.UpdatedAt) {
+		return errors.New(InvalidTimeCause, "cannot set time before current UpdatedAt value")
+	}
+
+	if t.Before(p.CreatedAt) {
+		return errors.New(InvalidTimeCause, "cannot set time before CreatedAt value")
+	}
+
+	p.UpdatedAt = t
+	return nil
 }
 
 // newPrimitive returns a new primitive entity object

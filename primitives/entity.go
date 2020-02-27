@@ -14,4 +14,5 @@ type Entity interface {
 	GetVersion() uint8
 	GetCreatedAt() time.Time
 	GetUpdatedAt() time.Time
+	SetUpdatedAt(time.Time) error
 }
