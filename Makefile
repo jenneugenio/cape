@@ -14,7 +14,7 @@ all: ci
 # Git.
 # ###############################################
 DOCKER_REQUIRED_VERSION=18.
-GO_REQUIRED_VERSION=1.13.
+GO_REQUIRED_VERSION=1.14.
 GOLINT_REQUIRED_VERSION=v1.22.2
 HELM_REQUIRED_VERSION=v3.0.
 GSUTIL_REQUIRED_VERSION=4.47
@@ -145,6 +145,8 @@ $(PREFIX)bin/privacy: gocheck $(SRC)
 
 build: $(PREFIX)bin/privacy
 
+test: lint integration
+
 unit: gocheck
 	go test -v ./...
 
@@ -155,9 +157,9 @@ integration: gocheck
 fmt: gocheck
 	gofmt -s -l -w $(SRC)
 
-ci: lint build test docker integration
+ci: lint build test docker
 
-.PHONY: lint build fmt test ci
+.PHONY: lint build fmt test ci integration
 
 # ###############################################
 # Building Docker Image

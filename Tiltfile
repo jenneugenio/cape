@@ -33,3 +33,4 @@ docker_build('dropoutlabs/privacyai:latest', '.', dockerfile='dockerfiles/Docker
 docker_build('dropoutlabs/privacyai-test:latest', '.', dockerfile='dockerfiles/Dockerfile.test')
 docker_build('dropoutlabs/controller:latest', '.', dockerfile='dockerfiles/Dockerfile.controller')
 docker_build('dropoutlabs/connector:latest', '.', dockerfile='dockerfiles/Dockerfile.connector')
+docker_build('dropoutlabs/update:latest', '.', dockerfile='dockerfiles/Dockerfile.update')
