@@ -56,7 +56,7 @@ func (e *Error) StatusCode() int {
 func New(c Cause, msg string, args ...interface{}) *Error {
 	return &Error{
 		Cause:    c,
-		Messages: []string{msg},
+		Messages: []string{fmt.Sprintf(msg, args...)},
 	}
 }
 

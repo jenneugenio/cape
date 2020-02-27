@@ -18,4 +18,12 @@ func TestNew(t *testing.T) {
 		gm.Expect(err.Code()).To(gm.Equal(int32(500)))
 		gm.Expect(err.StatusCode()).To(gm.Equal(500))
 	})
+
+	t.Run("supports formatting", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		e := New(UnknownCause, "hello %s", "joe")
+
+		gm.Expect(e.Messages[0]).To(gm.Equal("hello joe"))
+	})
 }
