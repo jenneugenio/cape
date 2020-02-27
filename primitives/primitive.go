@@ -9,21 +9,15 @@ import (
 // Primitive a low level object that can be inherited from for getting access
 // to common values and methods.
 type Primitive struct {
-	ID        ID         `json:"id"`
-	Type      types.Type `json:"type"`
-	Version   uint8      `json:"version"`
-	CreatedAt time.Time  `json:"created_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
+	ID        ID        `json:"id"`
+	Version   uint8     `json:"version"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // GetID satisifes the Entity interface to return an ID
 func (p *Primitive) GetID() ID {
 	return p.ID
-}
-
-// GetType satisfies the Entity interface to return the type of the struct
-func (p *Primitive) GetType() types.Type {
-	return p.Type
 }
 
 // GetVersion satisfies the Entity interface to return a Version.
@@ -50,13 +44,12 @@ func (p *Primitive) GetUpdatedAt() time.Time {
 func newPrimitive(t types.Type) (*Primitive, error) {
 	p := &Primitive{
 		Version:   1,
-		Type:      t,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 	}
 
 	if t.Mutable() {
-		ID, err := GenerateID(p)
+		ID, err := GenerateID(t)
 		if err != nil {
 			return nil, err
 		}

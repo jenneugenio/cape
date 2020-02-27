@@ -1,8 +1,17 @@
 package primitives
 
+import (
+	"github.com/dropoutlabs/privacyai/primitives/types"
+)
+
 // Attachment represents a policy being applied/attached to a role
 type Attachment struct {
 	*Primitive
+}
+
+// GetType returns the type for this entity
+func (a *Attachment) GetType() types.Type {
+	return AttachmentType
 }
 
 // NewAttachment returns a new attachment

@@ -17,7 +17,7 @@ func TestDerive(t *testing.T) {
 	gm.Expect(e.ID.Type()).To(gm.Equal(types.Test))
 	gm.Expect(e.ID.Version()).To(gm.Equal(byte(idVersion)))
 
-	gm.Expect(e.ID.String()).To(gm.Equal("3m0gaa32a13ee54mk5xyjhd4w8"))
+	gm.Expect(e.ID.String()).To(gm.Equal("3m0kg05yh1wzag8qux42umjz84"))
 }
 
 func TestGenerate(t *testing.T) {
@@ -36,10 +36,7 @@ func TestGenerate(t *testing.T) {
 func TestGenerateFail(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	e, err := NewTestEntity("yo")
-	gm.Expect(err).To(gm.BeNil())
-
-	ID, err := GenerateID(e)
+	ID, err := GenerateID(types.Test)
 	gm.Expect(err).To(gm.Equal(ErrNotMutable))
 	gm.Expect(ID).To(gm.Equal(EmptyID))
 }

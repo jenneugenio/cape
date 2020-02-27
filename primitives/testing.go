@@ -9,7 +9,12 @@ import (
 // TestEntity represents an internal Entity used exclusively for testing
 type TestEntity struct {
 	*Primitive
-	Data string
+	Data string `json:"data"`
+}
+
+// GetType returns the type of this entity
+func (t *TestEntity) GetType() types.Type {
+	return types.Test
 }
 
 // NewTestEntity returns a new TestEntity struct
@@ -41,6 +46,11 @@ func NewTestEntity(data string) (*TestEntity, error) {
 type TestMutableEntity struct {
 	*Primitive
 	Data string
+}
+
+// GetType returns the type of this entity
+func (t *TestMutableEntity) GetType() types.Type {
+	return types.TestMutable
 }
 
 // NewTestMutableEntity returns a new TestMutableEntity

@@ -1,8 +1,17 @@
 package primitives
 
+import (
+	"github.com/dropoutlabs/privacyai/primitives/types"
+)
+
 // Token for an authorized entity (user or service)
 type Token struct {
 	*Primitive
+}
+
+// GetType returns the type for this entity
+func (t *Token) GetType() types.Type {
+	return TokenType
 }
 
 // NewToken returns an immutable token struct

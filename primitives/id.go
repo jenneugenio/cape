@@ -52,9 +52,9 @@ func DeriveID(e Entity) (ID, error) {
 	return id, nil
 }
 
-// GenerateID returns an ID for a mutable Entity (e.g. not content-addressable)
-func GenerateID(e Entity) (ID, error) {
-	t := e.GetType()
+// GenerateID returns an ID for a type representing a mutable Entity (e.g. not
+// content-addressable)
+func GenerateID(t types.Type) (ID, error) {
 	if !t.Mutable() {
 		return ID{}, ErrNotMutable
 	}
