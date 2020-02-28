@@ -6,7 +6,6 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.9.1
 	github.com/golangci/golangci-lint v1.23.1
 	github.com/jackc/pgconn v1.3.2
-	github.com/jackc/pgx v3.2.0+incompatible
 	github.com/jackc/pgx/v4 v4.4.1
 	github.com/jackc/tern v1.9.1
 	github.com/lib/pq v1.3.0

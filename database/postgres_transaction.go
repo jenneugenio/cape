@@ -20,7 +20,7 @@ func (t *PostgresTransaction) Commit(ctx context.Context) error {
 	return convertPgTxError(t.tx.Commit(ctx))
 }
 
-// Rollback sends teh rollback transaction command to postgres
+// Rollback sends the rollback transaction command to postgres
 func (t *PostgresTransaction) Rollback(ctx context.Context) error {
 	// handles returning the connection back to the pool
 	return convertPgTxError(t.tx.Rollback(ctx))

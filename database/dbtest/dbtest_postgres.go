@@ -17,7 +17,7 @@ import (
 var ConnectionError = errors.NewCause(errors.BadRequestCategory, "connection_error")
 
 // TestPostgres implements the TestDatabase providing functionality for setting
-// up a test enviornment for integration testing.
+// up a test environment for integration testing.
 type TestPostgres struct {
 	rootURL *url.URL
 	dbURL   *url.URL // database this instance manages
