@@ -16,7 +16,6 @@ type pgConn interface {
 	Query(ctx context.Context, q string, args ...interface{}) (pgx.Rows, error)
 	QueryRow(ctx context.Context, q string, args ...interface{}) pgx.Row
 	Exec(ctx context.Context, q string, args ...interface{}) (pgconn.CommandTag, error)
-	Close()
 }
 
 type postgresQuerier struct {

@@ -12,6 +12,7 @@ type PostgresBackend struct {
 	*postgresQuerier
 	dbURL *url.URL
 	cfg   *pgxpool.Config
+	pool  *pgxpool.Pool
 }
 
 // Open the database
@@ -21,22 +22,43 @@ func (p *PostgresBackend) Open(ctx context.Context) error {
 		return err
 	}
 
+	// We need to separate out the `conn` from the `pool` as the
+	// `postgresQuerier` and `Querier` interface do not implement any
+	// transaction related methods. This is because Querier is a common
+	// interface over both a pgconn.Conn and pgxpool.Pool
 	p.conn = c // inherited from postgresQuerier
-
+	p.pool = c
 	return nil
 }
 
 // Close the database
 func (p *PostgresBackend) Close() error {
-	p.conn.Close()
+	p.pool.Close()
 	p.conn = nil
+	p.pool = nil
 
 	return nil
 }
 
-// Transaction starts a new transaction
-func (p *PostgresBackend) Transaction() (*Transaction, error) {
-	return nil, nil
+// Transaction starts a new transaction.
+//
+// This method returns a dedication connection which any users of must manage
+// themselves. Please ensure to call Rollback() or Commit() so the connection
+// is returned to the pool once you're done.
+func (p *PostgresBackend) Transaction(ctx context.Context) (Transaction, error) {
+	pgtx, err := p.pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// We need to set both the `conn` and `tx` as `conn` satisfies the Querier
+	// interface while `tx` is a straight pgx.Tx type
+	return &PostgresTransaction{
+		postgresQuerier: &postgresQuerier{
+			conn: pgtx,
+		},
+		tx: pgtx,
+	}, nil
 }
 
 // NewPostgresBackend returns a new postgres backend instance

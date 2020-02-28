@@ -20,4 +20,8 @@ var (
 	// DuplicateCause happens when an entity already exists due to some
 	// constraint that exists in the database
 	DuplicateCause = errors.NewCause(errors.ConflictCategory, "entity_already_exists")
+
+	// ClosedCause happens when a connection or transaction has already been
+	// committed or closed
+	ClosedCause = errors.NewCause(errors.BadRequestCategory, "already_closed")
 )

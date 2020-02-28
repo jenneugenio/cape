@@ -142,6 +142,96 @@ func TestPostgresBackend(t *testing.T) {
 		err = db.Update(ctx, e)
 		gm.Expect(errors.FromCause(err, NotFoundCause)).To(gm.BeTrue())
 	})
+
+	t.Run("can run commands in a transaction", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		tx, err := db.Transaction(ctx)
+		gm.Expect(err).To(gm.BeNil())
+		defer tx.Rollback(ctx)
+
+		e, err := primitives.NewTestMutableEntity("jack")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = tx.Create(ctx, e)
+		gm.Expect(err).To(gm.BeNil())
+
+		e.Data = "joe"
+		err = tx.Update(ctx, e)
+		gm.Expect(err).To(gm.BeNil())
+
+		err = tx.Commit(ctx)
+		gm.Expect(err).To(gm.BeNil())
+
+		target := &primitives.TestMutableEntity{}
+		err = db.Get(ctx, e.GetID(), target)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(target.Data).To(gm.Equal("joe"))
+	})
+
+	t.Run("can rollback", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		e, err := primitives.NewTestMutableEntity("jack")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Create(ctx, e)
+		gm.Expect(err).To(gm.BeNil())
+
+		tx, err := db.Transaction(ctx)
+		gm.Expect(err).To(gm.BeNil())
+		defer tx.Rollback(ctx)
+
+		e.Data = "joe"
+		err = tx.Update(ctx, e)
+		gm.Expect(err).To(gm.BeNil())
+
+		err = tx.Rollback(ctx)
+		gm.Expect(err).To(gm.BeNil())
+
+		target := &primitives.TestMutableEntity{}
+		err = db.Get(ctx, e.GetID(), target)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(target.Data).To(gm.Equal("jack"))
+	})
+
+	t.Run("rollback after commit causes an error", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		tx, err := db.Transaction(ctx)
+		gm.Expect(err).To(gm.BeNil())
+		defer tx.Rollback(ctx)
+
+		e, err := primitives.NewTestMutableEntity("jack")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = tx.Create(ctx, e)
+		gm.Expect(err).To(gm.BeNil())
+
+		e.Data = "joe"
+		err = tx.Update(ctx, e)
+		gm.Expect(err).To(gm.BeNil())
+
+		err = tx.Commit(ctx)
+		gm.Expect(err).To(gm.BeNil())
+
+		err = tx.Rollback(ctx)
+		gm.Expect(errors.FromCause(err, ClosedCause)).To(gm.BeTrue())
+
+		target := &primitives.TestMutableEntity{}
+		err = db.Get(ctx, e.GetID(), target)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(target.Data).To(gm.Equal("joe"))
+	})
 }
 
 func dbConnect(ctx context.Context, t dbtest.TestDatabase) (Backend, error) {

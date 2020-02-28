@@ -14,7 +14,7 @@ type Backend interface {
 	Querier
 	Open(context.Context) error
 	Close() error
-	Transaction() (*Transaction, error)
+	Transaction(context.Context) (Transaction, error)
 }
 
 // NewBackendFunc represents a constructor of a Backend implementation
