@@ -3,7 +3,6 @@ module github.com/dropoutlabs/cape
 go 1.14
 
 require (
-	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/protobuf v1.3.3 // indirect
 	github.com/golangci/golangci-lint v1.23.1
 	github.com/google/go-cmp v0.4.0 // indirect

@@ -158,7 +158,15 @@ integration: gocheck
 fmt: gocheck
 	gofmt -s -l -w $(SRC)
 
-ci: lint build test docker
+tidy: gocheck
+	go mod tidy
+	if [ -n "$(shell git status --untracked-files=no --porcelain)" ]; then \
+		echo "Make sure to run and commit changes from go mod tidy"; \
+		exit 1; \
+	fi; \
+
+
+ci: tidy lint build test docker
 
 .PHONY: lint build fmt test ci integration
 
