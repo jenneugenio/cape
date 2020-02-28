@@ -7,9 +7,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/tern/migrate"
 	"github.com/spf13/cobra"
-
-	_ "github.com/golang-migrate/migrate/v4/source/file"
-	_ "github.com/lib/pq"
 )
 
 var updateCmd = &cobra.Command{
