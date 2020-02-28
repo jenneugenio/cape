@@ -1,14 +1,13 @@
 package cmd
 
 import (
-	"database/sql"
-	"fmt"
+	"context"
 	"os"
 
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/tern/migrate"
 	"github.com/spf13/cobra"
 
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 )
@@ -19,29 +18,25 @@ var updateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		dbAddr := os.Getenv("CAPE_DB_URL")
 
-		db, err := sql.Open("postgres", dbAddr)
+		ctx := context.Background()
+		conn, err := pgx.Connect(ctx, dbAddr)
 		if err != nil {
 			return err
 		}
 
-		driver, err := postgres.WithInstance(db, &postgres.Config{})
+		defer conn.Close(ctx)
+
+		m, err := migrate.NewMigrator(ctx, conn, "migrations")
 		if err != nil {
 			return err
 		}
 
-		m, err := migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
+		err = m.LoadMigrations("migrations")
 		if err != nil {
 			return err
 		}
 
-		err = m.Up()
-
-		if err == migrate.ErrNoChange {
-			fmt.Println("No change, ignoring")
-			return nil
-		}
-
-		return err
+		return m.Migrate(ctx)
 	},
 }
 
