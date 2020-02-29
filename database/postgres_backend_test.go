@@ -232,6 +232,35 @@ func TestPostgresBackend(t *testing.T) {
 
 		gm.Expect(target.Data).To(gm.Equal("joe"))
 	})
+
+	t.Run("can query a single entity", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		eA, err := primitives.NewTestEntity("a")
+		gm.Expect(err).To(gm.BeNil())
+
+		eB, err := primitives.NewTestEntity("b")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Create(ctx, eA)
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Create(ctx, eB)
+		gm.Expect(err).To(gm.BeNil())
+
+		target := &primitives.TestEntity{}
+		err = db.QueryOne(ctx, target, F(Where{"data": "a"}, nil, nil))
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(eA).To(gm.Equal(target))
+
+		targetTwo := &primitives.TestEntity{}
+		filter := F(Where{"id": eB.GetID().String()}, nil, nil)
+		err = db.QueryOne(ctx, targetTwo, filter)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(eB).To(gm.Equal(targetTwo))
+	})
 }
 
 func dbConnect(ctx context.Context, t dbtest.TestDatabase) (Backend, error) {

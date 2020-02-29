@@ -62,6 +62,27 @@ func (q *postgresQuerier) Get(ctx context.Context, id primitives.ID, e primitive
 	}
 }
 
+// QueryOne uses a query to return a single entity from the database
+func (q *postgresQuerier) QueryOne(ctx context.Context, e primitives.Entity, f Filter) error {
+	if f.Page != nil {
+		return errors.New(BadFilterCause, "Pagination cannot  be provided to QueryOne")
+	}
+
+	f.Page = &Page{Limit: 1}
+
+	where, params := buildFilter(f)
+
+	sql := fmt.Sprintf(`SELECT data from %s %s`, e.GetType().String(), where)
+	r := q.conn.QueryRow(ctx, sql, params...)
+
+	switch err := r.Scan(e); err {
+	case pgx.ErrNoRows:
+		return errors.New(NotFoundCause, "could not find entity")
+	default:
+		return err
+	}
+}
+
 // Delete an entity from the database
 func (q *postgresQuerier) Delete(ctx context.Context, id primitives.ID) error {
 	t, err := id.Type()

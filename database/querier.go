@@ -12,4 +12,5 @@ type Querier interface {
 	Get(context.Context, primitives.ID, primitives.Entity) error
 	Delete(context.Context, primitives.ID) error
 	Update(context.Context, primitives.Entity) error
+	QueryOne(context.Context, primitives.Entity, Filter) error
 }
