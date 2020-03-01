@@ -262,6 +262,61 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(eB).To(gm.Equal(targetTwo))
 	})
+
+	t.Run("can query multiple entities of the same type", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		eA, err := primitives.NewTestEntity("a1")
+		gm.Expect(err).To(gm.BeNil())
+
+		eB, err := primitives.NewTestEntity("b1")
+		gm.Expect(err).To(gm.BeNil())
+
+		eC, err := primitives.NewTestEntity("c1")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Create(ctx, eA, eB, eC)
+		gm.Expect(err).To(gm.BeNil())
+
+		tests := map[string]struct {
+			f   Filter
+			out []primitives.TestEntity
+		}{
+			"can pull back single by id": {
+				F(Where{"id": eA.GetID().String()}, nil, nil),
+				[]primitives.TestEntity{*eA},
+			},
+			"can pull back using comparison": {
+				F(Where{"data": "a1"}, nil, nil),
+				[]primitives.TestEntity{*eA},
+			},
+			"can pull back using IN operator": {
+				F(Where{"id": In{eA.ID.String(), eB.ID.String()}}, nil, nil),
+				[]primitives.TestEntity{*eA, *eB},
+			},
+			"can order via a field": {
+				F(Where{"id": In{eA.ID.String(), eB.ID.String(), eC.ID.String()}},
+					&Order{Desc, "data"}, nil),
+				[]primitives.TestEntity{*eC, *eB, *eA},
+			},
+			"can order and paginate": {
+				F(Where{"id": In{eA.ID.String(), eB.ID.String(), eC.ID.String()}},
+					&Order{Desc, "data"}, &Page{1, 1}),
+				[]primitives.TestEntity{*eB},
+			},
+		}
+
+		for d, tc := range tests {
+			t.Run(d, func(t *testing.T) {
+				results := []primitives.TestEntity{}
+				err = db.Query(ctx, &results, tc.f)
+				gm.Expect(err).To(gm.BeNil())
+				gm.Expect(results).To(gm.BeEquivalentTo(tc.out))
+			})
+		}
+	})
 }
 
 func dbConnect(ctx context.Context, t dbtest.TestDatabase) (Backend, error) {

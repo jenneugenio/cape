@@ -3,6 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/jackc/pgconn"
@@ -28,8 +29,8 @@ func (q *postgresQuerier) Create(ctx context.Context, entities ...primitives.Ent
 		return nil
 	}
 
-	inserts, values := buildInsert(entities)
 	t := entities[0].GetType()
+	inserts, values := buildInsert(entities, t)
 
 	sql := fmt.Sprintf(`INSERT INTO %s (data) VALUES %s`, t.String(), inserts)
 	_, err := q.conn.Exec(ctx, sql, values...)
@@ -52,6 +53,10 @@ func (q *postgresQuerier) Get(ctx context.Context, id primitives.ID, e primitive
 		return err
 	}
 
+	// We return an error here instead of panic as it's possible the ID came
+	// from outside the system. However, this really isn't where this should be
+	// checked! This should be handled _prior_ to getting to this part of the
+	// code.
 	if t != e.GetType() {
 		return errors.New(TypeMismatchCause, "id and entity do not match: %s - %s",
 			t.String(), e.GetType().String())
@@ -87,6 +92,55 @@ func (q *postgresQuerier) QueryOne(ctx context.Context, e primitives.Entity, f F
 	default:
 		return err
 	}
+}
+
+// Query retrieves entities of a single type from the database
+func (q *postgresQuerier) Query(ctx context.Context, arr interface{}, f Filter) error {
+	// We want to use reflect to check whether or not the underlying type of
+	// arr is a pointer to a slice or not.
+	arrPtr := reflect.ValueOf(arr)
+	if arrPtr.Kind() != reflect.Ptr {
+		panic("Expected arr to be a pointer to a slice")
+	}
+
+	arrValue := arrPtr.Elem()
+	if arrValue.Kind() != reflect.Slice {
+		panic("Expected arr to be a pointer to a slice")
+	}
+
+	// Now we need to figure out the underlying concrete type and ensure that
+	// it satisfies the primitive.Entity interface. If it doesn't then we've
+	// encountered a developer error!
+	//
+	// To do this, we create an instance of the underlying type of this slice.
+	// This can then be used later on to determine the actual table to query.
+	entityType := reflect.TypeOf((*primitives.Entity)(nil)).Elem()
+	itemType := reflect.New(arrValue.Type().Elem())
+	if !itemType.Type().Implements(entityType) {
+		panic("Expected arr to be a pointer to a slice of primitive.Entity's")
+	}
+	e := itemType.Interface().(primitives.Entity)
+
+	where, params := buildFilter(f)
+	sql := fmt.Sprintf(`SELECT data from %s %s`, e.GetType().String(), where)
+	rows, err := q.conn.Query(ctx, sql, params...)
+	if err != nil {
+		// XXX Come back and figure out what errors can be returned here and
+		// then mutate them appropraitely.
+		return err
+	}
+	defer rows.Close()
+
+	for i := 0; rows.Next(); i++ {
+		// Grow the slice
+		item := getItem(arrValue, i)
+		err = rows.Scan(item)
+		if err != nil {
+			return err
+		}
+	}
+
+	return rows.Err()
 }
 
 // Delete an entity from the database
@@ -132,4 +186,32 @@ func (q *postgresQuerier) Update(ctx context.Context, e primitives.Entity) error
 	}
 
 	return nil
+}
+
+// getItem returns a primitive.Entity from the given slice thats passed as a
+// reflect.Value. We then use this value to determine if/how we should grow the
+// slice.
+func getItem(v reflect.Value, pos int) primitives.Entity {
+	if v.Type().Kind() != reflect.Slice {
+		panic("expected a slice")
+	}
+
+	num := pos + 1 // pos is a 0-indexed position in slice
+	cap := num     // cap will change independent of the current length
+	if pos >= v.Cap() {
+		cap = v.Cap() + v.Cap()/2
+		if cap < 4 {
+			cap = 4
+		}
+
+		newV := reflect.MakeSlice(v.Type(), v.Len(), cap)
+		reflect.Copy(newV, v)
+		v.Set(newV)
+	}
+
+	if num >= v.Len() {
+		v.SetLen(num)
+	}
+
+	return v.Index(pos).Addr().Interface().(primitives.Entity)
 }
