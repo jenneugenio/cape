@@ -122,11 +122,11 @@ func (q *postgresQuerier) Query(ctx context.Context, arr interface{}, f Filter) 
 	e := itemType.Interface().(primitives.Entity)
 
 	where, params := buildFilter(f)
-	sql := fmt.Sprintf(`SELECT data from %s %s`, e.GetType().String(), where)
+	sql := fmt.Sprintf(`SELECT data FROM %s %s`, e.GetType().String(), where)
 	rows, err := q.conn.Query(ctx, sql, params...)
 	if err != nil {
 		// XXX Come back and figure out what errors can be returned here and
-		// then mutate them appropraitely.
+		// then mutate them appropriately.
 		return err
 	}
 	defer rows.Close()
@@ -197,9 +197,8 @@ func getItem(v reflect.Value, pos int) primitives.Entity {
 	}
 
 	num := pos + 1 // pos is a 0-indexed position in slice
-	cap := num     // cap will change independent of the current length
-	if pos >= v.Cap() {
-		cap = v.Cap() + v.Cap()/2
+	if num >= v.Cap() {
+		cap := v.Cap() + v.Cap()/2
 		if cap < 4 {
 			cap = 4
 		}

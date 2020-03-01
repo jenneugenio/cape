@@ -35,7 +35,7 @@ func buildFilter(f Filter) (string, []interface{}) {
 	// statement everytime. This is generally unnecessary but is required for
 	// testing scenarios.
 	keys := []string{}
-	for k, _ := range f.Where {
+	for k := range f.Where {
 		keys = append(keys, k)
 	}
 
@@ -57,12 +57,10 @@ func buildFilter(f Filter) (string, []interface{}) {
 
 			field := fmt.Sprintf("%s IN (%s)", path, strings.Join(params, ", "))
 			fields = append(fields, field)
-			break
 		default:
 			fields = append(fields, fmt.Sprintf("%s = $%d", path, count))
 			values = append(values, item)
 			count++
-			break
 		}
 	}
 
