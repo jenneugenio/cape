@@ -71,7 +71,7 @@ func (q *postgresQuerier) Get(ctx context.Context, id primitives.ID, e primitive
 // QueryOne uses a query to return a single entity from the database
 func (q *postgresQuerier) QueryOne(ctx context.Context, e primitives.Entity, f Filter) error {
 	if f.Page != nil {
-		return errors.New(BadFilterCause, "Pagination cannot  be provided to QueryOne")
+		panic("Pagination cannot be performed via a QueryOne")
 	}
 
 	f.Page = &Page{Limit: 1}
@@ -97,7 +97,6 @@ func (q *postgresQuerier) Delete(ctx context.Context, id primitives.ID) error {
 	}
 
 	sql := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, t.String())
-
 	ct, err := q.conn.Exec(ctx, sql, id.String())
 	if err != nil {
 		return err
@@ -114,7 +113,7 @@ func (q *postgresQuerier) Delete(ctx context.Context, id primitives.ID) error {
 func (q *postgresQuerier) Update(ctx context.Context, e primitives.Entity) error {
 	t := e.GetType()
 	if !t.Mutable() {
-		return errors.New(NotMutableCause, "cannot update an immutable entity: %s", t.String())
+		panic("Cannot update an immutable entity")
 	}
 
 	err := e.SetUpdatedAt(time.Now().UTC())
@@ -123,7 +122,6 @@ func (q *postgresQuerier) Update(ctx context.Context, e primitives.Entity) error
 	}
 
 	sql := fmt.Sprintf(`UPDATE %s SET data = $1 WHERE id = $2`, t.String())
-
 	ct, err := q.conn.Exec(ctx, sql, e, e.GetID().String())
 	if err != nil {
 		return err

@@ -24,7 +24,4 @@ var (
 	// ClosedCause happens when a connection or transaction has already been
 	// committed or closed
 	ClosedCause = errors.NewCause(errors.BadRequestCategory, "already_closed")
-
-	// BadFilterCause happens when a badly constructed filter was supplied
-	BadFilterCause = errors.NewCause(errors.BadRequestCategory, "bad_filter")
 )

@@ -128,8 +128,9 @@ func TestPostgresBackend(t *testing.T) {
 		e, err := primitives.NewTestEntity("sup")
 		gm.Expect(err).To(gm.BeNil())
 
-		err = db.Update(ctx, e)
-		gm.Expect(errors.FromCause(err, NotMutableCause)).To(gm.BeTrue())
+		gm.Expect(func() {
+			err = db.Update(ctx, e)
+		}).To(gm.Panic())
 	})
 
 	t.Run("can't update a non-existent entity", func(t *testing.T) {
