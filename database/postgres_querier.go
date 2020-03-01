@@ -23,10 +23,16 @@ type postgresQuerier struct {
 }
 
 // Create an entity inside the database
-func (q *postgresQuerier) Create(ctx context.Context, e primitives.Entity) error {
-	sql := fmt.Sprintf(`INSERT INTO %s (data) VALUES ($1)`, e.GetType().String())
+func (q *postgresQuerier) Create(ctx context.Context, entities ...primitives.Entity) error {
+	if len(entities) == 0 {
+		return nil
+	}
 
-	_, err := q.conn.Exec(ctx, sql, e)
+	inserts, values := buildInsert(entities)
+	t := entities[0].GetType()
+
+	sql := fmt.Sprintf(`INSERT INTO %s (data) VALUES %s`, t.String(), inserts)
+	_, err := q.conn.Exec(ctx, sql, values...)
 	switch e := err.(type) {
 	case *pgconn.PgError:
 		if e.Code == "23505" {

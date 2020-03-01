@@ -4,9 +4,28 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/dropoutlabs/privacyai/primitives"
+	"github.com/dropoutlabs/privacyai/primitives/types"
 )
 
-// buildFilter returns the build clause and parameters for a postgres query
+// buildInsert returns the values statement for a multi-value query
+func buildInsert(entities []primitives.Entity, t types.Type) (string, []interface{}) {
+	rows := []string{}
+	values := []interface{}{}
+	for i, e := range entities {
+		rows = append(rows, fmt.Sprintf("($%d)", i+1))
+		values = append(values, e)
+
+		if e.GetType() != t {
+			panic("not all entities match type: " + t.String())
+		}
+	}
+
+	return strings.Join(rows, ", "), values
+}
+
+// buildFilter returns the clause and parameters for a postgres query
 func buildFilter(f Filter) (string, []interface{}) {
 	fields := []string{}
 	values := []interface{}{}
