@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 
 	"github.com/jackc/pgconn"
 	pgx "github.com/jackc/pgx/v4"
 	pgxpool "github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/tern/migrate"
 
 	errors "github.com/dropoutlabs/privacyai/partyerrors"
 )
@@ -57,11 +59,28 @@ func (t *TestPostgres) Setup(ctx context.Context) error {
 		return err
 	}
 	defer db.Close()
-
-	// TODO: Apply migrations after creating the database. The migrator may
-	// actually create the database as well. If it does, then that should
-	// happen in there.
 	_, err = db.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s", t.dbName))
+	if err != nil {
+		return err
+	}
+
+	conn, err := pgx.Connect(ctx, t.dbURL.String())
+	if err != nil {
+		return err
+	}
+	defer conn.Close(ctx)
+
+	m, err := migrate.NewMigrator(ctx, conn, "migrations")
+	if err != nil {
+		return err
+	}
+
+	err = m.LoadMigrations(os.Getenv("CAPE_DB_MIGRATIONS"))
+	if err != nil {
+		return err
+	}
+
+	err = m.Migrate(ctx)
 	if err != nil {
 		return err
 	}
@@ -137,7 +156,7 @@ func (t *TestPostgres) Truncate(ctx context.Context) error {
 	}
 
 	for _, name := range tables {
-		_, err = tx.Exec(ctx, "TRUNCATE TABLE "+name)
+		_, err = tx.Exec(ctx, fmt.Sprintf("TRUNCATE TABLE %v CASCADE", name))
 		if err != nil {
 			return err
 		}
