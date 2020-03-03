@@ -83,6 +83,7 @@ var (
 	RoleType       types.Type = 0x003
 	PolicyType     types.Type = 0x004
 	AttachmentType types.Type = 0x005
+	AssignmentType types.Type = 0x006
 )
 
 func init() {
