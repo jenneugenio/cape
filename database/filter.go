@@ -37,7 +37,7 @@ type Filter struct {
 // In is an operator that requires a field to match
 type In []string
 
-// F is a convenience function for creating a Filter
-func F(w Where, o *Order, p *Page) Filter {
+// NewFilter is a convenience function for creating a Filter
+func NewFilter(w Where, o *Order, p *Page) Filter {
 	return Filter{Where: w, Order: o, Page: p}
 }

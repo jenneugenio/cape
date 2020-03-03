@@ -45,8 +45,28 @@ func TestPostgresBackend(t *testing.T) {
 		target := &primitives.TestEntity{}
 		err = db.Get(ctx, e.GetID(), target)
 		gm.Expect(err).To(gm.BeNil())
+	})
 
-		gm.Expect(target).To(gm.Equal(e))
+	t.Run("can create multiple of same entity", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		eA, err := primitives.NewTestEntity("helloa")
+		gm.Expect(err).To(gm.BeNil())
+
+		eB, err := primitives.NewTestEntity("yod")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Create(ctx, eA, eB)
+		gm.Expect(err).To(gm.BeNil())
+
+		entities := []primitives.TestEntity{}
+		f := Filter{Where: Where{"id": In{eA.ID.String(), eB.ID.String()}}}
+		err = db.Query(ctx, &entities, f)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(entities).To(gm.Equal([]primitives.TestEntity{*eA, *eB}))
 	})
 
 	t.Run("can't insert same entity twice", func(t *testing.T) {
@@ -252,12 +272,12 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		target := &primitives.TestEntity{}
-		err = db.QueryOne(ctx, target, F(Where{"data": "a"}, nil, nil))
+		err = db.QueryOne(ctx, target, NewFilter(Where{"data": "a"}, nil, nil))
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(eA).To(gm.Equal(target))
 
 		targetTwo := &primitives.TestEntity{}
-		filter := F(Where{"id": eB.GetID().String()}, nil, nil)
+		filter := NewFilter(Where{"id": eB.GetID().String()}, nil, nil)
 		err = db.QueryOne(ctx, targetTwo, filter)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(eB).To(gm.Equal(targetTwo))
@@ -285,24 +305,24 @@ func TestPostgresBackend(t *testing.T) {
 			out []primitives.TestEntity
 		}{
 			"can pull back single by id": {
-				F(Where{"id": eA.GetID().String()}, nil, nil),
+				NewFilter(Where{"id": eA.GetID().String()}, nil, nil),
 				[]primitives.TestEntity{*eA},
 			},
 			"can pull back using comparison": {
-				F(Where{"data": "a1"}, nil, nil),
+				NewFilter(Where{"data": "a1"}, nil, nil),
 				[]primitives.TestEntity{*eA},
 			},
 			"can pull back using IN operator": {
-				F(Where{"id": In{eA.ID.String(), eB.ID.String()}}, nil, nil),
+				NewFilter(Where{"id": In{eA.ID.String(), eB.ID.String()}}, nil, nil),
 				[]primitives.TestEntity{*eA, *eB},
 			},
 			"can order via a field": {
-				F(Where{"id": In{eA.ID.String(), eB.ID.String(), eC.ID.String()}},
+				NewFilter(Where{"id": In{eA.ID.String(), eB.ID.String(), eC.ID.String()}},
 					&Order{Desc, "data"}, nil),
 				[]primitives.TestEntity{*eC, *eB, *eA},
 			},
 			"can order and paginate": {
-				F(Where{"id": In{eA.ID.String(), eB.ID.String(), eC.ID.String()}},
+				NewFilter(Where{"id": In{eA.ID.String(), eB.ID.String(), eC.ID.String()}},
 					&Order{Desc, "data"}, &Page{1, 1}),
 				[]primitives.TestEntity{*eB},
 			},
