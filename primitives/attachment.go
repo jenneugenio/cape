@@ -7,6 +7,8 @@ import (
 // Attachment represents a policy being applied/attached to a role
 type Attachment struct {
 	*Primitive
+	PolicyID ID `json:"policy_id"`
+	RoleID   ID `json:"role_id"`
 }
 
 // GetType returns the type for this entity
@@ -15,7 +17,7 @@ func (a *Attachment) GetType() types.Type {
 }
 
 // NewAttachment returns a new attachment
-func NewAttachment() (*Attachment, error) {
+func NewAttachment(policyID, roleID ID) (*Attachment, error) {
 	p, err := newPrimitive(AttachmentType)
 	if err != nil {
 		return nil, err
@@ -27,6 +29,8 @@ func NewAttachment() (*Attachment, error) {
 	// defined by the type)
 	a := &Attachment{
 		Primitive: p,
+		PolicyID:  policyID,
+		RoleID:    roleID,
 	}
 
 	ID, err := DeriveID(a)

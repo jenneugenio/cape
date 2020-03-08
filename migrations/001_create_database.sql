@@ -2,29 +2,36 @@ BEGIN;
 
 CREATE TABLE users (
   id char(29) primary key not null,
-  data jsonb
+  data jsonb,
+  CONSTRAINT users_id_check CHECK (data::jsonb#>>'{id}' = id)
 );
 
 CREATE TABLE services (
   id char(29) primary key not null,
-  data jsonb
+  data jsonb,
+  CONSTRAINT services_id_check CHECK (data::jsonb#>>'{id}' = id)
 );
 
 CREATE TABLE roles (
   id char(29) primary key not null,
-  data jsonb
+  data jsonb,
+  CONSTRAINT roles_id_check CHECK (data::jsonb#>>'{id}' = id)
 );
 
 CREATE TABLE policies (
   id char(29) primary key not null,
-  data jsonb
+  data jsonb,
+  CONSTRAINT policies_id_check CHECK (data::jsonb>>'{id}' = id)
 );
 
 CREATE TABLE attachments (
   id char(29) primary key not null,
   policy_id char(29) references policies(id) on delete cascade not null,
   role_id char(29) references roles(id) on delete cascade not null,
-  data jsonb
+  data jsonb,
+  CONSTRAINT attachments_id_check CHECK (data::jsonb#>>'{id}' = id),
+  CONSTRAINT attachments_policy_id_check CHECK (data::jsonb#>>'{policy_id}' = policy_id),
+  CONSTRAINT attachments_role_id_check CHECK (data::jsonb#>>'{role_id}' = role_id)
 );
 
 -- identities table is required so that we don't have to have
@@ -37,8 +44,9 @@ CREATE TABLE identities (
   id char(29) primary key not null,
   user_id char(29) references users(id) on delete cascade,
   service_id char(29) references services(id) on delete cascade,
-  UNIQUE (id, user_id, service_id),
-  CHECK (user_id != null AND service_id != null)
+  CONSTRAINT identities_id_user_service_unique UNIQUE (id, user_id, service_id),
+  CONSTRAINT identities_user_service_check CHECK (user_id != null AND service_id != null),
+  CONSTRAINT identities_id_check CHECK (id = service_id OR id = user_id)
 );
 
 CREATE TABLE assignments (
@@ -46,13 +54,18 @@ CREATE TABLE assignments (
   identity_id char(29) references identities(id) on delete cascade not null,
   role_id char(29) references roles(id) on delete cascade not null,
   data jsonb,
-  UNIQUE(identity_id, role_id)
+  UNIQUE(identity_id, role_id),
+  CONSTRAINT assignments_id_check CHECK (data::jsonb#>>'{id}' = id),
+  CONSTRAINT assignments_identity_id_check CHECK (data::jsonb#>>'{identity_id}' = ientity_id),
+  CONSTRAINT assignments_role_id_check CHECK (data::jsonb#>>'{role_id}' = role_Id)
 );
 
 CREATE TABLE tokens (
   id char(29) primary key not null,
-  identity_id char(29) references identities(id) on delete cascade,
-  data jsonb
+  identity_id char(29) references identities(id) on delete cascade not null,
+  data jsonb,
+  CONSTRAINT tokens_id_check CHECK (data::jsonb#>>'{id}' = id),
+  CONSTRAINT tokens_identity_id_check CHECK (data::jsonb#>>'{identity_id}' = identity_id)
 );
 
 CREATE OR REPLACE FUNCTION create_identity()

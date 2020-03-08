@@ -7,6 +7,8 @@ import (
 // Assignment represents a policy being applied/attached to a role
 type Assignment struct {
 	*Primitive
+	IdentityID ID `json:"identity_id"`
+	RoleID     ID `json:"role_id"`
 }
 
 // GetType returns the type for this entity
@@ -15,7 +17,7 @@ func (a *Assignment) GetType() types.Type {
 }
 
 // NewAssignment returns a new Assignment
-func NewAssignment() (*Assignment, error) {
+func NewAssignment(identityID, roleID ID) (*Assignment, error) {
 	p, err := newPrimitive(AssignmentType)
 	if err != nil {
 		return nil, err
@@ -26,7 +28,9 @@ func NewAssignment() (*Assignment, error) {
 	// An Assignment is considered an immutable type in our object system (as
 	// defined by the type)
 	a := &Assignment{
-		Primitive: p,
+		Primitive:  p,
+		IdentityID: identityID,
+		RoleID:     roleID,
 	}
 
 	ID, err := DeriveID(a)
