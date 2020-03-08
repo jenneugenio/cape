@@ -1,10 +1,61 @@
 BEGIN;
 
+-- This block creates the hoist values function which is used to pull values
+-- off of a data blob into a column for that value on the table.
+CREATE EXTENSION IF NOT EXISTS hstore;
+CREATE OR REPLACE FUNCTION hoist_values() RETURNS TRIGGER AS $$
+  DECLARE
+    value hstore;
+    paths text[];
+    path text;
+    segments text[];
+    segment text;
+  BEGIN
+    value = hstore(NEW);
+    paths = TG_ARGV;
+
+    FOREACH path IN ARRAY paths LOOP
+      segments = string_to_array(path, '.')::text[];
+      segment = segments[array_upper(segments, 1)];
+
+      value := value || hstore(segment, NEW.data::jsonb#>>segments);
+      NEW := NEW #= value;
+    END LOOP;
+
+    RETURN NEW;
+  END;
+$$ LANGUAGE plpgsql;
+
+-- This block creates the create_identity trigger which is used to extract a
+-- user or service id into the identities table
+CREATE OR REPLACE FUNCTION create_identity() RETURNS TRIGGER AS $$
+  BEGIN
+    IF TG_TABLE_NAME = 'users' THEN
+      INSERT INTO identities(id, user_id) VALUES(NEW.id, NEW.id);
+    ELSIF TG_TABLE_NAME = 'services' THEN
+      INSERT INTO identities(id, service_id) VALUES(NEW.id, NEW.id);
+    ELSE
+      RAISE EXCEPTION 'Trigger function must be run on users or services table, not %', TG_TABLE_NAME;
+    END IF;
+     RETURN NEW;
+  END;
+$$ LANGUAGE plpgsql;
+
 CREATE TABLE users (
   id char(29) primary key not null,
   data jsonb,
   CONSTRAINT users_id_check CHECK (data::jsonb#>>'{id}' = id)
 );
+
+CREATE TRIGGER users_hoist_tgr
+  BEFORE INSERT ON users
+  FOR EACH ROW EXECUTE PROCEDURE hoist_values('id');
+
+CREATE TRIGGER create_identity
+  AFTER INSERT
+  ON users
+  FOR EACH ROW
+  EXECUTE PROCEDURE create_identity();
 
 CREATE TABLE services (
   id char(29) primary key not null,
@@ -12,17 +63,36 @@ CREATE TABLE services (
   CONSTRAINT services_id_check CHECK (data::jsonb#>>'{id}' = id)
 );
 
+CREATE TRIGGER create_identity
+  AFTER INSERT
+  ON services
+  FOR EACH ROW
+  EXECUTE PROCEDURE create_identity();
+
+
+CREATE TRIGGER services_hoist_tgr
+  BEFORE INSERT ON services
+  FOR EACH ROW EXECUTE PROCEDURE hoist_values('id');
+
 CREATE TABLE roles (
   id char(29) primary key not null,
   data jsonb,
   CONSTRAINT roles_id_check CHECK (data::jsonb#>>'{id}' = id)
 );
 
+CREATE TRIGGER roles_hoist_tgr
+  BEFORE INSERT ON roles
+  FOR EACH ROW EXECUTE PROCEDURE hoist_values('id');
+
 CREATE TABLE policies (
   id char(29) primary key not null,
   data jsonb,
-  CONSTRAINT policies_id_check CHECK (data::jsonb>>'{id}' = id)
+  CONSTRAINT policies_id_check CHECK (data::jsonb#>>'{id}' = id)
 );
+
+CREATE TRIGGER policies_hoist_tgr
+  BEFORE INSERT ON policies
+  FOR EACH ROW EXECUTE PROCEDURE hoist_values('id');
 
 CREATE TABLE attachments (
   id char(29) primary key not null,
@@ -33,6 +103,10 @@ CREATE TABLE attachments (
   CONSTRAINT attachments_policy_id_check CHECK (data::jsonb#>>'{policy_id}' = policy_id),
   CONSTRAINT attachments_role_id_check CHECK (data::jsonb#>>'{role_id}' = role_id)
 );
+
+CREATE TRIGGER attachments_hoist_tgr
+  BEFORE INSERT ON attachments
+  FOR EACH ROW EXECUTE PROCEDURE hoist_values('id', 'policy_id', 'role_id');
 
 -- identities table is required so that we don't have to have
 -- user_id and service_id columns on every table that depends on
@@ -56,9 +130,13 @@ CREATE TABLE assignments (
   data jsonb,
   UNIQUE(identity_id, role_id),
   CONSTRAINT assignments_id_check CHECK (data::jsonb#>>'{id}' = id),
-  CONSTRAINT assignments_identity_id_check CHECK (data::jsonb#>>'{identity_id}' = ientity_id),
+  CONSTRAINT assignments_identity_id_check CHECK (data::jsonb#>>'{identity_id}' = identity_id),
   CONSTRAINT assignments_role_id_check CHECK (data::jsonb#>>'{role_id}' = role_Id)
 );
+
+CREATE TRIGGER assignments_hoist_tgr
+  BEFORE INSERT ON assignments
+  FOR EACH ROW EXECUTE PROCEDURE hoist_values('id', 'identity_id', 'role_id');
 
 CREATE TABLE tokens (
   id char(29) primary key not null,
@@ -68,35 +146,9 @@ CREATE TABLE tokens (
   CONSTRAINT tokens_identity_id_check CHECK (data::jsonb#>>'{identity_id}' = identity_id)
 );
 
-CREATE OR REPLACE FUNCTION create_identity()
-  RETURNS trigger AS
-$$
-BEGIN
-  IF TG_TABLE_NAME = 'users' THEN
-    INSERT INTO identities(id, user_id)
-        VALUES(NEW.id, NEW.id);
-  ELSIF TG_TABLE_NAME = 'services' THEN
-    INSERT INTO identities(id, service_id)
-        VALUES(NEW.id, NEW.id);
-  ELSE
-    RAISE EXCEPTION 'Trigger function must be run on users or services table, not %', TG_TABLE_NAME;
-  END IF;
-
-   RETURN NEW;
-END;
-$$ language plpgsql;
-
-CREATE TRIGGER create_identity
-  AFTER INSERT
-  ON users
-  FOR EACH ROW
-  EXECUTE PROCEDURE create_identity();
-
-CREATE TRIGGER create_identity
-  AFTER INSERT
-  ON services
-  FOR EACH ROW
-  EXECUTE PROCEDURE create_identity();
+CREATE TRIGGER tokens_hoist_tgr
+  BEFORE INSERT ON tokens
+  FOR EACH ROW EXECUTE PROCEDURE hoist_values('id', 'identity_id');
 
 COMMIT;
 

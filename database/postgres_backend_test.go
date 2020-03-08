@@ -359,47 +359,13 @@ func setupMigrations(ctx context.Context, db dbtest.TestDatabase) error {
 		return errors.New(errors.UnsupportedErrorCause, "dbtest must be a TestPostgres")
 	}
 
-	_, err := pg.Exec(ctx, baseMigrationSQL())
-	if err != nil {
-		return err
-	}
-
-	_, err = pg.Exec(ctx, deriveMigrationSQL("test"))
+	_, err := pg.Exec(ctx, deriveMigrationSQL("test"))
 	if err != nil {
 		return err
 	}
 
 	_, err = pg.Exec(ctx, deriveMigrationSQL("test_mutable"))
 	return err
-}
-
-func baseMigrationSQL() string {
-	return `
-		CREATE EXTENSION IF NOT EXISTS hstore;
-
-		CREATE FUNCTION hoist_values() RETURNS TRIGGER AS $$
-			DECLARE
-				value hstore;
-				paths text[];
-				path text;
-				segments text[];
-				segment text;
-			BEGIN
-				value = hstore(NEW);
-				paths = TG_ARGV;
-
-				FOREACH path IN ARRAY paths LOOP
-					segments = string_to_array(path, '.')::text[];
-					segment = segments[array_upper(segments, 1)];
-
-					value := value || hstore(segment, NEW.data::jsonb#>>segments);
-					NEW := NEW #= value;
-				END LOOP;
-
-				RETURN NEW;
-			END;
-		$$ LANGUAGE plpgsql;
-	`
 }
 
 func deriveMigrationSQL(name string) string {
