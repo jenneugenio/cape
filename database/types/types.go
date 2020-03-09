@@ -2,9 +2,10 @@ package types
 
 import (
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"strings"
+
+	errors "github.com/dropoutlabs/privacyai/partyerrors"
 )
 
 // Type is a list of all registered entity types within the Cape ecosystem.
@@ -38,9 +39,6 @@ func (t Type) Mutable() bool {
 	return registry[t].mutable
 }
 
-// ErrUnknownType occurs when an unknown type is provided
-var ErrUnknownType = errors.New("Cannot decode, encountered an unknown type")
-
 // A list of all the different object types that are stored within Cape.  They
 // are explicitly given hex values which cannot change (otherwise stored data
 // will not be able to be recalled out of database files).
@@ -54,7 +52,7 @@ var ErrUnknownType = errors.New("Cannot decode, encountered an unknown type")
 // entity. If it doesn't fit within an existing category create a new one. Each
 // category should have room for approximately 100 types.
 var (
-	// Everything greater than 0x100 is reserved for testing
+	// Everything greater than 0xD00 is reserved for testing
 	Reserved    Type = 0xD00
 	Test        Type = 0xD01
 	TestMutable Type = 0xD02
@@ -116,7 +114,7 @@ func Decode(in uint16) (Type, error) {
 	t := Type(in)
 	_, ok := registry[t]
 	if !ok {
-		return t, ErrUnknownType
+		return t, errors.New(UnknownTypeCause, "unknown type: %d", in)
 	}
 
 	return t, nil

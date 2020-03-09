@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	gm "github.com/onsi/gomega"
+
+	errors "github.com/dropoutlabs/privacyai/partyerrors"
 )
 
 var testingType Type = 0xD03
@@ -71,7 +73,7 @@ func TestDecode(t *testing.T) {
 		gm.RegisterTestingT(t)
 
 		_, err := Decode(uint16(0xDDD))
-		gm.Expect(err).To(gm.Equal(ErrUnknownType))
+		gm.Expect(errors.FromCause(err, UnknownTypeCause)).To(gm.BeTrue())
 	})
 
 	t.Run("byte decode", func(t *testing.T) {
