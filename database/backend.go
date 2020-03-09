@@ -15,6 +15,7 @@ type Backend interface {
 	Open(context.Context) error
 	Close() error
 	Transaction(context.Context) (Transaction, error)
+	URL() *url.URL
 }
 
 // NewBackendFunc represents a constructor of a Backend implementation
@@ -28,7 +29,7 @@ var validDBs = map[string]NewBackendFunc{
 func New(dbURL *url.URL, appName string) (Backend, error) {
 	ctor, ok := validDBs[dbURL.Scheme]
 	if !ok {
-		return nil, errors.New(NotImplementedDBCause, "database not supported")
+		return nil, errors.New(NotImplementedCause, "database not supported")
 	}
 
 	return ctor(dbURL, appName)

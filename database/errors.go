@@ -3,8 +3,8 @@ package database
 import errors "github.com/dropoutlabs/privacyai/partyerrors"
 
 var (
-	// NotImplementedDBCause happens when you try to connect to a db we do not support
-	NotImplementedDBCause = errors.NewCause(errors.NotImplementedCategory, "not_implemented")
+	// NotImplementedDBCause happens when you try to do something we do not support
+	NotImplementedCause = errors.NewCause(errors.NotImplementedCategory, "not_implemented")
 
 	// NotFoundCause happens when the entity you were trying to operate on was not found
 	NotFoundCause = errors.NewCause(errors.NotFoundCategory, "not_found")

@@ -4,7 +4,6 @@ package database
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 
@@ -22,13 +21,21 @@ func TestPostgresBackend(t *testing.T) {
 	testDB, err := dbtest.New(os.Getenv("CAPE_DB_URL"))
 	gm.Expect(err).To(gm.BeNil())
 
+	migrations := []string{
+		os.Getenv("CAPE_DB_MIGRATIONS"),
+		os.Getenv("CAPE_DB_TEST_MIGRATIONS"),
+	}
+
+	migrator, err := NewMigrator(testDB.URL(), migrations...)
+	gm.Expect(err).To(gm.BeNil())
+
 	err = testDB.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer testDB.Teardown(ctx) // nolint: errcheck
-
-	err = setupMigrations(ctx, testDB)
+	err = migrator.Up(ctx)
 	gm.Expect(err).To(gm.BeNil())
+
+	defer testDB.Teardown(ctx) // nolint: errcheck
 
 	t.Run("can create/retrieve an immutable entity", func(t *testing.T) {
 		db, err := dbConnect(ctx, testDB)
@@ -350,34 +357,4 @@ func dbConnect(ctx context.Context, t dbtest.TestDatabase) (Backend, error) {
 	}
 
 	return db, nil
-}
-
-func setupMigrations(ctx context.Context, db dbtest.TestDatabase) error {
-	pg, ok := db.(*dbtest.Wrapper).Database().(*dbtest.TestPostgres) // this is all throw away once we have migrations
-	if !ok {
-		return errors.New(errors.UnsupportedErrorCause, "dbtest must be a TestPostgres")
-	}
-
-	_, err := pg.Exec(ctx, deriveMigrationSQL("test"))
-	if err != nil {
-		return err
-	}
-
-	_, err = pg.Exec(ctx, deriveMigrationSQL("test_mutable"))
-	return err
-}
-
-func deriveMigrationSQL(name string) string {
-	return fmt.Sprintf(`
-		CREATE TABLE %s (
-			id char(29) not null primary key,
-			data jsonb not null,
-
-			CONSTRAINT %s_id_equals CHECK (data::jsonb#>>'{id}' = id)
-		);
-
-		CREATE TRIGGER %s_hoist_tgr
-			BEFORE INSERT ON %s
-			FOR EACH ROW EXECUTE PROCEDURE hoist_values('id');
-	`, name, name, name, name)
 }

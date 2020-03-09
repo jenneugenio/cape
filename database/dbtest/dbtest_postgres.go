@@ -3,15 +3,11 @@ package dbtest
 import (
 	"context"
 	"fmt"
-	"net/url"
-	"os"
-
+	errors "github.com/dropoutlabs/privacyai/partyerrors"
 	"github.com/jackc/pgconn"
 	pgx "github.com/jackc/pgx/v4"
 	pgxpool "github.com/jackc/pgx/v4/pgxpool"
-	"github.com/jackc/tern/migrate"
-
-	errors "github.com/dropoutlabs/privacyai/partyerrors"
+	"net/url"
 )
 
 // ConnectionError occurs when something can't be done because the database is
@@ -60,27 +56,6 @@ func (t *TestPostgres) Setup(ctx context.Context) error {
 	}
 	defer db.Close()
 	_, err = db.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s", t.dbName))
-	if err != nil {
-		return err
-	}
-
-	conn, err := pgx.Connect(ctx, t.dbURL.String())
-	if err != nil {
-		return err
-	}
-	defer conn.Close(ctx)
-
-	m, err := migrate.NewMigrator(ctx, conn, "migrations")
-	if err != nil {
-		return err
-	}
-
-	err = m.LoadMigrations(os.Getenv("CAPE_DB_MIGRATIONS"))
-	if err != nil {
-		return err
-	}
-
-	err = m.Migrate(ctx)
 	if err != nil {
 		return err
 	}

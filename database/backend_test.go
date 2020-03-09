@@ -15,7 +15,7 @@ func TestBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		_, err = New(u, "test")
-		gm.Expect(errors.FromCause(err, NotImplementedDBCause)).To(gm.BeTrue())
+		gm.Expect(errors.FromCause(err, NotImplementedCause)).To(gm.BeTrue())
 	})
 
 	t.Run("Valid backend specified", func(t *testing.T) {

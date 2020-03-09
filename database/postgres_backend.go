@@ -61,6 +61,14 @@ func (p *PostgresBackend) Transaction(ctx context.Context) (Transaction, error) 
 	}, nil
 }
 
+// URL returns the underlying database URL
+func (p *PostgresBackend) URL() *url.URL {
+	var c *url.URL = &url.URL{}
+	*c = *(p.dbURL)
+
+	return c
+}
+
 // NewPostgresBackend returns a new postgres backend instance
 func NewPostgresBackend(dbURL *url.URL, name string) (Backend, error) {
 	cfg, err := pgxpool.ParseConfig(dbURL.String())

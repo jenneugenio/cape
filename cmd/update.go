@@ -2,34 +2,28 @@ package cmd
 
 import (
 	"context"
+	"github.com/dropoutlabs/privacyai/database"
+	"net/url"
+	"os"
 
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/tern/migrate"
 	"github.com/urfave/cli/v2"
 )
 
 func updateCmd(c *cli.Context) error {
-	dbURL := c.String("db-url")
+	dbAddr := c.String("db-url")
 
 	ctx := context.Background()
-	conn, err := pgx.Connect(ctx, dbURL)
+
+	dbURL, err := url.Parse(dbAddr)
+	if err != nil {
+		return err
+	}
+	migrator, err := database.NewMigrator(dbURL, os.Getenv("CAPE_DB_MIGRATIONS"))
 	if err != nil {
 		return err
 	}
 
-	defer conn.Close(ctx)
-
-	m, err := migrate.NewMigrator(ctx, conn, "migrations")
-	if err != nil {
-		return err
-	}
-
-	err = m.LoadMigrations("migrations")
-	if err != nil {
-		return err
-	}
-
-	return m.Migrate(ctx)
+	return migrator.Up(ctx)
 }
 
 func init() {

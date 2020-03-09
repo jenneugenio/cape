@@ -10,7 +10,6 @@ import (
 	"github.com/dropoutlabs/privacyai/database/dbtest"
 
 	"github.com/jackc/pgx/v4"
-	"github.com/jackc/tern/migrate"
 )
 
 func TestMigrateUpAndDown(t *testing.T) {
@@ -31,13 +30,10 @@ func TestMigrateUpAndDown(t *testing.T) {
 
 	defer conn.Close(ctx)
 
-	m, err := migrate.NewMigrator(ctx, conn, "migrations")
+	migrator, err := NewMigrator(testDB.URL(), os.Getenv("CAPE_DB_MIGRATIONS"))
 	gm.Expect(err).To(gm.BeNil())
 
-	err = m.LoadMigrations("../migrations")
-	gm.Expect(err).To(gm.BeNil())
-
-	err = m.Migrate(ctx)
+	err = migrator.Up(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	// Checks to see if anything exists in the database, ignores pg_toast
@@ -60,7 +56,7 @@ func TestMigrateUpAndDown(t *testing.T) {
 	// need to explicitly Close this here or the connection will remain busy
 	rows.Close()
 
-	err = m.MigrateTo(ctx, 0)
+	err = migrator.Down(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	rows, err = conn.Query(ctx, tableCountQuery)
