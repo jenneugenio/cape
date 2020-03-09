@@ -1,4 +1,4 @@
-package primitives
+package database
 
 import (
 	"crypto/rand"
@@ -8,7 +8,7 @@ import (
 	"github.com/manifoldco/go-base32"
 	"golang.org/x/crypto/blake2b"
 
-	"github.com/dropoutlabs/privacyai/primitives/types"
+	"github.com/dropoutlabs/privacyai/database/types"
 )
 
 // ErrInvalidID occurs when an invalid id (bad encoding or overflow) is provided

@@ -10,7 +10,6 @@ import (
 	pgx "github.com/jackc/pgx/v4"
 
 	errors "github.com/dropoutlabs/privacyai/partyerrors"
-	"github.com/dropoutlabs/privacyai/primitives"
 )
 
 type pgConn interface {
@@ -24,7 +23,7 @@ type postgresQuerier struct {
 }
 
 // Create an entity inside the database
-func (q *postgresQuerier) Create(ctx context.Context, entities ...primitives.Entity) error {
+func (q *postgresQuerier) Create(ctx context.Context, entities ...Entity) error {
 	if len(entities) == 0 {
 		return nil
 	}
@@ -47,7 +46,7 @@ func (q *postgresQuerier) Create(ctx context.Context, entities ...primitives.Ent
 }
 
 // Get an entity from the database
-func (q *postgresQuerier) Get(ctx context.Context, id primitives.ID, e primitives.Entity) error {
+func (q *postgresQuerier) Get(ctx context.Context, id ID, e Entity) error {
 	t, err := id.Type()
 	if err != nil {
 		return err
@@ -74,7 +73,7 @@ func (q *postgresQuerier) Get(ctx context.Context, id primitives.ID, e primitive
 }
 
 // QueryOne uses a query to return a single entity from the database
-func (q *postgresQuerier) QueryOne(ctx context.Context, e primitives.Entity, f Filter) error {
+func (q *postgresQuerier) QueryOne(ctx context.Context, e Entity, f Filter) error {
 	if f.Page != nil {
 		panic("Pagination cannot be performed via a QueryOne")
 	}
@@ -114,12 +113,12 @@ func (q *postgresQuerier) Query(ctx context.Context, arr interface{}, f Filter) 
 	//
 	// To do this, we create an instance of the underlying type of this slice.
 	// This can then be used later on to determine the actual table to query.
-	entityType := reflect.TypeOf((*primitives.Entity)(nil)).Elem()
+	entityType := reflect.TypeOf((*Entity)(nil)).Elem()
 	itemType := reflect.New(arrValue.Type().Elem())
 	if !itemType.Type().Implements(entityType) {
 		panic("Expected arr to be a pointer to a slice of primitive.Entity's")
 	}
-	e := itemType.Interface().(primitives.Entity)
+	e := itemType.Interface().(Entity)
 
 	where, params := buildFilter(f)
 	sql := fmt.Sprintf(`SELECT data FROM %s %s`, e.GetType().String(), where)
@@ -144,7 +143,7 @@ func (q *postgresQuerier) Query(ctx context.Context, arr interface{}, f Filter) 
 }
 
 // Delete an entity from the database
-func (q *postgresQuerier) Delete(ctx context.Context, id primitives.ID) error {
+func (q *postgresQuerier) Delete(ctx context.Context, id ID) error {
 	t, err := id.Type()
 	if err != nil {
 		return err
@@ -164,7 +163,7 @@ func (q *postgresQuerier) Delete(ctx context.Context, id primitives.ID) error {
 }
 
 // Update an entity inside the database
-func (q *postgresQuerier) Update(ctx context.Context, e primitives.Entity) error {
+func (q *postgresQuerier) Update(ctx context.Context, e Entity) error {
 	t := e.GetType()
 	if !t.Mutable() {
 		panic("Cannot update an immutable entity")
@@ -191,7 +190,7 @@ func (q *postgresQuerier) Update(ctx context.Context, e primitives.Entity) error
 // getItem returns a primitive.Entity from the given slice thats passed as a
 // reflect.Value. We then use this value to determine if/how we should grow the
 // slice.
-func getItem(v reflect.Value, pos int) primitives.Entity {
+func getItem(v reflect.Value, pos int) Entity {
 	if v.Type().Kind() != reflect.Slice {
 		panic("expected a slice")
 	}
@@ -212,5 +211,5 @@ func getItem(v reflect.Value, pos int) primitives.Entity {
 		v.SetLen(num)
 	}
 
-	return v.Index(pos).Addr().Interface().(primitives.Entity)
+	return v.Index(pos).Addr().Interface().(Entity)
 }

@@ -1,13 +1,14 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/privacyai/primitives/types"
+	"github.com/dropoutlabs/privacyai/database"
+	"github.com/dropoutlabs/privacyai/database/types"
 )
 
 // Policy is a single defined policy
 // TODO -- write this
 type Policy struct {
-	*Primitive
+	*database.Primitive
 }
 
 // GetType returns the type for this entity
@@ -17,7 +18,7 @@ func (p *Policy) GetType() types.Type {
 
 // NewPolicy returns a mutable policy struct
 func NewPolicy() (*Policy, error) {
-	p, err := newPrimitive(PolicyType)
+	p, err := database.NewPrimitive(PolicyType)
 	if err != nil {
 		return nil, err
 	}

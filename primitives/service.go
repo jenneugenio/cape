@@ -1,13 +1,14 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/privacyai/primitives/types"
+	"github.com/dropoutlabs/privacyai/database"
+	"github.com/dropoutlabs/privacyai/database/types"
 )
 
 // Service represents a service connecting to the system (e.g. a machine
 // running a pipeline).
 type Service struct {
-	*Primitive
+	*database.Primitive
 }
 
 // GetType returns the type for this entity
@@ -17,7 +18,7 @@ func (s *Service) GetType() types.Type {
 
 // NewService returns a mutable service struct
 func NewService() (*Service, error) {
-	p, err := newPrimitive(ServiceType)
+	p, err := database.NewPrimitive(ServiceType)
 	if err != nil {
 		return nil, err
 	}

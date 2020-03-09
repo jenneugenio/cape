@@ -1,10 +1,10 @@
-package primitives
+package database
 
 import (
 	"time"
 
+	"github.com/dropoutlabs/privacyai/database/types"
 	errors "github.com/dropoutlabs/privacyai/partyerrors"
-	"github.com/dropoutlabs/privacyai/primitives/types"
 )
 
 // Primitive a low level object that can be inherited from for getting access
@@ -52,11 +52,11 @@ func (p *Primitive) SetUpdatedAt(t time.Time) error {
 	return nil
 }
 
-// newPrimitive returns a new primitive entity object
+// NewPrimitive returns a new primitive entity object
 //
 // If the type is mutable then this function will also generate an ID. For
 // immutable types the caller must manually lock the struct by deriving an ID.
-func newPrimitive(t types.Type) (*Primitive, error) {
+func NewPrimitive(t types.Type) (*Primitive, error) {
 	p := &Primitive{
 		Version:   1,
 		CreatedAt: time.Now().UTC(),
@@ -73,24 +73,4 @@ func newPrimitive(t types.Type) (*Primitive, error) {
 	}
 
 	return p, nil
-}
-
-var (
-	// The following types represent the core primitives in the system
-	UserType       types.Type = 0x000
-	ServiceType    types.Type = 0x001
-	TokenType      types.Type = 0x002
-	RoleType       types.Type = 0x003
-	PolicyType     types.Type = 0x004
-	AttachmentType types.Type = 0x005
-	AssignmentType types.Type = 0x006
-)
-
-func init() {
-	types.Register(UserType, "user", false)
-	types.Register(ServiceType, "service", false)
-	types.Register(TokenType, "token", true)
-	types.Register(RoleType, "role", false)
-	types.Register(PolicyType, "policy", false)
-	types.Register(AttachmentType, "attachment", true)
 }

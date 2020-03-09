@@ -1,13 +1,14 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/privacyai/primitives/types"
+	"github.com/dropoutlabs/privacyai/database"
+	"github.com/dropoutlabs/privacyai/database/types"
 )
 
 // Token for an authorized entity (user or service)
 type Token struct {
-	*Primitive
-	IdentityID ID `json:"identity_id"`
+	*database.Primitive
+	IdentityID database.ID `json:"identity_id"`
 }
 
 // GetType returns the type for this entity
@@ -16,8 +17,8 @@ func (t *Token) GetType() types.Type {
 }
 
 // NewToken returns an immutable token struct
-func NewToken(identityID ID) (*Token, error) {
-	p, err := newPrimitive(TokenType)
+func NewToken(identityID database.ID) (*Token, error) {
+	p, err := database.NewPrimitive(TokenType)
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +29,7 @@ func NewToken(identityID ID) (*Token, error) {
 		IdentityID: identityID,
 	}
 
-	ID, err := DeriveID(t)
+	ID, err := database.DeriveID(t)
 	if err != nil {
 		return nil, err
 	}

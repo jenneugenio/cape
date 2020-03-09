@@ -1,9 +1,9 @@
-package primitives
+package database
 
 import (
 	"time"
 
-	"github.com/dropoutlabs/privacyai/primitives/types"
+	"github.com/dropoutlabs/privacyai/database/types"
 )
 
 // TestEntity represents an internal Entity used exclusively for testing
@@ -19,7 +19,7 @@ func (t *TestEntity) GetType() types.Type {
 
 // NewTestEntity returns a new TestEntity struct
 func NewTestEntity(data string) (*TestEntity, error) {
-	p, err := newPrimitive(types.Test)
+	p, err := NewPrimitive(types.Test)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func (t *TestMutableEntity) GetType() types.Type {
 
 // NewTestMutableEntity returns a new TestMutableEntity
 func NewTestMutableEntity(data string) (*TestMutableEntity, error) {
-	p, err := newPrimitive(types.TestMutable)
+	p, err := NewPrimitive(types.TestMutable)
 	if err != nil {
 		return nil, err
 	}

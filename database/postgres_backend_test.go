@@ -12,7 +12,6 @@ import (
 
 	"github.com/dropoutlabs/privacyai/database/dbtest"
 	errors "github.com/dropoutlabs/privacyai/partyerrors"
-	"github.com/dropoutlabs/privacyai/primitives"
 )
 
 func TestPostgresBackend(t *testing.T) {
@@ -36,13 +35,13 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
-		e, err := primitives.NewTestEntity("hello")
+		e, err := NewTestEntity("hello")
 		gm.Expect(err).To(gm.BeNil())
 
 		err = db.Create(ctx, e)
 		gm.Expect(err).To(gm.BeNil())
 
-		target := &primitives.TestEntity{}
+		target := &TestEntity{}
 		err = db.Get(ctx, e.GetID(), target)
 		gm.Expect(err).To(gm.BeNil())
 	})
@@ -52,21 +51,21 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
-		eA, err := primitives.NewTestEntity("helloa")
+		eA, err := NewTestEntity("helloa")
 		gm.Expect(err).To(gm.BeNil())
 
-		eB, err := primitives.NewTestEntity("yod")
+		eB, err := NewTestEntity("yod")
 		gm.Expect(err).To(gm.BeNil())
 
 		err = db.Create(ctx, eA, eB)
 		gm.Expect(err).To(gm.BeNil())
 
-		entities := []primitives.TestEntity{}
+		entities := []TestEntity{}
 		f := Filter{Where: Where{"id": In{eA.ID.String(), eB.ID.String()}}}
 		err = db.Query(ctx, &entities, f)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(entities).To(gm.Equal([]primitives.TestEntity{*eA, *eB}))
+		gm.Expect(entities).To(gm.Equal([]TestEntity{*eA, *eB}))
 	})
 
 	t.Run("can't insert same entity twice", func(t *testing.T) {
@@ -74,7 +73,7 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
-		e, err := primitives.NewTestEntity("sup")
+		e, err := NewTestEntity("sup")
 		gm.Expect(err).To(gm.BeNil())
 
 		err = db.Create(ctx, e)
@@ -89,7 +88,7 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
-		e, err := primitives.NewTestEntity("hi")
+		e, err := NewTestEntity("hi")
 		gm.Expect(err).To(gm.BeNil())
 
 		err = db.Create(ctx, e)
@@ -98,7 +97,7 @@ func TestPostgresBackend(t *testing.T) {
 		err = db.Delete(ctx, e.GetID())
 		gm.Expect(err).To(gm.BeNil())
 
-		target := &primitives.TestEntity{}
+		target := &TestEntity{}
 		err = db.Get(ctx, e.GetID(), target)
 		gm.Expect(errors.FromCause(err, NotFoundCause)).To(gm.BeTrue())
 	})
@@ -108,10 +107,10 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
-		e, err := primitives.NewTestEntity("hi")
+		e, err := NewTestEntity("hi")
 		gm.Expect(err).To(gm.BeNil())
 
-		target := &primitives.TestEntity{}
+		target := &TestEntity{}
 		err = db.Get(ctx, e.GetID(), target)
 		gm.Expect(errors.FromCause(err, NotFoundCause)).To(gm.BeTrue())
 	})
@@ -121,7 +120,7 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
-		e, err := primitives.NewTestMutableEntity("sup")
+		e, err := NewTestMutableEntity("sup")
 		gm.Expect(err).To(gm.BeNil())
 
 		err = db.Create(ctx, e)
@@ -133,7 +132,7 @@ func TestPostgresBackend(t *testing.T) {
 		err = db.Update(ctx, e)
 		gm.Expect(err).To(gm.BeNil())
 
-		target := &primitives.TestMutableEntity{}
+		target := &TestMutableEntity{}
 		err = db.Get(ctx, e.GetID(), target)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(target.Data).To(gm.Equal(e.Data))
@@ -145,7 +144,7 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
-		e, err := primitives.NewTestEntity("sup")
+		e, err := NewTestEntity("sup")
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(func() {
@@ -158,7 +157,7 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
-		e, err := primitives.NewTestMutableEntity("sup")
+		e, err := NewTestMutableEntity("sup")
 
 		err = db.Update(ctx, e)
 		gm.Expect(errors.FromCause(err, NotFoundCause)).To(gm.BeTrue())
@@ -173,7 +172,7 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer tx.Rollback(ctx)
 
-		e, err := primitives.NewTestMutableEntity("jack")
+		e, err := NewTestMutableEntity("jack")
 		gm.Expect(err).To(gm.BeNil())
 
 		err = tx.Create(ctx, e)
@@ -186,7 +185,7 @@ func TestPostgresBackend(t *testing.T) {
 		err = tx.Commit(ctx)
 		gm.Expect(err).To(gm.BeNil())
 
-		target := &primitives.TestMutableEntity{}
+		target := &TestMutableEntity{}
 		err = db.Get(ctx, e.GetID(), target)
 		gm.Expect(err).To(gm.BeNil())
 
@@ -198,7 +197,7 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
-		e, err := primitives.NewTestMutableEntity("jack")
+		e, err := NewTestMutableEntity("jack")
 		gm.Expect(err).To(gm.BeNil())
 
 		err = db.Create(ctx, e)
@@ -215,7 +214,7 @@ func TestPostgresBackend(t *testing.T) {
 		err = tx.Rollback(ctx)
 		gm.Expect(err).To(gm.BeNil())
 
-		target := &primitives.TestMutableEntity{}
+		target := &TestMutableEntity{}
 		err = db.Get(ctx, e.GetID(), target)
 		gm.Expect(err).To(gm.BeNil())
 
@@ -231,7 +230,7 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer tx.Rollback(ctx)
 
-		e, err := primitives.NewTestMutableEntity("jack")
+		e, err := NewTestMutableEntity("jack")
 		gm.Expect(err).To(gm.BeNil())
 
 		err = tx.Create(ctx, e)
@@ -247,7 +246,7 @@ func TestPostgresBackend(t *testing.T) {
 		err = tx.Rollback(ctx)
 		gm.Expect(errors.FromCause(err, ClosedCause)).To(gm.BeTrue())
 
-		target := &primitives.TestMutableEntity{}
+		target := &TestMutableEntity{}
 		err = db.Get(ctx, e.GetID(), target)
 		gm.Expect(err).To(gm.BeNil())
 
@@ -259,10 +258,10 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
-		eA, err := primitives.NewTestEntity("a")
+		eA, err := NewTestEntity("a")
 		gm.Expect(err).To(gm.BeNil())
 
-		eB, err := primitives.NewTestEntity("b")
+		eB, err := NewTestEntity("b")
 		gm.Expect(err).To(gm.BeNil())
 
 		err = db.Create(ctx, eA)
@@ -271,12 +270,12 @@ func TestPostgresBackend(t *testing.T) {
 		err = db.Create(ctx, eB)
 		gm.Expect(err).To(gm.BeNil())
 
-		target := &primitives.TestEntity{}
+		target := &TestEntity{}
 		err = db.QueryOne(ctx, target, NewFilter(Where{"data": "a"}, nil, nil))
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(eA).To(gm.Equal(target))
 
-		targetTwo := &primitives.TestEntity{}
+		targetTwo := &TestEntity{}
 		filter := NewFilter(Where{"id": eB.GetID().String()}, nil, nil)
 		err = db.QueryOne(ctx, targetTwo, filter)
 		gm.Expect(err).To(gm.BeNil())
@@ -288,13 +287,13 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
-		eA, err := primitives.NewTestEntity("a1")
+		eA, err := NewTestEntity("a1")
 		gm.Expect(err).To(gm.BeNil())
 
-		eB, err := primitives.NewTestEntity("b1")
+		eB, err := NewTestEntity("b1")
 		gm.Expect(err).To(gm.BeNil())
 
-		eC, err := primitives.NewTestEntity("c1")
+		eC, err := NewTestEntity("c1")
 		gm.Expect(err).To(gm.BeNil())
 
 		err = db.Create(ctx, eA, eB, eC)
@@ -302,35 +301,35 @@ func TestPostgresBackend(t *testing.T) {
 
 		tests := map[string]struct {
 			f   Filter
-			out []primitives.TestEntity
+			out []TestEntity
 		}{
 			"can pull back single by id": {
 				NewFilter(Where{"id": eA.GetID().String()}, nil, nil),
-				[]primitives.TestEntity{*eA},
+				[]TestEntity{*eA},
 			},
 			"can pull back using comparison": {
 				NewFilter(Where{"data": "a1"}, nil, nil),
-				[]primitives.TestEntity{*eA},
+				[]TestEntity{*eA},
 			},
 			"can pull back using IN operator": {
 				NewFilter(Where{"id": In{eA.ID.String(), eB.ID.String()}}, nil, nil),
-				[]primitives.TestEntity{*eA, *eB},
+				[]TestEntity{*eA, *eB},
 			},
 			"can order via a field": {
 				NewFilter(Where{"id": In{eA.ID.String(), eB.ID.String(), eC.ID.String()}},
 					&Order{Desc, "data"}, nil),
-				[]primitives.TestEntity{*eC, *eB, *eA},
+				[]TestEntity{*eC, *eB, *eA},
 			},
 			"can order and paginate": {
 				NewFilter(Where{"id": In{eA.ID.String(), eB.ID.String(), eC.ID.String()}},
 					&Order{Desc, "data"}, &Page{1, 1}),
-				[]primitives.TestEntity{*eB},
+				[]TestEntity{*eB},
 			},
 		}
 
 		for d, tc := range tests {
 			t.Run(d, func(t *testing.T) {
-				results := []primitives.TestEntity{}
+				results := []TestEntity{}
 				err = db.Query(ctx, &results, tc.f)
 				gm.Expect(err).To(gm.BeNil())
 				gm.Expect(results).To(gm.BeEquivalentTo(tc.out))

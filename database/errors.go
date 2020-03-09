@@ -24,4 +24,8 @@ var (
 	// ClosedCause happens when a connection or transaction has already been
 	// committed or closed
 	ClosedCause = errors.NewCause(errors.BadRequestCategory, "already_closed")
+
+	// InvalidTimeCause occurs when a time is provided that outside the range
+	// of possible times
+	InvalidTimeCause = errors.NewCause(errors.BadRequestCategory, "invalid_time")
 )

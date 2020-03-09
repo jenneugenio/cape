@@ -5,12 +5,11 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dropoutlabs/privacyai/primitives"
-	"github.com/dropoutlabs/privacyai/primitives/types"
+	"github.com/dropoutlabs/privacyai/database/types"
 )
 
 // buildInsert returns the values statement for a multi-value query
-func buildInsert(entities []primitives.Entity, t types.Type) (string, []interface{}) {
+func buildInsert(entities []Entity, t types.Type) (string, []interface{}) {
 	rows := []string{}
 	values := []interface{}{}
 	for i, e := range entities {

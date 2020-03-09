@@ -1,14 +1,15 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/privacyai/primitives/types"
+	"github.com/dropoutlabs/privacyai/database"
+	"github.com/dropoutlabs/privacyai/database/types"
 )
 
 // Assignment represents a policy being applied/attached to a role
 type Assignment struct {
-	*Primitive
-	IdentityID ID `json:"identity_id"`
-	RoleID     ID `json:"role_id"`
+	*database.Primitive
+	IdentityID database.ID `json:"identity_id"`
+	RoleID     database.ID `json:"role_id"`
 }
 
 // GetType returns the type for this entity
@@ -17,8 +18,8 @@ func (a *Assignment) GetType() types.Type {
 }
 
 // NewAssignment returns a new Assignment
-func NewAssignment(identityID, roleID ID) (*Assignment, error) {
-	p, err := newPrimitive(AssignmentType)
+func NewAssignment(identityID, roleID database.ID) (*Assignment, error) {
+	p, err := database.NewPrimitive(AssignmentType)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +34,7 @@ func NewAssignment(identityID, roleID ID) (*Assignment, error) {
 		RoleID:     roleID,
 	}
 
-	ID, err := DeriveID(a)
+	ID, err := database.DeriveID(a)
 	if err != nil {
 		return nil, err
 	}

@@ -1,14 +1,15 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/privacyai/primitives/types"
+	"github.com/dropoutlabs/privacyai/database"
+	"github.com/dropoutlabs/privacyai/database/types"
 )
 
 // Attachment represents a policy being applied/attached to a role
 type Attachment struct {
-	*Primitive
-	PolicyID ID `json:"policy_id"`
-	RoleID   ID `json:"role_id"`
+	*database.Primitive
+	PolicyID database.ID `json:"policy_id"`
+	RoleID   database.ID `json:"role_id"`
 }
 
 // GetType returns the type for this entity
@@ -17,8 +18,8 @@ func (a *Attachment) GetType() types.Type {
 }
 
 // NewAttachment returns a new attachment
-func NewAttachment(policyID, roleID ID) (*Attachment, error) {
-	p, err := newPrimitive(AttachmentType)
+func NewAttachment(policyID, roleID database.ID) (*Attachment, error) {
+	p, err := database.NewPrimitive(AttachmentType)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +34,7 @@ func NewAttachment(policyID, roleID ID) (*Attachment, error) {
 		RoleID:    roleID,
 	}
 
-	ID, err := DeriveID(a)
+	ID, err := database.DeriveID(a)
 	if err != nil {
 		return nil, err
 	}

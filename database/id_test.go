@@ -1,11 +1,11 @@
-package primitives
+package database
 
 import (
 	"testing"
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/privacyai/primitives/types"
+	"github.com/dropoutlabs/privacyai/database/types"
 )
 
 func TestDerive(t *testing.T) {

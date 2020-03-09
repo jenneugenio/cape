@@ -1,9 +1,9 @@
-package primitives
+package database
 
 import (
 	"time"
 
-	"github.com/dropoutlabs/privacyai/primitives/types"
+	"github.com/dropoutlabs/privacyai/database/types"
 )
 
 // Entity represents any primitive data structure stored inside the Controller.

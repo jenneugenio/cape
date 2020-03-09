@@ -1,12 +1,13 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/privacyai/primitives/types"
+	"github.com/dropoutlabs/privacyai/database"
+	"github.com/dropoutlabs/privacyai/database/types"
 )
 
 // User represents a user of the system
 type User struct {
-	*Primitive
+	*database.Primitive
 	Name string `json:"name"`
 }
 
@@ -17,7 +18,7 @@ func (u *User) GetType() types.Type {
 
 // NewUser returns a new User struct
 func NewUser(name string) (*User, error) {
-	p, err := newPrimitive(UserType)
+	p, err := database.NewPrimitive(UserType)
 	if err != nil {
 		return nil, err
 	}
