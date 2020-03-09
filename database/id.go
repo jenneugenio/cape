@@ -3,20 +3,13 @@ package database
 import (
 	"crypto/rand"
 	"encoding/json"
-	"errors"
 
 	"github.com/manifoldco/go-base32"
 	"golang.org/x/crypto/blake2b"
 
 	"github.com/dropoutlabs/privacyai/database/types"
+	errors "github.com/dropoutlabs/privacyai/partyerrors"
 )
-
-// ErrInvalidID occurs when an invalid id (bad encoding or overflow) is provided
-var ErrInvalidID = errors.New("Invalid ID Provided")
-
-// ErrNotMutable occurs when a ID is attempted to be generated instead of
-// derived for an Entity
-var ErrNotMutable = errors.New("Must be mutable entity to generate ID; did you mean to derive?")
 
 const (
 	idVersion  = 0x01
@@ -56,7 +49,7 @@ func DeriveID(e Entity) (ID, error) {
 // content-addressable)
 func GenerateID(t types.Type) (ID, error) {
 	if !t.Mutable() {
-		return ID{}, ErrNotMutable
+		return ID{}, errors.New(NotMutableCause, "Cannot generate an ID for an immutable type")
 	}
 
 	b := make([]byte, byteLength-2)
@@ -88,9 +81,9 @@ func DecodeFromBytes(b []byte) (ID, error) {
 }
 
 // Validate returns an error if the ID is not a valid ID
-func (id ID) Validate(_ interface{}) error {
+func (id ID) Validate() error {
 	if id == EmptyID {
-		return ErrInvalidID
+		return errors.New(InvalidIDCause, "Invalid ID Provided")
 	}
 
 	return nil
@@ -106,7 +99,7 @@ func (id ID) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the json.Unmarshaler interface for IDs.
 func (id *ID) UnmarshalJSON(b []byte) error {
 	if len(b) < 2 || b[0] != byte('"') || b[len(b)-1] != byte('"') {
-		return errors.New("value is not a string")
+		return errors.New(InvalidIDCause, "ID value is not a string")
 	}
 
 	return id.fill(b[1 : len(b)-1])
@@ -145,7 +138,7 @@ func decodeFromBytes(raw []byte) ([]byte, error) {
 	}
 
 	if len(out) != byteLength {
-		return nil, errors.New("Incorrect length for id")
+		return nil, errors.New(InvalidIDCause, "Incorrect length for ID")
 	}
 
 	return out, nil

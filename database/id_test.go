@@ -6,6 +6,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/dropoutlabs/privacyai/database/types"
+	errors "github.com/dropoutlabs/privacyai/partyerrors"
 )
 
 func TestDerive(t *testing.T) {
@@ -37,7 +38,7 @@ func TestGenerateFail(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ID, err := GenerateID(types.Test)
-	gm.Expect(err).To(gm.Equal(ErrNotMutable))
+	gm.Expect(errors.FromCause(err, NotMutableCause)).To(gm.BeTrue())
 	gm.Expect(ID).To(gm.Equal(EmptyID))
 }
 

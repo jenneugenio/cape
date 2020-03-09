@@ -28,4 +28,7 @@ var (
 	// InvalidTimeCause occurs when a time is provided that outside the range
 	// of possible times
 	InvalidTimeCause = errors.NewCause(errors.BadRequestCategory, "invalid_time")
+
+	// InvalidIDCause occurs when an invalid value was provided for an ID type
+	InvalidIDCause = errors.NewCause(errors.BadRequestCategory, "invalid_id")
 )
