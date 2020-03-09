@@ -1,23 +1,26 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
 	"os"
 
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v2"
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "privacy",
-	Short: "PrivacyAI CLI",
-}
+var commands []*cli.Command
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// Execute creates the CLI App and runs its
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	app := cli.NewApp()
+	app.Name = "cape"
+	app.HelpName = "cape"
+	app.Usage = "Cape is used to manage access to your sensitive data"
+	app.Version = "0.0.1"
+	app.Commands = commands
+	app.EnableBashCompletion = true
+
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
 	}
 }

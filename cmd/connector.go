@@ -2,27 +2,30 @@ package cmd
 
 import (
 	"github.com/dropoutlabs/privacyai/connector"
-	"github.com/spf13/cobra"
+	"github.com/urfave/cli/v2"
 )
 
-var connectorCmd = &cobra.Command{
-	Use:   "connector",
-	Short: "Connect your data sources for use within PrivacyAI",
-}
+func startConnectorCmd(c *cli.Context) error {
+	serviceID := getServiceID(c)
+	conn := connector.New(serviceID)
+	conn.Start()
 
-var startConnectorCmd = &cobra.Command{
-	Use:   "start",
-	Short: "Launch the PrivacyAI Data Connector",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		serviceID := getServiceID()
-		c := connector.New(serviceID)
-		c.Start()
-
-		return nil
-	},
+	return nil
 }
 
 func init() {
-	rootCmd.AddCommand(connectorCmd)
-	connectorCmd.AddCommand(startConnectorCmd)
+	startCmd := &cli.Command{
+		Name:        "start",
+		Description: "Launch the Cape Data Connector",
+		Action:      startConnectorCmd,
+		Flags:       []cli.Flag{serviceIDFlag()},
+	}
+
+	connectorCmd := &cli.Command{
+		Name:        "connector",
+		Description: "Connect your data sources for use within PrivacyAI",
+		Subcommands: []*cli.Command{startCmd},
+	}
+
+	commands = append(commands, connectorCmd)
 }

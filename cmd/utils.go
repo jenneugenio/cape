@@ -1,11 +1,11 @@
 package cmd
 
 import (
-	"os"
+	"github.com/urfave/cli/v2"
 )
 
-func getServiceID() string {
-	serviceID := os.Getenv("CAPE_SERVICE_ID")
+func getServiceID(c *cli.Context) string {
+	serviceID := c.String("service-id")
 	if serviceID == "" {
 		serviceID = "unknown"
 	}
