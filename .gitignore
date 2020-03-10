@@ -16,3 +16,6 @@
 
 bin/
 deploy/
+
+# For users using GoLand
+.idea/
