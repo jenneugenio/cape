@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	errors "github.com/dropoutlabs/privacyai/partyerrors"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 // Type is a list of all registered entity types within the Cape ecosystem.

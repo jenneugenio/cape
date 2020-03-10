@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"testing"
 
-	errors "github.com/dropoutlabs/privacyai/partyerrors"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 	gm "github.com/onsi/gomega"
 )
 

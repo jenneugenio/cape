@@ -1,4 +1,4 @@
 apiVersion: v2
-description: A Helm chart for deploying PrivacyAI Controller on k8s
-name: privacyai-controller
+description: A Helm chart for deploying Cape Controller on k8s
+name: cape-controller
 version: 0.0.1

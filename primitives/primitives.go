@@ -1,7 +1,7 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/privacyai/database/types"
+	"github.com/dropoutlabs/cape/database/types"
 )
 
 var (

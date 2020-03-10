@@ -1,5 +1,5 @@
-db_deployment_name='privacy-db'
-db_name='privacyai'
+db_deployment_name='cape-db'
+db_name='cape'
 db_pw='dev'
 
 override_pw = 'postgresqlPassword=' + db_pw
@@ -29,8 +29,8 @@ k8s_yaml(helm('charts/controller', values=['charts/local_values/controller_value
 k8s_yaml('manifests/test_job.yaml')
 k8s_resource("test", trigger_mode=TRIGGER_MODE_MANUAL)
 
-docker_build('dropoutlabs/privacyai:latest', '.', dockerfile='dockerfiles/Dockerfile.base')
-docker_build('dropoutlabs/privacyai-test:latest', '.', dockerfile='dockerfiles/Dockerfile.test')
+docker_build('dropoutlabs/cape:latest', '.', dockerfile='dockerfiles/Dockerfile.base')
+docker_build('dropoutlabs/cape-test:latest', '.', dockerfile='dockerfiles/Dockerfile.test')
 docker_build('dropoutlabs/controller:latest', '.', dockerfile='dockerfiles/Dockerfile.controller')
 docker_build('dropoutlabs/connector:latest', '.', dockerfile='dockerfiles/Dockerfile.connector')
 docker_build('dropoutlabs/update:latest', '.', dockerfile='dockerfiles/Dockerfile.update')

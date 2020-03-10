@@ -1,8 +1,8 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/privacyai/database"
-	"github.com/dropoutlabs/privacyai/database/types"
+	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/database/types"
 )
 
 // Service represents a service connecting to the system (e.g. a machine

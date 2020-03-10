@@ -5,7 +5,7 @@ import (
 
 	"github.com/jackc/pgx/v4"
 
-	errors "github.com/dropoutlabs/privacyai/partyerrors"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 // PostgresTransaction implements the Transaction interface

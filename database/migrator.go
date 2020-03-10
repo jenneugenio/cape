@@ -2,7 +2,7 @@ package database
 
 import (
 	"context"
-	errors "github.com/dropoutlabs/privacyai/partyerrors"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 	"net/url"
 )
 

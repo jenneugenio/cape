@@ -7,10 +7,10 @@ import (
 
 	"time"
 
-	"github.com/dropoutlabs/privacyai/database"
+	"github.com/dropoutlabs/cape/database"
 )
 
-// Controller is the central brain of PrivacyAI.  It keeps track of system
+// Controller is the central brain of Cape.  It keeps track of system
 // users, policy, etc
 type Controller struct {
 	backend database.Backend

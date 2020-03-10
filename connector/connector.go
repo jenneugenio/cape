@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// Connector is the central brain of PrivacyAI.  It keeps track of system
+// Connector is the central brain of Cape.  It keeps track of system
 // users, policy, etc
 type Connector struct {
 	name string

@@ -1,6 +1,6 @@
 package database
 
-import errors "github.com/dropoutlabs/privacyai/partyerrors"
+import errors "github.com/dropoutlabs/cape/partyerrors"
 
 var (
 	// NotImplementedDBCause happens when you try to do something we do not support

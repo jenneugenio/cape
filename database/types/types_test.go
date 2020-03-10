@@ -5,7 +5,7 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	errors "github.com/dropoutlabs/privacyai/partyerrors"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 var testingType Type = 0xD03

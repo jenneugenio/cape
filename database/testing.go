@@ -3,7 +3,7 @@ package database
 import (
 	"time"
 
-	"github.com/dropoutlabs/privacyai/database/types"
+	"github.com/dropoutlabs/cape/database/types"
 )
 
 // TestEntity represents an internal Entity used exclusively for testing

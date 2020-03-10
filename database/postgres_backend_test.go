@@ -9,8 +9,8 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/privacyai/database/dbtest"
-	errors "github.com/dropoutlabs/privacyai/partyerrors"
+	"github.com/dropoutlabs/cape/database/dbtest"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 func TestPostgresBackend(t *testing.T) {

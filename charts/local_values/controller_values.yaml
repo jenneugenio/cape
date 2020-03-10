@@ -1,5 +1,5 @@
 db:
-  url: postgres://postgres:dev@privacy-db-postgresql.default.svc.cluster.local/postgres?sslmode=disable
+  url: postgres://postgres:dev@cape-db-postgresql.default.svc.cluster.local/postgres?sslmode=disable
 image:
   controller_repository: dropoutlabs/controller
   update_repository: dropoutlabs/update

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"context"
-	"github.com/dropoutlabs/privacyai/database"
+	"github.com/dropoutlabs/cape/database"
 	"net/url"
 	"os"
 

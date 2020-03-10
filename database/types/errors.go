@@ -1,7 +1,7 @@
 package types
 
 import (
-	errors "github.com/dropoutlabs/privacyai/partyerrors"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 var (

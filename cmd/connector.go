@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/dropoutlabs/privacyai/connector"
+	"github.com/dropoutlabs/cape/connector"
 	"github.com/urfave/cli/v2"
 )
 
@@ -23,7 +23,7 @@ func init() {
 
 	connectorCmd := &cli.Command{
 		Name:        "connector",
-		Description: "Connect your data sources for use within PrivacyAI",
+		Description: "Connect your data sources for use within Cape",
 		Subcommands: []*cli.Command{startCmd},
 	}
 

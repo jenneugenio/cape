@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/url"
 
-	errors "github.com/dropoutlabs/privacyai/partyerrors"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 // Backend represents a storage backend (e.g. Postgres, MySQL, etc).

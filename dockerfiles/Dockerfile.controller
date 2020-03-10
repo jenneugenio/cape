@@ -2,6 +2,6 @@ FROM golang:1.14.0-alpine
 
 WORKDIR /root/
 
-COPY --from=dropoutlabs/privacyai:latest /go/src/github.com/dropoutlabs/privacyai/bin/privacy .
+COPY --from=dropoutlabs/cape:latest /go/src/github.com/dropoutlabs/cape/bin/cape .
 
-CMD ["./privacy", "controller", "start"]
+CMD ["./cape", "controller", "start"]

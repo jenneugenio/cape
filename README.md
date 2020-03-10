@@ -1,4 +1,4 @@
-# PrivacyAI
+# Cape
 
 TODO
 
@@ -23,7 +23,7 @@ If you do not have helm you can install it with ```make bootstrap-local-dev```.
 
 ## Development
 
-PrivacyAI requires go1.14.X to build and run the executable. You can follow the official instructions to install it [here](https://golang.org/doc/install) or use [gvm](https://github.com/moovweb/gvm) to manage multiple go installations.
+Cape requires go1.14.X to build and run the executable. You can follow the official instructions to install it [here](https://golang.org/doc/install) or use [gvm](https://github.com/moovweb/gvm) to manage multiple go installations.
 
 We're using [Github Actions](https://github.com/features/actions) to automate our CI/CD. To test basic CI locally you can run the following command:
 

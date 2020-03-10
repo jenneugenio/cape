@@ -1,6 +1,6 @@
 package main
 
-import "github.com/dropoutlabs/privacyai/cmd"
+import "github.com/dropoutlabs/cape/cmd"
 
 func main() {
 	cmd.Execute()

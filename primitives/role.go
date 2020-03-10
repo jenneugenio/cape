@@ -1,8 +1,8 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/privacyai/database"
-	"github.com/dropoutlabs/privacyai/database/types"
+	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/database/types"
 )
 
 // Role in a role in the system (e.g. Admin, user, etc)

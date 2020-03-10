@@ -105,7 +105,7 @@ install-tools: gocheck download tools.go
 
 clean: gocheck
 	go clean
-	rm $(PREFIX)bin/privacy
+	rm $(PREFIX)bin/cape
 
 .PHONY: bootstrap clean
 
@@ -139,10 +139,10 @@ lint: gocheck
 	golangci-lint run
 
 GO_BUILD=go build -v -i
-$(PREFIX)bin/privacy: gocheck $(SRC)
+$(PREFIX)bin/cape: gocheck $(SRC)
 	$(GOOS_OVERRIDE) $(GO_BUILD) -o $@
 
-build: $(PREFIX)bin/privacy
+build: $(PREFIX)bin/cape
 
 test: lint integration
 
@@ -170,7 +170,7 @@ ci: lint build test docker
 # ###############################################
 DOCKER_BUILD=docker build -t dropoutlabs/$(1):$(2) -f $(3) .
 docker: dockerfiles/Dockerfile.base dockerfiles/Dockerfile.controller dockerfiles/Dockerfile.connector dockercheck
-	$(call DOCKER_BUILD,privacyai,latest,dockerfiles/Dockerfile.base)
+	$(call DOCKER_BUILD,cape,latest,dockerfiles/Dockerfile.base)
 	$(call DOCKER_BUILD,controller,latest,dockerfiles/Dockerfile.controller)
 	$(call DOCKER_BUILD,connector,latest,dockerfiles/Dockerfile.connector)
 	$(call DOCKER_BUILD,update,latest,dockerfiles/Dockerfile.update)
@@ -184,23 +184,23 @@ docker: dockerfiles/Dockerfile.base dockerfiles/Dockerfile.controller dockerfile
 # authenticating to docker hub and pushing built docker containers up with the
 # appropriate tags.
 # ###############################################
-DOCKER_TAG=docker tag dropoutlabs/$(1):$(2) docker.pkg.github.com/dropoutlabs/privacyai/$(1):$(3)
-DOCKER_PUSH=docker push docker.pkg.github.com/dropoutlabs/privacyai/$(1):$(2)
+DOCKER_TAG=docker tag dropoutlabs/$(1):$(2) docker.pkg.github.com/dropoutlabs/cape/$(1):$(3)
+DOCKER_PUSH=docker push docker.pkg.github.com/dropoutlabs/cape/$(1):$(2)
 
 docker-tag: dockercheck
-	$(call DOCKER_TAG,privacyai,latest,$(VERSION))
+	$(call DOCKER_TAG,cape,latest,$(VERSION))
 	$(call DOCKER_TAG,controller,latest,$(VERSION))
 	$(call DOCKER_TAG,connector,latest,$(VERSION))
 	$(call DOCKER_TAG,update,latest,$(VERSION))
 
 docker-push-tag: dockercheck
-	$(call DOCKER_PUSH,privacyai,$(VERSION))
+	$(call DOCKER_PUSH,cape,$(VERSION))
 	$(call DOCKER_PUSH,controller,$(VERSION))
 	$(call DOCKER_PUSH,connector,$(VERSION))
 	$(call DOCKER_PUSH,update,$(VERSION))
 
 docker-push-latest: dockercheck
-	$(call DOCKER_PUSH,privacyai,latest)
+	$(call DOCKER_PUSH,cape,latest)
 	$(call DOCKER_PUSH,controller,latest)
 	$(call DOCKER_PUSH,connector,latest)
 	$(call DOCKER_PUSH,update,latest)

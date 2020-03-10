@@ -1,8 +1,8 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/privacyai/database"
-	"github.com/dropoutlabs/privacyai/database/types"
+	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/database/types"
 )
 
 // Attachment represents a policy being applied/attached to a role

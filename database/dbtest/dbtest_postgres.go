@@ -3,7 +3,7 @@ package dbtest
 import (
 	"context"
 	"fmt"
-	errors "github.com/dropoutlabs/privacyai/partyerrors"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/jackc/pgconn"
 	pgx "github.com/jackc/pgx/v4"
 	pgxpool "github.com/jackc/pgx/v4/pgxpool"

@@ -7,7 +7,7 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/privacyai/database/dbtest"
+	"github.com/dropoutlabs/cape/database/dbtest"
 
 	"github.com/jackc/pgx/v4"
 )

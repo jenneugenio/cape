@@ -3,8 +3,8 @@ package cmd
 import (
 	"net/url"
 
-	"github.com/dropoutlabs/privacyai/controller"
-	errors "github.com/dropoutlabs/privacyai/partyerrors"
+	"github.com/dropoutlabs/cape/controller"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/urfave/cli/v2"
 )
 
@@ -64,7 +64,7 @@ func init() {
 
 	controllerCmd := &cli.Command{
 		Name:        "controller",
-		Description: "Control access to your data in PrivacyAI",
+		Description: "Control access to your data in Cape",
 		Subcommands: []*cli.Command{startCmd},
 	}
 

@@ -7,8 +7,8 @@ import (
 	"github.com/manifoldco/go-base32"
 	"golang.org/x/crypto/blake2b"
 
-	"github.com/dropoutlabs/privacyai/database/types"
-	errors "github.com/dropoutlabs/privacyai/partyerrors"
+	"github.com/dropoutlabs/cape/database/types"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 const (

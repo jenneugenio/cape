@@ -1,4 +1,4 @@
-module github.com/dropoutlabs/privacyai
+module github.com/dropoutlabs/cape
 
 go 1.14
 

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dropoutlabs/privacyai/database/types"
+	"github.com/dropoutlabs/cape/database/types"
 )
 
 // buildInsert returns the values statement for a multi-value query
