@@ -3,9 +3,11 @@ package database
 import (
 	"crypto/rand"
 	"encoding/json"
-
+	"fmt"
 	"github.com/manifoldco/go-base32"
 	"golang.org/x/crypto/blake2b"
+	"io"
+	"strconv"
 
 	"github.com/dropoutlabs/cape/database/types"
 	errors "github.com/dropoutlabs/cape/partyerrors"
@@ -18,6 +20,25 @@ const (
 
 // ID represents a container for an Entities content addressable ID
 type ID [byteLength]byte
+
+func (id *ID) UnmarshalGQL(v interface{}) error {
+	s, ok := v.(string)
+	if !ok {
+		return errors.New(InvalidIDCause, "Cannot unmarshall provided ID")
+	}
+
+	i, err := DecodeFromString(s)
+	if err != nil {
+		return err
+	}
+
+	*id = i
+	return nil
+}
+
+func (id ID) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(id.String()))
+}
 
 // EmptyID is a comparator for checking whether or not the given ID is empty
 var EmptyID = ID{}

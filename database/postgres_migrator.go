@@ -9,11 +9,11 @@ import (
 
 // PostgresMigrator implements the Migrator interface for a postgres backend.
 type PostgresMigrator struct {
-	dbURL *url.URL
+	dbURL      *url.URL
 	migrations []string
 }
 
-func (p *PostgresMigrator) getMigrator (ctx context.Context, conn *pgx.Conn) (*migrate.Migrator, error) {
+func (p *PostgresMigrator) getMigrator(ctx context.Context, conn *pgx.Conn) (*migrate.Migrator, error) {
 	m, err := migrate.NewMigrator(ctx, conn, "migrations")
 	if err != nil {
 		return nil, err
@@ -67,6 +67,6 @@ func (p *PostgresMigrator) Down(ctx context.Context) error {
 }
 
 // NewPostgresMigrator returns a postgres migrator that adheres to the Migrator interface
-func NewPostgresMigrator (dbURL *url.URL, migrations ...string) (Migrator, error) {
-	return &PostgresMigrator{dbURL:dbURL, migrations: migrations}, nil
+func NewPostgresMigrator(dbURL *url.URL, migrations ...string) (Migrator, error) {
+	return &PostgresMigrator{dbURL: dbURL, migrations: migrations}, nil
 }

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/dropoutlabs/cape/controller"
@@ -45,7 +46,8 @@ func startControllerCmd(c *cli.Context) error {
 		return err
 	}
 
-	ctrl.Start()
+	ctx := context.Background()
+	ctrl.Start(ctx)
 
 	return nil
 }

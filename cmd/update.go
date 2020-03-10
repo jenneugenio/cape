@@ -3,10 +3,8 @@ package cmd
 import (
 	"context"
 	"github.com/dropoutlabs/cape/database"
-	"net/url"
-	"os"
-
 	"github.com/urfave/cli/v2"
+	"net/url"
 )
 
 func updateCmd(c *cli.Context) error {
@@ -18,7 +16,7 @@ func updateCmd(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	migrator, err := database.NewMigrator(dbURL, os.Getenv("CAPE_DB_MIGRATIONS"))
+	migrator, err := database.NewMigrator(dbURL, "migrations")
 	if err != nil {
 		return err
 	}

@@ -34,3 +34,5 @@ docker_build('dropoutlabs/cape-test:latest', '.', dockerfile='dockerfiles/Docker
 docker_build('dropoutlabs/controller:latest', '.', dockerfile='dockerfiles/Dockerfile.controller')
 docker_build('dropoutlabs/connector:latest', '.', dockerfile='dockerfiles/Dockerfile.connector')
 docker_build('dropoutlabs/update:latest', '.', dockerfile='dockerfiles/Dockerfile.update')
+
+k8s_resource('controller', port_forwards=8081)

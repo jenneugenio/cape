@@ -9,8 +9,8 @@ import (
 // Migrator represents backend/database migrations
 // See a concrete implementation of this interface (e.g. PostgresMigrator) for more details.
 type Migrator interface {
-	Up (context.Context) error
-	Down (context.Context) error
+	Up(context.Context) error
+	Down(context.Context) error
 }
 
 // NewMigratorFunc represents a constructor of a Migrator implementation
@@ -21,7 +21,7 @@ var validMigrators = map[string]NewMigratorFunc{
 }
 
 // NewMigrator returns a new migrator for the given db type (based off of the provided URL)
-func NewMigrator (dbURL *url.URL, migrations ...string) (Migrator, error) {
+func NewMigrator(dbURL *url.URL, migrations ...string) (Migrator, error) {
 	ctor, ok := validMigrators[dbURL.Scheme]
 	if !ok {
 		return nil, errors.New(NotImplementedCause, "migrator not supported")
@@ -29,4 +29,3 @@ func NewMigrator (dbURL *url.URL, migrations ...string) (Migrator, error) {
 
 	return ctor(dbURL, migrations...)
 }
-

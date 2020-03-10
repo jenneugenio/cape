@@ -1,0 +1,22 @@
+schema:
+  - graph/*.graphqls
+
+exec:
+  filename: graph/generated/generated.go
+  package: generated
+
+model:
+  filename: graph/model/models_gen.go
+  package: model
+
+resolver:
+  layout: follow-schema
+  dir: graph
+  package: graph
+
+autobind:
+  - "github.com/dropoutlabs/cape/primitives"
+
+models:
+  ID:
+    model: github.com/dropoutlabs/cape/database.ID

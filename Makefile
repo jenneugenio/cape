@@ -107,7 +107,10 @@ clean: gocheck
 	go clean
 	rm $(PREFIX)bin/cape
 
-.PHONY: bootstrap clean
+gogen: gocheck gqlgen.yml graph/schema.graphqls
+	go generate ./...
+
+.PHONY: bootstrap clean gogen
 
 bootstrap-local-dev: bootstrap-helm
 
@@ -139,7 +142,7 @@ lint: gocheck
 	golangci-lint run
 
 GO_BUILD=go build -v -i
-$(PREFIX)bin/cape: gocheck $(SRC)
+$(PREFIX)bin/cape: gocheck $(SRC) gogen
 	$(GOOS_OVERRIDE) $(GO_BUILD) -o $@
 
 build: $(PREFIX)bin/cape

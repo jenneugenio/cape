@@ -16,11 +16,11 @@ var (
 )
 
 func init() {
-	types.Register(UserType, "user", false)
-	types.Register(ServiceType, "service", false)
-	types.Register(TokenType, "token", true)
-	types.Register(RoleType, "role", false)
-	types.Register(PolicyType, "policy", false)
-	types.Register(AttachmentType, "attachment", true)
-	types.Register(AssignmentType, "assignment", true)
+	types.Register(UserType, "users", false)
+	types.Register(ServiceType, "services", false)
+	types.Register(TokenType, "tokens", true)
+	types.Register(RoleType, "roles", false)
+	types.Register(PolicyType, "policies", false)
+	types.Register(AttachmentType, "attachments", true)
+	types.Register(AssignmentType, "assignments", true)
 }
