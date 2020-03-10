@@ -22,4 +22,5 @@ func init() {
 	types.Register(RoleType, "role", false)
 	types.Register(PolicyType, "policy", false)
 	types.Register(AttachmentType, "attachment", true)
+	types.Register(AssignmentType, "assignment", true)
 }
