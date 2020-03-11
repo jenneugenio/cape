@@ -13,14 +13,16 @@ var (
 	PolicyType     types.Type = 0x004
 	AttachmentType types.Type = 0x005
 	AssignmentType types.Type = 0x006
+	SessionType    types.Type = 0x007
 )
 
 func init() {
-	types.Register(UserType, "users", false)
-	types.Register(ServiceType, "services", false)
-	types.Register(TokenType, "tokens", true)
-	types.Register(RoleType, "roles", false)
-	types.Register(PolicyType, "policies", false)
-	types.Register(AttachmentType, "attachments", true)
-	types.Register(AssignmentType, "assignments", true)
+	types.Register(UserType, "users", true)
+	types.Register(ServiceType, "services", true)
+	types.Register(TokenType, "tokens", false)
+	types.Register(RoleType, "roles", true)
+	types.Register(PolicyType, "policies", true)
+	types.Register(AttachmentType, "attachments", false)
+	types.Register(AssignmentType, "assignments", false)
+	types.Register(SessionType, "sessions", false)
 }

@@ -14,6 +14,7 @@ require (
 	github.com/lib/pq v1.3.0 // indirect
 	github.com/machinebox/graphql v0.2.2
 	github.com/manifoldco/go-base32 v1.0.4
+	github.com/manifoldco/go-base64 v1.0.3
 	github.com/matryer/is v1.3.0 // indirect
 	github.com/onsi/gomega v1.9.0
 	github.com/pkg/errors v0.9.1 // indirect

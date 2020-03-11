@@ -12,7 +12,7 @@ import (
 )
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error) {
-	user, err := primitives.NewUser(input.Name)
+	user, err := primitives.NewUser(input.Name, "", nil)
 	if err != nil {
 		return nil, err
 	}

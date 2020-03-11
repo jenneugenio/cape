@@ -43,7 +43,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TABLE users (
   id char(29) primary key not null,
-  data jsonb,
+  data jsonb not null,
   CONSTRAINT users_id_check CHECK (data::jsonb#>>'{id}' = id)
 );
 
@@ -59,7 +59,7 @@ CREATE TRIGGER create_identity
 
 CREATE TABLE services (
   id char(29) primary key not null,
-  data jsonb,
+  data jsonb not null,
   CONSTRAINT services_id_check CHECK (data::jsonb#>>'{id}' = id)
 );
 
@@ -76,7 +76,7 @@ CREATE TRIGGER services_hoist_tgr
 
 CREATE TABLE roles (
   id char(29) primary key not null,
-  data jsonb,
+  data jsonb not null,
   CONSTRAINT roles_id_check CHECK (data::jsonb#>>'{id}' = id)
 );
 
@@ -86,7 +86,7 @@ CREATE TRIGGER roles_hoist_tgr
 
 CREATE TABLE policies (
   id char(29) primary key not null,
-  data jsonb,
+  data jsonb not null,
   CONSTRAINT policies_id_check CHECK (data::jsonb#>>'{id}' = id)
 );
 
@@ -98,7 +98,7 @@ CREATE TABLE attachments (
   id char(29) primary key not null,
   policy_id char(29) references policies(id) on delete cascade not null,
   role_id char(29) references roles(id) on delete cascade not null,
-  data jsonb,
+  data jsonb not null,
   CONSTRAINT attachments_id_check CHECK (data::jsonb#>>'{id}' = id),
   CONSTRAINT attachments_policy_id_check CHECK (data::jsonb#>>'{policy_id}' = policy_id),
   CONSTRAINT attachments_role_id_check CHECK (data::jsonb#>>'{role_id}' = role_id)
@@ -127,7 +127,7 @@ CREATE TABLE assignments (
   id char(29) primary key not null,
   identity_id char(29) references identities(id) on delete cascade not null,
   role_id char(29) references roles(id) on delete cascade not null,
-  data jsonb,
+  data jsonb not null,
   UNIQUE(identity_id, role_id),
   CONSTRAINT assignments_id_check CHECK (data::jsonb#>>'{id}' = id),
   CONSTRAINT assignments_identity_id_check CHECK (data::jsonb#>>'{identity_id}' = identity_id),
@@ -141,7 +141,7 @@ CREATE TRIGGER assignments_hoist_tgr
 CREATE TABLE tokens (
   id char(29) primary key not null,
   identity_id char(29) references identities(id) on delete cascade not null,
-  data jsonb,
+  data jsonb not null,
   CONSTRAINT tokens_id_check CHECK (data::jsonb#>>'{id}' = id),
   CONSTRAINT tokens_identity_id_check CHECK (data::jsonb#>>'{identity_id}' = identity_id)
 );
