@@ -3,6 +3,9 @@ package cmd
 import (
 	"context"
 	"net/url"
+	"os"
+	"os/signal"
+	"time"
 
 	"github.com/dropoutlabs/cape/controller"
 	errors "github.com/dropoutlabs/cape/partyerrors"
@@ -34,6 +37,20 @@ func getDBURL(c *cli.Context) (*url.URL, error) {
 	return u, nil
 }
 
+func catchShutdown(ctx context.Context, quit chan os.Signal, c *controller.Controller) error {
+	<-quit
+
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	err := c.Stop(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func startControllerCmd(c *cli.Context) error {
 	serviceID := getServiceID(c)
 	dbURL, err := getDBURL(c)
@@ -47,9 +64,12 @@ func startControllerCmd(c *cli.Context) error {
 	}
 
 	ctx := context.Background()
-	ctrl.Start(ctx)
 
-	return nil
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+
+	go catchShutdown(ctx, quit, ctrl) //nolint: errcheck
+	return ctrl.Start(ctx)
 }
 
 func init() {

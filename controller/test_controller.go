@@ -4,8 +4,14 @@ import (
 	"context"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/database/dbtest"
+	errors "github.com/dropoutlabs/cape/partyerrors"
+	"net/http"
 	"os"
 	"time"
+)
+
+var (
+	TimeoutCause = errors.NewCause(errors.InternalServerErrorCategory, "server_start_timeout")
 )
 
 // TestController is a convenience wrapper around the controller to help with testing.
@@ -62,12 +68,32 @@ func (t *TestController) Setup(ctx context.Context) (*Controller, error) {
 		return nil, err
 	}
 
-	t.controller.Start(ctx)
+	go t.controller.Start(ctx) //nolint: errcheck
 
-	// TODO -- Delete me
-	// This should be removed once we have health checks, ping the health endpoint until we get a 200
-	time.Sleep(2 * time.Second)
-	return t.controller, nil
+	timeout := make(chan bool, 1)
+	go func() {
+		time.Sleep(5 * time.Second)
+		timeout <- true
+	}()
+
+	for {
+		// We are never bubbling this error up to the caller, but that is intentional
+		// This request will fail until the server is online, we will ping /health every 50ms until we get a 200
+		// If 5s elapses then we will give up and fail whatever test is using this.
+		resp, err := http.Get("http://localhost:8081/health")
+		if err == nil {
+			if resp.StatusCode == 200 {
+				return t.controller, nil
+			}
+		}
+
+		select {
+		case <-timeout:
+			return nil, errors.New(TimeoutCause, "Timed out waiting for the server to start")
+		case <-time.After(50 * time.Millisecond):
+			continue
+		}
+	}
 }
 
 // Teardown will destroy the database and stop the gql server
