@@ -5,6 +5,7 @@ import (
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/database/dbtest"
 	"os"
+	"time"
 )
 
 // TestController is a convenience wrapper around the controller to help with testing.
@@ -62,6 +63,10 @@ func (t *TestController) Setup(ctx context.Context) (*Controller, error) {
 	}
 
 	t.controller.Start(ctx)
+
+	// TODO -- Delete me
+	// This should be removed once we have health checks, ping the health endpoint until we get a 200
+	time.Sleep(2 * time.Second)
 	return t.controller, nil
 }
 
