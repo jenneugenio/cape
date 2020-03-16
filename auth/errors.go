@@ -16,4 +16,6 @@ var (
 	BadSaltLength      = errors.NewCause(errors.BadRequestCategory, "bad_salt_length")
 	BadSecretLength    = errors.NewCause(errors.BadRequestCategory, "bad_secret_length")
 	BadPublicKeyLength = errors.NewCause(errors.BadRequestCategory, "bad_public_key_length")
+
+	InvalidTokenType = errors.NewCause(errors.BadRequestCategory, "invalid_token_type")
 )

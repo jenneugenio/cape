@@ -9,16 +9,6 @@ import (
 	"github.com/manifoldco/go-base64"
 )
 
-// SessionCategory is an enum holding the category of sessions
-type SessionCategory string
-
-var (
-	// Login is the session type used during the login flow
-	Login SessionCategory = "login"
-	// Authenticated is the session type used on normal API calls
-	Authenticated SessionCategory = "auth"
-)
-
 // AuthCredentials represents the credentials the
 // client will use to properly sign their challenge
 type AuthCredentials struct {
@@ -30,10 +20,10 @@ type AuthCredentials struct {
 // calls with the server
 type Session struct {
 	*database.Primitive
-	IdentityID database.ID     `json:"identity_id"`
-	ExpiresAt  time.Time       `json:"expires_at"`
-	Type       SessionCategory `json:"type"`
-	Token      *base64.Value   `json:"token"`
+	IdentityID database.ID    `json:"identity_id"`
+	ExpiresAt  time.Time      `json:"expires_at"`
+	Type       auth.TokenType `json:"type"`
+	Token      *base64.Value  `json:"token"`
 
 	AuthCredentials *AuthCredentials `json:"auth_credentials"`
 }
@@ -44,7 +34,7 @@ func (s *Session) GetType() types.Type {
 }
 
 // NewSession returns a new Session struct
-func NewSession(identity Identity, expiresAt time.Time, typ SessionCategory,
+func NewSession(identity Identity, expiresAt time.Time, typ auth.TokenType,
 	token *base64.Value) (*Session, error) {
 	p, err := database.NewPrimitive(SessionType)
 	if err != nil {
@@ -59,7 +49,7 @@ func NewSession(identity Identity, expiresAt time.Time, typ SessionCategory,
 		Token:      token,
 	}
 
-	if typ == Login {
+	if typ == auth.Login {
 		creds := identity.GetCredentials()
 
 		session.AuthCredentials = &AuthCredentials{

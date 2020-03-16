@@ -143,3 +143,7 @@ func deriveKey(secret []byte, salt []byte) (ed25519.PublicKey, ed25519.PrivateKe
 	// Generate a ed25519 keypair from the derived key
 	return ed25519.GenerateKey(bytes.NewBuffer(key))
 }
+
+func newKey() (ed25519.PublicKey, ed25519.PrivateKey, error) {
+	return ed25519.GenerateKey(nil)
+}

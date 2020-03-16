@@ -44,6 +44,7 @@ require (
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
 	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 // indirect
 	gopkg.in/ini.v1 v1.55.0 // indirect
+	gopkg.in/square/go-jose.v2 v2.4.1
 	mvdan.cc/unparam v0.0.0-20200314162735-0ac8026f7d06 // indirect
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )
