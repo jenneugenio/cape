@@ -1,16 +1,14 @@
 package controller
 
 import (
-	"github.com/dropoutlabs/cape/database"
-)
-
-import (
 	"context"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/graph"
 	"github.com/dropoutlabs/cape/graph/generated"
+	"github.com/manifoldco/healthz"
 	"net/http"
 	"net/url"
 )
@@ -67,11 +65,10 @@ func New(dbURL *url.URL, serviceID string) (*Controller, error) {
 
 	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	mux.Handle("/query", gqlHandler)
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
-	})
 
-	gqlSrv := &http.Server{Addr: ":8081", Handler: mux}
+	handler := healthz.NewHandler(mux)
+
+	gqlSrv := &http.Server{Addr: ":8081", Handler: handler}
 
 	return &Controller{
 		backend:   backend,

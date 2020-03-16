@@ -20,8 +20,9 @@ func TestControllerLifecycle(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		// ensure the controller is running
-		resp, err := http.Get("http://localhost:8081/health")
+		resp, err := http.Get("http://localhost:8081/_healthz")
 		gm.Expect(err).To(gm.BeNil())
+
 		gm.Expect(resp.StatusCode).To(gm.Equal(200))
 	})
 
@@ -34,7 +35,7 @@ func TestControllerLifecycle(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		// ensure the controller is running
-		resp, err := http.Get("http://localhost:8081/health")
+		resp, err := http.Get("http://localhost:8081/_healthz")
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(resp.StatusCode).To(gm.Equal(200))
 
@@ -42,7 +43,7 @@ func TestControllerLifecycle(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		// now this should fail
-		_, err = http.Get("http://localhost:8081/health")
+		_, err = http.Get("http://localhost:8081/_healthz")
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 }

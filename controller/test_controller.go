@@ -80,7 +80,7 @@ func (t *TestController) Setup(ctx context.Context) (*Controller, error) {
 		// We are never bubbling this error up to the caller, but that is intentional
 		// This request will fail until the server is online, we will ping /health every 50ms until we get a 200
 		// If 5s elapses then we will give up and fail whatever test is using this.
-		resp, err := http.Get("http://localhost:8081/health")
+		resp, err := http.Get("http://localhost:8081/_healthz")
 		if err == nil {
 			if resp.StatusCode == 200 {
 				return t.controller, nil
