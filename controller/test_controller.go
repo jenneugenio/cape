@@ -2,12 +2,17 @@ package controller
 
 import (
 	"context"
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/database/dbtest"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/rs/zerolog"
+
+	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/database/dbtest"
+	"github.com/dropoutlabs/cape/logging"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 var (
@@ -26,6 +31,7 @@ var (
 type TestController struct {
 	controller *Controller
 	database   dbtest.TestDatabase
+	logger     *zerolog.Logger
 }
 
 // NewTestController gives you a test controller with a live database & gql server
@@ -35,7 +41,8 @@ func NewTestController() (*TestController, error) {
 		return nil, err
 	}
 
-	controller, err := New(testDB.URL(), "test-controller")
+	logger := TestLogger()
+	controller, err := New(testDB.URL(), logger, "cape-test-controller")
 	if err != nil {
 		return nil, err
 	}
@@ -43,6 +50,7 @@ func NewTestController() (*TestController, error) {
 	return &TestController{
 		controller: controller,
 		database:   testDB,
+		logger:     logger,
 	}, nil
 }
 
@@ -68,7 +76,12 @@ func (t *TestController) Setup(ctx context.Context) (*Controller, error) {
 		return nil, err
 	}
 
-	go t.controller.Start(ctx) //nolint: errcheck
+	go func() {
+		err := t.controller.Start(ctx)
+		if err != nil {
+			t.logger.Error().Err(err).Msg("Could not start test controller")
+		}
+	}()
 
 	timeout := make(chan bool, 1)
 	go func() {
@@ -104,4 +117,24 @@ func (t *TestController) Teardown(ctx context.Context) error {
 	}
 
 	return t.database.Teardown(ctx)
+}
+
+// TestLogger returns a logger for use in writing tests
+func TestLogger() *zerolog.Logger {
+	loggerType := os.Getenv("CAPE_LOGGING_TYPE")
+	if loggerType == "" {
+		loggerType = "discard"
+	}
+
+	logLevel := os.Getenv("CAPE_LOGGING_LEVEL")
+	if logLevel == "" {
+		logLevel = "info"
+	}
+
+	logger, err := logging.Logger(loggerType, logLevel, "test")
+	if err != nil {
+		panic(fmt.Sprintf("could not create test logger: %s", err))
+	}
+
+	return logger
 }

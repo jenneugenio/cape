@@ -1,6 +1,13 @@
 package cmd
 
-import "github.com/urfave/cli/v2"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/urfave/cli/v2"
+
+	"github.com/dropoutlabs/cape/logging"
+)
 
 func dbURLFlag() cli.Flag {
 	return &cli.StringFlag{
@@ -19,10 +26,37 @@ func dbPasswordFlag() cli.Flag {
 	}
 }
 
-func serviceIDFlag() cli.Flag {
+func instanceIDFlag() cli.Flag {
 	return &cli.StringFlag{
-		Name:    "service-id",
-		Usage:   "Service ID of the component to run",
-		EnvVars: []string{"CAPE_SERVICE_ID"},
+		Name:    "instance-id",
+		Usage:   "An identifier to provide for uniquely identifying this process. One will be generated if not provided.",
+		EnvVars: []string{"CAPE_INSTANCE_ID"},
+	}
+}
+
+func loggingTypeFlag() cli.Flag {
+	options := []string{}
+	for _, str := range logging.Types() {
+		options = append(options, str)
+	}
+
+	str := "The type of logger to use for disptaching logs (options: %s)"
+	usage := fmt.Sprintf(str, strings.Join(options, ", "))
+	return &cli.StringFlag{
+		Name:    "logger",
+		Usage:   usage,
+		Value:   logging.JSONType.String(),
+		EnvVars: []string{"CAPE_LOGGING_TYPE"},
+	}
+}
+
+func loggingLevelFlag() cli.Flag {
+	str := "The level of log to report when dispatching logs (options: %s)"
+	usage := fmt.Sprintf(str, strings.Join(logging.Levels(), ", "))
+	return &cli.StringFlag{
+		Name:    "log-level",
+		Usage:   usage,
+		Value:   logging.DefaultLevel,
+		EnvVars: []string{"CAPE_LOGGING_LEVEL"},
 	}
 }

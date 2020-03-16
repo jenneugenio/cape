@@ -3,26 +3,30 @@ package controller
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/url"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/manifoldco/healthz"
+	"github.com/rs/zerolog"
+
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/graph"
 	"github.com/dropoutlabs/cape/graph/generated"
-	"github.com/manifoldco/healthz"
-	"net/http"
-	"net/url"
 )
 
 // Controller is the central brain of Cape.  It keeps track of system
 // users, policy, etc
 type Controller struct {
-	backend   database.Backend
-	name      string
-	gqlServer *http.Server
+	backend    database.Backend
+	instanceID string
+	server     *http.Server
+	logger     *zerolog.Logger
 }
 
 func (c *Controller) startGQLServer() error {
-	err := c.gqlServer.ListenAndServe()
+	err := c.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		return err
 	}
@@ -37,6 +41,7 @@ func (c *Controller) Start(ctx context.Context) error {
 		fmt.Println(err)
 	}
 
+	c.logger.Info().Msg(fmt.Sprintf("Attempting to listen on: %s", c.server.Addr))
 	return c.startGQLServer()
 }
 
@@ -44,15 +49,13 @@ func (c *Controller) Start(ctx context.Context) error {
 func (c *Controller) Stop(ctx context.Context) error {
 	defer c.backend.Close()
 
-	c.gqlServer.SetKeepAlivesEnabled(false)
-	return c.gqlServer.Shutdown(ctx)
+	c.server.SetKeepAlivesEnabled(false)
+	return c.server.Shutdown(ctx)
 }
 
 // New returns a pointer to a controller instance
-func New(dbURL *url.URL, serviceID string) (*Controller, error) {
-	name := fmt.Sprintf("cape-controller-%s", serviceID)
-	backend, err := database.New(dbURL, name)
-
+func New(dbURL *url.URL, logger *zerolog.Logger, instanceID string) (*Controller, error) {
+	backend, err := database.New(dbURL, instanceID)
 	if err != nil {
 		return nil, err
 	}
@@ -61,18 +64,26 @@ func New(dbURL *url.URL, serviceID string) (*Controller, error) {
 		Backend: backend,
 	}}))
 
-	mux := http.NewServeMux()
+	root := http.NewServeMux()
+	root.Handle("/v1", playground.Handler("GraphQL playground", "/query"))
+	root.Handle("/v1/query", gqlHandler)
+	root.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+	})
 
-	mux.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	mux.Handle("/query", gqlHandler)
+	recovery := recoveryMiddleware(roundtripLoggerMiddleware(healthz.NewHandler(root)))
+	handler := requestIDMiddleware(logMiddleware(logger, recovery))
 
-	handler := healthz.NewHandler(mux)
-
-	gqlSrv := &http.Server{Addr: ":8081", Handler: handler}
+	addr := ":8081"
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: handler,
+	}
 
 	return &Controller{
-		backend:   backend,
-		name:      name,
-		gqlServer: gqlSrv,
+		backend:    backend,
+		instanceID: instanceID,
+		server:     srv,
+		logger:     logger,
 	}, nil
 }

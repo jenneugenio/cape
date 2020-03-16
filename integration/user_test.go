@@ -28,7 +28,7 @@ func TestUsers(t *testing.T) {
 	id, err := database.DecodeFromString("3m0v6dgh7avzj9gdm63qnp819x")
 	gm.Expect(err).To(gm.BeNil())
 
-	client := graphql.NewClient("http://localhost:8081/query")
+	client := graphql.NewClient("http://localhost:8081/v1/query")
 	req := graphql.NewRequest(`
 		mutation CreateUser {
 		  createUser(input: { name: "Jerry", id: "3m0v6dgh7avzj9gdm63qnp819x" }) {

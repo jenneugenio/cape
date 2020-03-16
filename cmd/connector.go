@@ -6,8 +6,12 @@ import (
 )
 
 func startConnectorCmd(c *cli.Context) error {
-	serviceID := getServiceID(c)
-	conn := connector.New(serviceID)
+	instanceID, err := getInstanceID(c, "connector")
+	if err != nil {
+		return err
+	}
+
+	conn := connector.New(instanceID)
 	conn.Start()
 
 	return nil
@@ -18,7 +22,7 @@ func init() {
 		Name:        "start",
 		Description: "Launch the Cape Data Connector",
 		Action:      startConnectorCmd,
-		Flags:       []cli.Flag{serviceIDFlag()},
+		Flags:       []cli.Flag{instanceIDFlag()},
 	}
 
 	connectorCmd := &cli.Command{

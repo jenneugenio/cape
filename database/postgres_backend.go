@@ -33,6 +33,10 @@ func (p *PostgresBackend) Open(ctx context.Context) error {
 
 // Close the database
 func (p *PostgresBackend) Close() error {
+	if p.pool == nil && p.conn == nil {
+		return nil
+	}
+
 	p.pool.Close()
 	p.conn = nil
 	p.pool = nil
