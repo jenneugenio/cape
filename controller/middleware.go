@@ -13,12 +13,15 @@ import (
 	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
+// ContextKey is a type alias used for storing data in a context
+type ContextKey string
+
 const (
 	// RequestIDContextKey is the name of the key stored on the contet
-	RequestIDContextKey = "request-id"
+	RequestIDContextKey ContextKey = "request-id"
 
 	// LoggerContextKey is the name of the logger key stored on the context
-	LoggerContextKey = "logger"
+	LoggerContextKey ContextKey = "logger"
 )
 
 // RequestID returns the request id stored on a given context
