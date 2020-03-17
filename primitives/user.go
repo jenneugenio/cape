@@ -1,7 +1,6 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/database/types"
 )
@@ -9,9 +8,9 @@ import (
 // User represents a user of the system
 type User struct {
 	*database.Primitive
-	Name        string            `json:"name"`
-	Email       string            `json:"email"`
-	Credentials *auth.Credentials `json:"credentials"`
+	Name        string       `json:"name"`
+	Email       string       `json:"email"`
+	Credentials *Credentials `json:"credentials"`
 }
 
 // GetType returns the type for this entity
@@ -20,7 +19,7 @@ func (u *User) GetType() types.Type {
 }
 
 // NewUser returns a new User struct
-func NewUser(name string, email string, creds *auth.Credentials) (*User, error) {
+func NewUser(name string, email string, creds *Credentials) (*User, error) {
 	p, err := database.NewPrimitive(UserType)
 	if err != nil {
 		return nil, err
@@ -35,6 +34,6 @@ func NewUser(name string, email string, creds *auth.Credentials) (*User, error) 
 }
 
 // GetCredentials satisfies Identity interface
-func (u *User) GetCredentials() *auth.Credentials {
+func (u *User) GetCredentials() *Credentials {
 	return u.Credentials
 }

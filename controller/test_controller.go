@@ -2,17 +2,18 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/rs/zerolog"
 
+	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/database/dbtest"
-	"github.com/dropoutlabs/cape/logging"
+	"github.com/dropoutlabs/cape/framework"
 	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 var (
@@ -32,6 +33,11 @@ type TestController struct {
 	controller *Controller
 	database   dbtest.TestDatabase
 	logger     *zerolog.Logger
+
+	User *primitives.User
+
+	// TODO this should be stored on our own client
+	Credentials *auth.Credentials
 }
 
 // NewTestController gives you a test controller with a live database & gql server
@@ -41,7 +47,7 @@ func NewTestController() (*TestController, error) {
 		return nil, err
 	}
 
-	logger := TestLogger()
+	logger := framework.TestLogger()
 	controller, err := New(testDB.URL(), logger, "cape-test-controller")
 	if err != nil {
 		return nil, err
@@ -96,6 +102,11 @@ func (t *TestController) Setup(ctx context.Context) (*Controller, error) {
 		resp, err := http.Get("http://localhost:8081/_healthz")
 		if err == nil {
 			if resp.StatusCode == 200 {
+				err = t.createUser(ctx)
+				if err != nil {
+					return nil, err
+				}
+
 				return t.controller, nil
 			}
 		}
@@ -119,22 +130,19 @@ func (t *TestController) Teardown(ctx context.Context) error {
 	return t.database.Teardown(ctx)
 }
 
-// TestLogger returns a logger for use in writing tests
-func TestLogger() *zerolog.Logger {
-	loggerType := os.Getenv("CAPE_LOGGING_TYPE")
-	if loggerType == "" {
-		loggerType = "discard"
-	}
-
-	logLevel := os.Getenv("CAPE_LOGGING_LEVEL")
-	if logLevel == "" {
-		logLevel = "info"
-	}
-
-	logger, err := logging.Logger(loggerType, logLevel, "test")
+func (t *TestController) createUser(ctx context.Context) error {
+	creds, err := auth.NewCredentials([]byte("swimmingfishmustswimquick"), nil)
 	if err != nil {
-		panic(fmt.Sprintf("could not create test logger: %s", err))
+		return err
+	}
+	t.Credentials = creds
+
+	user, err := primitives.NewUser("Testy Testerson", "testy@capeprivacy.com", creds.Package())
+	if err != nil {
+		return err
 	}
 
-	return logger
+	t.User = user
+
+	return t.controller.backend.Create(ctx, user)
 }

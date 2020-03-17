@@ -1,5 +1,5 @@
 schema:
-  - graph/*.graphqls
+  - graph/*.graphql
 
 exec:
   filename: graph/generated/generated.go
@@ -20,3 +20,5 @@ autobind:
 models:
   ID:
     model: github.com/dropoutlabs/cape/database.ID
+  Base64:
+    model: github.com/dropoutlabs/cape/primitives.Base64Value

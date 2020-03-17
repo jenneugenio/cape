@@ -3,7 +3,6 @@ package primitives
 import (
 	"time"
 
-	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/database/types"
 	"github.com/manifoldco/go-base64"
@@ -13,19 +12,19 @@ import (
 // client will use to properly sign their challenge
 type AuthCredentials struct {
 	Salt *base64.Value
-	Alg  auth.CredentialsAlgType
+	Alg  CredentialsAlgType
 }
 
 // Session holds all the session data required to authenticate API
 // calls with the server
 type Session struct {
 	*database.Primitive
-	IdentityID database.ID    `json:"identity_id"`
-	ExpiresAt  time.Time      `json:"expires_at"`
-	Type       auth.TokenType `json:"type"`
-	Token      *base64.Value  `json:"token"`
+	IdentityID database.ID   `json:"identity_id"`
+	ExpiresAt  time.Time     `json:"expires_at"`
+	Type       TokenType     `json:"type"`
+	Token      *base64.Value `json:"token"`
 
-	AuthCredentials *AuthCredentials `json:"auth_credentials"`
+	Credentials *AuthCredentials `json:"credentials"`
 }
 
 // GetType returns the type for this entity
@@ -34,7 +33,7 @@ func (s *Session) GetType() types.Type {
 }
 
 // NewSession returns a new Session struct
-func NewSession(identity Identity, expiresAt time.Time, typ auth.TokenType,
+func NewSession(identity Identity, expiresAt time.Time, typ TokenType,
 	token *base64.Value) (*Session, error) {
 	p, err := database.NewPrimitive(SessionType)
 	if err != nil {
@@ -47,12 +46,14 @@ func NewSession(identity Identity, expiresAt time.Time, typ auth.TokenType,
 		ExpiresAt:  expiresAt,
 		Type:       typ,
 		Token:      token,
+
+		Credentials: nil,
 	}
 
-	if typ == auth.Login {
+	if typ == Login {
 		creds := identity.GetCredentials()
 
-		session.AuthCredentials = &AuthCredentials{
+		session.Credentials = &AuthCredentials{
 			Salt: creds.Salt,
 			Alg:  creds.Alg,
 		}

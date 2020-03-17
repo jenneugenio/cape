@@ -4,24 +4,15 @@ import (
 	"crypto/ed25519"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"github.com/manifoldco/go-base64"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 
 	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
-// TokenType is an enum holding the category of sessions
-type TokenType string
-
-var (
-	// Login is the session type used during the login flow
-	Login TokenType = "login"
-	// Authenticated is the session type used on normal API calls
-	Authenticated TokenType = "auth"
-)
-
-//
 var (
 	// LoginTokenDuration how long login tokens last
 	LoginTokenDuration = time.Minute * 5
@@ -77,26 +68,33 @@ func (t *TokenAuthority) Verify(signedToken *base64.Value) error {
 // - IssuedAt: time the JWT was issued
 // - NotBefore: the JWT will not be accepted before this time has passed
 // - Issuer: the service email of the issuing controller
-func (t *TokenAuthority) Generate(tokenType TokenType) (*base64.Value, error) {
+func (t *TokenAuthority) Generate(tokenType primitives.TokenType) (*base64.Value, time.Time, error) {
 	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.EdDSA, Key: t.privateKey},
 		(&jose.SignerOptions{}).WithType("JWT"))
 	if err != nil {
-		return nil, err
+		return nil, time.Time{}, err
 	}
 
 	now := time.Now().UTC()
 
 	var expiresIn time.Time
 	switch tokenType {
-	case Login:
+	case primitives.Login:
 		expiresIn = now.Add(LoginTokenDuration)
-	case Authenticated:
+	case primitives.Authenticated:
 		expiresIn = now.Add(AuthTokenDuration)
 	default:
-		return nil, errors.New(InvalidTokenType, "Invalid token type must be login or authenticated")
+		return nil, time.Time{}, errors.New(primitives.InvalidTokenType,
+			"Invalid token type must be login or authenticated")
+	}
+
+	u, err := uuid.NewV4()
+	if err != nil {
+		return nil, time.Time{}, err
 	}
 
 	cl := jwt.Claims{
+		Subject:   u.String(),
 		Issuer:    t.ServiceEmail,
 		IssuedAt:  jwt.NewNumericDate(now),
 		NotBefore: jwt.NewNumericDate(now),
@@ -105,8 +103,8 @@ func (t *TokenAuthority) Generate(tokenType TokenType) (*base64.Value, error) {
 
 	signedToken, err := jwt.Signed(sig).Claims(cl).CompactSerialize()
 	if err != nil {
-		return nil, err
+		return nil, time.Time{}, err
 	}
 
-	return base64.New([]byte(signedToken)), nil
+	return base64.New([]byte(signedToken)), expiresIn, nil
 }

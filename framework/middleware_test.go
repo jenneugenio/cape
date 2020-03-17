@@ -1,14 +1,16 @@
-package controller
+package framework
 
 import (
 	"encoding/json"
-	"github.com/justinas/alice"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/justinas/alice"
+
 	"github.com/gofrs/uuid"
+	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 	"github.com/rs/zerolog"
 
@@ -21,8 +23,11 @@ func init() {
 	logger = TestLogger()
 }
 
-func runMiddleware(mw http.Handler) {
+func runMiddleware(mw http.Handler, header *http.Header) {
 	req := httptest.NewRequest("GET", "http://my.capeprivacy.com", nil)
+	if header != nil {
+		req.Header = *header
+	}
 	w := httptest.NewRecorder()
 
 	mw.ServeHTTP(w, req)
@@ -41,8 +46,8 @@ func TestRequestIDMiddleware(t *testing.T) {
 			gm.Expect(rw.Header().Get("X-Request-Id")).To(gm.Equal(v.(uuid.UUID).String()))
 		})
 
-		mw := requestIDMiddleware(next)
-		runMiddleware(mw)
+		mw := RequestIDMiddleware(next)
+		runMiddleware(mw, nil)
 
 		gm.Expect(wasCalled).To(gm.BeTrue(), "next was not called")
 	})
@@ -58,7 +63,7 @@ func TestRecoveryMiddleware(t *testing.T) {
 			panic("a bad thing happened")
 		})
 
-		mw := alice.New(requestIDMiddleware, logMiddleware(logger), recoveryMiddleware).Then(next)
+		mw := alice.New(RequestIDMiddleware, LogMiddleware(logger), RecoveryMiddleware).Then(next)
 
 		req := httptest.NewRequest("GET", "http://api.torus.sh", nil)
 		w := httptest.NewRecorder()
@@ -92,8 +97,8 @@ func TestLoggingMiddleware(t *testing.T) {
 			}).ToNot(gm.Panic())
 		})
 
-		mw := alice.New(requestIDMiddleware, logMiddleware(logger)).Then(next)
-		runMiddleware(mw)
+		mw := alice.New(RequestIDMiddleware, LogMiddleware(logger)).Then(next)
+		runMiddleware(mw, nil)
 
 		gm.Expect(wasCalled).To(gm.BeTrue(), "next was not called")
 	})
@@ -102,10 +107,32 @@ func TestLoggingMiddleware(t *testing.T) {
 		gm.RegisterTestingT(t)
 
 		next := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {})
-		mw := alice.New(logMiddleware(logger)).Then(next)
+		mw := alice.New(LogMiddleware(logger)).Then(next)
 
 		gm.Expect(func() {
-			runMiddleware(mw)
+			runMiddleware(mw, nil)
 		}).To(gm.Panic())
+	})
+}
+
+func TestAuthTokenMiddleware(t *testing.T) {
+	t.Run("sets auth token on the request context", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		expID := base64.New([]byte("cool-auth-token"))
+		wasCalled := false
+		next := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			wasCalled = true
+			id := r.Context().Value(AuthTokenContextKey)
+			gm.Expect(id).To(gm.Equal(expID))
+		})
+
+		header := &http.Header{}
+		header.Add("Authorization", "Bearer "+expID.String())
+
+		mw := AuthTokenMiddleware(next)
+		runMiddleware(mw, header)
+
+		gm.Expect(wasCalled).To(gm.BeTrue(), "next was not called")
 	})
 }

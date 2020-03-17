@@ -9,6 +9,7 @@ import (
 	"golang.org/x/crypto/scrypt"
 
 	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 const (
@@ -23,21 +24,13 @@ const (
 	SeedSize = 32
 )
 
-// CredentialsAlgType enum holding the supported crypto algorithms
-type CredentialsAlgType string
-
-var (
-	// EDDSA algorithm type
-	EDDSA CredentialsAlgType = "eddsa"
-)
-
 // Credentials holds the public key and salt for a user
 type Credentials struct {
 	// privateKey not saved in the database or sent anywhere!
 	privateKey ed25519.PrivateKey
-	PublicKey  *base64.Value      `json:"public_key"`
-	Salt       *base64.Value      `json:"salt"`
-	Alg        CredentialsAlgType `json:"alg"`
+	PublicKey  *base64.Value                 `json:"public_key"`
+	Salt       *base64.Value                 `json:"salt"`
+	Alg        primitives.CredentialsAlgType `json:"alg"`
 }
 
 //Sign signs a message token
@@ -77,6 +70,15 @@ func (c *Credentials) Verify(token, sig *base64.Value) error {
 	return nil
 }
 
+// Package packages up a auth.Credentials into a primitives.Credentials
+func (c *Credentials) Package() *primitives.Credentials {
+	return &primitives.Credentials{
+		PublicKey: c.PublicKey,
+		Salt:      c.Salt,
+		Alg:       c.Alg,
+	}
+}
+
 // NewCredentials returns a Credential struct for creating credentials & re-deriving credentials.
 // To rederive credentials you must provide the same secret & salt with the same Alg parameters as used previously.
 func NewCredentials(secret []byte, salt *base64.Value) (*Credentials, error) {
@@ -100,7 +102,7 @@ func NewCredentials(secret []byte, salt *base64.Value) (*Credentials, error) {
 		privateKey: priv,
 		PublicKey:  base64.New([]byte(pub)),
 		Salt:       base64.New(saltBytes),
-		Alg:        EDDSA,
+		Alg:        primitives.EDDSA,
 	}, nil
 }
 
@@ -119,7 +121,7 @@ func LoadCredentials(publicKey, salt *base64.Value) (*Credentials, error) {
 	return &Credentials{
 		PublicKey: publicKey,
 		Salt:      salt,
-		Alg:       EDDSA,
+		Alg:       primitives.EDDSA,
 	}, nil
 }
 

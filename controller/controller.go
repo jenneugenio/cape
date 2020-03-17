@@ -3,18 +3,21 @@ package controller
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/url"
+
 	"github.com/NYTimes/gziphandler"
 	"github.com/justinas/alice"
 	"github.com/rs/cors"
-	"net/http"
-	"net/url"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/manifoldco/healthz"
 	"github.com/rs/zerolog"
 
+	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/framework"
 	"github.com/dropoutlabs/cape/graph"
 	"github.com/dropoutlabs/cape/graph/generated"
 )
@@ -63,8 +66,14 @@ func New(dbURL *url.URL, logger *zerolog.Logger, instanceID string) (*Controller
 		return nil, err
 	}
 
+	tokenAuth, err := auth.NewTokenAuthority(instanceID)
+	if err != nil {
+		return nil, err
+	}
+
 	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
-		Backend: backend,
+		Backend:        backend,
+		TokenAuthority: tokenAuth,
 	}}))
 
 	root := http.NewServeMux()
@@ -76,13 +85,14 @@ func New(dbURL *url.URL, logger *zerolog.Logger, instanceID string) (*Controller
 
 	health := healthz.NewHandler(root)
 	chain := alice.New(
-		requestIDMiddleware,
-		logMiddleware(logger),
-		roundtripLoggerMiddleware,
-		recoveryMiddleware,
+		framework.RequestIDMiddleware,
+		framework.LogMiddleware(logger),
+		framework.AuthTokenMiddleware,
+		framework.RoundtripLoggerMiddleware,
+		framework.RecoveryMiddleware,
 		gziphandler.GzipHandler,
 		cors.Default().Handler,
-		).Then(health)
+	).Then(health)
 
 	addr := ":8081"
 	srv := &http.Server{

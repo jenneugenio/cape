@@ -8,6 +8,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func TestNewCredential(t *testing.T) {
@@ -18,7 +19,7 @@ func TestNewCredential(t *testing.T) {
 	gm.Expect(len(*creds.Salt)).To(gm.Equal(SaltLength))
 	gm.Expect(len(*creds.PublicKey)).To(gm.Equal(ed25519.PublicKeySize))
 	gm.Expect(len(creds.privateKey)).To(gm.Equal(ed25519.PrivateKeySize))
-	gm.Expect(creds.Alg).To(gm.Equal(EDDSA))
+	gm.Expect(creds.Alg).To(gm.Equal(primitives.EDDSA))
 }
 
 func TestSignVerifyChallenge(t *testing.T) {

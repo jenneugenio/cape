@@ -13,12 +13,12 @@ type Token struct {
 
 // GetType returns the type for this entity
 func (t *Token) GetType() types.Type {
-	return TokenType
+	return TokenPrimitiveType
 }
 
 // NewToken returns an immutable token struct
 func NewToken(identityID database.ID) (*Token, error) {
-	p, err := database.NewPrimitive(TokenType)
+	p, err := database.NewPrimitive(TokenPrimitiveType)
 	if err != nil {
 		return nil, err
 	}

@@ -40,6 +40,7 @@ require (
 	github.com/spf13/cobra v0.0.6 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.6.2 // indirect
+	github.com/square/go-jose v2.4.1+incompatible
 	github.com/stretchr/testify v1.5.1 // indirect
 	github.com/urfave/cli/v2 v2.1.1
 	github.com/vektah/gqlparser/v2 v2.0.1

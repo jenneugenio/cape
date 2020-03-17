@@ -1,7 +1,6 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/database/types"
 )
@@ -10,8 +9,8 @@ import (
 // running a pipeline).
 type Service struct {
 	*database.Primitive
-	Email       string            `json:"email"`
-	Credentials *auth.Credentials `json:"credentials"`
+	Email       string       `json:"email"`
+	Credentials *Credentials `json:"credentials"`
 }
 
 // GetType returns the type for this entity
@@ -32,6 +31,6 @@ func NewService() (*Service, error) {
 }
 
 // GetCredentials satisfies Identity interface
-func (s *Service) GetCredentials() *auth.Credentials {
+func (s *Service) GetCredentials() *Credentials {
 	return s.Credentials
 }

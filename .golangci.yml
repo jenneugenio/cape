@@ -3,8 +3,9 @@ run:
 
   timeout: 1m
 
+linters-settings:
   lll:
-    line-length: 120
+    line-length: 150
 
 linters:
   enable:

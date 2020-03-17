@@ -3,10 +3,26 @@
 package model
 
 import (
-	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/primitives"
+	"github.com/manifoldco/go-base64"
 )
 
+type AuthSessionRequest struct {
+	Signature base64.Value `json:"signature"`
+}
+
+type DeleteSessionRequest struct {
+	Token base64.Value `json:"token"`
+}
+
+type LoginSessionRequest struct {
+	Email string `json:"email"`
+}
+
 type NewUserRequest struct {
-	Name string      `json:"name"`
-	ID   database.ID `json:"id"`
+	Name      string                        `json:"name"`
+	Email     string                        `json:"email"`
+	PublicKey base64.Value                  `json:"public_key"`
+	Salt      base64.Value                  `json:"salt"`
+	Alg       primitives.CredentialsAlgType `json:"alg"`
 }

@@ -1,0 +1,57 @@
+type User {
+  id: ID!
+  name: String!
+  email: String!
+}
+
+input NewUserRequest {
+  name: String!
+  email: String!
+  public_key: Base64!
+  salt: Base64!
+  alg: CredentialsAlgType!
+}
+
+input LoginSessionRequest {
+  email: String!
+}
+
+input AuthSessionRequest {
+  signature: Base64!
+}
+
+type AuthCredentials {
+  salt: Base64!
+  alg: CredentialsAlgType!
+}
+
+type Session {
+  id: ID!
+  identity_id: ID!
+  expires_at: Time!
+  type: TokenType!
+  token: Base64!
+  credentials: AuthCredentials
+}
+
+input DeleteSessionRequest {
+  token: Base64!
+}
+
+type Query {
+  user: User!
+  session: Session!
+}
+
+type Mutation {
+  createUser(input: NewUserRequest!): User!
+
+  createLoginSession(input: LoginSessionRequest!): Session!
+  createAuthSession(input: AuthSessionRequest!): Session!
+  deleteSession(input: DeleteSessionRequest): String!
+}
+
+scalar Time
+scalar Base64
+scalar CredentialsAlgType
+scalar TokenType
