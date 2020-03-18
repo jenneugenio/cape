@@ -2,6 +2,7 @@ package controller
 
 import (
 	"encoding/json"
+	"github.com/justinas/alice"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -56,7 +57,8 @@ func TestRecoveryMiddleware(t *testing.T) {
 			wasCalled = true
 			panic("a bad thing happened")
 		})
-		mw := requestIDMiddleware(logMiddleware(logger, recoveryMiddleware(next)))
+
+		mw := alice.New(requestIDMiddleware, logMiddleware(logger), recoveryMiddleware).Then(next)
 
 		req := httptest.NewRequest("GET", "http://api.torus.sh", nil)
 		w := httptest.NewRecorder()
@@ -90,7 +92,7 @@ func TestLoggingMiddleware(t *testing.T) {
 			}).ToNot(gm.Panic())
 		})
 
-		mw := requestIDMiddleware(logMiddleware(logger, next))
+		mw := alice.New(requestIDMiddleware, logMiddleware(logger)).Then(next)
 		runMiddleware(mw)
 
 		gm.Expect(wasCalled).To(gm.BeTrue(), "next was not called")
@@ -100,7 +102,7 @@ func TestLoggingMiddleware(t *testing.T) {
 		gm.RegisterTestingT(t)
 
 		next := http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {})
-		mw := logMiddleware(logger, next)
+		mw := alice.New(logMiddleware(logger)).Then(next)
 
 		gm.Expect(func() {
 			runMiddleware(mw)

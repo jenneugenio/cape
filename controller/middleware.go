@@ -62,16 +62,18 @@ func requestIDMiddleware(next http.Handler) http.Handler {
 
 // logMiddleware sets a zerolog.Logger on the request context for use in
 // downstream callers. This middleware relies on the requestIDMiddleware.
-func logMiddleware(log *zerolog.Logger, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		ctx := req.Context()
-		requestID := RequestID(ctx)
-		logger := log.With().Str("request_id", requestID.String()).Logger()
+func logMiddleware(log *zerolog.Logger) func (http.Handler) http.Handler {
+	return func (next http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			ctx := req.Context()
+			requestID := RequestID(ctx)
+			logger := log.With().Str("request_id", requestID.String()).Logger()
 
-		ctx = context.WithValue(ctx, LoggerContextKey, logger)
-		req = req.WithContext(ctx)
-		next.ServeHTTP(rw, req)
-	})
+			ctx = context.WithValue(ctx, LoggerContextKey, logger)
+			req = req.WithContext(ctx)
+			next.ServeHTTP(rw, req)
+		})
+	}
 }
 
 // roundtripLoggerMiddleware logs information about request and response

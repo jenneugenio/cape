@@ -3,6 +3,9 @@ package controller
 import (
 	"context"
 	"fmt"
+	"github.com/NYTimes/gziphandler"
+	"github.com/justinas/alice"
+	"github.com/rs/cors"
 	"net/http"
 	"net/url"
 
@@ -71,13 +74,20 @@ func New(dbURL *url.URL, logger *zerolog.Logger, instanceID string) (*Controller
 		w.WriteHeader(200)
 	})
 
-	recovery := recoveryMiddleware(roundtripLoggerMiddleware(healthz.NewHandler(root)))
-	handler := requestIDMiddleware(logMiddleware(logger, recovery))
+	health := healthz.NewHandler(root)
+	chain := alice.New(
+		requestIDMiddleware,
+		logMiddleware(logger),
+		roundtripLoggerMiddleware,
+		recoveryMiddleware,
+		gziphandler.GzipHandler,
+		cors.Default().Handler,
+		).Then(health)
 
 	addr := ":8081"
 	srv := &http.Server{
 		Addr:    addr,
-		Handler: handler,
+		Handler: chain,
 	}
 
 	return &Controller{
