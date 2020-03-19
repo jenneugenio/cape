@@ -71,10 +71,14 @@ func New(dbURL *url.URL, logger *zerolog.Logger, instanceID string) (*Controller
 		return nil, err
 	}
 
-	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{
+	config := generated.Config{Resolvers: &graph.Resolver{
 		Backend:        backend,
 		TokenAuthority: tokenAuth,
-	}}))
+	}}
+
+	config.Directives.IsAuthenticated = framework.IsAuthenticatedDirective(backend, tokenAuth)
+
+	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 
 	root := http.NewServeMux()
 	root.Handle("/v1", playground.Handler("GraphQL playground", "/query"))

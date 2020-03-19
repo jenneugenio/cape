@@ -13,9 +13,9 @@ type TokenType string
 
 var (
 	// Login is the session type used during the login flow
-	Login TokenType = "login"
+	Login TokenType = "LOGIN"
 	// Authenticated is the session type used on normal API calls
-	Authenticated TokenType = "auth"
+	Authenticated TokenType = "AUTHENTICATED"
 )
 
 // String returns the string represented by the enum value

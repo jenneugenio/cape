@@ -1,3 +1,9 @@
+# isAuthenticated depends on having access to an auth token and checks that the
+# auth token is valid and appends the related user and session to the request context.
+# Most graphql queries and mutation should be annotated with this except for createLoginSession
+# and other exceptions as needed
+directive @isAuthenticated(type: TokenType! = AUTHENTICATED) on FIELD_DEFINITION
+
 type User {
   id: ID!
   name: String!
@@ -47,8 +53,8 @@ type Mutation {
   createUser(input: NewUserRequest!): User!
 
   createLoginSession(input: LoginSessionRequest!): Session!
-  createAuthSession(input: AuthSessionRequest!): Session!
-  deleteSession(input: DeleteSessionRequest): String!
+  createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
+  deleteSession(input: DeleteSessionRequest): String! @isAuthenticated()
 }
 
 scalar Time

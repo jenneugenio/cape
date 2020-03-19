@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog"
 
 	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 // ContextKey is a type alias used for storing data in a context
@@ -25,8 +26,14 @@ const (
 	// LoggerContextKey is the name of the logger key stored on the context
 	LoggerContextKey ContextKey = "logger"
 
-	// AuthTokenContextKey is the name of the session key stored on the context
+	// AuthTokenContextKey is the name of the auth token stored on the context
 	AuthTokenContextKey ContextKey = "auth-token"
+
+	// SessionContextKey is the name of the session key stored on the context
+	SessionContextKey ContextKey = "session"
+
+	// UserContextKey is the name of the user key stored on the context
+	UserContextKey ContextKey = "user"
 )
 
 // RequestID returns the request id stored on a given context
@@ -57,6 +64,26 @@ func AuthToken(ctx context.Context) *base64.Value {
 	}
 
 	return token.(*base64.Value)
+}
+
+// Session returns the session stored on the given context
+func Session(ctx context.Context) *primitives.Session {
+	session := ctx.Value(SessionContextKey)
+	if session == nil {
+		panic("session id not available on context")
+	}
+
+	return session.(*primitives.Session)
+}
+
+// User returns the user stored on the given context
+func User(ctx context.Context) *primitives.User {
+	user := ctx.Value(UserContextKey)
+	if user == nil {
+		panic("session id not available on context")
+	}
+
+	return user.(*primitives.User)
 }
 
 // RequestIDMiddleware sets a UUID on the response header and request context
@@ -91,39 +118,25 @@ func LogMiddleware(log *zerolog.Logger) func(http.Handler) http.Handler {
 	}
 }
 
-// SessionIDMiddleware sets the session ID on the request context for us in
+// AuthTokenMiddleware sets the session ID on the request context for us in
 // graphql handlers and elsewhere
 func AuthTokenMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
-		var token *base64.Value
-
 		authHeader := req.Header.Get("Authorization")
 		r := regexp.MustCompile(`Bearer\s(?P<bearer_token>[^\s]+)$`)
 		authHeaderParts := r.FindStringSubmatch(authHeader)
 		if len(authHeaderParts) != 2 {
-			// TODO always return a token for now, should reject any requests that don't
-			// match the createLoginSession graphql route as all other require some sort
-			// of token
-			emptyToken, err := base64.NewFromString("")
-			if err != nil {
-				err := errors.New(InvalidAuthHeader, "Unable to parse auth header")
-				respondWithError(rw, err)
-			}
-
-			token = emptyToken
-		} else {
-			t, err := base64.NewFromString(authHeaderParts[1])
-			if err != nil {
-				err := errors.New(InvalidAuthHeader, "Unable to parse auth header")
-				respondWithError(rw, err)
-			}
-
-			token = t
+			next.ServeHTTP(rw, req)
+			return
 		}
 
-		// TODO verify the token here!!!
+		token, err := base64.NewFromString(authHeaderParts[1])
+		if err != nil {
+			err := errors.New(InvalidAuthHeader, "Unable to parse auth header")
+			respondWithError(rw, err)
+		}
 
 		ctx = context.WithValue(ctx, AuthTokenContextKey, token)
 		req = req.WithContext(ctx)
