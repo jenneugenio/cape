@@ -3,9 +3,16 @@
 package model
 
 import (
+	"net/url"
+
 	"github.com/dropoutlabs/cape/primitives"
 	"github.com/manifoldco/go-base64"
 )
+
+type AddSourceRequest struct {
+	Label       string  `json:"label"`
+	Credentials url.URL `json:"credentials"`
+}
 
 type AuthSessionRequest struct {
 	Signature base64.Value `json:"signature"`

@@ -2,7 +2,9 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/dropoutlabs/cape/database"
 	"net/url"
 
 	"github.com/machinebox/graphql"
@@ -162,15 +164,133 @@ func (c *Client) Logout(ctx context.Context, authToken *base64.Value) error {
 		token = c.authToken
 	}
 
-	err := c.Raw(ctx, fmt.Sprintf(`
+	return c.Raw(ctx, fmt.Sprintf(`
 		mutation DeleteSession {
 		  deleteSession(input: { token: "%s" })
 		}
 	`, token), nil)
+}
 
+// Source Routes
+
+// SourceResponse is an alias of primitives.Source
+// This is needed because the graphQL client cannot leverage the marshallers we have written
+// for the URL properties of source (e.g. the Endpoint)
+//
+// We create a custom marshaller that encodes the endpoint as a string
+type SourceResponse primitives.Source
+
+// MarshalJSON is the marshaller implementation for SourceResponse
+func (s *SourceResponse) MarshalJSON() ([]byte, error) {
+	// We need another alias here as we are overwriting the Endpoint field of SourceResponse, which is a URL
+	// If we embedded SourceResponse directly on the struct below, we would get an infinite loop trying to marshal
+	// this object.  The type alias drops the Marshal & Unmarshal functions from "this" object.
+	type SourceAlias SourceResponse
+	return json.Marshal(&struct {
+		Endpoint string `json:"endpoint"`
+		*SourceAlias
+	} {
+		Endpoint: s.Endpoint.String(),
+		SourceAlias: (*SourceAlias)(s),
+	})
+}
+
+// UnmarshalJSON is the marshaller implementation for SourceResponse
+func (s *SourceResponse) UnmarshalJSON(data []byte) error {
+	// See MarshalJSON for an explanation of this weird type alias
+	type SourceAlias SourceResponse
+	aux := &struct {
+		Endpoint string `json:"endpoint"`
+		*SourceAlias
+	} {
+		SourceAlias: (*SourceAlias)(s),
+	}
+
+	err := json.Unmarshal(data, &aux)
 	if err != nil {
 		return err
 	}
 
+	e, err := url.Parse(aux.Endpoint)
+	if err != nil {
+		return err
+	}
+
+	s.Endpoint = *e
 	return nil
+}
+
+// AddSource adds a new source to the database
+func (c *Client) AddSource(ctx context.Context, label string, credentials *url.URL) (*primitives.Source, error) {
+	var resp struct {
+		Source SourceResponse `json:"addSource"`
+	}
+
+	err := c.Raw(ctx, fmt.Sprintf(`
+		mutation AddSource {
+			  addSource(input: { label: "%s", credentials: "%s"}) {
+				id
+				label
+				endpoint
+			  }
+			}
+	`, label, credentials.String()), &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	source := primitives.Source(resp.Source)
+	return &source, nil
+}
+
+// ListSources returns all of the data sources in the database that you
+func (c *Client) ListSources(ctx context.Context) ([]*primitives.Source, error) {
+	var resp struct {
+		Sources []SourceResponse `json:"sources"`
+	}
+
+	err := c.Raw(ctx, `
+		query Sources {
+				sources {
+					id
+					label
+					endpoint
+				}
+			}
+	`, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	sources := make([]*primitives.Source, len(resp.Sources))
+	for i := 0; i < len(sources); i++ {
+		s := primitives.Source(resp.Sources[i])
+		sources[i] = &s
+	}
+
+	return sources, nil
+}
+
+// GetSource returns a specific data source
+func (c *Client) GetSource(ctx context.Context, id database.ID) (*primitives.Source, error) {
+	var resp struct {
+		Source SourceResponse `json:"source"`
+	}
+
+	err := c.Raw(ctx, fmt.Sprintf(`
+		query Sources {
+				source(id: "%s") {
+					id
+					label
+					endpoint
+				}
+			}
+	`, id.String()), &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	source := primitives.Source(resp.Source)
+	return &source, nil
 }

@@ -14,6 +14,7 @@ var (
 	AttachmentType     types.Type = 0x005
 	AssignmentType     types.Type = 0x006
 	SessionType        types.Type = 0x007
+	SourceType         types.Type = 0x008
 )
 
 func init() {
@@ -25,4 +26,5 @@ func init() {
 	types.Register(AttachmentType, "attachments", false)
 	types.Register(AssignmentType, "assignments", false)
 	types.Register(SessionType, "sessions", false)
+	types.Register(SourceType, "sources", true)
 }

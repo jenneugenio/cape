@@ -4,11 +4,42 @@
 # and other exceptions as needed
 directive @isAuthenticated(type: TokenType! = AUTHENTICATED) on FIELD_DEFINITION
 
+# ------------------------------------------------------------------
+# BEGIN PRIMITIVES
+#
+# These map to objects in the primitives package
+# ------------------------------------------------------------------
+
 type User {
   id: ID!
   name: String!
   email: String!
 }
+
+type Session {
+  id: ID!
+  identity_id: ID!
+  expires_at: Time!
+  type: TokenType!
+  token: Base64!
+  credentials: AuthCredentials
+}
+
+type Source {
+  id: ID!
+  label: String!
+  endpoint: URL!
+}
+
+# ------------------------------------------------------------------
+# END PRIMITIVES
+# ------------------------------------------------------------------
+
+# ------------------------------------------------------------------
+# END INPUTS
+#
+# These are used as inputs to mutations
+# ------------------------------------------------------------------
 
 input NewUserRequest {
   name: String!
@@ -31,26 +62,29 @@ type AuthCredentials {
   alg: CredentialsAlgType!
 }
 
-type Session {
-  id: ID!
-  identity_id: ID!
-  expires_at: Time!
-  type: TokenType!
-  token: Base64!
-  credentials: AuthCredentials
-}
-
 input DeleteSessionRequest {
   token: Base64!
 }
 
+input AddSourceRequest {
+  label: String!
+  credentials: URL!
+}
+
+# ------------------------------------------------------------------
+# END INPUTS
+# ------------------------------------------------------------------
+
 type Query {
   user: User!
   session: Session!
+  sources: [Source!]!
+  source(id: ID!): Source!
 }
 
 type Mutation {
   createUser(input: NewUserRequest!): User!
+  addSource(input: AddSourceRequest!): Source!
 
   createLoginSession(input: LoginSessionRequest!): Session!
   createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
@@ -61,3 +95,4 @@ scalar Time
 scalar Base64
 scalar CredentialsAlgType
 scalar TokenType
+scalar URL

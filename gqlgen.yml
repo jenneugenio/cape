@@ -22,3 +22,5 @@ models:
     model: github.com/dropoutlabs/cape/database.ID
   Base64:
     model: github.com/dropoutlabs/cape/primitives.Base64Value
+  URL:
+    model: github.com/dropoutlabs/cape/primitives.URL

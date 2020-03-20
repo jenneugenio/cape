@@ -36,6 +36,20 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRe
 	return user, nil
 }
 
+func (r *mutationResolver) AddSource(ctx context.Context, input model.AddSourceRequest) (*primitives.Source, error) {
+	source, err := primitives.NewSource(input.Label, input.Credentials)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Backend.Create(ctx, source)
+	if err != nil {
+		return nil, err
+	}
+
+	return source, nil
+}
+
 func (r *mutationResolver) CreateLoginSession(ctx context.Context, input model.LoginSessionRequest) (*primitives.Session, error) {
 	logger := fw.Logger(ctx)
 
@@ -149,6 +163,31 @@ func (r *queryResolver) User(ctx context.Context) (*primitives.User, error) {
 
 func (r *queryResolver) Session(ctx context.Context) (*primitives.Session, error) {
 	return nil, errs.New(RouteNotImplemented, "Session query not implemented")
+}
+
+func (r *queryResolver) Sources(ctx context.Context) ([]*primitives.Source, error) {
+	var s []primitives.Source
+	err := r.Backend.Query(ctx, &s, database.NewEmptyFilter())
+	if err != nil {
+		return nil, err
+	}
+
+	sources := make([]*primitives.Source, len(s))
+	for i := 0; i < len(sources); i++ {
+		sources[i] = &(s[i])
+	}
+
+	return sources, nil
+}
+
+func (r *queryResolver) Source(ctx context.Context, id database.ID) (*primitives.Source, error) {
+	var primitive primitives.Source
+	err := r.Backend.Get(ctx, id, &primitive)
+	if err != nil {
+		return nil, err
+	}
+
+	return &primitive, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

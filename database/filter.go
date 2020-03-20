@@ -41,3 +41,7 @@ type In []string
 func NewFilter(w Where, o *Order, p *Page) Filter {
 	return Filter{Where: w, Order: o, Page: p}
 }
+
+func NewEmptyFilter() Filter {
+	return Filter{}
+}
