@@ -128,8 +128,19 @@ func (r *mutationResolver) CreateAuthSession(ctx context.Context, input model.Au
 	return authSession, nil
 }
 
-func (r *mutationResolver) DeleteSession(ctx context.Context, input *model.DeleteSessionRequest) (string, error) {
-	return "", errs.New(RouteNotImplemented, "Delete session not implemented")
+func (r *mutationResolver) DeleteSession(ctx context.Context, input model.DeleteSessionRequest) (*string, error) {
+	session := &primitives.Session{}
+	err := r.Backend.QueryOne(ctx, session, database.NewFilter(database.Where{"token": input.Token.String()}, nil, nil))
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Backend.Delete(ctx, session.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
 
 func (r *queryResolver) User(ctx context.Context) (*primitives.User, error) {

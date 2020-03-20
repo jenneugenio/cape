@@ -154,3 +154,23 @@ func (c *Client) Login(ctx context.Context, email string, password []byte) (*pri
 
 	return session, nil
 }
+
+// Logout calls the deleteSession mutation
+func (c *Client) Logout(ctx context.Context, authToken *base64.Value) error {
+	var token *base64.Value
+	if authToken == nil {
+		token = c.authToken
+	}
+
+	err := c.Raw(ctx, fmt.Sprintf(`
+		mutation DeleteSession {
+		  deleteSession(input: { token: "%s" })
+		}
+	`, token), nil)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

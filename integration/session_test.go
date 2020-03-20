@@ -57,6 +57,26 @@ func TestSessions(t *testing.T) {
 		session, err := client.Login(ctx, tc.User.Email, []byte("idontknowmypassword"))
 		gm.Expect(session).To(gm.BeNil())
 
+		gm.Expect(err).ToNot(gm.BeNil())
+
+		gm.Expect(err.Error()).To(gm.Equal("graphql: authentication_failure: Failed to authenticate"))
+
+	})
+
+	t.Run("test delete session", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		session, err := client.Login(ctx, tc.User.Email, tc.UserPassword)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(session).ToNot(gm.BeNil())
+
+		err = client.Logout(ctx, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		// Can't do authenticated command after deleting session
+		err = client.Logout(ctx, nil)
+		gm.Expect(err).ToNot(gm.BeNil())
+
 		gm.Expect(err.Error()).To(gm.Equal("graphql: authentication_failure: Failed to authenticate"))
 	})
 }

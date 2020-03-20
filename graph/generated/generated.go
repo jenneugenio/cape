@@ -58,7 +58,7 @@ type ComplexityRoot struct {
 		CreateAuthSession  func(childComplexity int, input model.AuthSessionRequest) int
 		CreateLoginSession func(childComplexity int, input model.LoginSessionRequest) int
 		CreateUser         func(childComplexity int, input model.NewUserRequest) int
-		DeleteSession      func(childComplexity int, input *model.DeleteSessionRequest) int
+		DeleteSession      func(childComplexity int, input model.DeleteSessionRequest) int
 	}
 
 	Query struct {
@@ -86,7 +86,7 @@ type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error)
 	CreateLoginSession(ctx context.Context, input model.LoginSessionRequest) (*primitives.Session, error)
 	CreateAuthSession(ctx context.Context, input model.AuthSessionRequest) (*primitives.Session, error)
-	DeleteSession(ctx context.Context, input *model.DeleteSessionRequest) (string, error)
+	DeleteSession(ctx context.Context, input model.DeleteSessionRequest) (*string, error)
 }
 type QueryResolver interface {
 	User(ctx context.Context) (*primitives.User, error)
@@ -168,7 +168,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteSession(childComplexity, args["input"].(*model.DeleteSessionRequest)), true
+		return e.complexity.Mutation.DeleteSession(childComplexity, args["input"].(model.DeleteSessionRequest)), true
 
 	case "Query.session":
 		if e.complexity.Query.Session == nil {
@@ -367,7 +367,7 @@ type Mutation {
 
   createLoginSession(input: LoginSessionRequest!): Session!
   createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
-  deleteSession(input: DeleteSessionRequest): String! @isAuthenticated()
+  deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
 }
 
 scalar Time
@@ -441,9 +441,9 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 func (ec *executionContext) field_Mutation_deleteSession_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *model.DeleteSessionRequest
+	var arg0 model.DeleteSessionRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalODeleteSessionRequest2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDeleteSessionRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNDeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDeleteSessionRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -742,7 +742,7 @@ func (ec *executionContext) _Mutation_deleteSession(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DeleteSession(rctx, args["input"].(*model.DeleteSessionRequest))
+			return ec.resolvers.Mutation().DeleteSession(rctx, args["input"].(model.DeleteSessionRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
@@ -762,24 +762,21 @@ func (ec *executionContext) _Mutation_deleteSession(ctx context.Context, field g
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(string); ok {
+		if data, ok := tmp.(*string); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2445,9 +2442,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "deleteSession":
 			out.Values[i] = ec._Mutation_deleteSession(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2907,6 +2901,10 @@ func (ec *executionContext) marshalNCredentialsAlgType2githubᚗcomᚋdropoutlab
 	return v
 }
 
+func (ec *executionContext) unmarshalNDeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDeleteSessionRequest(ctx context.Context, v interface{}) (model.DeleteSessionRequest, error) {
+	return ec.unmarshalInputDeleteSessionRequest(ctx, v)
+}
+
 func (ec *executionContext) unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
 	var res database.ID
 	return res, res.UnmarshalGQL(v)
@@ -3247,18 +3245,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
-}
-
-func (ec *executionContext) unmarshalODeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDeleteSessionRequest(ctx context.Context, v interface{}) (model.DeleteSessionRequest, error) {
-	return ec.unmarshalInputDeleteSessionRequest(ctx, v)
-}
-
-func (ec *executionContext) unmarshalODeleteSessionRequest2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDeleteSessionRequest(ctx context.Context, v interface{}) (*model.DeleteSessionRequest, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalODeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDeleteSessionRequest(ctx, v)
-	return &res, err
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
