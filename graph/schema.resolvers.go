@@ -16,6 +16,18 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 )
 
+func (r *assignmentResolver) Role(ctx context.Context, obj *primitives.Assignment) (*primitives.Role, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *assignmentResolver) Identity(ctx context.Context, obj *primitives.Assignment) (primitives.Identity, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *assignmentResolver) Version(ctx context.Context, obj *primitives.Assignment) (int, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error) {
 	creds := &primitives.Credentials{
 		PublicKey: &input.PublicKey,
@@ -157,6 +169,22 @@ func (r *mutationResolver) DeleteSession(ctx context.Context, input model.Delete
 	return nil, nil
 }
 
+func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRoleRequest) (*primitives.Assignment, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignRoleRequest) (*string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *queryResolver) User(ctx context.Context) (*primitives.User, error) {
 	return nil, errs.New(RouteNotImplemented, "User query not implemented")
 }
@@ -190,11 +218,27 @@ func (r *queryResolver) Source(ctx context.Context, id database.ID) (*primitives
 	return &primitive, nil
 }
 
+func (r *queryResolver) Role(ctx context.Context) (*primitives.Role, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]primitives.Identity, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+// Assignment returns generated.AssignmentResolver implementation.
+func (r *Resolver) Assignment() generated.AssignmentResolver { return &assignmentResolver{r} }
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+type assignmentResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

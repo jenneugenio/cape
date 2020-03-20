@@ -41,6 +41,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Assignment() AssignmentResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 }
@@ -50,6 +51,15 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Assignment struct {
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Identity  func(childComplexity int) int
+		Role      func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+		Version   func(childComplexity int) int
+	}
+
 	AuthCredentials struct {
 		Alg  func(childComplexity int) int
 		Salt func(childComplexity int) int
@@ -57,17 +67,31 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AddSource          func(childComplexity int, input model.AddSourceRequest) int
+		AssignRole         func(childComplexity int, input model.AssignRoleRequest) int
 		CreateAuthSession  func(childComplexity int, input model.AuthSessionRequest) int
 		CreateLoginSession func(childComplexity int, input model.LoginSessionRequest) int
+		CreateRole         func(childComplexity int, input model.CreateRoleRequest) int
 		CreateUser         func(childComplexity int, input model.NewUserRequest) int
+		DeleteRole         func(childComplexity int, input model.DeleteRoleRequest) int
 		DeleteSession      func(childComplexity int, input model.DeleteSessionRequest) int
+		UnassignRole       func(childComplexity int, input model.AssignRoleRequest) int
 	}
 
 	Query struct {
-		Session func(childComplexity int) int
-		Source  func(childComplexity int, id database.ID) int
-		Sources func(childComplexity int) int
-		User    func(childComplexity int) int
+		Role        func(childComplexity int) int
+		RoleMembers func(childComplexity int, roleID database.ID) int
+		Roles       func(childComplexity int) int
+		Session     func(childComplexity int) int
+		Source      func(childComplexity int, id database.ID) int
+		Sources     func(childComplexity int) int
+		User        func(childComplexity int) int
+	}
+
+	Role struct {
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Label     func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
 	}
 
 	Session struct {
@@ -86,24 +110,39 @@ type ComplexityRoot struct {
 	}
 
 	User struct {
-		Email func(childComplexity int) int
-		ID    func(childComplexity int) int
-		Name  func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		Email     func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Name      func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
 	}
 }
 
+type AssignmentResolver interface {
+	Role(ctx context.Context, obj *primitives.Assignment) (*primitives.Role, error)
+	Identity(ctx context.Context, obj *primitives.Assignment) (primitives.Identity, error)
+
+	Version(ctx context.Context, obj *primitives.Assignment) (int, error)
+}
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error)
 	AddSource(ctx context.Context, input model.AddSourceRequest) (*primitives.Source, error)
 	CreateLoginSession(ctx context.Context, input model.LoginSessionRequest) (*primitives.Session, error)
 	CreateAuthSession(ctx context.Context, input model.AuthSessionRequest) (*primitives.Session, error)
 	DeleteSession(ctx context.Context, input model.DeleteSessionRequest) (*string, error)
+	CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error)
+	DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error)
+	AssignRole(ctx context.Context, input model.AssignRoleRequest) (*primitives.Assignment, error)
+	UnassignRole(ctx context.Context, input model.AssignRoleRequest) (*string, error)
 }
 type QueryResolver interface {
 	User(ctx context.Context) (*primitives.User, error)
 	Session(ctx context.Context) (*primitives.Session, error)
 	Sources(ctx context.Context) ([]*primitives.Source, error)
 	Source(ctx context.Context, id database.ID) (*primitives.Source, error)
+	Role(ctx context.Context) (*primitives.Role, error)
+	Roles(ctx context.Context) ([]*primitives.Role, error)
+	RoleMembers(ctx context.Context, roleID database.ID) ([]primitives.Identity, error)
 }
 
 type executableSchema struct {
@@ -120,6 +159,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Assignment.created_at":
+		if e.complexity.Assignment.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Assignment.CreatedAt(childComplexity), true
+
+	case "Assignment.id":
+		if e.complexity.Assignment.ID == nil {
+			break
+		}
+
+		return e.complexity.Assignment.ID(childComplexity), true
+
+	case "Assignment.identity":
+		if e.complexity.Assignment.Identity == nil {
+			break
+		}
+
+		return e.complexity.Assignment.Identity(childComplexity), true
+
+	case "Assignment.role":
+		if e.complexity.Assignment.Role == nil {
+			break
+		}
+
+		return e.complexity.Assignment.Role(childComplexity), true
+
+	case "Assignment.updated_at":
+		if e.complexity.Assignment.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Assignment.UpdatedAt(childComplexity), true
+
+	case "Assignment.version":
+		if e.complexity.Assignment.Version == nil {
+			break
+		}
+
+		return e.complexity.Assignment.Version(childComplexity), true
 
 	case "AuthCredentials.alg":
 		if e.complexity.AuthCredentials.Alg == nil {
@@ -147,6 +228,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddSource(childComplexity, args["input"].(model.AddSourceRequest)), true
 
+	case "Mutation.assignRole":
+		if e.complexity.Mutation.AssignRole == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_assignRole_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AssignRole(childComplexity, args["input"].(model.AssignRoleRequest)), true
+
 	case "Mutation.createAuthSession":
 		if e.complexity.Mutation.CreateAuthSession == nil {
 			break
@@ -171,6 +264,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateLoginSession(childComplexity, args["input"].(model.LoginSessionRequest)), true
 
+	case "Mutation.createRole":
+		if e.complexity.Mutation.CreateRole == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createRole_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateRole(childComplexity, args["input"].(model.CreateRoleRequest)), true
+
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
 			break
@@ -183,6 +288,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateUser(childComplexity, args["input"].(model.NewUserRequest)), true
 
+	case "Mutation.deleteRole":
+		if e.complexity.Mutation.DeleteRole == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteRole_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteRole(childComplexity, args["input"].(model.DeleteRoleRequest)), true
+
 	case "Mutation.deleteSession":
 		if e.complexity.Mutation.DeleteSession == nil {
 			break
@@ -194,6 +311,44 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteSession(childComplexity, args["input"].(model.DeleteSessionRequest)), true
+
+	case "Mutation.unassignRole":
+		if e.complexity.Mutation.UnassignRole == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_unassignRole_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UnassignRole(childComplexity, args["input"].(model.AssignRoleRequest)), true
+
+	case "Query.role":
+		if e.complexity.Query.Role == nil {
+			break
+		}
+
+		return e.complexity.Query.Role(childComplexity), true
+
+	case "Query.roleMembers":
+		if e.complexity.Query.RoleMembers == nil {
+			break
+		}
+
+		args, err := ec.field_Query_roleMembers_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.RoleMembers(childComplexity, args["role_id"].(database.ID)), true
+
+	case "Query.roles":
+		if e.complexity.Query.Roles == nil {
+			break
+		}
+
+		return e.complexity.Query.Roles(childComplexity), true
 
 	case "Query.session":
 		if e.complexity.Query.Session == nil {
@@ -227,6 +382,34 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.User(childComplexity), true
+
+	case "Role.created_at":
+		if e.complexity.Role.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Role.CreatedAt(childComplexity), true
+
+	case "Role.id":
+		if e.complexity.Role.ID == nil {
+			break
+		}
+
+		return e.complexity.Role.ID(childComplexity), true
+
+	case "Role.label":
+		if e.complexity.Role.Label == nil {
+			break
+		}
+
+		return e.complexity.Role.Label(childComplexity), true
+
+	case "Role.updated_at":
+		if e.complexity.Role.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Role.UpdatedAt(childComplexity), true
 
 	case "Session.credentials":
 		if e.complexity.Session.Credentials == nil {
@@ -291,6 +474,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Source.Label(childComplexity), true
 
+	case "User.created_at":
+		if e.complexity.User.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.User.CreatedAt(childComplexity), true
+
 	case "User.email":
 		if e.complexity.User.Email == nil {
 			break
@@ -311,6 +501,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.User.Name(childComplexity), true
+
+	case "User.updated_at":
+		if e.complexity.User.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.User.UpdatedAt(childComplexity), true
 
 	}
 	return 0, false
@@ -382,16 +579,36 @@ var sources = []*ast.Source{
 # and other exceptions as needed
 directive @isAuthenticated(type: TokenType! = AUTHENTICATED) on FIELD_DEFINITION
 
+type AuthCredentials {
+  salt: Base64!
+  alg: CredentialsAlgType!
+}
+
+# ------------------------------------------------------------------
+# BEGIN INTERFACES
+#
+# These are common values on our types
+# ------------------------------------------------------------------
+
+interface Identity {
+  id: ID!
+  email: String!
+  created_at: Time!
+  updated_at: Time!
+}
+
 # ------------------------------------------------------------------
 # BEGIN PRIMITIVES
 #
 # These map to objects in the primitives package
 # ------------------------------------------------------------------
 
-type User {
+type User implements Identity {
   id: ID!
   name: String!
   email: String!
+  created_at: Time!
+  updated_at: Time!
 }
 
 type Session {
@@ -409,12 +626,29 @@ type Source {
   endpoint: URL!
 }
 
+type Role {
+  id: ID!
+  label: String!
+  created_at: Time!
+  updated_at: Time!
+}
+
+type Assignment {
+  id: ID!
+  role: Role!
+  identity: Identity!
+  created_at: Time!
+  updated_at: Time!
+  version: Int!
+}
+
+
 # ------------------------------------------------------------------
 # END PRIMITIVES
 # ------------------------------------------------------------------
 
 # ------------------------------------------------------------------
-# END INPUTS
+# BEGIN INPUTS
 #
 # These are used as inputs to mutations
 # ------------------------------------------------------------------
@@ -435,11 +669,6 @@ input AuthSessionRequest {
   signature: Base64!
 }
 
-type AuthCredentials {
-  salt: Base64!
-  alg: CredentialsAlgType!
-}
-
 input DeleteSessionRequest {
   token: Base64!
 }
@@ -447,6 +676,20 @@ input DeleteSessionRequest {
 input AddSourceRequest {
   label: String!
   credentials: URL!
+}
+
+input CreateRoleRequest {
+  label: String!
+  identity_ids: [ID!]!
+}
+
+input DeleteRoleRequest {
+  label: String!
+}
+
+input AssignRoleRequest {
+  role_id: ID!
+  assignment_id: ID!
 }
 
 # ------------------------------------------------------------------
@@ -458,6 +701,10 @@ type Query {
   session: Session!
   sources: [Source!]!
   source(id: ID!): Source!
+
+  role: Role! @isAuthenticated()
+  roles: [Role!] @isAuthenticated()
+  roleMembers(role_id: ID!): [Identity!] @isAuthenticated()
 }
 
 type Mutation {
@@ -467,7 +714,15 @@ type Mutation {
   createLoginSession(input: LoginSessionRequest!): Session!
   createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
   deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
+
+  createRole(input: CreateRoleRequest!): Role! @isAuthenticated()
+  deleteRole(input: DeleteRoleRequest!): String @isAuthenticated()
+
+  assignRole(input: AssignRoleRequest!): Assignment! @isAuthenticated()
+  unassignRole(input: AssignRoleRequest!): String @isAuthenticated()
 }
+
+# Scalar definitions
 
 scalar Time
 scalar Base64
@@ -510,6 +765,20 @@ func (ec *executionContext) field_Mutation_addSource_args(ctx context.Context, r
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_assignRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.AssignRoleRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAssignRoleRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createAuthSession_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -538,12 +807,40 @@ func (ec *executionContext) field_Mutation_createLoginSession_args(ctx context.C
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.CreateRoleRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNCreateRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐCreateRoleRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.NewUserRequest
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐNewUserRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.DeleteRoleRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNDeleteRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDeleteRoleRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -566,6 +863,20 @@ func (ec *executionContext) field_Mutation_deleteSession_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_unassignRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.AssignRoleRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAssignRoleRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -577,6 +888,20 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_roleMembers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 database.ID
+	if tmp, ok := rawArgs["role_id"]; ok {
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["role_id"] = arg0
 	return args, nil
 }
 
@@ -629,6 +954,210 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Assignment_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Assignment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Assignment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(database.ID)
+	fc.Result = res
+	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Assignment_role(ctx context.Context, field graphql.CollectedField, obj *primitives.Assignment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Assignment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Assignment().Role(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*primitives.Role)
+	fc.Result = res
+	return ec.marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Assignment_identity(ctx context.Context, field graphql.CollectedField, obj *primitives.Assignment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Assignment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Assignment().Identity(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(primitives.Identity)
+	fc.Result = res
+	return ec.marshalNIdentity2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentity(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Assignment_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Assignment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Assignment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Assignment_updated_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Assignment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Assignment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Assignment_version(ctx context.Context, field graphql.CollectedField, obj *primitives.Assignment) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Assignment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Assignment().Version(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _AuthCredentials_salt(ctx context.Context, field graphql.CollectedField, obj *primitives.AuthCredentials) (ret graphql.Marshaler) {
 	defer func() {
@@ -948,6 +1477,260 @@ func (ec *executionContext) _Mutation_deleteSession(ctx context.Context, field g
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_createRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createRole_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateRole(rctx, args["input"].(model.CreateRoleRequest))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*primitives.Role); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Role`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*primitives.Role)
+	fc.Result = res
+	return ec.marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteRole_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteRole(rctx, args["input"].(model.DeleteRoleRequest))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_assignRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_assignRole_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AssignRole(rctx, args["input"].(model.AssignRoleRequest))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*primitives.Assignment); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Assignment`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*primitives.Assignment)
+	fc.Result = res
+	return ec.marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐAssignment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_unassignRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_unassignRole_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UnassignRole(rctx, args["input"].(model.AssignRoleRequest))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1091,6 +1874,181 @@ func (ec *executionContext) _Query_source(ctx context.Context, field graphql.Col
 	return ec.marshalNSource2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSource(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_role(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Role(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*primitives.Role); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Role`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*primitives.Role)
+	fc.Result = res
+	return ec.marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_roles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Roles(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*primitives.Role); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/dropoutlabs/cape/primitives.Role`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*primitives.Role)
+	fc.Result = res
+	return ec.marshalORole2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRoleᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_roleMembers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_roleMembers_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().RoleMembers(rctx, args["role_id"].(database.ID))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]primitives.Identity); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []github.com/dropoutlabs/cape/primitives.Identity`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]primitives.Identity)
+	fc.Result = res
+	return ec.marshalOIdentity2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentityᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1158,6 +2116,142 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	res := resTmp.(*introspection.Schema)
 	fc.Result = res
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Role_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Role",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(database.ID)
+	fc.Result = res
+	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Role_label(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Role",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Label, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Role_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Role",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Role_updated_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Role",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Session_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Session) (ret graphql.Marshaler) {
@@ -1563,6 +2657,74 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "User",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _User_updated_at(ctx context.Context, field graphql.CollectedField, obj *primitives.User) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "User",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -2644,6 +3806,30 @@ func (ec *executionContext) unmarshalInputAddSourceRequest(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAssignRoleRequest(ctx context.Context, obj interface{}) (model.AssignRoleRequest, error) {
+	var it model.AssignRoleRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "role_id":
+			var err error
+			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "assignment_id":
+			var err error
+			it.AssignmentID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAuthSessionRequest(ctx context.Context, obj interface{}) (model.AuthSessionRequest, error) {
 	var it model.AuthSessionRequest
 	var asMap = obj.(map[string]interface{})
@@ -2653,6 +3839,48 @@ func (ec *executionContext) unmarshalInputAuthSessionRequest(ctx context.Context
 		case "signature":
 			var err error
 			it.Signature, err = ec.unmarshalNBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateRoleRequest(ctx context.Context, obj interface{}) (model.CreateRoleRequest, error) {
+	var it model.CreateRoleRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "label":
+			var err error
+			it.Label, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "identity_ids":
+			var err error
+			it.IdentityIds, err = ec.unmarshalNID2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐIDᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputDeleteRoleRequest(ctx context.Context, obj interface{}) (model.DeleteRoleRequest, error) {
+	var it model.DeleteRoleRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "label":
+			var err error
+			it.Label, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2744,9 +3972,102 @@ func (ec *executionContext) unmarshalInputNewUserRequest(ctx context.Context, ob
 
 // region    ************************** interface.gotpl ***************************
 
+func (ec *executionContext) _Identity(ctx context.Context, sel ast.SelectionSet, obj primitives.Identity) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case *primitives.User:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._User(ctx, sel, obj)
+	default:
+		panic(fmt.Errorf("unexpected type %T", obj))
+	}
+}
+
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var assignmentImplementors = []string{"Assignment"}
+
+func (ec *executionContext) _Assignment(ctx context.Context, sel ast.SelectionSet, obj *primitives.Assignment) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, assignmentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Assignment")
+		case "id":
+			out.Values[i] = ec._Assignment_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "role":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Assignment_role(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "identity":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Assignment_identity(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "created_at":
+			out.Values[i] = ec._Assignment_created_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updated_at":
+			out.Values[i] = ec._Assignment_updated_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "version":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Assignment_version(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
 
 var authCredentialsImplementors = []string{"AuthCredentials"}
 
@@ -2817,6 +4138,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "deleteSession":
 			out.Values[i] = ec._Mutation_deleteSession(ctx, field)
+		case "createRole":
+			out.Values[i] = ec._Mutation_createRole(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteRole":
+			out.Values[i] = ec._Mutation_deleteRole(ctx, field)
+		case "assignRole":
+			out.Values[i] = ec._Mutation_assignRole(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "unassignRole":
+			out.Values[i] = ec._Mutation_unassignRole(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2899,10 +4234,88 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "role":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_role(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "roles":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_roles(ctx, field)
+				return res
+			})
+		case "roleMembers":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_roleMembers(ctx, field)
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
 			out.Values[i] = ec._Query___schema(ctx, field)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var roleImplementors = []string{"Role"}
+
+func (ec *executionContext) _Role(ctx context.Context, sel ast.SelectionSet, obj *primitives.Role) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, roleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Role")
+		case "id":
+			out.Values[i] = ec._Role_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "label":
+			out.Values[i] = ec._Role_label(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "created_at":
+			out.Values[i] = ec._Role_created_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updated_at":
+			out.Values[i] = ec._Role_updated_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3000,7 +4413,7 @@ func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
-var userImplementors = []string{"User"}
+var userImplementors = []string{"User", "Identity"}
 
 func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj *primitives.User) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, userImplementors)
@@ -3023,6 +4436,16 @@ func (ec *executionContext) _User(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "email":
 			out.Values[i] = ec._User_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "created_at":
+			out.Values[i] = ec._User_created_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updated_at":
+			out.Values[i] = ec._User_updated_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3286,6 +4709,24 @@ func (ec *executionContext) unmarshalNAddSourceRequest2githubᚗcomᚋdropoutlab
 	return ec.unmarshalInputAddSourceRequest(ctx, v)
 }
 
+func (ec *executionContext) unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAssignRoleRequest(ctx context.Context, v interface{}) (model.AssignRoleRequest, error) {
+	return ec.unmarshalInputAssignRoleRequest(ctx, v)
+}
+
+func (ec *executionContext) marshalNAssignment2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐAssignment(ctx context.Context, sel ast.SelectionSet, v primitives.Assignment) graphql.Marshaler {
+	return ec._Assignment(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐAssignment(ctx context.Context, sel ast.SelectionSet, v *primitives.Assignment) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Assignment(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNAuthSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAuthSessionRequest(ctx context.Context, v interface{}) (model.AuthSessionRequest, error) {
 	return ec.unmarshalInputAuthSessionRequest(ctx, v)
 }
@@ -3336,6 +4777,10 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalNCreateRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐCreateRoleRequest(ctx context.Context, v interface{}) (model.CreateRoleRequest, error) {
+	return ec.unmarshalInputCreateRoleRequest(ctx, v)
+}
+
 func (ec *executionContext) unmarshalNCredentialsAlgType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx context.Context, v interface{}) (primitives.CredentialsAlgType, error) {
 	var res primitives.CredentialsAlgType
 	return res, res.UnmarshalGQL(v)
@@ -3343,6 +4788,10 @@ func (ec *executionContext) unmarshalNCredentialsAlgType2githubᚗcomᚋdropoutl
 
 func (ec *executionContext) marshalNCredentialsAlgType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx context.Context, sel ast.SelectionSet, v primitives.CredentialsAlgType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNDeleteRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDeleteRoleRequest(ctx context.Context, v interface{}) (model.DeleteRoleRequest, error) {
+	return ec.unmarshalInputDeleteRoleRequest(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNDeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDeleteSessionRequest(ctx context.Context, v interface{}) (model.DeleteSessionRequest, error) {
@@ -3358,12 +4807,79 @@ func (ec *executionContext) marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatab
 	return v
 }
 
+func (ec *executionContext) unmarshalNID2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐIDᚄ(ctx context.Context, v interface{}) ([]database.ID, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]database.ID, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNID2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐIDᚄ(ctx context.Context, sel ast.SelectionSet, v []database.ID) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNIdentity2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentity(ctx context.Context, sel ast.SelectionSet, v primitives.Identity) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Identity(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	return graphql.UnmarshalInt(v)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNLoginSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐLoginSessionRequest(ctx context.Context, v interface{}) (model.LoginSessionRequest, error) {
 	return ec.unmarshalInputLoginSessionRequest(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐNewUserRequest(ctx context.Context, v interface{}) (model.NewUserRequest, error) {
 	return ec.unmarshalInputNewUserRequest(ctx, v)
+}
+
+func (ec *executionContext) marshalNRole2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx context.Context, sel ast.SelectionSet, v primitives.Role) graphql.Marshaler {
+	return ec._Role(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx context.Context, sel ast.SelectionSet, v *primitives.Role) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Role(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNSession2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSession(ctx context.Context, sel ast.SelectionSet, v primitives.Session) graphql.Marshaler {
@@ -3754,6 +5270,86 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
+}
+
+func (ec *executionContext) marshalOIdentity2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentityᚄ(ctx context.Context, sel ast.SelectionSet, v []primitives.Identity) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNIdentity2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentity(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalORole2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Role) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

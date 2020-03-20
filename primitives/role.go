@@ -8,6 +8,7 @@ import (
 // Role in a role in the system (e.g. Admin, user, etc)
 type Role struct {
 	*database.Primitive
+	Label string `json:"label"`
 }
 
 // GetType returns the type of this entity

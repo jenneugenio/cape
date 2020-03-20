@@ -5,6 +5,7 @@ package model
 import (
 	"net/url"
 
+	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/primitives"
 	"github.com/manifoldco/go-base64"
 )
@@ -14,8 +15,22 @@ type AddSourceRequest struct {
 	Credentials url.URL `json:"credentials"`
 }
 
+type AssignRoleRequest struct {
+	RoleID       database.ID `json:"role_id"`
+	AssignmentID database.ID `json:"assignment_id"`
+}
+
 type AuthSessionRequest struct {
 	Signature base64.Value `json:"signature"`
+}
+
+type CreateRoleRequest struct {
+	Label       string        `json:"label"`
+	IdentityIds []database.ID `json:"identity_ids"`
+}
+
+type DeleteRoleRequest struct {
+	Label string `json:"label"`
 }
 
 type DeleteSessionRequest struct {

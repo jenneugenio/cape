@@ -4,16 +4,36 @@
 # and other exceptions as needed
 directive @isAuthenticated(type: TokenType! = AUTHENTICATED) on FIELD_DEFINITION
 
+type AuthCredentials {
+  salt: Base64!
+  alg: CredentialsAlgType!
+}
+
+# ------------------------------------------------------------------
+# BEGIN INTERFACES
+#
+# These are common values on our types
+# ------------------------------------------------------------------
+
+interface Identity {
+  id: ID!
+  email: String!
+  created_at: Time!
+  updated_at: Time!
+}
+
 # ------------------------------------------------------------------
 # BEGIN PRIMITIVES
 #
 # These map to objects in the primitives package
 # ------------------------------------------------------------------
 
-type User {
+type User implements Identity {
   id: ID!
   name: String!
   email: String!
+  created_at: Time!
+  updated_at: Time!
 }
 
 type Session {
@@ -31,12 +51,29 @@ type Source {
   endpoint: URL!
 }
 
+type Role {
+  id: ID!
+  label: String!
+  created_at: Time!
+  updated_at: Time!
+}
+
+type Assignment {
+  id: ID!
+  role: Role!
+  identity: Identity!
+  created_at: Time!
+  updated_at: Time!
+  version: Int!
+}
+
+
 # ------------------------------------------------------------------
 # END PRIMITIVES
 # ------------------------------------------------------------------
 
 # ------------------------------------------------------------------
-# END INPUTS
+# BEGIN INPUTS
 #
 # These are used as inputs to mutations
 # ------------------------------------------------------------------
@@ -57,11 +94,6 @@ input AuthSessionRequest {
   signature: Base64!
 }
 
-type AuthCredentials {
-  salt: Base64!
-  alg: CredentialsAlgType!
-}
-
 input DeleteSessionRequest {
   token: Base64!
 }
@@ -69,6 +101,20 @@ input DeleteSessionRequest {
 input AddSourceRequest {
   label: String!
   credentials: URL!
+}
+
+input CreateRoleRequest {
+  label: String!
+  identity_ids: [ID!]!
+}
+
+input DeleteRoleRequest {
+  label: String!
+}
+
+input AssignRoleRequest {
+  role_id: ID!
+  assignment_id: ID!
 }
 
 # ------------------------------------------------------------------
@@ -80,6 +126,10 @@ type Query {
   session: Session!
   sources: [Source!]!
   source(id: ID!): Source!
+
+  role: Role! @isAuthenticated()
+  roles: [Role!] @isAuthenticated()
+  roleMembers(role_id: ID!): [Identity!] @isAuthenticated()
 }
 
 type Mutation {
@@ -89,7 +139,15 @@ type Mutation {
   createLoginSession(input: LoginSessionRequest!): Session!
   createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
   deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
+
+  createRole(input: CreateRoleRequest!): Role! @isAuthenticated()
+  deleteRole(input: DeleteRoleRequest!): String @isAuthenticated()
+
+  assignRole(input: AssignRoleRequest!): Assignment! @isAuthenticated()
+  unassignRole(input: AssignRoleRequest!): String @isAuthenticated()
 }
+
+# Scalar definitions
 
 scalar Time
 scalar Base64
