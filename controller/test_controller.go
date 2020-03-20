@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -34,10 +35,8 @@ type TestController struct {
 	database   dbtest.TestDatabase
 	logger     *zerolog.Logger
 
-	User *primitives.User
-
-	// TODO this should be stored on our own client
-	Credentials *auth.Credentials
+	User         *primitives.User
+	UserPassword []byte
 }
 
 // NewTestController gives you a test controller with a live database & gql server
@@ -99,10 +98,9 @@ func (t *TestController) Setup(ctx context.Context) (*Controller, error) {
 		// We are never bubbling this error up to the caller, but that is intentional
 		// This request will fail until the server is online, we will ping /health every 50ms until we get a 200
 		// If 5s elapses then we will give up and fail whatever test is using this.
-		resp, err := http.Get("http://localhost:8081/_healthz")
+		resp, err := http.Get(t.URL().String() + "/_healthz")
 		if err == nil {
 			if resp.StatusCode == 200 {
-				err = t.createUser(ctx)
 				if err != nil {
 					return nil, err
 				}
@@ -130,13 +128,31 @@ func (t *TestController) Teardown(ctx context.Context) error {
 	return t.database.Teardown(ctx)
 }
 
-func (t *TestController) createUser(ctx context.Context) error {
-	creds, err := auth.NewCredentials([]byte("swimmingfishmustswimquick"), nil)
+// Client returns a client that works with this TestController
+func (t *TestController) Client() (*Client, error) {
+	t.UserPassword = []byte("dogbarktooloud")
+	creds, err := auth.NewCredentials(t.UserPassword, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	t.Credentials = creds
 
+	ctx := context.Background()
+	err = t.createUser(ctx, creds)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewClient(t.URL(), nil), nil
+}
+
+// URL returns the URL for the test controller
+func (t *TestController) URL() *url.URL {
+	u, _ := url.Parse("http://localhost:8081")
+	return u
+}
+
+func (t *TestController) createUser(ctx context.Context, creds *auth.Credentials) error {
 	user, err := primitives.NewUser("Testy Testerson", "testy@capeprivacy.com", creds.Package())
 	if err != nil {
 		return err

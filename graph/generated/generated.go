@@ -311,7 +311,11 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	&ast.Source{Name: "graph/schema.graphql", Input: `directive @isAuthenticated(type: TokenType! = AUTHENTICATED) on FIELD_DEFINITION
+	&ast.Source{Name: "graph/schema.graphql", Input: `# isAuthenticated depends on having access to an auth token and checks that the
+# auth token is valid and appends the related user and session to the request context.
+# Most graphql queries and mutation should be annotated with this except for createLoginSession
+# and other exceptions as needed
+directive @isAuthenticated(type: TokenType! = AUTHENTICATED) on FIELD_DEFINITION
 
 type User {
   id: ID!
