@@ -276,6 +276,28 @@ func clientIdentitiesToPrimitive(identities []primitives.IdentityImpl) ([]primit
 	return pIdentities, nil
 }
 
+// ListRoles returns all of the roles in the database
+func (c *Client) ListRoles(ctx context.Context) ([]*primitives.Role, error) {
+	var resp struct {
+		Roles []*primitives.Role `json:"roles"`
+	}
+
+	err := c.Raw(ctx, `
+		query Roles {
+			roles {
+				id
+				label
+			}
+		}
+	`, nil, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Roles, nil
+}
+
 // Source Routes
 
 // SourceResponse is an alias of primitives.Source

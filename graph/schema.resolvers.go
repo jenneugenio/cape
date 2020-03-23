@@ -271,7 +271,18 @@ func (r *queryResolver) Role(ctx context.Context, id database.ID) (*primitives.R
 }
 
 func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
-	panic(fmt.Errorf("not implemented"))
+	var tmpR []primitives.Role
+	err := r.Backend.Query(ctx, &tmpR, database.NewEmptyFilter())
+	if err != nil {
+		return nil, err
+	}
+
+	roles := make([]*primitives.Role, len(tmpR))
+	for i := 0; i < len(roles); i++ {
+		roles[i] = &(tmpR[i])
+	}
+
+	return roles, nil
 }
 
 func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]primitives.Identity, error) {

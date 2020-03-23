@@ -73,4 +73,49 @@ func TestRoles(t *testing.T) {
 
 		gm.Expect(identities[0].GetID()).To(gm.Equal(tc.User.ID))
 	})
+
+	t.Run("list roles", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		roles, err := client.ListRoles(ctx)
+		gm.Expect(err).To(gm.BeNil())
+
+		// create three early in the tests and then delete one
+		gm.Expect(len(roles)).To(gm.Equal(2))
+		gm.Expect(roles[0].Label).To(gm.Equal("data-scientist"))
+		gm.Expect(roles[1].Label).To(gm.Equal("cto"))
+	})
+}
+
+func TestListRoles(t *testing.T) {
+	gm.RegisterTestingT(t)
+
+	ctx := context.Background()
+
+	tc, err := controller.NewTestController()
+	gm.Expect(err).To(gm.BeNil())
+
+	_, err = tc.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	defer tc.Teardown(ctx) // nolint: errcheck
+
+	client, err := tc.Client()
+	gm.Expect(err).To(gm.BeNil())
+
+	_, err = client.Login(ctx, tc.User.Email, tc.UserPassword)
+	gm.Expect(err).To(gm.BeNil())
+
+	dsRole, err := client.CreateRole(ctx, "data-scientist", nil)
+	gm.Expect(err).To(gm.BeNil())
+
+	ctoRole, err := client.CreateRole(ctx, "cto", nil)
+	gm.Expect(err).To(gm.BeNil())
+
+	roles, err := client.ListRoles(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	// create three early in the tests and then delete one
+	gm.Expect(len(roles)).To(gm.Equal(2))
+	gm.Expect(roles).To(gm.ContainElements(dsRole, ctoRole))
 }
