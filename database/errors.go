@@ -3,7 +3,7 @@ package database
 import errors "github.com/dropoutlabs/cape/partyerrors"
 
 var (
-	// NotImplementedDBCause happens when you try to do something we do not support
+	// NotImplementedCause happens when you try to do something we do not support
 	NotImplementedCause = errors.NewCause(errors.NotImplementedCategory, "not_implemented")
 
 	// NotFoundCause happens when the entity you were trying to operate on was not found

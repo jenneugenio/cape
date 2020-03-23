@@ -13,3 +13,5 @@ linters:
     - whitespace
     - lll
     - unconvert
+    - gofmt
+    - golint

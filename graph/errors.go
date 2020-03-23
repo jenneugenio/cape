@@ -5,8 +5,6 @@ import (
 )
 
 var (
-	AuthenticationFailure = errors.NewCause(errors.UnauthorizedCategory, "authentication_failure")
-	AuthenticationError   = errors.New(AuthenticationFailure, "Failed to authenticate")
-
+	// RouteNotImplemented occurs when a graphQL route that has not been implemented is invoked
 	RouteNotImplemented = errors.NewCause(errors.NotImplementedCategory, "route_not_implemented")
 )

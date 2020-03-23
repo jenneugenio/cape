@@ -38,7 +38,7 @@ func (w *Wrapper) Setup(ctx context.Context) error {
 		return err
 	}
 
-	w.count += 1
+	w.count++
 	return nil
 }
 
@@ -49,7 +49,7 @@ func (w *Wrapper) Teardown(ctx context.Context) error {
 	defer w.mutex.Unlock()
 
 	if w.count > 2 {
-		w.count -= 1
+		w.count--
 		return nil
 	}
 

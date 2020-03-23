@@ -189,8 +189,8 @@ func (s *SourceResponse) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Endpoint string `json:"endpoint"`
 		*SourceAlias
-	} {
-		Endpoint: s.Endpoint.String(),
+	}{
+		Endpoint:    s.Endpoint.String(),
 		SourceAlias: (*SourceAlias)(s),
 	})
 }
@@ -202,7 +202,7 @@ func (s *SourceResponse) UnmarshalJSON(data []byte) error {
 	aux := &struct {
 		Endpoint string `json:"endpoint"`
 		*SourceAlias
-	} {
+	}{
 		SourceAlias: (*SourceAlias)(s),
 	}
 

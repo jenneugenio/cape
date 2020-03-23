@@ -5,16 +5,32 @@ import (
 )
 
 var (
-	// The following types represent the core primitives in the system
-	UserType           types.Type = 0x000
-	ServiceType        types.Type = 0x001
+	// UserType represents a user (ie a person)
+	UserType types.Type = 0x000
+
+	// ServiceType is a service (e.g. another machine)
+	ServiceType types.Type = 0x001
+
+	// TokenPrimitiveType is a token representing an authenticated user
 	TokenPrimitiveType types.Type = 0x002
-	RoleType           types.Type = 0x003
-	PolicyType         types.Type = 0x004
-	AttachmentType     types.Type = 0x005
-	AssignmentType     types.Type = 0x006
-	SessionType        types.Type = 0x007
-	SourceType         types.Type = 0x008
+
+	// RoleType represents a role, which is attached to users/services to determine what they can or cannot do
+	RoleType types.Type = 0x003
+
+	// PolicyType represents a policy, which dictates how roles must be use
+	PolicyType types.Type = 0x004
+
+	// AttachmentType represents a policy being attached to a role
+	AttachmentType types.Type = 0x005
+
+	// AssignmentType represents a role being applied to an identity
+	AssignmentType types.Type = 0x006
+
+	// SessionType represents a session between a user/services & the system
+	SessionType types.Type = 0x007
+
+	// SourceType represents an external database/dataset
+	SourceType types.Type = 0x008
 )
 
 func init() {

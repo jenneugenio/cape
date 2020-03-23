@@ -9,8 +9,8 @@ import (
 // Source represents the connection information for an external data source
 type Source struct {
 	*database.Primitive
-	Label       string   `json:"label"`
-	Endpoint    url.URL `json:"endpoint"`
+	Label    string  `json:"label"`
+	Endpoint url.URL `json:"endpoint"`
 
 	Credentials url.URL `json:"credentials"`
 }
@@ -42,4 +42,3 @@ func NewSource(label string, credentials url.URL) (*Source, error) {
 		Endpoint:    *credentialCopy,
 	}, nil
 }
-
