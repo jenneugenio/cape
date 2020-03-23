@@ -16,6 +16,70 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 )
 
+func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest) (*primitives.User, error) {
+	// Make the user
+	creds := &primitives.Credentials{
+		PublicKey: &input.PublicKey,
+		Salt:      &input.Salt,
+		Alg:       input.Alg,
+	}
+
+	user, err := primitives.NewUser(input.Name, input.Email, creds)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := r.Backend.Transaction(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx) // nolint: errcheck
+
+	err = tx.Create(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	// Make the role
+	role, err := primitives.NewRole("system/admin")
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Create(ctx, role)
+	if err != nil {
+		return nil, err
+	}
+
+	// Assign the role
+	assignment, err := primitives.NewAssignment(user.ID, role.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Create(ctx, assignment)
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := primitives.NewConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Create(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error) {
 	creds := &primitives.Credentials{
 		PublicKey: &input.PublicKey,

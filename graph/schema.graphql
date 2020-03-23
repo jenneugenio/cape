@@ -66,7 +66,6 @@ type Assignment {
   updated_at: Time!
 }
 
-
 # ------------------------------------------------------------------
 # END PRIMITIVES
 # ------------------------------------------------------------------
@@ -132,6 +131,8 @@ type Query {
 }
 
 type Mutation {
+  setup(input: NewUserRequest!): User!
+
   createUser(input: NewUserRequest!): User!
   addSource(input: AddSourceRequest!): Source!
 

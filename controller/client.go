@@ -515,3 +515,32 @@ func (c *Client) GetSource(ctx context.Context, id database.ID) (*primitives.Sou
 	source := primitives.Source(resp.Source)
 	return &source, nil
 }
+
+// Setup calls the setup command to bootstrap cape
+func (c *Client) Setup(ctx context.Context, user *primitives.User) (*primitives.User, error) {
+	var resp struct {
+		User primitives.User `json:"setup"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["name"] = user.Name
+	variables["email"] = user.Email
+	variables["public_key"] = user.Credentials.PublicKey
+	variables["salt"] = user.Credentials.Salt
+
+	err := c.Raw(ctx, `
+		mutation CreateUser($name: String!, $email: String!, $public_key: Base64!, $salt: Base64!) {
+			setup(input: { name: $name, email: $email, public_key: $public_key, salt: $salt, alg: "EDDSA"}) {
+				id
+				name
+				email
+			}
+		}
+	`, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.User, nil
+}

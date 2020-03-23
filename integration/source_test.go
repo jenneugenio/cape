@@ -27,8 +27,6 @@ func TestSource(t *testing.T) {
 	defer tc.Teardown(ctx) // nolint: errcheck
 	var id database.ID
 
-
-
 	t.Run("create a new source", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 

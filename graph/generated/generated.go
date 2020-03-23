@@ -72,6 +72,7 @@ type ComplexityRoot struct {
 		CreateUser         func(childComplexity int, input model.NewUserRequest) int
 		DeleteRole         func(childComplexity int, input model.DeleteRoleRequest) int
 		DeleteSession      func(childComplexity int, input model.DeleteSessionRequest) int
+		Setup              func(childComplexity int, input model.NewUserRequest) int
 		UnassignRole       func(childComplexity int, input model.AssignRoleRequest) int
 	}
 
@@ -117,6 +118,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
+	Setup(ctx context.Context, input model.NewUserRequest) (*primitives.User, error)
 	CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error)
 	AddSource(ctx context.Context, input model.AddSourceRequest) (*primitives.Source, error)
 	CreateLoginSession(ctx context.Context, input model.LoginSessionRequest) (*primitives.Session, error)
@@ -296,6 +298,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteSession(childComplexity, args["input"].(model.DeleteSessionRequest)), true
+
+	case "Mutation.setup":
+		if e.complexity.Mutation.Setup == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_setup_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Setup(childComplexity, args["input"].(model.NewUserRequest)), true
 
 	case "Mutation.unassignRole":
 		if e.complexity.Mutation.UnassignRole == nil {
@@ -631,7 +645,6 @@ type Assignment {
   updated_at: Time!
 }
 
-
 # ------------------------------------------------------------------
 # END PRIMITIVES
 # ------------------------------------------------------------------
@@ -697,6 +710,8 @@ type Query {
 }
 
 type Mutation {
+  setup(input: NewUserRequest!): User!
+
   createUser(input: NewUserRequest!): User!
   addSource(input: AddSourceRequest!): Source!
 
@@ -844,6 +859,20 @@ func (ec *executionContext) field_Mutation_deleteSession_args(ctx context.Contex
 	var arg0 model.DeleteSessionRequest
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalNDeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDeleteSessionRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_setup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.NewUserRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐNewUserRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1194,6 +1223,47 @@ func (ec *executionContext) _AuthCredentials_alg(ctx context.Context, field grap
 	res := resTmp.(primitives.CredentialsAlgType)
 	fc.Result = res
 	return ec.marshalNCredentialsAlgType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_setup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_setup_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Setup(rctx, args["input"].(model.NewUserRequest))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*primitives.User)
+	fc.Result = res
+	return ec.marshalNUser2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4060,6 +4130,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
+		case "setup":
+			out.Values[i] = ec._Mutation_setup(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "createUser":
 			out.Values[i] = ec._Mutation_createUser(ctx, field)
 			if out.Values[i] == graphql.Null {

@@ -31,6 +31,9 @@ var (
 
 	// SourceType represents an external database/dataset
 	SourceType types.Type = 0x008
+
+	// ConfigType represents the config object for cape
+	ConfigType types.Type = 0x009
 )
 
 func init() {
@@ -43,4 +46,5 @@ func init() {
 	types.Register(AssignmentType, "assignments", false)
 	types.Register(SessionType, "sessions", false)
 	types.Register(SourceType, "sources", true)
+	types.Register(ConfigType, "config", true)
 }
