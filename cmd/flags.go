@@ -28,7 +28,7 @@ func yesFlag() cli.Flag {
 func useClusterFlag() cli.Flag {
 	return &cli.StringFlag{
 		Name:    "use, u",
-		Usage:   "Specify the `LABEL` of the Cpae cluster to use",
+		Usage:   "Specify the `LABEL` of the Cape cluster to use",
 		EnvVars: []string{"CAPE_USE"},
 	}
 }

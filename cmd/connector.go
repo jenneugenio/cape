@@ -18,18 +18,24 @@ func startConnectorCmd(c *cli.Context) error {
 }
 
 func init() {
-	startCmd := &cli.Command{
-		Name:        "start",
-		Description: "Launch the Cape Data Connector",
-		Action:      startConnectorCmd,
-		Flags:       []cli.Flag{instanceIDFlag()},
+	startCmd := &Command{
+		Usage:       "Start an instance of the Cape data connector",
+		Description: "Use this command to start an instance of a Cape data connector.",
+		Command: &cli.Command{
+			Name:   "start",
+			Action: startConnectorCmd,
+			Flags:  []cli.Flag{instanceIDFlag()},
+		},
 	}
 
-	connectorCmd := &cli.Command{
-		Name:        "connector",
-		Description: "Connect your data sources for use within Cape",
-		Subcommands: []*cli.Command{startCmd},
+	connectorCmd := &Command{
+		Usage:       "Commands for starting and managing data connectors",
+		Description: "Commands for managing Cape data connectors which make data sources available for use within Cape.",
+		Command: &cli.Command{
+			Name:        "connector",
+			Subcommands: []*cli.Command{startCmd.Package()},
+		},
 	}
 
-	commands = append(commands, connectorCmd)
+	commands = append(commands, connectorCmd.Package())
 }

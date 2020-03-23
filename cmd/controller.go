@@ -15,26 +15,30 @@ import (
 )
 
 func init() {
-	startCmd := &cli.Command{
-		Name:        "start",
-		Description: "Starts an instance of the Cape Controlller",
-		Action:      startControllerCmd,
-		Flags: []cli.Flag{
-			dbURLFlag(),
-			dbPasswordFlag(),
-			instanceIDFlag(),
-			loggingTypeFlag(),
-			loggingLevelFlag(),
+	startCmd := &Command{
+		Usage: "Start an instance of the Cape controller",
+		Command: &cli.Command{
+			Name:   "start",
+			Action: startControllerCmd,
+			Flags: []cli.Flag{
+				dbURLFlag(),
+				dbPasswordFlag(),
+				instanceIDFlag(),
+				loggingTypeFlag(),
+				loggingLevelFlag(),
+			},
 		},
 	}
 
-	controllerCmd := &cli.Command{
-		Name:        "controller",
-		Description: "Commands for launching and managing an instance of Cape's Controller",
-		Subcommands: []*cli.Command{startCmd},
+	controllerCmd := &Command{
+		Usage: "Commands for starting and managing Cape controllers.",
+		Command: &cli.Command{
+			Name:        "controller",
+			Subcommands: []*cli.Command{startCmd.Package()},
+		},
 	}
 
-	commands = append(commands, controllerCmd)
+	commands = append(commands, controllerCmd.Package())
 }
 
 func catchShutdown(ctx context.Context, quit chan os.Signal, c *controller.Controller) error {

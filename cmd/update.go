@@ -27,12 +27,14 @@ func updateCmd(c *cli.Context) error {
 }
 
 func init() {
-	updateCmd := &cli.Command{
-		Name:        "update",
-		Description: "Update Cape Controller database schema version",
-		Action:      updateCmd,
-		Flags:       []cli.Flag{dbURLFlag()},
+	updateCmd := &Command{
+		Usage: "Update a running Cape controller to a new version",
+		Command: &cli.Command{
+			Name:   "update",
+			Action: updateCmd,
+			Flags:  []cli.Flag{dbURLFlag()},
+		},
 	}
 
-	commands = append(commands, updateCmd)
+	commands = append(commands, updateCmd.Package())
 }
