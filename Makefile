@@ -72,7 +72,7 @@ endif
 VERSION=$(shell [ -d .git ] && git describe --tags --abbrev=0 2> /dev/null | sed 's/^v//')
 EXACT_TAG=$(shell [ -d .git ] && git describe --exact-match --tags HEAD 2> /dev/null | sed 's/^v//')
 ifeq (,$(VERSION))
-    VERSION=0.0.1
+    VERSION=dev
 endif
 NOT_RC=$(shell git tag --points-at HEAD | grep -v -e -rc)
 
@@ -141,9 +141,11 @@ helm-update: helmcheck
 lint: gocheck
 	golangci-lint run
 
-GO_BUILD=go build -v -i
+BUILD_DATE=$(date)
+PKG=github.com/dropoutlabs/cape
+GO_BUILD=go build -v -i -v -ldflags "-w -X '$(PKG)/version.Version=$(VERSION)' -X '$(PKG)/version.BuildDate=$(DATE)' -s"
 $(PREFIX)bin/cape: gocheck $(SRC) gogen
-	$(GOOS_OVERRIDE) $(GO_BUILD) -o $@
+	$(GOOS_OVERRIDE) $(GO_BUILD) -o $@ $(PKG)/cmd
 
 build: $(PREFIX)bin/cape
 

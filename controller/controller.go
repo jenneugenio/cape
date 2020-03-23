@@ -83,9 +83,7 @@ func New(dbURL *url.URL, logger *zerolog.Logger, instanceID string) (*Controller
 	root := http.NewServeMux()
 	root.Handle("/v1", playground.Handler("GraphQL playground", "/query"))
 	root.Handle("/v1/query", gqlHandler)
-	root.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
-	})
+	root.Handle("/v1/version", framework.VersionHandler(instanceID))
 
 	health := healthz.NewHandler(root)
 	chain := alice.New(

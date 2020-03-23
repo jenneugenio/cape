@@ -65,7 +65,7 @@ func TestRecoveryMiddleware(t *testing.T) {
 
 		mw := alice.New(RequestIDMiddleware, LogMiddleware(logger), RecoveryMiddleware).Then(next)
 
-		req := httptest.NewRequest("GET", "http://api.torus.sh", nil)
+		req := httptest.NewRequest("GET", "http://my.cape.com", nil)
 		w := httptest.NewRecorder()
 
 		mw.ServeHTTP(w, req)

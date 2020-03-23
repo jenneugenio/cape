@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"fmt"
@@ -9,10 +9,34 @@ import (
 	"github.com/dropoutlabs/cape/logging"
 )
 
+func versionFlag() cli.Flag {
+	return &cli.BoolFlag{
+		Name:  "version, v",
+		Usage: "Display the current version of Cape",
+	}
+}
+
+func yesFlag() cli.Flag {
+	return &cli.BoolFlag{
+		Name:    "yes, y",
+		Usage:   "If specified, the user will not be prompted to confirm their action before proceeding",
+		Value:   false,
+		EnvVars: []string{"CAPE_YES"},
+	}
+}
+
+func useClusterFlag() cli.Flag {
+	return &cli.StringFlag{
+		Name:    "use, u",
+		Usage:   "Specify the `LABEL` of the Cpae cluster to use",
+		EnvVars: []string{"CAPE_USE"},
+	}
+}
+
 func dbURLFlag() cli.Flag {
 	return &cli.StringFlag{
 		Name:     "db-url",
-		Usage:    "The database url",
+		Usage:    "The database `URL`",
 		EnvVars:  []string{"CAPE_DB_URL"},
 		Required: true,
 	}

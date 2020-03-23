@@ -1,10 +1,12 @@
-package cmd
+package main
 
 import (
 	"context"
-	"github.com/dropoutlabs/cape/database"
-	"github.com/urfave/cli/v2"
 	"net/url"
+
+	"github.com/urfave/cli/v2"
+
+	"github.com/dropoutlabs/cape/database"
 )
 
 func updateCmd(c *cli.Context) error {
