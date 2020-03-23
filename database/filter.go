@@ -35,13 +35,14 @@ type Filter struct {
 }
 
 // In is an operator that requires a field to match
-type In []string
+type In []interface{}
 
 // NewFilter is a convenience function for creating a Filter
 func NewFilter(w Where, o *Order, p *Page) Filter {
 	return Filter{Where: w, Order: o, Page: p}
 }
 
+// NewEmptyFilter creates an empty filter
 func NewEmptyFilter() Filter {
 	return Filter{}
 }

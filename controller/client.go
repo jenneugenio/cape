@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/dropoutlabs/cape/database"
 	"net/url"
+
+	"github.com/dropoutlabs/cape/database"
 
 	"github.com/machinebox/graphql"
 	"github.com/manifoldco/go-base64"
@@ -32,8 +33,13 @@ func NewClient(controllerURL *url.URL, authToken *base64.Value) *Client {
 
 // Raw wraps the NewRequest and does common req changes like adding authorization
 // headers. It calls Run passing the object to be filled with the request data.
-func (c *Client) Raw(ctx context.Context, query string, resp interface{}) error {
+func (c *Client) Raw(ctx context.Context, query string,
+	variables map[string]interface{}, resp interface{}) error {
 	req := graphql.NewRequest(query)
+
+	for key, val := range variables {
+		req.Var(key, val)
+	}
 
 	if c.authToken != nil {
 		req.Header.Add("Authorization", "Bearer "+c.authToken.String())
@@ -68,7 +74,7 @@ func (c *Client) createLoginSession(ctx context.Context, email string) (*primiti
 				}
 			}
 		}
-	`, email), &resp)
+	`, email), nil, &resp)
 
 	if err != nil {
 		return nil, err
@@ -95,7 +101,7 @@ func (c *Client) createAuthSession(ctx context.Context, sig *base64.Value) (*pri
 				token
 			}
 		}
-	`, sig.String()), &resp)
+	`, sig.String()), nil, &resp)
 
 	if err != nil {
 		return nil, err
@@ -112,13 +118,13 @@ func (c *Client) CreateUser(ctx context.Context, user *primitives.User) (*primit
 
 	err := c.Raw(ctx, fmt.Sprintf(`
 		mutation CreateUser {
-		  createUser(input: { name: "%s", email: "%s", public_key: "%s", salt: "%s", alg: "EDDSA"}) {
-			id
-			name
-			email
-		  }
+			createUser(input: { name: "%s", email: "%s", public_key: "%s", salt: "%s", alg: "EDDSA"}) {
+				id
+				name
+				email
+			}
 		}
-	`, user.Name, user.Email, user.Credentials.PublicKey.String(), user.Credentials.Salt.String()), &resp)
+	`, user.Name, user.Email, user.Credentials.PublicKey.String(), user.Credentials.Salt.String()), nil, &resp)
 
 	if err != nil {
 		return nil, err
@@ -166,9 +172,108 @@ func (c *Client) Logout(ctx context.Context, authToken *base64.Value) error {
 
 	return c.Raw(ctx, fmt.Sprintf(`
 		mutation DeleteSession {
-		  deleteSession(input: { token: "%s" })
+			deleteSession(input: { token: "%s" })
 		}
-	`, token), nil)
+	`, token), nil, nil)
+}
+
+// Role Routes
+
+// CreateRole creates a new role with a label
+func (c *Client) CreateRole(ctx context.Context, label string, identityIDs []database.ID) (*primitives.Role, error) {
+	var resp struct {
+		Role primitives.Role `json:"createRole"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["ids"] = identityIDs
+
+	err := c.Raw(ctx, fmt.Sprintf(`
+		mutation CreateRole($ids: [ID!]) {
+			createRole(input: { label: "%s", identity_ids: $ids }) {
+				id
+				label
+			}
+		}
+	`, label), variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Role, nil
+}
+
+// DeleteRole deletes a role with the given id
+func (c *Client) DeleteRole(ctx context.Context, id database.ID) error {
+	return c.Raw(ctx, fmt.Sprintf(`
+		mutation DeleteRole {
+			deleteRole(input: { id: "%s" })
+		}
+	`, id.String()), nil, nil)
+}
+
+// GetRole returns a specific role
+func (c *Client) GetRole(ctx context.Context, id database.ID) (*primitives.Role, error) {
+	var resp struct {
+		Role primitives.Role `json:"role"`
+	}
+
+	err := c.Raw(ctx, fmt.Sprintf(`
+		query Role {
+			role(id: "%s") {
+				id
+				label
+			}
+		}
+	`, id.String()), nil, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Role, nil
+}
+
+// GetMembersRole returns the members of a role
+func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]primitives.Identity, error) {
+	var resp struct {
+		Identities []primitives.IdentityImpl `json:"roleMembers"`
+	}
+
+	err := c.Raw(ctx, fmt.Sprintf(`
+		query GetMembersRole {
+			roleMembers(role_id: "%s") {
+				id
+				email
+			}
+		}
+	`, roleID.String()), nil, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientIdentitiesToPrimitive(resp.Identities)
+}
+
+func clientIdentitiesToPrimitive(identities []primitives.IdentityImpl) ([]primitives.Identity, error) {
+	pIdentities := make([]primitives.Identity, len(identities))
+	for i, identity := range identities {
+		typ, err := identity.ID.Type()
+		if err != nil {
+			return nil, err
+		}
+
+		if typ == primitives.UserType {
+			pIdentities[i] = &primitives.User{
+				IdentityImpl: &identity,
+			}
+		} else if typ == primitives.ServiceType {
+			pIdentities[i] = &primitives.Service{
+				IdentityImpl: &identity,
+			}
+		}
+	}
+
+	return pIdentities, nil
 }
 
 // Source Routes
@@ -234,7 +339,7 @@ func (c *Client) AddSource(ctx context.Context, label string, credentials *url.U
 				endpoint
 			  }
 			}
-	`, label, credentials.String()), &resp)
+	`, label, credentials.String()), nil, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +362,7 @@ func (c *Client) ListSources(ctx context.Context) ([]*primitives.Source, error) 
 					endpoint
 				}
 			}
-	`, &resp)
+	`, nil, &resp)
 
 	if err != nil {
 		return nil, err
@@ -286,7 +391,7 @@ func (c *Client) GetSource(ctx context.Context, id database.ID) (*primitives.Sou
 					endpoint
 				}
 			}
-	`, id.String()), &resp)
+	`, id.String()), nil, &resp)
 	if err != nil {
 		return nil, err
 	}

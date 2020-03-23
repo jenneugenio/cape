@@ -24,8 +24,6 @@ func NewAssignment(identityID, roleID database.ID) (*Assignment, error) {
 		return nil, err
 	}
 
-	// TODO: Pass in the values of the Assignment!
-	//
 	// An Assignment is considered an immutable type in our object system (as
 	// defined by the type)
 	a := &Assignment{

@@ -24,10 +24,6 @@ func (r *assignmentResolver) Identity(ctx context.Context, obj *primitives.Assig
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *assignmentResolver) Version(ctx context.Context, obj *primitives.Assignment) (int, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error) {
 	creds := &primitives.Credentials{
 		PublicKey: &input.PublicKey,
@@ -170,15 +166,61 @@ func (r *mutationResolver) DeleteSession(ctx context.Context, input model.Delete
 }
 
 func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error) {
-	panic(fmt.Errorf("not implemented"))
+	role, err := primitives.NewRole(input.Label)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := r.Backend.Transaction(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx) // nolint: errcheck
+
+	err = tx.Create(ctx, role)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(input.IdentityIds) > 0 {
+		assignments := make([]database.Entity, len(input.IdentityIds))
+		for i, id := range input.IdentityIds {
+			assignment, err := primitives.NewAssignment(id, role.ID)
+			if err != nil {
+				return nil, err
+			}
+			assignments[i] = assignment
+		}
+		err = tx.Create(ctx, assignments...)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return role, nil
 }
 
 func (r *mutationResolver) DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error) {
-	panic(fmt.Errorf("not implemented"))
+	err := r.Backend.Delete(ctx, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
 
 func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRoleRequest) (*primitives.Assignment, error) {
-	panic(fmt.Errorf("not implemented"))
+	assignment, err := primitives.NewAssignment(input.AssignmentID, input.RoleID)
+	if err != nil {
+		return nil, err
+	}
+
+	return assignment, nil
 }
 
 func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignRoleRequest) (*string, error) {
@@ -218,8 +260,14 @@ func (r *queryResolver) Source(ctx context.Context, id database.ID) (*primitives
 	return &primitive, nil
 }
 
-func (r *queryResolver) Role(ctx context.Context) (*primitives.Role, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Role(ctx context.Context, id database.ID) (*primitives.Role, error) {
+	var primitive primitives.Role
+	err := r.Backend.Get(ctx, id, &primitive)
+	if err != nil {
+		return nil, err
+	}
+
+	return &primitive, nil
 }
 
 func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
@@ -227,7 +275,53 @@ func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
 }
 
 func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]primitives.Identity, error) {
-	panic(fmt.Errorf("not implemented"))
+	var a []primitives.Assignment
+	err := r.Backend.Query(ctx, &a, database.NewFilter(database.Where{"role_id": roleID.String()}, nil, nil))
+	if err != nil {
+		return nil, err
+	}
+
+	userIDs := database.In{}
+	serviceIDs := database.In{}
+	for _, assignment := range a {
+		typ, err := assignment.IdentityID.Type()
+		if err != nil {
+			return nil, err
+		}
+
+		if typ == primitives.UserType {
+			userIDs = append(userIDs, assignment.IdentityID)
+		} else if typ == primitives.ServiceType {
+			serviceIDs = append(serviceIDs, assignment.IdentityID)
+		}
+	}
+
+	var users []primitives.User
+	if len(userIDs) > 0 {
+		err = r.Backend.Query(ctx, &users, database.NewFilter(database.Where{"id": userIDs}, nil, nil))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var services []primitives.Service
+	if len(serviceIDs) > 0 {
+		err = r.Backend.Query(ctx, &services, database.NewFilter(database.Where{"id": serviceIDs}, nil, nil))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	identities := make([]primitives.Identity, len(a))
+	for i, user := range users {
+		identities[i] = &user
+	}
+
+	for i, service := range services {
+		identities[i+len(users)] = &service
+	}
+
+	return identities, nil
 }
 
 // Assignment returns generated.AssignmentResolver implementation.

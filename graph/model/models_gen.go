@@ -30,7 +30,7 @@ type CreateRoleRequest struct {
 }
 
 type DeleteRoleRequest struct {
-	Label string `json:"label"`
+	ID database.ID `json:"id"`
 }
 
 type DeleteSessionRequest struct {

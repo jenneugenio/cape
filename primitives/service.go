@@ -9,8 +9,7 @@ import (
 // running a pipeline).
 type Service struct {
 	*database.Primitive
-	Email       string       `json:"email"`
-	Credentials *Credentials `json:"credentials"`
+	*IdentityImpl
 }
 
 // GetType returns the type for this entity
@@ -26,11 +25,18 @@ func NewService() (*Service, error) {
 	}
 
 	return &Service{
-		Primitive: p,
+		IdentityImpl: &IdentityImpl{
+			Primitive: p,
+		},
 	}, nil
 }
 
 // GetCredentials satisfies Identity interface
 func (s *Service) GetCredentials() *Credentials {
 	return s.Credentials
+}
+
+// GetEmail satisfies Identity interface
+func (s *Service) GetEmail() string {
+	return s.Email
 }

@@ -64,7 +64,6 @@ type Assignment {
   identity: Identity!
   created_at: Time!
   updated_at: Time!
-  version: Int!
 }
 
 
@@ -105,11 +104,11 @@ input AddSourceRequest {
 
 input CreateRoleRequest {
   label: String!
-  identity_ids: [ID!]!
+  identity_ids: [ID!]
 }
 
 input DeleteRoleRequest {
-  label: String!
+  id: ID!
 }
 
 input AssignRoleRequest {
@@ -127,7 +126,7 @@ type Query {
   sources: [Source!]!
   source(id: ID!): Source!
 
-  role: Role! @isAuthenticated()
+  role(id: ID!): Role! @isAuthenticated()
   roles: [Role!] @isAuthenticated()
   roleMembers(role_id: ID!): [Identity!] @isAuthenticated()
 }

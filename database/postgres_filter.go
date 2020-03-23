@@ -50,7 +50,14 @@ func buildFilter(f Filter) (string, []interface{}) {
 			params := []string{}
 			for _, v := range item {
 				params = append(params, fmt.Sprintf("$%d", count))
-				values = append(values, v)
+				switch t := v.(type) {
+				case fmt.Stringer:
+					values = append(values, t.String())
+				case string:
+					values = append(values, t)
+				default:
+					panic(fmt.Sprintf("in type must be string or Stringer, got %T ", t))
+				}
 				count++
 			}
 

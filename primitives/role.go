@@ -17,7 +17,7 @@ func (r *Role) GetType() types.Type {
 }
 
 // NewRole returns a mutable role struct
-func NewRole() (*Role, error) {
+func NewRole(label string) (*Role, error) {
 	p, err := database.NewPrimitive(RoleType)
 	if err != nil {
 		return nil, err
@@ -25,5 +25,6 @@ func NewRole() (*Role, error) {
 
 	return &Role{
 		Primitive: p,
+		Label:     label,
 	}, nil
 }
