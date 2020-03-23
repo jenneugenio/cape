@@ -41,7 +41,6 @@ type Config struct {
 }
 
 type ResolverRoot interface {
-	Assignment() AssignmentResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 }
@@ -117,10 +116,6 @@ type ComplexityRoot struct {
 	}
 }
 
-type AssignmentResolver interface {
-	Role(ctx context.Context, obj *primitives.Assignment) (*primitives.Role, error)
-	Identity(ctx context.Context, obj *primitives.Assignment) (primitives.Identity, error)
-}
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error)
 	AddSource(ctx context.Context, input model.AddSourceRequest) (*primitives.Source, error)
@@ -129,7 +124,7 @@ type MutationResolver interface {
 	DeleteSession(ctx context.Context, input model.DeleteSessionRequest) (*string, error)
 	CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error)
 	DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error)
-	AssignRole(ctx context.Context, input model.AssignRoleRequest) (*primitives.Assignment, error)
+	AssignRole(ctx context.Context, input model.AssignRoleRequest) (*model.Assignment, error)
 	UnassignRole(ctx context.Context, input model.AssignRoleRequest) (*string, error)
 }
 type QueryResolver interface {
@@ -683,7 +678,7 @@ input DeleteRoleRequest {
 
 input AssignRoleRequest {
   role_id: ID!
-  assignment_id: ID!
+  identity_id: ID!
 }
 
 # ------------------------------------------------------------------
@@ -963,7 +958,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Assignment_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Assignment) (ret graphql.Marshaler) {
+func (ec *executionContext) _Assignment_id(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -997,7 +992,7 @@ func (ec *executionContext) _Assignment_id(ctx context.Context, field graphql.Co
 	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Assignment_role(ctx context.Context, field graphql.CollectedField, obj *primitives.Assignment) (ret graphql.Marshaler) {
+func (ec *executionContext) _Assignment_role(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1008,13 +1003,13 @@ func (ec *executionContext) _Assignment_role(ctx context.Context, field graphql.
 		Object:   "Assignment",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Assignment().Role(rctx, obj)
+		return obj.Role, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1031,7 +1026,7 @@ func (ec *executionContext) _Assignment_role(ctx context.Context, field graphql.
 	return ec.marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Assignment_identity(ctx context.Context, field graphql.CollectedField, obj *primitives.Assignment) (ret graphql.Marshaler) {
+func (ec *executionContext) _Assignment_identity(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1042,13 +1037,13 @@ func (ec *executionContext) _Assignment_identity(ctx context.Context, field grap
 		Object:   "Assignment",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Assignment().Identity(rctx, obj)
+		return obj.Identity, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1065,7 +1060,7 @@ func (ec *executionContext) _Assignment_identity(ctx context.Context, field grap
 	return ec.marshalNIdentity2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentity(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Assignment_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Assignment) (ret graphql.Marshaler) {
+func (ec *executionContext) _Assignment_created_at(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1099,7 +1094,7 @@ func (ec *executionContext) _Assignment_created_at(ctx context.Context, field gr
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Assignment_updated_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Assignment) (ret graphql.Marshaler) {
+func (ec *executionContext) _Assignment_updated_at(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1623,10 +1618,10 @@ func (ec *executionContext) _Mutation_assignRole(ctx context.Context, field grap
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*primitives.Assignment); ok {
+		if data, ok := tmp.(*model.Assignment); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Assignment`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/graph/model.Assignment`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1638,9 +1633,9 @@ func (ec *executionContext) _Mutation_assignRole(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.Assignment)
+	res := resTmp.(*model.Assignment)
 	fc.Result = res
-	return ec.marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐAssignment(ctx, field.Selections, res)
+	return ec.marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAssignment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_unassignRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3799,9 +3794,9 @@ func (ec *executionContext) unmarshalInputAssignRoleRequest(ctx context.Context,
 			if err != nil {
 				return it, err
 			}
-		case "assignment_id":
+		case "identity_id":
 			var err error
-			it.AssignmentID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.IdentityID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3973,7 +3968,7 @@ func (ec *executionContext) _Identity(ctx context.Context, sel ast.SelectionSet,
 
 var assignmentImplementors = []string{"Assignment"}
 
-func (ec *executionContext) _Assignment(ctx context.Context, sel ast.SelectionSet, obj *primitives.Assignment) graphql.Marshaler {
+func (ec *executionContext) _Assignment(ctx context.Context, sel ast.SelectionSet, obj *model.Assignment) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, assignmentImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3985,45 +3980,27 @@ func (ec *executionContext) _Assignment(ctx context.Context, sel ast.SelectionSe
 		case "id":
 			out.Values[i] = ec._Assignment_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "role":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Assignment_role(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Assignment_role(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "identity":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Assignment_identity(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Assignment_identity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "created_at":
 			out.Values[i] = ec._Assignment_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "updated_at":
 			out.Values[i] = ec._Assignment_updated_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -4680,11 +4657,11 @@ func (ec *executionContext) unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutla
 	return ec.unmarshalInputAssignRoleRequest(ctx, v)
 }
 
-func (ec *executionContext) marshalNAssignment2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐAssignment(ctx context.Context, sel ast.SelectionSet, v primitives.Assignment) graphql.Marshaler {
+func (ec *executionContext) marshalNAssignment2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAssignment(ctx context.Context, sel ast.SelectionSet, v model.Assignment) graphql.Marshaler {
 	return ec._Assignment(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐAssignment(ctx context.Context, sel ast.SelectionSet, v *primitives.Assignment) graphql.Marshaler {
+func (ec *executionContext) marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAssignment(ctx context.Context, sel ast.SelectionSet, v *model.Assignment) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")

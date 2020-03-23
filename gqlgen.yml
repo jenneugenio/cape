@@ -14,13 +14,28 @@ resolver:
   dir: graph
   package: graph
 
-autobind:
-  - "github.com/dropoutlabs/cape/primitives"
-
 models:
+  Identity:
+    model: github.com/dropoutlabs/cape/primitives.Identity
+  User:
+    model: github.com/dropoutlabs/cape/primitives.User
+  Source:
+    model: github.com/dropoutlabs/cape/primitives.Source
+  Role:
+    model: github.com/dropoutlabs/cape/primitives.Role
+  Session:
+    model: github.com/dropoutlabs/cape/primitives.Session
   ID:
     model: github.com/dropoutlabs/cape/database.ID
   Base64:
     model: github.com/dropoutlabs/cape/primitives.Base64Value
   URL:
     model: github.com/dropoutlabs/cape/primitives.URL
+  CredentialsAlgType:
+    model: github.com/dropoutlabs/cape/primitives.CredentialsAlgType
+  TokenType:
+    model: github.com/dropoutlabs/cape/primitives.TokenType
+  AuthCredentials:
+    model: github.com/dropoutlabs/cape/primitives.AuthCredentials
+  IdentityImpl:
+    model: github.com/dropoutlabs/cape/primitives.IdentityImpl

@@ -4,6 +4,7 @@ package model
 
 import (
 	"net/url"
+	"time"
 
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/primitives"
@@ -16,8 +17,16 @@ type AddSourceRequest struct {
 }
 
 type AssignRoleRequest struct {
-	RoleID       database.ID `json:"role_id"`
-	AssignmentID database.ID `json:"assignment_id"`
+	RoleID     database.ID `json:"role_id"`
+	IdentityID database.ID `json:"identity_id"`
+}
+
+type Assignment struct {
+	ID        database.ID         `json:"id"`
+	Role      *primitives.Role    `json:"role"`
+	Identity  primitives.Identity `json:"identity"`
+	CreatedAt time.Time           `json:"created_at"`
+	UpdatedAt time.Time           `json:"updated_at"`
 }
 
 type AuthSessionRequest struct {

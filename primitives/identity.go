@@ -2,19 +2,18 @@ package primitives
 
 import (
 	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/database/types"
 )
 
 // Identity represents an identity type such as user or service
 type Identity interface {
-	GetID() database.ID
-	GetType() types.Type
+	database.Entity
 	GetCredentials() *Credentials
 	GetEmail() string
 }
 
 // IdentityImpl implements the above interface and is a common
-// container for identity data
+// container for identity data. Its required to deserialize the
+// common data in services and users.
 type IdentityImpl struct {
 	*database.Primitive
 	Credentials *Credentials `json:"credentials"`

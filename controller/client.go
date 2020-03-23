@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/graph/model"
 
 	"github.com/machinebox/graphql"
 	"github.com/manifoldco/go-base64"
@@ -274,6 +275,99 @@ func clientIdentitiesToPrimitive(identities []primitives.IdentityImpl) ([]primit
 	}
 
 	return pIdentities, nil
+}
+
+// AssignmentResponse is a type alias to easily decode the
+// identity field to either a user or a service
+type AssignmentResponse model.Assignment
+
+// MarshalJSON marshaller impl for AssignmentResponse
+func (a *AssignmentResponse) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&model.Assignment{
+		ID:        a.ID,
+		Role:      a.Role,
+		Identity:  a.Identity,
+		CreatedAt: a.CreatedAt,
+		UpdatedAt: a.UpdatedAt,
+	})
+}
+
+// UnmarshalJSON is the marshaller implementation for AssignmentResponse
+func (a *AssignmentResponse) UnmarshalJSON(data []byte) error {
+	aux := &struct {
+		Identity *primitives.IdentityImpl `json:"identity"`
+		Role     *primitives.Role         `json:"role"`
+	}{}
+
+	err := json.Unmarshal(data, aux)
+	if err != nil {
+		return err
+	}
+
+	typ, err := aux.Identity.ID.Type()
+	if err != nil {
+		return err
+	}
+
+	if typ == primitives.UserType {
+		a.Identity = &primitives.User{
+			IdentityImpl: aux.Identity,
+		}
+	} else if typ == primitives.ServiceType {
+		a.Identity = &primitives.Service{
+			IdentityImpl: aux.Identity,
+		}
+	}
+
+	a.Role = aux.Role
+
+	return nil
+}
+
+// AssignRole assigns a role to an identity
+func (c *Client) AssignRole(ctx context.Context, identityID database.ID,
+	roleID database.ID) (*model.Assignment, error) {
+	var resp struct {
+		Assignment AssignmentResponse `json:"assignRole"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["role_id"] = roleID
+	variables["identity_id"] = identityID
+
+	err := c.Raw(ctx, `
+		mutation AssignRole($role_id: ID!, $identity_id: ID!) {
+			assignRole(input: { role_id: $role_id, identity_id: $identity_id }) {
+				role {
+					id
+					label
+				}
+				identity {
+					id
+					email
+				}
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	assignment := model.Assignment(resp.Assignment)
+	return &assignment, nil
+}
+
+// UnassignRole unassigns a role from an identity
+func (c *Client) UnassignRole(ctx context.Context, identityID database.ID, roleID database.ID) error {
+	variables := make(map[string]interface{})
+	variables["role_id"] = roleID
+	variables["identity_id"] = identityID
+
+	return c.Raw(ctx, `
+		mutation UnassignRole($role_id: ID!, $identity_id: ID!) {
+			unassignRole(input: { role_id: $role_id, identity_id: $identity_id })
+		}
+	`, variables, nil)
 }
 
 // ListRoles returns all of the roles in the database

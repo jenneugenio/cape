@@ -16,14 +16,6 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 )
 
-func (r *assignmentResolver) Role(ctx context.Context, obj *primitives.Assignment) (*primitives.Role, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *assignmentResolver) Identity(ctx context.Context, obj *primitives.Assignment) (primitives.Identity, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error) {
 	creds := &primitives.Credentials{
 		PublicKey: &input.PublicKey,
@@ -214,17 +206,68 @@ func (r *mutationResolver) DeleteRole(ctx context.Context, input model.DeleteRol
 	return nil, nil
 }
 
-func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRoleRequest) (*primitives.Assignment, error) {
-	assignment, err := primitives.NewAssignment(input.AssignmentID, input.RoleID)
+func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRoleRequest) (*model.Assignment, error) {
+	assignment, err := primitives.NewAssignment(input.IdentityID, input.RoleID)
 	if err != nil {
 		return nil, err
 	}
 
-	return assignment, nil
+	err = r.Backend.Create(ctx, assignment)
+	if err != nil {
+		return nil, err
+	}
+
+	role := &primitives.Role{}
+	err = r.Backend.Get(ctx, input.RoleID, role)
+	if err != nil {
+		return nil, err
+	}
+
+	typ, err := input.IdentityID.Type()
+	if err != nil {
+		return nil, err
+	}
+
+	var identity primitives.Identity
+	if typ == primitives.UserType {
+		identity = &primitives.User{}
+	} else if typ == primitives.ServiceType {
+		identity = &primitives.Service{}
+	}
+
+	err = r.Backend.Get(ctx, input.IdentityID, identity)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Assignment{
+		ID:        assignment.ID,
+		CreatedAt: assignment.CreatedAt,
+		UpdatedAt: assignment.UpdatedAt,
+		Role:      role,
+		Identity:  identity,
+	}, nil
 }
 
 func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignRoleRequest) (*string, error) {
-	panic(fmt.Errorf("not implemented"))
+	assignment := &primitives.Assignment{}
+
+	filter := database.NewFilter(database.Where{
+		"role_id":     input.RoleID.String(),
+		"identity_id": input.IdentityID.String(),
+	}, nil, nil)
+
+	err := r.Backend.QueryOne(ctx, assignment, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Backend.Delete(ctx, assignment.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
 
 func (r *queryResolver) User(ctx context.Context) (*primitives.User, error) {
@@ -335,15 +378,11 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 	return identities, nil
 }
 
-// Assignment returns generated.AssignmentResolver implementation.
-func (r *Resolver) Assignment() generated.AssignmentResolver { return &assignmentResolver{r} }
-
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-type assignmentResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

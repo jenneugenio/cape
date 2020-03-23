@@ -113,7 +113,7 @@ input DeleteRoleRequest {
 
 input AssignRoleRequest {
   role_id: ID!
-  assignment_id: ID!
+  identity_id: ID!
 }
 
 # ------------------------------------------------------------------

@@ -119,3 +119,64 @@ func TestListRoles(t *testing.T) {
 	gm.Expect(len(roles)).To(gm.Equal(2))
 	gm.Expect(roles).To(gm.ContainElements(dsRole, ctoRole))
 }
+
+func TestAssignments(t *testing.T) {
+	gm.RegisterTestingT(t)
+
+	ctx := context.Background()
+
+	tc, err := controller.NewTestController()
+	gm.Expect(err).To(gm.BeNil())
+
+	_, err = tc.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	defer tc.Teardown(ctx) // nolint: errcheck
+
+	client, err := tc.Client()
+	gm.Expect(err).To(gm.BeNil())
+
+	_, err = client.Login(ctx, tc.User.Email, tc.UserPassword)
+	gm.Expect(err).To(gm.BeNil())
+
+	t.Run("assign role", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		label := "data-scientist"
+		role, err := client.CreateRole(ctx, label, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		assignment, err := client.AssignRole(ctx, tc.User.ID, role.ID)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(assignment).NotTo(gm.BeNil())
+		gm.Expect(assignment.Identity.GetID()).To(gm.Equal(tc.User.ID))
+		gm.Expect(assignment.Role.Label).To(gm.Equal(label))
+
+		identities, err := client.GetMembersRole(ctx, role.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(identities)).To(gm.Equal(1))
+
+		gm.Expect(identities[0].GetID()).To(gm.Equal(tc.User.ID))
+	})
+
+	t.Run("unassign role", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		label := "iamarole"
+		role, err := client.CreateRole(ctx, label, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		assignment, err := client.AssignRole(ctx, tc.User.ID, role.ID)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(assignment).NotTo(gm.BeNil())
+
+		err = client.UnassignRole(ctx, tc.User.ID, role.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		identities, err := client.GetMembersRole(ctx, role.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(identities)).To(gm.Equal(0))
+	})
+}
