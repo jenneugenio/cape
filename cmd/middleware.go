@@ -6,6 +6,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/dropoutlabs/cape/cmd/config"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 // ContextKey is a type alias used for storing data in a context
@@ -14,6 +15,9 @@ type ContextKey string
 const (
 	// ConfigContextKey is the name of the key storing configuration on the context
 	ConfigContextKey ContextKey = "config"
+
+	// ArgumentContextKey is the name of the key storing argument values for a command
+	ArgumentContextKey ContextKey = "arguments"
 )
 
 // Config returns the config object stored on the context
@@ -26,6 +30,16 @@ func Config(ctx context.Context) *config.Config {
 	return cfg.(*config.Config)
 }
 
+// Arguments returns the ArgumentValues object stored on the context
+func Arguments(ctx context.Context) ArgumentValues {
+	args := ctx.Value(ArgumentContextKey)
+	if args == nil {
+		panic("argument values not available on context")
+	}
+
+	return args.(ArgumentValues)
+}
+
 func retrieveConfig(next cli.ActionFunc) cli.ActionFunc {
 	return cli.ActionFunc(func(c *cli.Context) error {
 		cfg, err := config.Parse()
@@ -34,6 +48,32 @@ func retrieveConfig(next cli.ActionFunc) cli.ActionFunc {
 		}
 
 		c.Context = context.WithValue(c.Context, ConfigContextKey, cfg)
+		return next(c)
+	})
+}
+
+func processArguments(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
+	return cli.ActionFunc(func(c *cli.Context) error {
+		values := ArgumentValues{}
+		for i, arg := range cmd.Arguments {
+			input := c.Args().Get(i)
+			if input == "" && arg.Required {
+				return errors.New(MissingArgCause, "The argument %s is required, but was not provided", arg.Name)
+			}
+
+			if input == "" {
+				return nil
+			}
+
+			value, err := arg.Processor(input)
+			if err != nil {
+				return err
+			}
+
+			values[arg.Name] = value
+		}
+
+		c.Context = context.WithValue(c.Context, ArgumentContextKey, values)
 		return next(c)
 	})
 }

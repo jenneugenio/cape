@@ -9,23 +9,20 @@ import (
 
 var argNameRegex = regexp.MustCompile("^[a-z/-]{3,64}$")
 
-// NewArgument is a helper function for creating a command line argument
-func NewArgument(name, description string, required bool) *Argument {
-	matched := argNameRegex.MatchString(name)
+// ArgumentValues represents a map of arguments to their values
+type ArgumentValues map[string]interface{}
 
-	if !matched {
-		msg := fmt.Sprintf("Incorrect argument name %s: Argument names must only contain a-z, /, or -", name)
-		panic(msg)
-	}
-
-	return &Argument{Name: name, Required: required, Description: description}
-}
+// ArgumentProcessorFunc represents a function that given a value, validates
+// the value, parses the string, and then returns the value to store in the
+// ArgumentValues map for this invocation of the Command.
+type ArgumentProcessorFunc func(string) (interface{}, error)
 
 // Argument represents a command line argument
 type Argument struct {
 	Name        string
 	Required    bool
 	Description string
+	Processor   ArgumentProcessorFunc
 }
 
 // String returns a string representation of the argument
@@ -104,14 +101,28 @@ func (c *Command) ArgsUsageText() string {
 func (c *Command) Package() *cli.Command {
 	cmd := c.Command
 
+	// Since we're using literal struct declarations to define args, usage,
+	// etc., we have to leverage the `.Package()` func to test that any
+	// required properties are set and all properties are also valid.
+	//
+	// Ideally, these would be checked at compile time but it's not entirely
+	// possible. Perhaps in future we can introduce a linter :)
 	if c.Usage == "" {
 		panic("All commands must have usage text.")
+	}
+
+	for _, arg := range c.Arguments {
+		if !argNameRegex.MatchString(arg.Name) {
+			msg := fmt.Sprintf("Incorrect argument name %s: Argument names must only contain a-z, or -", arg.Name)
+			panic(msg)
+		}
 	}
 
 	cmd.Description = c.Description
 	cmd.Usage = c.Usage
 	cmd.ArgsUsage = c.ArgsUsageText()
 	cmd.UsageText = c.UsageText()
+	cmd.Action = processArguments(c, cmd.Action)
 
 	return cmd
 }

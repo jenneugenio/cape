@@ -1,9 +1,13 @@
 package main
 
 import (
+	"fmt"
+	"net/url"
 	"os"
 
 	"github.com/urfave/cli/v2"
+
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func init() {
@@ -16,12 +20,10 @@ func init() {
 		},
 	}
 
-	labelArg := NewArgument("label", "A label for the cluster", true)
-	urlArg := NewArgument("url", "The url of the cape cluster", true)
 	addClusterCmd := &Command{
 		Usage:       "Add configuration for a cape cluster",
 		Description: "Use this command to add configuration enabling a user to execute commands against a cluster of Cape",
-		Arguments:   []*Argument{labelArg, urlArg},
+		Arguments:   []*Argument{ClusterLabelArg, ClusterURLArg},
 		Examples: []*Example{
 			{
 				Example:     "cape config clusters add production https://my.production.com",
@@ -35,14 +37,14 @@ func init() {
 		Command: &cli.Command{
 			Name:   "add",
 			Flags:  []cli.Flag{useClusterFlag()},
-			Action: addCluster,
+			Action: retrieveConfig(addCluster),
 		},
 	}
 
 	removeClusterCmd := &Command{
 		Usage:       "Remove configuration for a cape cluster",
 		Description: "Use this command to remove local connection information for a cape cluster",
-		Arguments:   []*Argument{labelArg},
+		Arguments:   []*Argument{ClusterLabelArg},
 		Examples: []*Example{
 			{
 				Example:     "cape config clusters remove production",
@@ -65,7 +67,7 @@ func init() {
 	useClusterCmd := &Command{
 		Usage:       "Set a cape cluster as your current cluster",
 		Description: useDescription,
-		Arguments:   []*Argument{labelArg},
+		Arguments:   []*Argument{ClusterLabelArg},
 		Examples: []*Example{
 			{
 				Example:     "cape config clusters use production",
@@ -111,6 +113,35 @@ func viewConfig(c *cli.Context) error {
 }
 
 func addCluster(c *cli.Context) error {
+	use := c.Bool("use")
+	args := Arguments(c.Context)
+	cfg := Config(c.Context)
+
+	label := args["label"].(primitives.Label)
+	clusterURL := args["url"].(*url.URL)
+
+	cluster, err := cfg.AddCluster(label, clusterURL, "")
+	if err != nil {
+		return err
+	}
+
+	if use {
+		err = cfg.Use(cluster.Label)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = cfg.Write()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("The '%s' cluster has been added to your configuration.", label)
+	if use {
+		fmt.Printf("\n\nYour current cluster has been set to '%s'.\n", cluster.Label)
+	}
+
 	return nil
 }
 

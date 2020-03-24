@@ -10,4 +10,6 @@ var (
 	InvalidConfigCause      = errors.NewCause(errors.BadRequestCategory, "invalid_config")
 	InvalidEnvCause         = errors.NewCause(errors.BadRequestCategory, "invalid_environment")
 	InvalidPermissionsCause = errors.NewCause(errors.BadRequestCategory, "invalid_file_permissions")
+	ExistingClusterCause    = errors.NewCause(errors.BadRequestCategory, "cluster_exists")
+	ClusterNotFoundCause    = errors.NewCause(errors.NotFoundCategory, "cluster_not_found")
 )

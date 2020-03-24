@@ -19,7 +19,7 @@ import (
 // readable and writable by the owner. This is to ensure that another user on
 // the system _cannot_ get access to the users `auth_token` for any of their
 // clusters.
-const requiredPermissions = 0600
+const requiredPermissions = 0700
 
 var (
 	ErrNoCluster   = errors.New(MissingConfigCause, "No cluster has been configured")
@@ -98,6 +98,24 @@ func (c *Config) Print(w io.Writer) error {
 	return nil
 }
 
+// AddCluster attempts to add the cluster to the configuration
+func (c *Config) AddCluster(label primitives.Label, url *url.URL, authToken string) (*Cluster, error) {
+	for _, cluster := range c.Clusters {
+		if cluster.Label == label {
+			return nil, errors.New(ExistingClusterCause, "A cluster labelled %s already exists", label)
+		}
+	}
+
+	cluster := Cluster{
+		Label:     label,
+		URL:       url.String(),
+		AuthToken: authToken,
+	}
+
+	c.Clusters = append(c.Clusters, cluster)
+	return &cluster, nil
+}
+
 // Cluster returns the current cluster, if no cluster is set, cluster will be n
 func (c *Config) Cluster() (*Cluster, error) {
 	if c.Context.Cluster.String() == "" {
@@ -111,6 +129,23 @@ func (c *Config) Cluster() (*Cluster, error) {
 	}
 
 	return nil, errors.New(InvalidConfigCause, "The key 'context.cluster' is set but the cluster does not exist")
+}
+
+// Use sets the given label as the current cluster
+func (c *Config) Use(label primitives.Label) error {
+	var target *Cluster
+	for _, cluster := range c.Clusters {
+		if cluster.Label == label {
+			target = &cluster
+		}
+	}
+
+	if target == nil {
+		return errors.New(ClusterNotFoundCause, "A cluster labelled '%s' does not exist", label)
+	}
+
+	c.Context.Cluster = target.Label
+	return nil
 }
 
 // Validate returns an error if the config is invalid
@@ -139,13 +174,17 @@ type Context struct {
 
 // Validate returns an error if the context is invalid
 func (c *Context) Validate() error {
+	if c.Cluster == "" {
+		return nil
+	}
+
 	return c.Cluster.Validate()
 }
 
 // Cluster represents configuration for a Cape cluster
 type Cluster struct {
 	AuthToken string           `json:"auth_token,omitempty"`
-	URL       *url.URL         `json:"url"`
+	URL       string           `json:"url"`
 	Label     primitives.Label `json:"label"`
 }
 
