@@ -6,6 +6,7 @@ require (
 	github.com/99designs/gqlgen v0.11.2
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/bombsimon/wsl/v2 v2.2.0 // indirect
+	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
@@ -27,6 +28,7 @@ require (
 	github.com/manifoldco/go-base32 v1.0.4
 	github.com/manifoldco/go-base64 v1.0.3
 	github.com/manifoldco/healthz v1.2.0
+	github.com/manifoldco/promptui v0.7.0
 	github.com/matryer/is v1.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/onsi/gomega v1.9.0

@@ -6,6 +6,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/dropoutlabs/cape/cmd/config"
+	"github.com/dropoutlabs/cape/cmd/ui"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
@@ -18,6 +19,9 @@ const (
 
 	// ArgumentContextKey is the name of the key storing argument values for a command
 	ArgumentContextKey ContextKey = "arguments"
+
+	// UIContextKey is the name of the key storing the ui.UI struct for a command
+	UIContextKey ContextKey = "ui"
 )
 
 // Config returns the config object stored on the context
@@ -40,6 +44,16 @@ func Arguments(ctx context.Context) ArgumentValues {
 	return args.(ArgumentValues)
 }
 
+// UI returns the UI object stored on the context
+func UI(ctx context.Context) *ui.UI {
+	u := ctx.Value(UIContextKey)
+	if u == nil {
+		panic("ui not available on context")
+	}
+
+	return u.(*ui.UI)
+}
+
 func retrieveConfig(next cli.ActionFunc) cli.ActionFunc {
 	return cli.ActionFunc(func(c *cli.Context) error {
 		cfg, err := config.Parse()
@@ -47,7 +61,14 @@ func retrieveConfig(next cli.ActionFunc) cli.ActionFunc {
 			return err
 		}
 
+		u, err := ui.NewUI(cfg)
+		if err != nil {
+			return err
+		}
+
+		c.Context = context.WithValue(c.Context, UIContextKey, u)
 		c.Context = context.WithValue(c.Context, ConfigContextKey, cfg)
+
 		return next(c)
 	})
 }

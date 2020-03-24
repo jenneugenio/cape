@@ -7,6 +7,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
+	"github.com/dropoutlabs/cape/cmd/config"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -149,23 +150,32 @@ func removeCluster(c *cli.Context) error {
 	skipConfirm := c.Bool("yes")
 	args := Arguments(c.Context)
 	cfg := Config(c.Context)
+	ui := UI(c.Context)
 
-	if skipConfirm {
-		fmt.Printf("This is where i should prompt\n")
-	}
-
+	// XXX: cluster can be nil here and that's ok - it's possible no cluster
+	// was set yet the cluster were trying to delete may exist!
+	//
+	// We just need to be careful with how we use the `cluster` variable in the
+	// rest of the command
 	cluster, err := cfg.Cluster()
-	if err != nil {
+	if err != nil && err != config.ErrNoCluster {
 		return err
 	}
 
 	label := args["label"].(primitives.Label)
+	if !skipConfirm {
+		err := ui.Confirm(fmt.Sprintf("Do you want to delete the '%s' cluster from configuration?", label))
+		if err != nil {
+			return err
+		}
+	}
+
 	err = cfg.RemoveCluster(label)
 	if err != nil {
 		return err
 	}
 
-	if cluster.Label == label {
+	if cluster != nil && cluster.Label == label {
 		err = cfg.Use(primitives.Label(""))
 		if err != nil {
 			return err
@@ -178,7 +188,7 @@ func removeCluster(c *cli.Context) error {
 	}
 
 	fmt.Printf("The cluster '%s' has been removed from your configation.\n", label)
-	if cluster.Label == label {
+	if cluster != nil && cluster.Label == label {
 		fmt.Printf("\nA current cluster is no longer set, please set one using 'cape config clusters use <label>'\n")
 	}
 

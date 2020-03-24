@@ -22,7 +22,7 @@ import (
 const requiredPermissions = 0700
 
 var (
-	ErrNoCluster   = errors.New(MissingConfigCause, "No cluster has been configured")
+	ErrNoCluster   = errors.New(MissingConfigCause, "Missing cluster configuration; please set via 'cape config clusters use'")
 	ErrMissingHome = errors.New(InvalidEnvCause, "The $HOME environment variable could not be found")
 )
 
@@ -120,7 +120,7 @@ func (c *Config) AddCluster(label primitives.Label, url *url.URL, authToken stri
 func (c *Config) RemoveCluster(label primitives.Label) error {
 	idx, cluster := c.findCluster(label)
 	if cluster == nil {
-		return ErrNoCluster
+		return errors.New(ClusterNotFoundCause, "No cluster named '%s' exists", label)
 	}
 
 	c.Clusters = append(c.Clusters[:idx], c.Clusters[idx+1:]...)
