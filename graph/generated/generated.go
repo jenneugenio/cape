@@ -869,7 +869,6 @@ scalar URL
 }
 
 input CreateServiceRequest {
-    name: String!
     email: String!
     public_key: Base64!
     salt: Base64!
@@ -4671,12 +4670,6 @@ func (ec *executionContext) unmarshalInputCreateServiceRequest(ctx context.Conte
 
 	for k, v := range asMap {
 		switch k {
-		case "name":
-			var err error
-			it.Name, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "email":
 			var err error
 			it.Email, err = ec.unmarshalNString2string(ctx, v)

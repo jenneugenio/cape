@@ -17,7 +17,7 @@ func (s *Service) GetType() types.Type {
 }
 
 // NewService returns a mutable service struct
-func NewService() (*Service, error) {
+func NewService(email string, creds *Credentials) (*Service, error) {
 	p, err := database.NewPrimitive(ServiceType)
 	if err != nil {
 		return nil, err
@@ -25,7 +25,9 @@ func NewService() (*Service, error) {
 
 	return &Service{
 		IdentityImpl: &IdentityImpl{
-			Primitive: p,
+			Primitive:   p,
+			Email:       email,
+			Credentials: creds,
 		},
 	}, nil
 }

@@ -6,7 +6,6 @@ type Service implements Identity {
 }
 
 input CreateServiceRequest {
-    name: String!
     email: String!
     public_key: Base64!
     salt: Base64!

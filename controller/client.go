@@ -545,3 +545,112 @@ func (c *Client) Setup(ctx context.Context, user *primitives.User) (*primitives.
 
 	return &resp.User, nil
 }
+
+// CreateService creates a new service
+func (c *Client) CreateService(ctx context.Context, service *primitives.Service) (*primitives.Service, error) {
+	var resp struct {
+		Service primitives.Service `json:"createService"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["email"] = service.Email
+	variables["public_key"] = service.Credentials.PublicKey
+	variables["salt"] = service.Credentials.Salt
+
+	err := c.Raw(ctx, `
+		mutation CreateService($email: String!, $public_key: Base64!, $salt: Base64!) {
+			createService(input: { email: $email, public_key: $public_key, salt: $salt, alg: "EDDSA"}) {
+				id
+				email
+			}
+		}
+	`, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Service, nil
+}
+
+// DeleteService deletes a service
+func (c *Client) DeleteService(ctx context.Context, id database.ID) error {
+	variables := make(map[string]interface{})
+	variables["id"] = id
+
+	return c.Raw(ctx, `
+		mutation DeleteService($id: ID!) {
+			deleteService(input: { id: $id })
+		}
+	`, variables, nil)
+}
+
+// GetService returns a service by id
+func (c *Client) GetService(ctx context.Context, id database.ID) (*primitives.Service, error) {
+	var resp struct {
+		Service primitives.Service `json:"service"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["id"] = id
+
+	err := c.Raw(ctx, `
+		query Service($id: ID!) {
+			service(id: $id) {
+				id
+				email
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Service, nil
+}
+
+// GetServiceByEmail returns a service by email
+func (c *Client) GetServiceByEmail(ctx context.Context, email string) (*primitives.Service, error) {
+	var resp struct {
+		Service primitives.Service `json:"serviceByEmail"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["email"] = email
+
+	err := c.Raw(ctx, `
+		query Service($email: String!) {
+			serviceByEmail(email: $email) {
+				id
+				email
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Service, nil
+}
+
+// ListServices returns all services
+func (c *Client) ListServices(ctx context.Context) ([]*primitives.Service, error) {
+	var resp struct {
+		Services []*primitives.Service `json:"services"`
+	}
+
+	err := c.Raw(ctx, `
+		query Services {
+			services {
+				id
+				email
+			}
+		}
+	`, nil, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Services, nil
+}

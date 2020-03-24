@@ -39,7 +39,6 @@ type CreateRoleRequest struct {
 }
 
 type CreateServiceRequest struct {
-	Name      string                        `json:"name"`
 	Email     string                        `json:"email"`
 	PublicKey base64.Value                  `json:"public_key"`
 	Salt      base64.Value                  `json:"salt"`
