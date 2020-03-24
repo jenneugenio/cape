@@ -1,0 +1,29 @@
+type Service implements Identity {
+    id: ID!
+    email: String!
+    created_at: Time!
+    updated_at: Time!
+}
+
+input CreateServiceRequest {
+    name: String!
+    email: String!
+    public_key: Base64!
+    salt: Base64!
+    alg: CredentialsAlgType!
+}
+
+input DeleteServiceRequest {
+    id: ID!
+}
+
+extend type Query {
+    service(id: ID!): Service!
+    serviceByEmail(email: String!): Service!
+    services: [Service!]
+}
+
+extend type Mutation {
+    createService(input: CreateServiceRequest!): Service! @isAuthenticated()
+    deleteService(input: DeleteServiceRequest!): String @isAuthenticated()
+}

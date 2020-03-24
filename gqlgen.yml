@@ -19,6 +19,8 @@ models:
     model: github.com/dropoutlabs/cape/primitives.Identity
   User:
     model: github.com/dropoutlabs/cape/primitives.User
+  Service:
+    model: github.com/dropoutlabs/cape/primitives.Service
   Source:
     model: github.com/dropoutlabs/cape/primitives.Source
   Role:

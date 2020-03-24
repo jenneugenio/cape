@@ -334,8 +334,12 @@ func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignR
 	return nil, nil
 }
 
-func (r *queryResolver) User(ctx context.Context) (*primitives.User, error) {
+func (r *queryResolver) User(ctx context.Context, id database.ID) (*primitives.User, error) {
 	return nil, errs.New(RouteNotImplemented, "User query not implemented")
+}
+
+func (r *queryResolver) Users(ctx context.Context) ([]*primitives.User, error) {
+	return nil, errs.New(RouteNotImplemented, "Users query not implemented")
 }
 
 func (r *queryResolver) Session(ctx context.Context) (*primitives.Session, error) {
