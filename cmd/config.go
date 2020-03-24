@@ -146,6 +146,42 @@ func addCluster(c *cli.Context) error {
 }
 
 func removeCluster(c *cli.Context) error {
+	skipConfirm := c.Bool("yes")
+	args := Arguments(c.Context)
+	cfg := Config(c.Context)
+
+	if skipConfirm {
+		fmt.Printf("This is where i should prompt\n")
+	}
+
+	cluster, err := cfg.Cluster()
+	if err != nil {
+		return err
+	}
+
+	label := args["label"].(primitives.Label)
+	err = cfg.RemoveCluster(label)
+	if err != nil {
+		return err
+	}
+
+	if cluster.Label == label {
+		err = cfg.Use(primitives.Label(""))
+		if err != nil {
+			return err
+		}
+	}
+
+	err = cfg.Write()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("The cluster '%s' has been removed from your configation.\n", label)
+	if cluster.Label == label {
+		fmt.Printf("\nA current cluster is no longer set, please set one using 'cape config clusters use <label>'\n")
+	}
+
 	return nil
 }
 

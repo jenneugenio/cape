@@ -116,23 +116,48 @@ func (c *Config) AddCluster(label primitives.Label, url *url.URL, authToken stri
 	return &cluster, nil
 }
 
+// RemoveCluster attempts to remove the cluster from configuration
+func (c *Config) RemoveCluster(label primitives.Label) error {
+	idx, cluster := c.findCluster(label)
+	if cluster == nil {
+		return ErrNoCluster
+	}
+
+	c.Clusters = append(c.Clusters[:idx], c.Clusters[idx+1:]...)
+	return nil
+}
+
 // Cluster returns the current cluster, if no cluster is set, cluster will be n
 func (c *Config) Cluster() (*Cluster, error) {
 	if c.Context.Cluster.String() == "" {
 		return nil, ErrNoCluster
 	}
 
-	for _, cluster := range c.Clusters {
-		if cluster.Label == c.Context.Cluster {
-			return &cluster, nil
-		}
+	_, cluster := c.findCluster(c.Context.Cluster)
+	if cluster != nil {
+		return cluster, nil
 	}
 
 	return nil, errors.New(InvalidConfigCause, "The key 'context.cluster' is set but the cluster does not exist")
 }
 
-// Use sets the given label as the current cluster
+func (c *Config) findCluster(label primitives.Label) (int, *Cluster) {
+	for i, cluster := range c.Clusters {
+		if cluster.Label == label {
+			return i, &cluster
+		}
+	}
+
+	return -1, nil
+}
+
+// Use sets the given label as the current cluster or to unset the current cluster by passing an empty label
 func (c *Config) Use(label primitives.Label) error {
+	if label == "" {
+		c.Context.Cluster = ""
+		return nil
+	}
+
 	var target *Cluster
 	for _, cluster := range c.Clusters {
 		if cluster.Label == label {
