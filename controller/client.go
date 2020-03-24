@@ -194,6 +194,7 @@ func (c *Client) CreateRole(ctx context.Context, label string, identityIDs []dat
 			createRole(input: { label: "%s", identity_ids: $ids }) {
 				id
 				label
+				system
 			}
 		}
 	`, label), variables, &resp)

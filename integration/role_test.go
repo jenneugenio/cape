@@ -85,6 +85,13 @@ func TestRoles(t *testing.T) {
 		gm.Expect(roles[0].Label).To(gm.Equal("data-scientist"))
 		gm.Expect(roles[1].Label).To(gm.Equal("cto"))
 	})
+
+	t.Run("Roles will not default to system roles", func(t *testing.T) {
+		role, err := client.CreateRole(ctx, "coolguy", []database.ID{tc.User.ID})
+
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(role.System).To(gm.BeFalse())
+	})
 }
 
 func TestListRoles(t *testing.T) {

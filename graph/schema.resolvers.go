@@ -41,7 +41,7 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest
 	}
 
 	// Make the role
-	role, err := primitives.NewRole("system/admin")
+	role, err := primitives.NewRole("admin", true)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +222,7 @@ func (r *mutationResolver) DeleteSession(ctx context.Context, input model.Delete
 }
 
 func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error) {
-	role, err := primitives.NewRole(input.Label)
+	role, err := primitives.NewRole(input.Label, false)
 	if err != nil {
 		return nil, err
 	}

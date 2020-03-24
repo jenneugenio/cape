@@ -54,6 +54,7 @@ type Source {
 type Role {
   id: ID!
   label: String!
+  system: Boolean!
   created_at: Time!
   updated_at: Time!
 }
