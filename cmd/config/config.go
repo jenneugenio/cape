@@ -102,7 +102,7 @@ func (c *Config) Print(w io.Writer) error {
 func (c *Config) AddCluster(label primitives.Label, url *url.URL, authToken string) (*Cluster, error) {
 	for _, cluster := range c.Clusters {
 		if cluster.Label == label {
-			return nil, errors.New(ExistingClusterCause, "A cluster labelled %s already exists", label)
+			return nil, errors.New(ExistingClusterCause, "A cluster labeled %s already exists", label)
 		}
 	}
 
@@ -141,7 +141,7 @@ func (c *Config) Use(label primitives.Label) error {
 	}
 
 	if target == nil {
-		return errors.New(ClusterNotFoundCause, "A cluster labelled '%s' does not exist", label)
+		return errors.New(ClusterNotFoundCause, "A cluster labeled '%s' does not exist", label)
 	}
 
 	c.Context.Cluster = target.Label

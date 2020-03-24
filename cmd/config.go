@@ -16,7 +16,7 @@ func init() {
 		Description: "Use this command to list all configuration settings, their defaults, and current values.",
 		Command: &cli.Command{
 			Name:   "view",
-			Action: retrieveConfig(viewConfig),
+			Action: viewConfig,
 		},
 	}
 
@@ -37,7 +37,7 @@ func init() {
 		Command: &cli.Command{
 			Name:   "add",
 			Flags:  []cli.Flag{useClusterFlag()},
-			Action: retrieveConfig(addCluster),
+			Action: addCluster,
 		},
 	}
 
@@ -137,9 +137,9 @@ func addCluster(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("The '%s' cluster has been added to your configuration.", label)
+	fmt.Printf("The '%s' cluster has been added to your configuration.\n", label)
 	if use {
-		fmt.Printf("\n\nYour current cluster has been set to '%s'.\n", cluster.Label)
+		fmt.Printf("\nYour current cluster has been set to '%s'.\n", cluster.Label)
 	}
 
 	return nil
@@ -150,5 +150,20 @@ func removeCluster(c *cli.Context) error {
 }
 
 func useCluster(c *cli.Context) error {
+	args := Arguments(c.Context)
+	cfg := Config(c.Context)
+
+	label := args["label"].(primitives.Label)
+	err := cfg.Use(label)
+	if err != nil {
+		return err
+	}
+
+	err = cfg.Write()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Your current cluster has been set to '%s'.\n", label)
 	return nil
 }
