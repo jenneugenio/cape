@@ -4,10 +4,8 @@ package integration
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
-	"github.com/machinebox/graphql"
 	gm "github.com/onsi/gomega"
 
 	"github.com/dropoutlabs/cape/auth"
@@ -28,27 +26,39 @@ func TestUsers(t *testing.T) {
 
 	defer tc.Teardown(ctx) // nolint: errcheck
 
-	creds, err := auth.NewCredentials([]byte("jerryberrybuddyboy"), nil)
+	client, err := tc.Client()
 	gm.Expect(err).To(gm.BeNil())
 
-	client := graphql.NewClient("http://localhost:8081/v1/query")
-	req := graphql.NewRequest(fmt.Sprintf(`
-		mutation CreateUser {
-		  createUser(input: { name: "Jerry Berry", email: "jerry@jerry.berry", public_key: "%s", salt: "%s", alg: "EDDSA"}) {
-			id
-			name
-			email
-		  }
-		}
-	`, creds.PublicKey.String(), creds.Salt.String()))
+	t.Run("create user", func(t *testing.T) {
+		creds, err := auth.NewCredentials([]byte("jerryberrybuddyboy"), nil)
+		gm.Expect(err).To(gm.BeNil())
 
-	var resp struct {
-		User primitives.User `json:"createUser"`
-	}
+		user, err := primitives.NewUser("Jerry Berry", "jerry@jerry.berry", creds.Package())
+		gm.Expect(err).To(gm.BeNil())
 
-	err = client.Run(ctx, req, &resp)
-	gm.Expect(err).To(gm.BeNil())
+		otherUser, err := client.CreateUser(ctx, user)
+		gm.Expect(err).To(gm.BeNil())
 
-	gm.Expect(resp.User.Name).To(gm.Equal("Jerry Berry"))
-	gm.Expect(resp.User.Email).To(gm.Equal("jerry@jerry.berry"))
+		gm.Expect(user.Name).To(gm.Equal(otherUser.Name))
+		gm.Expect(user.Email).To(gm.Equal(otherUser.Email))
+	})
+
+	t.Run("cannot create multiple users with same email", func(t *testing.T) {
+		creds, err := auth.NewCredentials([]byte("jerryberrybuddyboy"), nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err := primitives.NewUser("Lenny Bonedog", "bones@tails.com", creds.Package())
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(user).NotTo(gm.BeNil())
+
+		otherUser, err := client.CreateUser(ctx, user)
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err = primitives.NewUser("Julio Tails", "bones@tails.com", creds.Package())
+		gm.Expect(err).To(gm.BeNil())
+
+		otherUser, err = client.CreateUser(ctx, user)
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(otherUser).To(gm.BeNil())
+	})
 }

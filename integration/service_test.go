@@ -78,6 +78,23 @@ func TestServices(t *testing.T) {
 		gm.Expect(service.Email).To(gm.Equal(otherService.Email))
 		gm.Expect(service.ID).To(gm.Equal(otherService.ID))
 	})
+
+	t.Run("cannot create multiple services with same email", func(t *testing.T) {
+		email := "fresh-email@bomb.com"
+		s, err := createServicePrimitive(email, []byte("randompassword"))
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err := client.CreateService(ctx, s)
+		gm.Expect(err).To(gm.BeNil())
+
+		email = "fresh-email@bomb.com"
+		s, err = createServicePrimitive(email, []byte("randompassword"))
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err = client.CreateService(ctx, s)
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(service).To(gm.BeNil())
+	})
 }
 
 func TestListServices(t *testing.T) {
@@ -162,7 +179,8 @@ func TestServiceLogin(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(service.Email).To(gm.Equal(email))
 
-	serviceClient, err := tc.Client()
+	serviceClient := controller.NewClient(tc.URL(), nil)
+
 	_, err = serviceClient.Login(ctx, token.Email, token.Secret)
 	gm.Expect(err).To(gm.BeNil())
 
