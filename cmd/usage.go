@@ -124,7 +124,9 @@ func (c *Command) Package() *cli.Command {
 	cmd.UsageText = c.UsageText()
 
 	// Apply our middleware!
-	cmd.Action = retrieveConfig(processArguments(c, cmd.Action))
+	if cmd.Action != nil {
+		cmd.Action = retrieveConfig(processArguments(c, cmd.Action))
+	}
 
 	return cmd
 }
