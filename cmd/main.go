@@ -65,7 +65,7 @@ GLOBAL OPTIONS:
 
 COPYRIGHT:
    {{.Copyright}}{{end}}
-   `, cliName)
+`, cliName)
 
 func main() {
 	cli.CommandHelpTemplate = commandHelpTemplate

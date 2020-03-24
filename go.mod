@@ -49,5 +49,6 @@ require (
 	gopkg.in/ini.v1 v1.55.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1
 	mvdan.cc/unparam v0.0.0-20200314162735-0ac8026f7d06 // indirect
+	sigs.k8s.io/yaml v1.2.0
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )

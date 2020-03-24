@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/urfave/cli/v2"
 )
 
@@ -10,7 +12,7 @@ func init() {
 		Description: "Use this command to list all configuration settings, their defaults, and current values.",
 		Command: &cli.Command{
 			Name:   "view",
-			Action: viewConfig,
+			Action: retrieveConfig(viewConfig),
 		},
 	}
 
@@ -104,7 +106,8 @@ func init() {
 }
 
 func viewConfig(c *cli.Context) error {
-	return nil
+	cfg := Config(c.Context)
+	return cfg.Print(os.Stdout)
 }
 
 func addCluster(c *cli.Context) error {
