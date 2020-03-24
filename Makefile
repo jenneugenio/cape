@@ -143,6 +143,7 @@ lint: gocheck
 
 BUILD_DATE=$(date)
 PKG=github.com/dropoutlabs/cape
+DATE=$(shell date)
 GO_BUILD=go build -i -v -ldflags "-w -X '$(PKG)/version.Version=$(VERSION)' -X '$(PKG)/version.BuildDate=$(DATE)' -s"
 $(PREFIX)bin/cape: gocheck $(SRC) gogen
 	$(GOOS_OVERRIDE) $(GO_BUILD) -o $@ $(PKG)/cmd
