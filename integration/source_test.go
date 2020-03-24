@@ -27,10 +27,15 @@ func TestSource(t *testing.T) {
 	defer tc.Teardown(ctx) // nolint: errcheck
 	var id database.ID
 
+	client, err := tc.Client()
+	gm.Expect(err).To(gm.BeNil())
+
+	_, err = client.Login(ctx, tc.User.Email, tc.UserPassword)
+	gm.Expect(err).To(gm.BeNil())
+
 	t.Run("create a new source", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		client := controller.NewClient(tc.URL(), nil)
 		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
 		gm.Expect(err).To(gm.BeNil())
 
@@ -47,7 +52,6 @@ func TestSource(t *testing.T) {
 	t.Run("pull your data sources", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		client := controller.NewClient(tc.URL(), nil)
 		sources, err := client.ListSources(ctx)
 		gm.Expect(err).To(gm.BeNil())
 
@@ -58,7 +62,6 @@ func TestSource(t *testing.T) {
 	t.Run("pull a single data source", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		client := controller.NewClient(tc.URL(), nil)
 		source, err := client.GetSource(ctx, id)
 		gm.Expect(err).To(gm.BeNil())
 
@@ -69,7 +72,6 @@ func TestSource(t *testing.T) {
 	t.Run("insert the same data source", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		client := controller.NewClient(tc.URL(), nil)
 		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
 		gm.Expect(err).To(gm.BeNil())
 

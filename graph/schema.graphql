@@ -125,8 +125,9 @@ type Query {
   users: [User!]
 
   session: Session!
-  sources: [Source!]!
-  source(id: ID!): Source!
+
+  sources: [Source!]! @isAuthenticated()
+  source(id: ID!): Source! @isAuthenticated()
 
   role(id: ID!): Role! @isAuthenticated()
   roles: [Role!] @isAuthenticated()
@@ -138,7 +139,7 @@ type Mutation {
 
   createUser(input: NewUserRequest!): User!
 
-  addSource(input: AddSourceRequest!): Source!
+  addSource(input: AddSourceRequest!): Source! @isAuthenticated()
 
   createLoginSession(input: LoginSessionRequest!): Session!
   createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
