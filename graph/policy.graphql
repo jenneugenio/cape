@@ -1,0 +1,51 @@
+type Policy {
+  id: ID!
+  created_at: Time!
+  updated_at: Time!
+
+  label: String!
+  # Policy will have more fields and they will encapsulate
+  # all the data that the controller needs to use to make
+  # a policy decision. We haven't decided on these yet but
+  # they would go here!
+}
+
+type Attachment {
+  id: ID!
+  created_at: Time!
+  updated_at: Time!
+
+  Role: Role!
+  Policy: Policy!
+}
+
+extend type Query {
+  policy(id: ID!): Policy!
+  policies: [Policy!]
+
+  attachment(role_id: ID!, policy_id: ID!): Attachment!
+  attachments: [Attachment!]
+}
+
+input CreatePolicyRequest {
+  label: String!
+  # The rest of the fields that make up a policy
+  # will go here!
+}
+
+input DeletePolicyRequest {
+  id: ID!
+}
+
+input AttachPolicyRequest {
+  policy_id: ID!
+  role_id: ID!
+}
+
+extend type Mutation {
+  createPolicy(input: CreatePolicyRequest!): Policy!
+  deletePolicy(input: DeletePolicyRequest!): String
+
+  attachPolicy(input: AttachPolicyRequest!): Attachment!
+  detachPolicy(input: AttachPolicyRequest!): String
+}

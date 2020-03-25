@@ -29,8 +29,25 @@ type Assignment struct {
 	UpdatedAt time.Time           `json:"updated_at"`
 }
 
+type AttachPolicyRequest struct {
+	PolicyID database.ID `json:"policy_id"`
+	RoleID   database.ID `json:"role_id"`
+}
+
+type Attachment struct {
+	ID        database.ID      `json:"id"`
+	CreatedAt time.Time        `json:"created_at"`
+	UpdatedAt time.Time        `json:"updated_at"`
+	Role      *primitives.Role `json:"Role"`
+	Policy    *Policy          `json:"Policy"`
+}
+
 type AuthSessionRequest struct {
 	Signature base64.Value `json:"signature"`
+}
+
+type CreatePolicyRequest struct {
+	Label string `json:"label"`
 }
 
 type CreateRoleRequest struct {
@@ -43,6 +60,10 @@ type CreateServiceRequest struct {
 	PublicKey base64.Value                  `json:"public_key"`
 	Salt      base64.Value                  `json:"salt"`
 	Alg       primitives.CredentialsAlgType `json:"alg"`
+}
+
+type DeletePolicyRequest struct {
+	ID database.ID `json:"id"`
 }
 
 type DeleteRoleRequest struct {
@@ -67,4 +88,11 @@ type NewUserRequest struct {
 	PublicKey base64.Value                  `json:"public_key"`
 	Salt      base64.Value                  `json:"salt"`
 	Alg       primitives.CredentialsAlgType `json:"alg"`
+}
+
+type Policy struct {
+	ID        database.ID `json:"id"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
+	Label     string      `json:"label"`
 }
