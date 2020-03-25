@@ -43,3 +43,5 @@ models:
     model: github.com/dropoutlabs/cape/primitives.IdentityImpl
   Policy:
     model: github.com/dropoutlabs/cape/primitives.Policy
+  Label:
+    model: github.com/dropoutlabs/cape/primitives.Label

@@ -3,7 +3,7 @@ type Policy {
   created_at: Time!
   updated_at: Time!
 
-  label: String!
+  label: Label!
   # Policy will have more fields and they will encapsulate
   # all the data that the controller needs to use to make
   # a policy decision. We haven't decided on these yet but
@@ -15,20 +15,12 @@ type Attachment {
   created_at: Time!
   updated_at: Time!
 
-  Role: Role!
-  Policy: Policy!
-}
-
-extend type Query {
-  policy(id: ID!): Policy!
-  policies: [Policy!]
-
-  attachment(role_id: ID!, policy_id: ID!): Attachment!
-  attachments: [Attachment!]
+  role: Role!
+  policy: Policy!
 }
 
 input CreatePolicyRequest {
-  label: String!
+  label: Label!
   # The rest of the fields that make up a policy
   # will go here!
 }
@@ -42,6 +34,15 @@ input AttachPolicyRequest {
   role_id: ID!
 }
 
+extend type Query {
+  policy(id: ID!): Policy!
+  policies: [Policy!]
+  rolePolicies(role_id: ID!): [Policy!]
+  identityPolicies(identity_id: ID!): [Policy!]
+
+  attachment(role_id: ID!, policy_id: ID!): Attachment!
+}
+
 extend type Mutation {
   createPolicy(input: CreatePolicyRequest!): Policy!
   deletePolicy(input: DeletePolicyRequest!): String
@@ -49,3 +50,5 @@ extend type Mutation {
   attachPolicy(input: AttachPolicyRequest!): Attachment!
   detachPolicy(input: AttachPolicyRequest!): String
 }
+
+scalar Label

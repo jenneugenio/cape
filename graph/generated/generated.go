@@ -98,21 +98,22 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Attachment     func(childComplexity int, roleID database.ID, policyID database.ID) int
-		Attachments    func(childComplexity int) int
-		Policies       func(childComplexity int) int
-		Policy         func(childComplexity int, id database.ID) int
-		Role           func(childComplexity int, id database.ID) int
-		RoleMembers    func(childComplexity int, roleID database.ID) int
-		Roles          func(childComplexity int) int
-		Service        func(childComplexity int, id database.ID) int
-		ServiceByEmail func(childComplexity int, email string) int
-		Services       func(childComplexity int) int
-		Session        func(childComplexity int) int
-		Source         func(childComplexity int, id database.ID) int
-		Sources        func(childComplexity int) int
-		User           func(childComplexity int, id database.ID) int
-		Users          func(childComplexity int) int
+		Attachment       func(childComplexity int, roleID database.ID, policyID database.ID) int
+		IdentityPolicies func(childComplexity int, identityID database.ID) int
+		Policies         func(childComplexity int) int
+		Policy           func(childComplexity int, id database.ID) int
+		Role             func(childComplexity int, id database.ID) int
+		RoleMembers      func(childComplexity int, roleID database.ID) int
+		RolePolicies     func(childComplexity int, roleID database.ID) int
+		Roles            func(childComplexity int) int
+		Service          func(childComplexity int, id database.ID) int
+		ServiceByEmail   func(childComplexity int, email string) int
+		Services         func(childComplexity int) int
+		Session          func(childComplexity int) int
+		Source           func(childComplexity int, id database.ID) int
+		Sources          func(childComplexity int) int
+		User             func(childComplexity int, id database.ID) int
+		Users            func(childComplexity int) int
 	}
 
 	Role struct {
@@ -183,8 +184,9 @@ type QueryResolver interface {
 	RoleMembers(ctx context.Context, roleID database.ID) ([]primitives.Identity, error)
 	Policy(ctx context.Context, id database.ID) (*primitives.Policy, error)
 	Policies(ctx context.Context) ([]*primitives.Policy, error)
+	RolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error)
+	IdentityPolicies(ctx context.Context, identityID database.ID) ([]*primitives.Policy, error)
 	Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error)
-	Attachments(ctx context.Context) ([]*model.Attachment, error)
 	Service(ctx context.Context, id database.ID) (*primitives.Service, error)
 	ServiceByEmail(ctx context.Context, email string) (*primitives.Service, error)
 	Services(ctx context.Context) ([]*primitives.Service, error)
@@ -254,14 +256,14 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Attachment.ID(childComplexity), true
 
-	case "Attachment.Policy":
+	case "Attachment.policy":
 		if e.complexity.Attachment.Policy == nil {
 			break
 		}
 
 		return e.complexity.Attachment.Policy(childComplexity), true
 
-	case "Attachment.Role":
+	case "Attachment.role":
 		if e.complexity.Attachment.Role == nil {
 			break
 		}
@@ -521,12 +523,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Attachment(childComplexity, args["role_id"].(database.ID), args["policy_id"].(database.ID)), true
 
-	case "Query.attachments":
-		if e.complexity.Query.Attachments == nil {
+	case "Query.identityPolicies":
+		if e.complexity.Query.IdentityPolicies == nil {
 			break
 		}
 
-		return e.complexity.Query.Attachments(childComplexity), true
+		args, err := ec.field_Query_identityPolicies_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.IdentityPolicies(childComplexity, args["identity_id"].(database.ID)), true
 
 	case "Query.policies":
 		if e.complexity.Query.Policies == nil {
@@ -570,6 +577,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.RoleMembers(childComplexity, args["role_id"].(database.ID)), true
+
+	case "Query.rolePolicies":
+		if e.complexity.Query.RolePolicies == nil {
+			break
+		}
+
+		args, err := ec.field_Query_rolePolicies_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.RolePolicies(childComplexity, args["role_id"].(database.ID)), true
 
 	case "Query.roles":
 		if e.complexity.Query.Roles == nil {
@@ -884,7 +903,7 @@ var sources = []*ast.Source{
   created_at: Time!
   updated_at: Time!
 
-  label: String!
+  label: Label!
   # Policy will have more fields and they will encapsulate
   # all the data that the controller needs to use to make
   # a policy decision. We haven't decided on these yet but
@@ -896,20 +915,12 @@ type Attachment {
   created_at: Time!
   updated_at: Time!
 
-  Role: Role!
-  Policy: Policy!
-}
-
-extend type Query {
-  policy(id: ID!): Policy!
-  policies: [Policy!]
-
-  attachment(role_id: ID!, policy_id: ID!): Attachment!
-  attachments: [Attachment!]
+  role: Role!
+  policy: Policy!
 }
 
 input CreatePolicyRequest {
-  label: String!
+  label: Label!
   # The rest of the fields that make up a policy
   # will go here!
 }
@@ -923,6 +934,15 @@ input AttachPolicyRequest {
   role_id: ID!
 }
 
+extend type Query {
+  policy(id: ID!): Policy!
+  policies: [Policy!]
+  rolePolicies(role_id: ID!): [Policy!]
+  identityPolicies(identity_id: ID!): [Policy!]
+
+  attachment(role_id: ID!, policy_id: ID!): Attachment!
+}
+
 extend type Mutation {
   createPolicy(input: CreatePolicyRequest!): Policy!
   deletePolicy(input: DeletePolicyRequest!): String
@@ -930,7 +950,8 @@ extend type Mutation {
   attachPolicy(input: AttachPolicyRequest!): Attachment!
   detachPolicy(input: AttachPolicyRequest!): String
 }
-`, BuiltIn: false},
+
+scalar Label`, BuiltIn: false},
 	&ast.Source{Name: "graph/schema.graphql", Input: `# isAuthenticated depends on having access to an auth token and checks that the
 # auth token is valid and appends the related user and session to the request context.
 # Most graphql queries and mutation should be annotated with this except for createLoginSession
@@ -1403,6 +1424,20 @@ func (ec *executionContext) field_Query_attachment_args(ctx context.Context, raw
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_identityPolicies_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 database.ID
+	if tmp, ok := rawArgs["identity_id"]; ok {
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["identity_id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_policy_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1418,6 +1453,20 @@ func (ec *executionContext) field_Query_policy_args(ctx context.Context, rawArgs
 }
 
 func (ec *executionContext) field_Query_roleMembers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 database.ID
+	if tmp, ok := rawArgs["role_id"]; ok {
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["role_id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_rolePolicies_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 database.ID
@@ -1809,7 +1858,7 @@ func (ec *executionContext) _Attachment_updated_at(ctx context.Context, field gr
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Attachment_Role(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+func (ec *executionContext) _Attachment_role(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1843,7 +1892,7 @@ func (ec *executionContext) _Attachment_Role(ctx context.Context, field graphql.
 	return ec.marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Attachment_Policy(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
+func (ec *executionContext) _Attachment_policy(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2930,9 +2979,9 @@ func (ec *executionContext) _Policy_label(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(primitives.Label)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3418,6 +3467,82 @@ func (ec *executionContext) _Query_policies(ctx context.Context, field graphql.C
 	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_rolePolicies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_rolePolicies_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().RolePolicies(rctx, args["role_id"].(database.ID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*primitives.Policy)
+	fc.Result = res
+	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_identityPolicies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_identityPolicies_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().IdentityPolicies(rctx, args["identity_id"].(database.ID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*primitives.Policy)
+	fc.Result = res
+	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3457,37 +3582,6 @@ func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql
 	res := resTmp.(*model.Attachment)
 	fc.Result = res
 	return ec.marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_attachments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Attachments(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Attachment)
-	fc.Result = res
-	return ec.marshalOAttachment2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAttachmentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_service(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5604,7 +5698,7 @@ func (ec *executionContext) unmarshalInputCreatePolicyRequest(ctx context.Contex
 		switch k {
 		case "label":
 			var err error
-			it.Label, err = ec.unmarshalNString2string(ctx, v)
+			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5906,13 +6000,13 @@ func (ec *executionContext) _Attachment(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Role":
-			out.Values[i] = ec._Attachment_Role(ctx, field, obj)
+		case "role":
+			out.Values[i] = ec._Attachment_role(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "Policy":
-			out.Values[i] = ec._Attachment_Policy(ctx, field, obj)
+		case "policy":
+			out.Values[i] = ec._Attachment_policy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -6232,6 +6326,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_policies(ctx, field)
 				return res
 			})
+		case "rolePolicies":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_rolePolicies(ctx, field)
+				return res
+			})
+		case "identityPolicies":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_identityPolicies(ctx, field)
+				return res
+			})
 		case "attachment":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -6244,17 +6360,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
-				return res
-			})
-		case "attachments":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_attachments(ctx, field)
 				return res
 			})
 		case "service":
@@ -6924,6 +7029,21 @@ func (ec *executionContext) marshalNIdentity2githubᚗcomᚋdropoutlabsᚋcape�
 	return ec._Identity(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx context.Context, v interface{}) (primitives.Label, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	return primitives.Label(tmp), err
+}
+
+func (ec *executionContext) marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx context.Context, sel ast.SelectionSet, v primitives.Label) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNLoginSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐLoginSessionRequest(ctx context.Context, v interface{}) (model.LoginSessionRequest, error) {
 	return ec.unmarshalInputLoginSessionRequest(ctx, v)
 }
@@ -7328,46 +7448,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) marshalOAttachment2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAttachmentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Attachment) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAttachment(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
 }
 
 func (ec *executionContext) marshalOAuthCredentials2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐAuthCredentials(ctx context.Context, sel ast.SelectionSet, v primitives.AuthCredentials) graphql.Marshaler {

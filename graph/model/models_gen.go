@@ -38,8 +38,8 @@ type Attachment struct {
 	ID        database.ID        `json:"id"`
 	CreatedAt time.Time          `json:"created_at"`
 	UpdatedAt time.Time          `json:"updated_at"`
-	Role      *primitives.Role   `json:"Role"`
-	Policy    *primitives.Policy `json:"Policy"`
+	Role      *primitives.Role   `json:"role"`
+	Policy    *primitives.Policy `json:"policy"`
 }
 
 type AuthSessionRequest struct {
@@ -47,7 +47,7 @@ type AuthSessionRequest struct {
 }
 
 type CreatePolicyRequest struct {
-	Label string `json:"label"`
+	Label primitives.Label `json:"label"`
 }
 
 type CreateRoleRequest struct {

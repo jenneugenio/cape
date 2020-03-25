@@ -665,7 +665,7 @@ func (c *Client) CreatePolicy(ctx context.Context, policy *primitives.Policy) (*
 	variables["label"] = policy.Label
 
 	err := c.Raw(ctx, `
-		mutation CreatePolicy($label: String!) {
+		mutation CreatePolicy($label: Label!) {
 			createPolicy(input: { label: $label }) {
 				id
 				label
@@ -731,6 +731,99 @@ func (c *Client) ListPolicies(ctx context.Context) ([]*primitives.Policy, error)
 		}
 	`, nil, &resp)
 
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Policies, nil
+}
+
+// AttachPolicy attaches a policy to a role
+func (c *Client) AttachPolicy(ctx context.Context, policyID database.ID,
+	roleID database.ID) (*model.Attachment, error) {
+	var resp struct {
+		Attachment model.Attachment `json:"attachPolicy"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["role_id"] = roleID
+	variables["policy_id"] = policyID
+
+	err := c.Raw(ctx, `
+		mutation AttachPolicy($role_id: ID!, $policy_id: ID!) {
+			attachPolicy(input: { role_id: $role_id, policy_id: $policy_id }) {
+				role {
+					id
+					label
+				}
+				policy {
+					id
+					label
+				}
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Attachment, nil
+}
+
+// DetachPolicy unattaches a policy from a role
+func (c *Client) DetachPolicy(ctx context.Context, policyID database.ID, roleID database.ID) error {
+	variables := make(map[string]interface{})
+	variables["role_id"] = roleID
+	variables["policy_id"] = policyID
+
+	return c.Raw(ctx, `
+		mutation detachPolicy($role_id: ID!, $policy_id: ID!) {
+			detachPolicy(input: { role_id: $role_id, policy_id: $policy_id })
+		}
+	`, variables, nil)
+}
+
+// GetRolePolicies returns all policies attached to a role
+func (c *Client) GetRolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error) {
+	var resp struct {
+		Policies []*primitives.Policy `json:"rolePolicies"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["role_id"] = roleID
+
+	err := c.Raw(ctx, `
+		query RolePolicies($role_id: ID!) {
+			rolePolicies(role_id: $role_id) {
+				id
+				label
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Policies, nil
+}
+
+// GetIdentityPolicies returns all policies related to an identity
+func (c *Client) GetIdentityPolicies(ctx context.Context, identityID database.ID) ([]*primitives.Policy, error) {
+	var resp struct {
+		Policies []*primitives.Policy `json:"identityPolicies"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["identity_id"] = identityID
+
+	err := c.Raw(ctx, `
+		query IdentityPolicies($identity_id: ID!) {
+			identityPolicies(identity_id: $identity_id) {
+				id
+				label
+			}
+		}
+	`, variables, &resp)
 	if err != nil {
 		return nil, err
 	}
