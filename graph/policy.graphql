@@ -50,5 +50,3 @@ extend type Mutation {
   attachPolicy(input: AttachPolicyRequest!): Attachment!
   detachPolicy(input: AttachPolicyRequest!): String
 }
-
-scalar Label

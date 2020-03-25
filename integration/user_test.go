@@ -47,18 +47,32 @@ func TestUsers(t *testing.T) {
 		creds, err := auth.NewCredentials([]byte("jerryberrybuddyboy"), nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		user, err := primitives.NewUser("Lenny Bonedog", "bones@tails.com", creds.Package())
+		n, err := primitives.NewName("Lenny Bonedog")
+		gm.Expect(err).To(gm.BeNil())
+
+		e, err := primitives.NewEmail("bones@tails.com")
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err := primitives.NewUser(n, e, creds.Package())
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(user).NotTo(gm.BeNil())
 
 		otherUser, err := client.CreateUser(ctx, user)
 		gm.Expect(err).To(gm.BeNil())
 
-		user, err = primitives.NewUser("Julio Tails", "bones@tails.com", creds.Package())
+		n, err = primitives.NewName("Julio Tails")
+		gm.Expect(err).To(gm.BeNil())
+
+		e, err = primitives.NewEmail("bones@tails.com")
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err = primitives.NewUser(n, e, creds.Package())
 		gm.Expect(err).To(gm.BeNil())
 
 		otherUser, err = client.CreateUser(ctx, user)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(otherUser).To(gm.BeNil())
+
+
 	})
 }

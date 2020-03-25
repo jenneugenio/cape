@@ -8,8 +8,8 @@ import (
 // Role in a role in the system (e.g. Admin, user, etc)
 type Role struct {
 	*database.Primitive
-	Label  string `json:"label"`
-	System bool   `json:"system"`
+	Label  Label `json:"label"`
+	System bool  `json:"system"`
 }
 
 // GetType returns the type of this entity
@@ -18,7 +18,7 @@ func (r *Role) GetType() types.Type {
 }
 
 // NewRole returns a mutable role struct
-func NewRole(label string, system bool) (*Role, error) {
+func NewRole(label Label, system bool) (*Role, error) {
 	p, err := database.NewPrimitive(RoleType)
 	if err != nil {
 		return nil, err

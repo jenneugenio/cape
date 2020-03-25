@@ -107,7 +107,7 @@ type ComplexityRoot struct {
 		RolePolicies     func(childComplexity int, roleID database.ID) int
 		Roles            func(childComplexity int) int
 		Service          func(childComplexity int, id database.ID) int
-		ServiceByEmail   func(childComplexity int, email string) int
+		ServiceByEmail   func(childComplexity int, email primitives.Email) int
 		Services         func(childComplexity int) int
 		Session          func(childComplexity int) int
 		Source           func(childComplexity int, id database.ID) int
@@ -188,7 +188,7 @@ type QueryResolver interface {
 	IdentityPolicies(ctx context.Context, identityID database.ID) ([]*primitives.Policy, error)
 	Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error)
 	Service(ctx context.Context, id database.ID) (*primitives.Service, error)
-	ServiceByEmail(ctx context.Context, email string) (*primitives.Service, error)
+	ServiceByEmail(ctx context.Context, email primitives.Email) (*primitives.Service, error)
 	Services(ctx context.Context) ([]*primitives.Service, error)
 }
 
@@ -619,7 +619,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.ServiceByEmail(childComplexity, args["email"].(string)), true
+		return e.complexity.Query.ServiceByEmail(childComplexity, args["email"].(primitives.Email)), true
 
 	case "Query.services":
 		if e.complexity.Query.Services == nil {
@@ -949,9 +949,7 @@ extend type Mutation {
 
   attachPolicy(input: AttachPolicyRequest!): Attachment!
   detachPolicy(input: AttachPolicyRequest!): String
-}
-
-scalar Label`, BuiltIn: false},
+}`, BuiltIn: false},
 	&ast.Source{Name: "graph/schema.graphql", Input: `# isAuthenticated depends on having access to an auth token and checks that the
 # auth token is valid and appends the related user and session to the request context.
 # Most graphql queries and mutation should be annotated with this except for createLoginSession
@@ -971,7 +969,7 @@ type AuthCredentials {
 
 interface Identity {
   id: ID!
-  email: String!
+  email: Email!
   created_at: Time!
   updated_at: Time!
 }
@@ -984,8 +982,8 @@ interface Identity {
 
 type User implements Identity {
   id: ID!
-  name: String!
-  email: String!
+  name: Name!
+  email: Email!
   created_at: Time!
   updated_at: Time!
 }
@@ -1001,13 +999,13 @@ type Session {
 
 type Source {
   id: ID!
-  label: String!
+  label: Label!
   endpoint: URL!
 }
 
 type Role {
   id: ID!
-  label: String!
+  label: Label!
   system: Boolean!
   created_at: Time!
   updated_at: Time!
@@ -1032,15 +1030,16 @@ type Assignment {
 # ------------------------------------------------------------------
 
 input NewUserRequest {
-  name: String!
-  email: String!
+  name: Name!
+  email: Email!
   public_key: Base64!
   salt: Base64!
   alg: CredentialsAlgType!
 }
 
 input LoginSessionRequest {
-  email: String!
+
+  email: Email!
 }
 
 input AuthSessionRequest {
@@ -1052,12 +1051,12 @@ input DeleteSessionRequest {
 }
 
 input AddSourceRequest {
-  label: String!
+  label: Label!
   credentials: URL!
 }
 
 input CreateRoleRequest {
-  label: String!
+  label: Label!
   identity_ids: [ID!]
 }
 
@@ -1113,16 +1112,19 @@ scalar Base64
 scalar CredentialsAlgType
 scalar TokenType
 scalar URL
+scalar Name
+scalar Email
+scalar Label
 `, BuiltIn: false},
 	&ast.Source{Name: "graph/services.graphql", Input: `type Service implements Identity {
     id: ID!
-    email: String!
+    email: Email!
     created_at: Time!
     updated_at: Time!
 }
 
 input CreateServiceRequest {
-    email: String!
+    email: Email!
     public_key: Base64!
     salt: Base64!
     alg: CredentialsAlgType!
@@ -1134,7 +1136,7 @@ input DeleteServiceRequest {
 
 extend type Query {
     service(id: ID!): Service!
-    serviceByEmail(email: String!): Service!
+    serviceByEmail(email: Email!): Service!
     services: [Service!]
 }
 
@@ -1497,9 +1499,9 @@ func (ec *executionContext) field_Query_role_args(ctx context.Context, rawArgs m
 func (ec *executionContext) field_Query_serviceByEmail_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 primitives.Email
 	if tmp, ok := rawArgs["email"]; ok {
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		arg0, err = ec.unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3649,7 +3651,7 @@ func (ec *executionContext) _Query_serviceByEmail(ctx context.Context, field gra
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ServiceByEmail(rctx, args["email"].(string))
+		return ec.resolvers.Query().ServiceByEmail(rctx, args["email"].(primitives.Email))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3829,9 +3831,9 @@ func (ec *executionContext) _Role_label(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(primitives.Label)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Role_system(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
@@ -3999,9 +4001,9 @@ func (ec *executionContext) _Service_email(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(primitives.Email)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Service_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
@@ -4336,9 +4338,9 @@ func (ec *executionContext) _Source_label(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(primitives.Label)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_endpoint(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
@@ -4438,9 +4440,9 @@ func (ec *executionContext) _User_name(ctx context.Context, field graphql.Collec
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(primitives.Name)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNName2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐName(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_email(ctx context.Context, field graphql.CollectedField, obj *primitives.User) (ret graphql.Marshaler) {
@@ -4472,9 +4474,9 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(primitives.Email)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.User) (ret graphql.Marshaler) {
@@ -5608,7 +5610,7 @@ func (ec *executionContext) unmarshalInputAddSourceRequest(ctx context.Context, 
 		switch k {
 		case "label":
 			var err error
-			it.Label, err = ec.unmarshalNString2string(ctx, v)
+			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5716,7 +5718,7 @@ func (ec *executionContext) unmarshalInputCreateRoleRequest(ctx context.Context,
 		switch k {
 		case "label":
 			var err error
-			it.Label, err = ec.unmarshalNString2string(ctx, v)
+			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5740,7 +5742,7 @@ func (ec *executionContext) unmarshalInputCreateServiceRequest(ctx context.Conte
 		switch k {
 		case "email":
 			var err error
-			it.Email, err = ec.unmarshalNString2string(ctx, v)
+			it.Email, err = ec.unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5848,7 +5850,7 @@ func (ec *executionContext) unmarshalInputLoginSessionRequest(ctx context.Contex
 		switch k {
 		case "email":
 			var err error
-			it.Email, err = ec.unmarshalNString2string(ctx, v)
+			it.Email, err = ec.unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5866,13 +5868,13 @@ func (ec *executionContext) unmarshalInputNewUserRequest(ctx context.Context, ob
 		switch k {
 		case "name":
 			var err error
-			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			it.Name, err = ec.unmarshalNName2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐName(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "email":
 			var err error
-			it.Email, err = ec.unmarshalNString2string(ctx, v)
+			it.Email, err = ec.unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7010,6 +7012,15 @@ func (ec *executionContext) unmarshalNDeleteSessionRequest2githubᚗcomᚋdropou
 	return ec.unmarshalInputDeleteSessionRequest(ctx, v)
 }
 
+func (ec *executionContext) unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx context.Context, v interface{}) (primitives.Email, error) {
+	var res primitives.Email
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx context.Context, sel ast.SelectionSet, v primitives.Email) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
 	var res database.ID
 	return res, res.UnmarshalGQL(v)
@@ -7046,6 +7057,21 @@ func (ec *executionContext) marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋpr
 
 func (ec *executionContext) unmarshalNLoginSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐLoginSessionRequest(ctx context.Context, v interface{}) (model.LoginSessionRequest, error) {
 	return ec.unmarshalInputLoginSessionRequest(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNName2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐName(ctx context.Context, v interface{}) (primitives.Name, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	return primitives.Name(tmp), err
+}
+
+func (ec *executionContext) marshalNName2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐName(ctx context.Context, sel ast.SelectionSet, v primitives.Name) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐNewUserRequest(ctx context.Context, v interface{}) (model.NewUserRequest, error) {

@@ -9,7 +9,7 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 )
 
-func queryIdentity(ctx context.Context, db database.Backend, email string) (primitives.Identity, error) {
+func queryIdentity(ctx context.Context, db database.Backend, email primitives.Email) (primitives.Identity, error) {
 	filter := database.NewFilter(database.Where{"email": email}, nil, nil)
 
 	user := &primitives.User{}

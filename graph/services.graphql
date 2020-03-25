@@ -1,12 +1,12 @@
 type Service implements Identity {
     id: ID!
-    email: String!
+    email: Email!
     created_at: Time!
     updated_at: Time!
 }
 
 input CreateServiceRequest {
-    email: String!
+    email: Email!
     public_key: Base64!
     salt: Base64!
     alg: CredentialsAlgType!
@@ -18,7 +18,7 @@ input DeleteServiceRequest {
 
 extend type Query {
     service(id: ID!): Service!
-    serviceByEmail(email: String!): Service!
+    serviceByEmail(email: Email!): Service!
     services: [Service!]
 }
 

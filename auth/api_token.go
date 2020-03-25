@@ -3,6 +3,7 @@ package auth
 import (
 	"crypto/rand"
 	"fmt"
+	"github.com/dropoutlabs/cape/primitives"
 	"net/url"
 	"strings"
 
@@ -21,14 +22,14 @@ const (
 // the APIToken will be tied to a token (token_id will replace email)
 // that is tied to an identity (user or service)
 type APIToken struct {
-	Email   string
+	Email   primitives.Email
 	URL     *url.URL
 	Version byte
 	Secret  []byte
 }
 
 // NewAPIToken returns a new api token from email and url
-func NewAPIToken(email string, url *url.URL) (*APIToken, error) {
+func NewAPIToken(email primitives.Email, url *url.URL) (*APIToken, error) {
 	secretBytes := make([]byte, secretBytes)
 	_, err := rand.Read(secretBytes)
 	if err != nil {
@@ -70,7 +71,12 @@ func (a *APIToken) Unmarshal(token string) error {
 		return errors.New(BadTokenFormat, "API Token only has two parts, email and base64 encoded data")
 	}
 
-	a.Email = strs[0]
+	email, err := primitives.NewEmail(strs[0])
+	if err != nil {
+		return err
+	}
+
+	a.Email = email
 
 	val, err := base64.NewFromString(strs[1])
 	if err != nil {

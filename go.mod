@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/99designs/gqlgen v0.11.2
 	github.com/NYTimes/gziphandler v1.1.1
+	github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad
 	github.com/bombsimon/wsl/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/fatih/color v1.9.0 // indirect

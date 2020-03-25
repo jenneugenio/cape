@@ -1,6 +1,7 @@
 package primitives
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
 	"io"
@@ -26,7 +27,19 @@ func UnmarshalURL(v interface{}) (url.URL, error) {
 		}
 
 		return *u, nil
+	case map[string]interface{}:
+		x, err := json.Marshal(v)
+		if err != nil {
+			return url.URL{}, err
+		}
 
+		var resp url.URL
+		err = json.Unmarshal(x, &resp)
+		if err != nil {
+			return url.URL{}, err
+		}
+
+		return resp, nil
 	default:
 		return url.URL{}, fmt.Errorf("%T is not a string", v)
 	}

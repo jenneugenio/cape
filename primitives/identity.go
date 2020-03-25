@@ -8,7 +8,7 @@ import (
 type Identity interface {
 	database.Entity
 	GetCredentials() *Credentials
-	GetEmail() string
+	GetEmail() Email
 }
 
 // IdentityImpl implements the above interface and is a common
@@ -17,7 +17,7 @@ type Identity interface {
 type IdentityImpl struct {
 	*database.Primitive
 	Credentials *Credentials `json:"credentials"`
-	Email       string       `json:"email"`
+	Email       Email        `json:"email"`
 }
 
 // GetCredentials implements Identity interface
@@ -26,6 +26,6 @@ func (i *IdentityImpl) GetCredentials() *Credentials {
 }
 
 // GetEmail implements Identity interface
-func (i *IdentityImpl) GetEmail() string {
+func (i *IdentityImpl) GetEmail() Email {
 	return i.Email
 }

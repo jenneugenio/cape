@@ -12,8 +12,8 @@ import (
 )
 
 type AddSourceRequest struct {
-	Label       string  `json:"label"`
-	Credentials url.URL `json:"credentials"`
+	Label       primitives.Label `json:"label"`
+	Credentials url.URL          `json:"credentials"`
 }
 
 type AssignRoleRequest struct {
@@ -51,12 +51,12 @@ type CreatePolicyRequest struct {
 }
 
 type CreateRoleRequest struct {
-	Label       string        `json:"label"`
-	IdentityIds []database.ID `json:"identity_ids"`
+	Label       primitives.Label `json:"label"`
+	IdentityIds []database.ID    `json:"identity_ids"`
 }
 
 type CreateServiceRequest struct {
-	Email     string                        `json:"email"`
+	Email     primitives.Email              `json:"email"`
 	PublicKey base64.Value                  `json:"public_key"`
 	Salt      base64.Value                  `json:"salt"`
 	Alg       primitives.CredentialsAlgType `json:"alg"`
@@ -79,12 +79,12 @@ type DeleteSessionRequest struct {
 }
 
 type LoginSessionRequest struct {
-	Email string `json:"email"`
+	Email primitives.Email `json:"email"`
 }
 
 type NewUserRequest struct {
-	Name      string                        `json:"name"`
-	Email     string                        `json:"email"`
+	Name      primitives.Name               `json:"name"`
+	Email     primitives.Email              `json:"email"`
 	PublicKey base64.Value                  `json:"public_key"`
 	Salt      base64.Value                  `json:"salt"`
 	Alg       primitives.CredentialsAlgType `json:"alg"`

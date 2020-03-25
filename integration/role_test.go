@@ -4,6 +4,7 @@ package integration
 
 import (
 	"context"
+	"github.com/dropoutlabs/cape/primitives"
 	"testing"
 
 	"github.com/dropoutlabs/cape/controller"
@@ -33,7 +34,8 @@ func TestRoles(t *testing.T) {
 	t.Run("create role", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		label := "data-scientist"
+		label, err := primitives.NewLabel("data-scientist")
+		gm.Expect(err).To(gm.BeNil())
 		role, err := client.CreateRole(ctx, label, nil)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(role.Label).To(gm.Equal(label))
@@ -47,7 +49,8 @@ func TestRoles(t *testing.T) {
 	t.Run("delete role", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		label := "cio"
+		label, err := primitives.NewLabel("cio-person")
+		gm.Expect(err).To(gm.BeNil())
 		role, err := client.CreateRole(ctx, label, nil)
 		gm.Expect(err).To(gm.BeNil())
 
@@ -62,7 +65,8 @@ func TestRoles(t *testing.T) {
 	t.Run("create role with members", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		label := "cto"
+		label, err := primitives.NewLabel("cto-person")
+		gm.Expect(err).To(gm.BeNil())
 		role, err := client.CreateRole(ctx, label, []database.ID{tc.User.ID})
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(role).ToNot(gm.BeNil())
@@ -82,12 +86,13 @@ func TestRoles(t *testing.T) {
 
 		// create three early in the tests and then delete one
 		gm.Expect(len(roles)).To(gm.Equal(2))
-		gm.Expect(roles[0].Label).To(gm.Equal("data-scientist"))
-		gm.Expect(roles[1].Label).To(gm.Equal("cto"))
+		gm.Expect(roles[0].Label.String()).To(gm.Equal("data-scientist"))
+		gm.Expect(roles[1].Label.String()).To(gm.Equal("cto-person"))
 	})
 
 	t.Run("Roles will not default to system roles", func(t *testing.T) {
-		role, err := client.CreateRole(ctx, "coolguy", []database.ID{tc.User.ID})
+		l, err := primitives.NewLabel("coolguy")
+		role, err := client.CreateRole(ctx, l, []database.ID{tc.User.ID})
 
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(role.System).To(gm.BeFalse())
@@ -149,7 +154,8 @@ func TestAssignments(t *testing.T) {
 	t.Run("assign role", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		label := "data-scientist"
+		label, err := primitives.NewLabel("data-scientist")
+		gm.Expect(err).To(gm.BeNil())
 		role, err := client.CreateRole(ctx, label, nil)
 		gm.Expect(err).To(gm.BeNil())
 
@@ -170,7 +176,8 @@ func TestAssignments(t *testing.T) {
 	t.Run("unassign role", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		label := "iamarole"
+		label, err := primitives.NewLabel("iamarole")
+		gm.Expect(err).To(gm.BeNil())
 		role, err := client.CreateRole(ctx, label, nil)
 		gm.Expect(err).To(gm.BeNil())
 

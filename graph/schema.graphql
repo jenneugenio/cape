@@ -17,7 +17,7 @@ type AuthCredentials {
 
 interface Identity {
   id: ID!
-  email: String!
+  email: Email!
   created_at: Time!
   updated_at: Time!
 }
@@ -30,8 +30,8 @@ interface Identity {
 
 type User implements Identity {
   id: ID!
-  name: String!
-  email: String!
+  name: Name!
+  email: Email!
   created_at: Time!
   updated_at: Time!
 }
@@ -47,13 +47,13 @@ type Session {
 
 type Source {
   id: ID!
-  label: String!
+  label: Label!
   endpoint: URL!
 }
 
 type Role {
   id: ID!
-  label: String!
+  label: Label!
   system: Boolean!
   created_at: Time!
   updated_at: Time!
@@ -78,15 +78,16 @@ type Assignment {
 # ------------------------------------------------------------------
 
 input NewUserRequest {
-  name: String!
-  email: String!
+  name: Name!
+  email: Email!
   public_key: Base64!
   salt: Base64!
   alg: CredentialsAlgType!
 }
 
 input LoginSessionRequest {
-  email: String!
+
+  email: Email!
 }
 
 input AuthSessionRequest {
@@ -98,12 +99,12 @@ input DeleteSessionRequest {
 }
 
 input AddSourceRequest {
-  label: String!
+  label: Label!
   credentials: URL!
 }
 
 input CreateRoleRequest {
-  label: String!
+  label: Label!
   identity_ids: [ID!]
 }
 
@@ -159,3 +160,6 @@ scalar Base64
 scalar CredentialsAlgType
 scalar TokenType
 scalar URL
+scalar Name
+scalar Email
+scalar Label

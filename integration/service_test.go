@@ -33,7 +33,9 @@ func TestServices(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("create service", func(t *testing.T) {
-		email := "service@connector-cape.com"
+		email, err := primitives.NewEmail("service@connector-cape.com")
+		gm.Expect(err).To(gm.BeNil())
+
 		s, err := createServicePrimitive(email, []byte("randompassword"))
 		gm.Expect(err).To(gm.BeNil())
 
@@ -49,7 +51,9 @@ func TestServices(t *testing.T) {
 	})
 
 	t.Run("delete service", func(t *testing.T) {
-		email := "deleted-service@connector-cape.com"
+		email, err := primitives.NewEmail("deleted-service@connector-cape.com")
+		gm.Expect(err).To(gm.BeNil())
+
 		s, err := createServicePrimitive(email, []byte("randompassword"))
 		gm.Expect(err).To(gm.BeNil())
 
@@ -65,7 +69,9 @@ func TestServices(t *testing.T) {
 	})
 
 	t.Run("get service by email", func(t *testing.T) {
-		email := "email@connector-cape.com"
+		email, err := primitives.NewEmail("email@connector-cape.com")
+		gm.Expect(err).To(gm.BeNil())
+
 		s, err := createServicePrimitive(email, []byte("randompassword"))
 		gm.Expect(err).To(gm.BeNil())
 
@@ -80,14 +86,15 @@ func TestServices(t *testing.T) {
 	})
 
 	t.Run("cannot create multiple services with same email", func(t *testing.T) {
-		email := "fresh-email@bomb.com"
+		email, err := primitives.NewEmail("fresh-email@bomb.com")
 		s, err := createServicePrimitive(email, []byte("randompassword"))
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
 		gm.Expect(err).To(gm.BeNil())
 
-		email = "fresh-email@bomb.com"
+		email, err = primitives.NewEmail("fresh-email@bomb.com")
+		gm.Expect(err).To(gm.BeNil())
 		s, err = createServicePrimitive(email, []byte("randompassword"))
 		gm.Expect(err).To(gm.BeNil())
 
@@ -119,7 +126,10 @@ func TestListServices(t *testing.T) {
 	emails := []string{"connector1@email.com", "connector2@email.com", "connector3@email.com"}
 	services := make([]*primitives.Service, 3)
 	for i, email := range emails {
-		s, err := createServicePrimitive(email, []byte("randompassword"))
+		e, err := primitives.NewEmail(email)
+		gm.Expect(err).To(gm.BeNil())
+
+		s, err := createServicePrimitive(e, []byte("randompassword"))
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
@@ -134,7 +144,7 @@ func TestListServices(t *testing.T) {
 	gm.Expect(otherServices).To(gm.ContainElements(services))
 }
 
-func createServicePrimitive(email string, secret []byte) (*primitives.Service, error) {
+func createServicePrimitive(email primitives.Email, secret []byte) (*primitives.Service, error) {
 	creds, err := auth.NewCredentials(secret, nil)
 	if err != nil {
 		return nil, err
@@ -167,7 +177,8 @@ func TestServiceLogin(t *testing.T) {
 	_, err = client.Login(ctx, tc.User.Email, tc.UserPassword)
 	gm.Expect(err).To(gm.BeNil())
 
-	email := "service@connector-cape.com"
+	email, err := primitives.NewEmail("service@connector-cape.com")
+	gm.Expect(err).To(gm.BeNil())
 
 	token, err := auth.NewAPIToken(email, tc.URL())
 	gm.Expect(err).To(gm.BeNil())

@@ -45,3 +45,7 @@ models:
     model: github.com/dropoutlabs/cape/primitives.Policy
   Label:
     model: github.com/dropoutlabs/cape/primitives.Label
+  Name:
+    model: github.com/dropoutlabs/cape/primitives.Name
+  Email:
+    model: github.com/dropoutlabs/cape/primitives.Email

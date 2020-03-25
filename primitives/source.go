@@ -9,7 +9,7 @@ import (
 // Source represents the connection information for an external data source
 type Source struct {
 	*database.Primitive
-	Label    string  `json:"label"`
+	Label    Label   `json:"label"`
 	Endpoint url.URL `json:"endpoint"`
 
 	Credentials url.URL `json:"credentials"`
@@ -21,7 +21,7 @@ func (s *Source) GetType() types.Type {
 }
 
 // NewSource returns a new Source struct
-func NewSource(label string, credentials url.URL) (*Source, error) {
+func NewSource(label Label, credentials url.URL) (*Source, error) {
 	p, err := database.NewPrimitive(SourceType)
 	if err != nil {
 		return nil, err

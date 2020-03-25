@@ -5,6 +5,7 @@ package integration
 import (
 	"context"
 	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/primitives"
 	"net/url"
 	"testing"
 
@@ -39,10 +40,13 @@ func TestSource(t *testing.T) {
 		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, "my-transactions", u)
+		l, err := primitives.NewLabel("my-transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(source.Label).To(gm.Equal("my-transactions"))
+		source, err := client.AddSource(ctx, l, u)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(source.Label).To(gm.Equal(l))
 		gm.Expect(source.ID).ToNot(gm.BeNil())
 		gm.Expect(source.Endpoint.String()).To(gm.Equal("postgres://my.cool.website.com:5432/mydb"))
 
@@ -55,8 +59,11 @@ func TestSource(t *testing.T) {
 		sources, err := client.ListSources(ctx)
 		gm.Expect(err).To(gm.BeNil())
 
+		l, err := primitives.NewLabel("my-transactions")
+		gm.Expect(err).To(gm.BeNil())
+
 		gm.Expect(len(sources)).To(gm.Equal(1))
-		gm.Expect(sources[0].Label).To(gm.Equal("my-transactions"))
+		gm.Expect(sources[0].Label).To(gm.Equal(l))
 	})
 
 	t.Run("pull a single data source", func(t *testing.T) {
@@ -65,7 +72,10 @@ func TestSource(t *testing.T) {
 		source, err := client.GetSource(ctx, id)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(source.Label).To(gm.Equal("my-transactions"))
+		expectedLabel, err := primitives.NewLabel("my-transactions")
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(source.Label).To(gm.Equal(expectedLabel))
 		gm.Expect(source.Endpoint.String()).To(gm.Equal("postgres://my.cool.website.com:5432/mydb"))
 	})
 
@@ -74,8 +84,10 @@ func TestSource(t *testing.T) {
 
 		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
 		gm.Expect(err).To(gm.BeNil())
+		l, err := primitives.NewLabel("my-transactions")
+		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, "my-transactions", u)
+		source, err := client.AddSource(ctx, l, u)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(source).To(gm.BeNil())
 	})

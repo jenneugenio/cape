@@ -8,7 +8,7 @@ import (
 // User represents a user of the system
 type User struct {
 	*IdentityImpl
-	Name string `json:"name"`
+	Name Name `json:"name"`
 }
 
 // GetType returns the type for this entity
@@ -17,7 +17,7 @@ func (u *User) GetType() types.Type {
 }
 
 // NewUser returns a new User struct
-func NewUser(name string, email string, creds *Credentials) (*User, error) {
+func NewUser(name Name, email Email, creds *Credentials) (*User, error) {
 	p, err := database.NewPrimitive(UserType)
 	if err != nil {
 		return nil, err
@@ -39,6 +39,6 @@ func (u *User) GetCredentials() *Credentials {
 }
 
 // GetEmail satisfies the Identity interface
-func (u *User) GetEmail() string {
+func (u *User) GetEmail() Email {
 	return u.Email
 }

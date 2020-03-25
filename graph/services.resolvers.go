@@ -50,7 +50,7 @@ func (r *queryResolver) Service(ctx context.Context, id database.ID) (*primitive
 	return service, nil
 }
 
-func (r *queryResolver) ServiceByEmail(ctx context.Context, email string) (*primitives.Service, error) {
+func (r *queryResolver) ServiceByEmail(ctx context.Context, email primitives.Email) (*primitives.Service, error) {
 	service := &primitives.Service{}
 	err := r.Backend.QueryOne(ctx, service, database.NewFilter(database.Where{"email": email}, nil, nil))
 	if err != nil {

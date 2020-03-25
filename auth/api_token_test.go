@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/dropoutlabs/cape/primitives"
 	"net/url"
 	"testing"
 
@@ -10,8 +11,10 @@ import (
 func TestAPIToken(t *testing.T) {
 	gm.RegisterTestingT(t)
 
+	email, err := primitives.NewEmail("email@email.com")
+	gm.Expect(err).To(gm.BeNil())
+
 	t.Run("new api token", func(t *testing.T) {
-		email := "email@email.com"
 		host := "host.controller.com"
 
 		u, err := url.Parse(host)
@@ -27,7 +30,6 @@ func TestAPIToken(t *testing.T) {
 	})
 
 	t.Run("marhsal unmarhal token", func(t *testing.T) {
-		email := "email@email.com"
 		host := "host.controller.com"
 
 		u, err := url.Parse(host)
@@ -52,7 +54,6 @@ func TestAPIToken(t *testing.T) {
 	})
 
 	t.Run("test unmarshal on raw string", func(t *testing.T) {
-		email := "email@email.com"
 		host := "host.controller.com"
 
 		tokenStr := "email@email.com,AYqMLOkUUbK58Qr66G1a5v1ob3N0LmNvbnRyb2xsZXIuY29t"
