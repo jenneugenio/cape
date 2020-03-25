@@ -22,7 +22,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 
 		err := tokenAuthority.Verify(token)
 		if err != nil {
-			msg := "Could not authenticates. Unable to verify auth token"
+			msg := "Could not authenticate. Unable to verify auth token"
 			logger.Info().Err(err).Msg(msg)
 			return nil, ErrAuthentication
 		}
@@ -30,21 +30,41 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 		session := &primitives.Session{}
 		err = db.QueryOne(ctx, session, database.NewFilter(database.Where{"token": token.String()}, nil, nil))
 		if err != nil {
-			msg := "Could not authenticates. Unable to find session"
+			msg := "Could not authenticate. Unable to find session"
 			logger.Info().Err(err).Msg(msg)
 			return nil, ErrAuthentication
 		}
 
-		user := &primitives.User{}
-		err = db.Get(ctx, session.IdentityID, user)
+		typ, err := session.IdentityID.Type()
 		if err != nil {
-			msg := "Could not authenticates. Unable to find user"
-			logger.Error().Err(err).Msg(msg)
+			msg := "Could not authenticate. Unable get identity type"
+			logger.Info().Err(err).Msg(msg)
 			return nil, ErrAuthentication
 		}
 
+		var identity primitives.Identity
+		if typ == primitives.UserType {
+			user := &primitives.User{}
+			err = db.Get(ctx, session.IdentityID, user)
+			if err != nil {
+				msg := "Could not authenticate. Unable to find identity"
+				logger.Error().Err(err).Msg(msg)
+				return nil, ErrAuthentication
+			}
+			identity = user
+		} else if typ == primitives.ServiceType {
+			service := &primitives.Service{}
+			err = db.Get(ctx, session.IdentityID, service)
+			if err != nil {
+				msg := "Could not authenticate. Unable to find identity"
+				logger.Error().Err(err).Msg(msg)
+				return nil, ErrAuthentication
+			}
+			identity = service
+		}
+
 		ctx = context.WithValue(ctx, SessionContextKey, session)
-		ctx = context.WithValue(ctx, UserContextKey, user)
+		ctx = context.WithValue(ctx, IdentityContextKey, identity)
 
 		return next(ctx)
 	}

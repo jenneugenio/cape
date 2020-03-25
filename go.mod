@@ -17,7 +17,9 @@ require (
 	github.com/golangci/golangci-lint v1.24.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
 	github.com/google/go-cmp v0.4.0 // indirect
+	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/gostaticanalysis/analysisutil v0.0.3 // indirect
+	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/jackc/pgconn v1.3.2
 	github.com/jackc/pgx/v4 v4.4.1
 	github.com/jackc/tern v1.9.1

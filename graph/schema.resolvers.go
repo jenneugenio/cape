@@ -117,45 +117,42 @@ func (r *mutationResolver) AddSource(ctx context.Context, input model.AddSourceR
 func (r *mutationResolver) CreateLoginSession(ctx context.Context, input model.LoginSessionRequest) (*primitives.Session, error) {
 	logger := fw.Logger(ctx)
 
-	isFakeUser := false
-	user := &primitives.User{}
-	err := r.Backend.QueryOne(ctx, user, database.NewFilter(database.Where{"email": input.Email}, nil, nil))
-	if err != nil {
-		if errs.FromCause(err, database.NotFoundCause) {
-			isFakeUser = true
-			user, err = auth.NewFakeUser(input.Email)
-			if err != nil {
-				logger.Info().Err(err).Msg("Could not authenticate. Unable to create fake user")
-				return nil, fw.ErrAuthentication
-			}
-		} else {
-			logger.Info().Err(err).Msg("Could not authenticate. Error querying database")
+	isFakeIdentity := false
+	identity, err := queryIdentity(ctx, r.Backend, input.Email)
+	if err != nil && !errs.FromCause(err, database.NotFoundCause) {
+		logger.Info().Err(err).Msg("Could not authenticate. Error querying database")
+		return nil, fw.ErrAuthentication
+	} else if errs.FromCause(err, database.NotFoundCause) {
+		// if identity doesn't exist need to return fake data
+		isFakeIdentity = true
+		identity, err = auth.NewFakeIdentity(input.Email)
+		if err != nil {
+			logger.Info().Err(err).Msg("Could not authenticate. Unable to create fake identity")
 			return nil, fw.ErrAuthentication
 		}
 	}
 
 	token, expiresIn, err := r.TokenAuthority.Generate(primitives.Login)
 	if err != nil {
-		msg := fmt.Sprintf("Could not authenticate user %s. Failed to generate auth token", user.Email)
-		logger.Info().Err(err).Msg(msg)
+		logger.Info().Err(err).Msgf("Could not authenticate identity %s. Failed to generate auth token", identity.GetEmail())
 		return nil, fw.ErrAuthentication
 	}
 
-	session, err := primitives.NewSession(user, expiresIn, primitives.Login, token)
+	session, err := primitives.NewSession(identity, expiresIn, primitives.Login, token)
 	if err != nil {
-		msg := fmt.Sprintf("Could not authenticate user %s. Failed to create session", user.Email)
-		logger.Info().Err(err).Msg(msg)
+		logger.Info().Err(err).Msgf("Could not authenticate identity %s. Failed to create session", identity.GetEmail())
 		return nil, fw.ErrAuthentication
 	}
 
-	if isFakeUser {
+	if isFakeIdentity {
+		// fake data doesn't need to be put in database so
+		// return early
 		return session, nil
 	}
 
 	err = r.Backend.Create(ctx, session)
 	if err != nil {
-		msg := fmt.Sprintf("Could not authenticate user %s. Create session in database", user.Email)
-		logger.Error().Err(err).Msg(msg)
+		logger.Error().Err(err).Msgf("Could not authenticate identity %s. Create session in database", identity.GetEmail())
 		return nil, fw.ErrAuthentication
 	}
 
@@ -166,39 +163,39 @@ func (r *mutationResolver) CreateAuthSession(ctx context.Context, input model.Au
 	logger := fw.Logger(ctx)
 
 	session := fw.Session(ctx)
-	user := fw.User(ctx)
+	identity := fw.Identity(ctx)
 
-	creds, err := auth.LoadCredentials(user.Credentials.PublicKey, user.Credentials.Salt)
+	creds, err := auth.LoadCredentials(identity.GetCredentials().PublicKey, identity.GetCredentials().Salt)
 	if err != nil {
-		msg := fmt.Sprintf("Could not authenticate user %s. Load credentials failed", user.Email)
-		logger.Error().Err(err).Msg(msg)
+		msg := fmt.Sprintf("Could not authenticate identity %s. Load credentials failed", identity.GetEmail())
+		logger.Info().Err(err).Msg(msg)
 		return nil, fw.ErrAuthentication
 	}
 
 	err = creds.Verify(session.Token, &input.Signature)
 	if err != nil {
-		msg := fmt.Sprintf("Could not authenticate user %s. Token verification failed", user.Email)
-		logger.Error().Err(err).Msg(msg)
+		msg := fmt.Sprintf("Could not authenticate identity %s. Token verification failed", identity.GetEmail())
+		logger.Info().Err(err).Msg(msg)
 		return nil, fw.ErrAuthentication
 	}
 
 	token, expiresIn, err := r.TokenAuthority.Generate(primitives.Authenticated)
 	if err != nil {
-		msg := fmt.Sprintf("Could not authenticate user %s. Failed to generate auth token", user.Email)
+		msg := fmt.Sprintf("Could not authenticate identity %s. Failed to generate auth token", identity.GetEmail())
 		logger.Info().Err(err).Msg(msg)
 		return nil, fw.ErrAuthentication
 	}
 
-	authSession, err := primitives.NewSession(user, expiresIn, primitives.Authenticated, token)
+	authSession, err := primitives.NewSession(identity, expiresIn, primitives.Authenticated, token)
 	if err != nil {
-		msg := fmt.Sprintf("Could not authenticate user %s. Failed to create session", user.Email)
-		logger.Error().Err(err).Msg(msg)
+		msg := fmt.Sprintf("Could not authenticate identity %s. Failed to create session", identity.GetEmail())
+		logger.Info().Err(err).Msg(msg)
 		return nil, fw.ErrAuthentication
 	}
 
 	err = r.Backend.Create(ctx, authSession)
 	if err != nil {
-		msg := fmt.Sprintf("Could not authenticate user %s. Create session in database", user.Email)
+		msg := fmt.Sprintf("Could not authenticate identity %s. Create session in database", identity.GetEmail())
 		logger.Error().Err(err).Msg(msg)
 		return nil, fw.ErrAuthentication
 	}

@@ -9,10 +9,10 @@ import (
 	"github.com/manifoldco/go-base64"
 )
 
-// NewFakeUser returns fake user data for when an attacker
+// NewFakeIdentity returns fake identity data for when an attacker
 // attempts to enumerate over emails to see who has an
 // account with the controller
-func NewFakeUser(email string) (*primitives.User, error) {
+func NewFakeIdentity(email string) (primitives.Identity, error) {
 	h := sha256.New()
 	_, err := h.Write([]byte(email))
 	if err != nil {
@@ -28,6 +28,7 @@ func NewFakeUser(email string) (*primitives.User, error) {
 		return nil, err
 	}
 
+	// It doesn't matter whether this is a user or a service
 	user, err := primitives.NewUser("", "", &primitives.Credentials{
 		Salt: base64.New(salt),
 		Alg:  primitives.EDDSA,

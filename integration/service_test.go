@@ -34,7 +34,7 @@ func TestServices(t *testing.T) {
 
 	t.Run("create service", func(t *testing.T) {
 		email := "service@connector-cape.com"
-		s, err := createServicePrimitive(email)
+		s, err := createServicePrimitive(email, []byte("randompassword"))
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
@@ -50,7 +50,7 @@ func TestServices(t *testing.T) {
 
 	t.Run("delete service", func(t *testing.T) {
 		email := "deleted-service@connector-cape.com"
-		s, err := createServicePrimitive(email)
+		s, err := createServicePrimitive(email, []byte("randompassword"))
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
@@ -66,7 +66,7 @@ func TestServices(t *testing.T) {
 
 	t.Run("get service by email", func(t *testing.T) {
 		email := "email@connector-cape.com"
-		s, err := createServicePrimitive(email)
+		s, err := createServicePrimitive(email, []byte("randompassword"))
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
@@ -102,7 +102,7 @@ func TestListServices(t *testing.T) {
 	emails := []string{"connector1@email.com", "connector2@email.com", "connector3@email.com"}
 	services := make([]*primitives.Service, 3)
 	for i, email := range emails {
-		s, err := createServicePrimitive(email)
+		s, err := createServicePrimitive(email, []byte("randompassword"))
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
@@ -117,8 +117,8 @@ func TestListServices(t *testing.T) {
 	gm.Expect(otherServices).To(gm.ContainElements(services))
 }
 
-func createServicePrimitive(email string) (*primitives.Service, error) {
-	creds, err := auth.NewCredentials([]byte("connectorsecretsarecool"), nil)
+func createServicePrimitive(email string, secret []byte) (*primitives.Service, error) {
+	creds, err := auth.NewCredentials(secret, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -129,4 +129,44 @@ func createServicePrimitive(email string) (*primitives.Service, error) {
 	}
 
 	return service, nil
+}
+
+func TestServiceLogin(t *testing.T) {
+	gm.RegisterTestingT(t)
+
+	ctx := context.Background()
+
+	tc, err := controller.NewTestController()
+	gm.Expect(err).To(gm.BeNil())
+
+	_, err = tc.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	defer tc.Teardown(ctx) // nolint: errcheck
+
+	client, err := tc.Client()
+	gm.Expect(err).To(gm.BeNil())
+
+	_, err = client.Login(ctx, tc.User.Email, tc.UserPassword)
+	gm.Expect(err).To(gm.BeNil())
+
+	email := "service@connector-cape.com"
+
+	token, err := auth.NewAPIToken(email, tc.URL())
+	gm.Expect(err).To(gm.BeNil())
+
+	s, err := createServicePrimitive(email, token.Secret)
+	gm.Expect(err).To(gm.BeNil())
+
+	service, err := client.CreateService(ctx, s)
+	gm.Expect(err).To(gm.BeNil())
+	gm.Expect(service.Email).To(gm.Equal(email))
+
+	serviceClient, err := tc.Client()
+	_, err = serviceClient.Login(ctx, token.Email, token.Secret)
+	gm.Expect(err).To(gm.BeNil())
+
+	sources, err := serviceClient.ListSources(ctx)
+	gm.Expect(err).To(gm.BeNil())
+	gm.Expect(len(sources)).To(gm.Equal(0))
 }

@@ -32,8 +32,8 @@ const (
 	// SessionContextKey is the name of the session key stored on the context
 	SessionContextKey ContextKey = "session"
 
-	// UserContextKey is the name of the user key stored on the context
-	UserContextKey ContextKey = "user"
+	// IdentityContextKey is the name of the identity key stored on the context
+	IdentityContextKey ContextKey = "identity"
 )
 
 // RequestID returns the request id stored on a given context
@@ -60,7 +60,7 @@ func Logger(ctx context.Context) zerolog.Logger {
 func AuthToken(ctx context.Context) *base64.Value {
 	token := ctx.Value(AuthTokenContextKey)
 	if token == nil {
-		panic("session id not available on context")
+		panic("auth token not available on context")
 	}
 
 	return token.(*base64.Value)
@@ -70,20 +70,20 @@ func AuthToken(ctx context.Context) *base64.Value {
 func Session(ctx context.Context) *primitives.Session {
 	session := ctx.Value(SessionContextKey)
 	if session == nil {
-		panic("session id not available on context")
+		panic("session not available on context")
 	}
 
 	return session.(*primitives.Session)
 }
 
-// User returns the user stored on the given context
-func User(ctx context.Context) *primitives.User {
-	user := ctx.Value(UserContextKey)
-	if user == nil {
-		panic("session id not available on context")
+// Identity returns the identity stored on the given context
+func Identity(ctx context.Context) primitives.Identity {
+	identity := ctx.Value(IdentityContextKey)
+	if identity == nil {
+		panic("identity not available on context")
 	}
 
-	return user.(*primitives.User)
+	return identity.(primitives.Identity)
 }
 
 // RequestIDMiddleware sets a UUID on the response header and request context

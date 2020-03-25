@@ -1,13 +1,16 @@
+// +build integration
+
 package integration
 
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/controller"
 	"github.com/dropoutlabs/cape/primitives"
 	gm "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestSetup(t *testing.T) {
