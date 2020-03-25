@@ -6,9 +6,9 @@ import (
 )
 
 // Policy is a single defined policy
-// TODO -- write this
 type Policy struct {
 	*database.Primitive
+	Label string
 }
 
 // GetType returns the type for this entity
@@ -17,7 +17,7 @@ func (p *Policy) GetType() types.Type {
 }
 
 // NewPolicy returns a mutable policy struct
-func NewPolicy() (*Policy, error) {
+func NewPolicy(label string) (*Policy, error) {
 	p, err := database.NewPrimitive(PolicyType)
 	if err != nil {
 		return nil, err
@@ -25,5 +25,6 @@ func NewPolicy() (*Policy, error) {
 
 	return &Policy{
 		Primitive: p,
+		Label:     label,
 	}, nil
 }

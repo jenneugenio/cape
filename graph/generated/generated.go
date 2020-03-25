@@ -165,7 +165,7 @@ type MutationResolver interface {
 	DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error)
 	AssignRole(ctx context.Context, input model.AssignRoleRequest) (*model.Assignment, error)
 	UnassignRole(ctx context.Context, input model.AssignRoleRequest) (*string, error)
-	CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*model.Policy, error)
+	CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*primitives.Policy, error)
 	DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error)
 	AttachPolicy(ctx context.Context, input model.AttachPolicyRequest) (*model.Attachment, error)
 	DetachPolicy(ctx context.Context, input model.AttachPolicyRequest) (*string, error)
@@ -181,8 +181,8 @@ type QueryResolver interface {
 	Role(ctx context.Context, id database.ID) (*primitives.Role, error)
 	Roles(ctx context.Context) ([]*primitives.Role, error)
 	RoleMembers(ctx context.Context, roleID database.ID) ([]primitives.Identity, error)
-	Policy(ctx context.Context, id database.ID) (*model.Policy, error)
-	Policies(ctx context.Context) ([]*model.Policy, error)
+	Policy(ctx context.Context, id database.ID) (*primitives.Policy, error)
+	Policies(ctx context.Context) ([]*primitives.Policy, error)
 	Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error)
 	Attachments(ctx context.Context) ([]*model.Attachment, error)
 	Service(ctx context.Context, id database.ID) (*primitives.Service, error)
@@ -1872,9 +1872,9 @@ func (ec *executionContext) _Attachment_Policy(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Policy)
+	res := resTmp.(*primitives.Policy)
 	fc.Result = res
-	return ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐPolicy(ctx, field.Selections, res)
+	return ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthCredentials_salt(ctx context.Context, field graphql.CollectedField, obj *primitives.AuthCredentials) (ret graphql.Marshaler) {
@@ -2550,9 +2550,9 @@ func (ec *executionContext) _Mutation_createPolicy(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Policy)
+	res := resTmp.(*primitives.Policy)
 	fc.Result = res
-	return ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐPolicy(ctx, field.Selections, res)
+	return ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deletePolicy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2799,7 +2799,7 @@ func (ec *executionContext) _Mutation_deleteService(ctx context.Context, field g
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_id(ctx context.Context, field graphql.CollectedField, obj *model.Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _Policy_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2833,7 +2833,7 @@ func (ec *executionContext) _Policy_id(ctx context.Context, field graphql.Collec
 	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_created_at(ctx context.Context, field graphql.CollectedField, obj *model.Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _Policy_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2867,7 +2867,7 @@ func (ec *executionContext) _Policy_created_at(ctx context.Context, field graphq
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_updated_at(ctx context.Context, field graphql.CollectedField, obj *model.Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _Policy_updated_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2901,7 +2901,7 @@ func (ec *executionContext) _Policy_updated_at(ctx context.Context, field graphq
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_label(ctx context.Context, field graphql.CollectedField, obj *model.Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _Policy_label(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3382,9 +3382,9 @@ func (ec *executionContext) _Query_policy(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Policy)
+	res := resTmp.(*primitives.Policy)
 	fc.Result = res
-	return ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐPolicy(ctx, field.Selections, res)
+	return ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_policies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3413,9 +3413,9 @@ func (ec *executionContext) _Query_policies(ctx context.Context, field graphql.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.Policy)
+	res := resTmp.([]*primitives.Policy)
 	fc.Result = res
-	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐPolicyᚄ(ctx, field.Selections, res)
+	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6049,7 +6049,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 var policyImplementors = []string{"Policy"}
 
-func (ec *executionContext) _Policy(ctx context.Context, sel ast.SelectionSet, obj *model.Policy) graphql.Marshaler {
+func (ec *executionContext) _Policy(ctx context.Context, sel ast.SelectionSet, obj *primitives.Policy) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, policyImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -6932,11 +6932,11 @@ func (ec *executionContext) unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabs�
 	return ec.unmarshalInputNewUserRequest(ctx, v)
 }
 
-func (ec *executionContext) marshalNPolicy2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐPolicy(ctx context.Context, sel ast.SelectionSet, v model.Policy) graphql.Marshaler {
+func (ec *executionContext) marshalNPolicy2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx context.Context, sel ast.SelectionSet, v primitives.Policy) graphql.Marshaler {
 	return ec._Policy(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐPolicy(ctx context.Context, sel ast.SelectionSet, v *model.Policy) graphql.Marshaler {
+func (ec *executionContext) marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx context.Context, sel ast.SelectionSet, v *primitives.Policy) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -7476,7 +7476,7 @@ func (ec *executionContext) marshalOIdentity2ᚕgithubᚗcomᚋdropoutlabsᚋcap
 	return ret
 }
 
-func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐPolicyᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Policy) graphql.Marshaler {
+func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicyᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Policy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -7503,7 +7503,7 @@ func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋca
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐPolicy(ctx, sel, v[i])
+			ret[i] = ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

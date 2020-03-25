@@ -35,11 +35,11 @@ type AttachPolicyRequest struct {
 }
 
 type Attachment struct {
-	ID        database.ID      `json:"id"`
-	CreatedAt time.Time        `json:"created_at"`
-	UpdatedAt time.Time        `json:"updated_at"`
-	Role      *primitives.Role `json:"Role"`
-	Policy    *Policy          `json:"Policy"`
+	ID        database.ID        `json:"id"`
+	CreatedAt time.Time          `json:"created_at"`
+	UpdatedAt time.Time          `json:"updated_at"`
+	Role      *primitives.Role   `json:"Role"`
+	Policy    *primitives.Policy `json:"Policy"`
 }
 
 type AuthSessionRequest struct {
@@ -88,11 +88,4 @@ type NewUserRequest struct {
 	PublicKey base64.Value                  `json:"public_key"`
 	Salt      base64.Value                  `json:"salt"`
 	Alg       primitives.CredentialsAlgType `json:"alg"`
-}
-
-type Policy struct {
-	ID        database.ID `json:"id"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
-	Label     string      `json:"label"`
 }

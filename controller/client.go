@@ -654,3 +654,86 @@ func (c *Client) ListServices(ctx context.Context) ([]*primitives.Service, error
 
 	return resp.Services, nil
 }
+
+// CreatePolicy creates a policy on the controller
+func (c *Client) CreatePolicy(ctx context.Context, policy *primitives.Policy) (*primitives.Policy, error) {
+	var resp struct {
+		Policy primitives.Policy `json:"createPolicy"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["label"] = policy.Label
+
+	err := c.Raw(ctx, `
+		mutation CreatePolicy($label: String!) {
+			createPolicy(input: { label: $label }) {
+				id
+				label
+			}
+		}
+	`, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Policy, nil
+}
+
+// DeletePolicy deletes a policy on the controller
+func (c *Client) DeletePolicy(ctx context.Context, id database.ID) error {
+	variables := make(map[string]interface{})
+	variables["id"] = id
+
+	return c.Raw(ctx, `
+		mutation DeletePolicy($id: ID!) {
+			deletePolicy(input: { id: $id })
+		}
+	`, variables, nil)
+}
+
+// GetPolicy returns a policy by id
+func (c *Client) GetPolicy(ctx context.Context, id database.ID) (*primitives.Policy, error) {
+	var resp struct {
+		Policy primitives.Policy `json:"policy"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["id"] = id
+
+	err := c.Raw(ctx, `
+		query Policy($id: ID!) {
+			policy(id: $id) {
+				id
+				label
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Policy, nil
+}
+
+// ListPolicies returns all policies
+func (c *Client) ListPolicies(ctx context.Context) ([]*primitives.Policy, error) {
+	var resp struct {
+		Policies []*primitives.Policy `json:"policies"`
+	}
+
+	err := c.Raw(ctx, `
+		query Policies {
+			policies {
+				id
+				label
+			}
+		}
+	`, nil, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Policies, nil
+}
