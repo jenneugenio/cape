@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/dropoutlabs/cape/primitives"
-
 	"github.com/urfave/cli/v2"
 
 	"github.com/dropoutlabs/cape/controller"
@@ -28,22 +25,10 @@ func init() {
 }
 
 func logoutCmd(c *cli.Context) error {
+	cfgSession := Session(c.Context)
 	cfg := Config(c.Context)
 
-	clusterStr := c.String("cluster")
-
-	if clusterStr != "" {
-		clusterLabel, err := primitives.NewLabel(clusterStr)
-		if err != nil {
-			return err
-		}
-		err = cfg.Use(clusterLabel)
-		if err != nil {
-			return err
-		}
-	}
-
-	cluster, err := cfg.Cluster()
+	cluster, err := cfgSession.Cluster()
 	if err != nil {
 		return err
 	}

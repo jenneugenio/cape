@@ -30,7 +30,7 @@ func init() {
 				Description: "Initialize an admin account on a local cape instance",
 			},
 		},
-		Arguments: []*Argument{ClusterLabelArg, ClusterURLArg},
+		Arguments: []*Argument{LabelArg("controller"), ClusterURLArg},
 		Command: &cli.Command{
 			Name:   "setup",
 			Action: setupControllerCmd,

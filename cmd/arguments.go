@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/url"
 
 	errors "github.com/dropoutlabs/cape/partyerrors"
@@ -8,15 +9,18 @@ import (
 )
 
 var (
-	ClusterLabelArg = &Argument{
-		Name:        "label",
-		Description: "A label for the cluster",
-		Required:    true,
-		Processor: func(in string) (interface{}, error) {
-			// NewLabel validates that the label meets label criteria
-			return primitives.NewLabel(in)
-		},
+	LabelArg = func(f string) *Argument {
+		return &Argument{
+			Name:        "label",
+			Description: fmt.Sprintf("A label for the %s", f),
+			Required:    true,
+			Processor: func(in string) (interface{}, error) {
+				// NewLabel validates that the label meets label criteria
+				return primitives.NewLabel(in)
+			},
+		}
 	}
+
 	ClusterURLArg = &Argument{
 		Name:        "url",
 		Description: "A url for the cluster",
@@ -60,6 +64,32 @@ var (
 		Processor: func(in string) (interface{}, error) {
 			// validates!!
 			return primitives.NewEmail(in)
+		},
+	}
+
+	SourcesCredentialsArg = &Argument{
+		Name:        "connection-string",
+		Description: "The connection string for the database.",
+		Required:    true,
+		Processor: func(in string) (interface{}, error) {
+			if in == "" {
+				return nil, errors.New(InvalidURLCause, "A valid url must be provided")
+			}
+
+			u, err := url.Parse(in)
+			if err != nil {
+				return nil, errors.New(InvalidURLCause, "could not parse: %s", err)
+			}
+
+			if u.Scheme != "postgres" {
+				return nil, errors.New(InvalidURLCause, "Invalid database type. Currently only postgres is supported.")
+			}
+
+			if u.Host == "" {
+				return nil, errors.New(InvalidURLCause, "A host must be provided")
+			}
+
+			return u, nil
 		},
 	}
 )

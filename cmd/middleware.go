@@ -117,20 +117,24 @@ func handleSessionOverrides(next cli.ActionFunc) cli.ActionFunc {
 		cfg := Config(c.Context)
 		clusterStr := c.String("cluster")
 
-		cluster, err := cfg.Cluster()
-		if err != nil {
-			return err
-		}
-
+		var cluster *config.Cluster
 		if clusterStr != "" {
-			cluster, err = cfg.GetCluster(clusterStr)
+			c, err := cfg.GetCluster(clusterStr)
 			if err != nil {
 				return err
 			}
+
+			cluster = c
+		} else {
+			c, err := cfg.Cluster()
+			if err != nil {
+				return err
+			}
+
+			cluster = c
 		}
 
 		session := config.NewSession(cfg, cluster)
-
 		c.Context = context.WithValue(c.Context, SessionContextKey, session)
 		return next(c)
 	})

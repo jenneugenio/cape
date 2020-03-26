@@ -24,7 +24,7 @@ func init() {
 	addClusterCmd := &Command{
 		Usage:       "Add configuration for a cape cluster",
 		Description: "Use this command to add configuration enabling a user to execute commands against a cluster of Cape",
-		Arguments:   []*Argument{ClusterLabelArg, ClusterURLArg},
+		Arguments:   []*Argument{LabelArg("cluster"), ClusterURLArg},
 		Examples: []*Example{
 			{
 				Example:     "cape config clusters add production https://my.production.com",
@@ -45,7 +45,7 @@ func init() {
 	removeClusterCmd := &Command{
 		Usage:       "Remove configuration for a cape cluster",
 		Description: "Use this command to remove local connection information for a cape cluster",
-		Arguments:   []*Argument{ClusterLabelArg},
+		Arguments:   []*Argument{LabelArg("cluster")},
 		Examples: []*Example{
 			{
 				Example:     "cape config clusters remove production",
@@ -68,7 +68,7 @@ func init() {
 	useClusterCmd := &Command{
 		Usage:       "Set a cape cluster as your current cluster",
 		Description: useDescription,
-		Arguments:   []*Argument{ClusterLabelArg},
+		Arguments:   []*Argument{LabelArg("cluster")},
 		Examples: []*Example{
 			{
 				Example:     "cape config clusters use production",
