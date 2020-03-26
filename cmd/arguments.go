@@ -42,4 +42,14 @@ var (
 			return u, nil
 		},
 	}
+
+	UserEmailArg = &Argument{
+		Name:        "email",
+		Description: "An email for a user or service",
+		Required:    true,
+		Processor: func(in string) (interface{}, error) {
+			// validates!!
+			return primitives.NewEmail(in)
+		},
+	}
 )
