@@ -138,8 +138,7 @@ type Query {
 type Mutation {
   setup(input: NewUserRequest!): User!
 
-  createUser(input: NewUserRequest!): User!
-
+  createUser(input: NewUserRequest!): User! @isAuthenticated()
   addSource(input: AddSourceRequest!): Source! @isAuthenticated()
 
   createLoginSession(input: LoginSessionRequest!): Session!

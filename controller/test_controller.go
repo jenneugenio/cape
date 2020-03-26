@@ -130,35 +130,33 @@ func (t *TestController) Teardown(ctx context.Context) error {
 
 // Client returns a client that works with this TestController
 func (t *TestController) Client() (*Client, error) {
-	t.UserPassword = []byte("dogbarktooloud")
+	ctx := context.Background()
+	client := NewClient(t.URL(), nil)
+	t.UserPassword = []byte("iamtheadmin")
+
 	creds, err := auth.NewCredentials(t.UserPassword, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx := context.Background()
-	err = t.createUser(ctx, creds)
-
+	user, err := primitives.NewUser("admin", "admin@cape.com", creds.Package())
 	if err != nil {
 		return nil, err
 	}
 
-	return NewClient(t.URL(), nil), nil
+	user, err = client.Setup(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	t.User = user
+
+	_, err = client.Login(ctx, "admin@cape.com", t.UserPassword)
+	return client, err
 }
 
 // URL returns the URL for the test controller
 func (t *TestController) URL() *url.URL {
 	u, _ := url.Parse("http://localhost:8081")
 	return u
-}
-
-func (t *TestController) createUser(ctx context.Context, creds *auth.Credentials) error {
-	user, err := primitives.NewUser("Testy Testerson", "testy@capeprivacy.com", creds.Package())
-	if err != nil {
-		return err
-	}
-
-	t.User = user
-
-	return t.controller.backend.Create(ctx, user)
 }

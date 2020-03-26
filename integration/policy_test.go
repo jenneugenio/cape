@@ -28,9 +28,6 @@ func TestPolicies(t *testing.T) {
 	client, err := tc.Client()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = client.Login(ctx, tc.User.Email, tc.UserPassword)
-	gm.Expect(err).To(gm.BeNil())
-
 	t.Run("create policy", func(t *testing.T) {
 		label, err := primitives.NewLabel("admin-disallowed")
 		gm.Expect(err).To(gm.BeNil())
@@ -84,9 +81,6 @@ func TestListPolicies(t *testing.T) {
 	client, err := tc.Client()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = client.Login(ctx, tc.User.Email, tc.UserPassword)
-	gm.Expect(err).To(gm.BeNil())
-
 	labelStrs := []string{"cool-policy", "sad-policy", "wow-policy"}
 	labels := make([]primitives.Label, len(labelStrs))
 
@@ -128,9 +122,6 @@ func TestAttachments(t *testing.T) {
 	client, err := tc.Client()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = client.Login(ctx, tc.User.Email, tc.UserPassword)
-	gm.Expect(err).To(gm.BeNil())
-
 	t.Run("attach policy", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
@@ -143,7 +134,7 @@ func TestAttachments(t *testing.T) {
 		policy, err := client.CreatePolicy(ctx, p)
 		gm.Expect(err).To(gm.BeNil())
 
-		role, err := client.CreateRole(ctx, "admin", nil)
+		role, err := client.CreateRole(ctx, "owner", nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		attachment, err := client.AttachPolicy(ctx, policy.ID, role.ID)

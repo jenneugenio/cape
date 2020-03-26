@@ -31,9 +31,6 @@ func TestSource(t *testing.T) {
 	client, err := tc.Client()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = client.Login(ctx, tc.User.Email, tc.UserPassword)
-	gm.Expect(err).To(gm.BeNil())
-
 	t.Run("create a new source", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 

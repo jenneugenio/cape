@@ -28,9 +28,6 @@ func TestRoles(t *testing.T) {
 	client, err := tc.Client()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = client.Login(ctx, tc.User.Email, tc.UserPassword)
-	gm.Expect(err).To(gm.BeNil())
-
 	t.Run("create role", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
@@ -84,10 +81,10 @@ func TestRoles(t *testing.T) {
 		roles, err := client.ListRoles(ctx)
 		gm.Expect(err).To(gm.BeNil())
 
-		// create three early in the tests and then delete one
-		gm.Expect(len(roles)).To(gm.Equal(2))
-		gm.Expect(roles[0].Label.String()).To(gm.Equal("data-scientist"))
-		gm.Expect(roles[1].Label.String()).To(gm.Equal("cto-person"))
+		// create three early in the tests and then delete one + the system role
+		gm.Expect(len(roles)).To(gm.Equal(3))
+		gm.Expect(roles[1].Label.String()).To(gm.Equal("data-scientist"))
+		gm.Expect(roles[2].Label.String()).To(gm.Equal("cto-person"))
 	})
 
 	t.Run("Roles will not default to system roles", func(t *testing.T) {
@@ -115,9 +112,6 @@ func TestListRoles(t *testing.T) {
 	client, err := tc.Client()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = client.Login(ctx, tc.User.Email, tc.UserPassword)
-	gm.Expect(err).To(gm.BeNil())
-
 	dsRole, err := client.CreateRole(ctx, "data-scientist", nil)
 	gm.Expect(err).To(gm.BeNil())
 
@@ -127,8 +121,8 @@ func TestListRoles(t *testing.T) {
 	roles, err := client.ListRoles(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	// create three early in the tests and then delete one
-	gm.Expect(len(roles)).To(gm.Equal(2))
+	// create two roles + the system role
+	gm.Expect(len(roles)).To(gm.Equal(3))
 	gm.Expect(roles).To(gm.ContainElements(dsRole, ctoRole))
 }
 
@@ -146,9 +140,6 @@ func TestAssignments(t *testing.T) {
 	defer tc.Teardown(ctx) // nolint: errcheck
 
 	client, err := tc.Client()
-	gm.Expect(err).To(gm.BeNil())
-
-	_, err = client.Login(ctx, tc.User.Email, tc.UserPassword)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("assign role", func(t *testing.T) {
