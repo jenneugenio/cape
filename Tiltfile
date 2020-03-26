@@ -35,4 +35,5 @@ docker_build('dropoutlabs/controller:latest', '.', dockerfile='dockerfiles/Docke
 docker_build('dropoutlabs/connector:latest', '.', dockerfile='dockerfiles/Dockerfile.connector')
 docker_build('dropoutlabs/update:latest', '.', dockerfile='dockerfiles/Dockerfile.update')
 
-k8s_resource('controller', port_forwards=8081)
+k8s_resource('connector', port_forwards=8080, trigger_mode=TRIGGER_MODE_MANUAL)
+k8s_resource('controller', port_forwards=8081, trigger_mode=TRIGGER_MODE_MANUAL)

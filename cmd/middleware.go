@@ -22,6 +22,9 @@ const (
 
 	// UIContextKey is the name of the key storing the ui.UI struct for a command
 	UIContextKey ContextKey = "ui"
+
+	// SessionContextKey is the name of key storing the config.Session struct for a command
+	SessionContextKey ContextKey = "session"
 )
 
 // Config returns the config object stored on the context
@@ -52,6 +55,16 @@ func UI(ctx context.Context) *ui.UI {
 	}
 
 	return u.(*ui.UI)
+}
+
+// Session returns the session object stored on the context
+func Session(ctx context.Context) *config.Session {
+	s := ctx.Value(SessionContextKey)
+	if s == nil {
+		panic("session not available on context")
+	}
+
+	return s.(*config.Session)
 }
 
 func retrieveConfig(next cli.ActionFunc) cli.ActionFunc {
@@ -95,6 +108,30 @@ func processArguments(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 		}
 
 		c.Context = context.WithValue(c.Context, ArgumentContextKey, values)
+		return next(c)
+	})
+}
+
+func handleSessionOverrides(next cli.ActionFunc) cli.ActionFunc {
+	return cli.ActionFunc(func(c *cli.Context) error {
+		cfg := Config(c.Context)
+		clusterStr := c.String("cluster")
+
+		cluster, err := cfg.Cluster()
+		if err != nil {
+			return err
+		}
+
+		if clusterStr != "" {
+			cluster, err = cfg.GetCluster(clusterStr)
+			if err != nil {
+				return err
+			}
+		}
+
+		session := config.NewSession(cfg, cluster)
+
+		c.Context = context.WithValue(c.Context, SessionContextKey, session)
 		return next(c)
 	})
 }

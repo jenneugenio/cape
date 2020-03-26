@@ -3,6 +3,7 @@
 package config
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
+	"github.com/manifoldco/go-base64"
 )
 
 // All files and folders that contain cape cli configuration must only be
@@ -30,12 +32,12 @@ var (
 func Default() *Config {
 	return &Config{
 		Version: 1,
-		UI: UI{
+		UI: &UI{
 			Colors:     true,
 			Animations: true,
 		},
 		Context:  &Context{},
-		Clusters: []Cluster{},
+		Clusters: []*Cluster{},
 	}
 }
 
@@ -47,10 +49,10 @@ type UI struct {
 
 // Config represents the configuration settings for the command line
 type Config struct {
-	Version  int       `json:"version"`
-	Context  *Context  `json:"context,omitempty"`
-	Clusters []Cluster `json:"clusters,omitempty"`
-	UI       UI        `json:"ui"`
+	Version  int        `json:"version"`
+	Context  *Context   `json:"context,omitempty"`
+	Clusters []*Cluster `json:"clusters,omitempty"`
+	UI       *UI        `json:"ui"`
 }
 
 // Write writes the configuration file out to the globally configured and
@@ -106,14 +108,14 @@ func (c *Config) AddCluster(label primitives.Label, url *url.URL, authToken stri
 		}
 	}
 
-	cluster := Cluster{
+	cluster := &Cluster{
 		Label:     label,
 		URL:       url.String(),
 		AuthToken: authToken,
 	}
 
 	c.Clusters = append(c.Clusters, cluster)
-	return &cluster, nil
+	return cluster, nil
 }
 
 // RemoveCluster attempts to remove the cluster from configuration
@@ -141,10 +143,25 @@ func (c *Config) Cluster() (*Cluster, error) {
 	return nil, errors.New(InvalidConfigCause, "The key 'context.cluster' is set but the cluster does not exist")
 }
 
+// GetCluster returns the cluster by its label
+func (c *Config) GetCluster(clusterStr string) (*Cluster, error) {
+	label, err := primitives.NewLabel(clusterStr)
+	if err != nil {
+		return nil, err
+	}
+
+	_, cluster := c.findCluster(label)
+	if cluster != nil {
+		return cluster, nil
+	}
+
+	return nil, errors.New(InvalidConfigCause, "The key 'context.cluster' is set but the cluster does not exist")
+}
+
 func (c *Config) findCluster(label primitives.Label) (int, *Cluster) {
 	for i, cluster := range c.Clusters {
 		if cluster.Label == label {
-			return i, &cluster
+			return i, cluster
 		}
 	}
 
@@ -161,7 +178,7 @@ func (c *Config) Use(label primitives.Label) error {
 	var target *Cluster
 	for _, cluster := range c.Clusters {
 		if cluster.Label == label {
-			target = &cluster
+			target = cluster
 		}
 	}
 
@@ -216,6 +233,25 @@ type Cluster struct {
 // Validate returns an error if the cluster configuration is invalid
 func (c *Cluster) Validate() error {
 	return c.Label.Validate()
+}
+
+// GetURL parses the url and returns it
+func (c *Cluster) GetURL() (*url.URL, error) {
+	return url.Parse(c.URL)
+}
+
+// Token parses the auth token and returns the base64 value
+func (c *Cluster) Token() (*base64.Value, error) {
+	return base64.NewFromString(c.AuthToken)
+}
+
+// SetToken sets the token on the cluster
+func (c *Cluster) SetToken(token *base64.Value) {
+	c.AuthToken = token.String()
+}
+
+func (c *Cluster) String() string {
+	return fmt.Sprintf("%s (%s)", c.Label, c.URL)
 }
 
 // Path returns the path to local configuration yaml file.

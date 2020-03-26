@@ -125,7 +125,8 @@ func (c *Command) Package() *cli.Command {
 
 	// Apply our middleware!
 	if cmd.Action != nil {
-		cmd.Action = retrieveConfig(processArguments(c, cmd.Action))
+		next := processArguments(c, handleSessionOverrides(cmd.Action))
+		cmd.Action = retrieveConfig(next)
 	}
 
 	return cmd

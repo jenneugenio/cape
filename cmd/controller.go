@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/badoux/checkmail"
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/primitives"
 	"net/url"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/badoux/checkmail"
+	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/primitives"
 
 	"github.com/urfave/cli/v2"
 

@@ -178,7 +178,7 @@ func (c *Client) Login(ctx context.Context, email primitives.Email, password []b
 
 // Logout calls the deleteSession mutation
 func (c *Client) Logout(ctx context.Context, authToken *base64.Value) error {
-	var token *base64.Value
+	token := authToken
 	if authToken == nil {
 		token = c.authToken
 	}

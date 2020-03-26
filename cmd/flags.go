@@ -84,3 +84,30 @@ func loggingLevelFlag() cli.Flag {
 		EnvVars: []string{"CAPE_LOGGING_LEVEL"},
 	}
 }
+
+func emailFlag() cli.Flag {
+	usage := "The email used to log into the cluster"
+	return &cli.StringFlag{
+		Name:    "email",
+		Usage:   usage,
+		EnvVars: []string{"CAPE_EMAIL"},
+	}
+}
+
+func passwordFlag() cli.Flag {
+	usage := "The password used to log into the cluster"
+	return &cli.StringFlag{
+		Name:    "password",
+		Usage:   usage,
+		EnvVars: []string{"CAPE_PASSWORD"},
+	}
+}
+
+func clusterFlag() cli.Flag {
+	usage := "The cluster to login to"
+	return &cli.StringFlag{
+		Name:    "cluster",
+		Usage:   usage,
+		EnvVars: []string{"CAPE_CLUSTER"},
+	}
+}
