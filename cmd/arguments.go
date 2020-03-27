@@ -67,6 +67,16 @@ var (
 		},
 	}
 
+	RoleLabelArg = &Argument{
+		Name:        "label",
+		Description: "An label for a role",
+		Required:    true,
+		Processor: func(in string) (interface{}, error) {
+			// validates!!
+			return primitives.NewLabel(in)
+		},
+	}
+
 	SourcesCredentialsArg = &Argument{
 		Name:        "connection-string",
 		Description: "The connection string for the database.",

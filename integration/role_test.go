@@ -4,8 +4,9 @@ package integration
 
 import (
 	"context"
-	"github.com/dropoutlabs/cape/primitives"
 	"testing"
+
+	"github.com/dropoutlabs/cape/primitives"
 
 	"github.com/dropoutlabs/cape/controller"
 	"github.com/dropoutlabs/cape/database"
@@ -89,10 +90,25 @@ func TestRoles(t *testing.T) {
 
 	t.Run("Roles will not default to system roles", func(t *testing.T) {
 		l, err := primitives.NewLabel("coolguy")
+		gm.Expect(err).To(gm.BeNil())
+
 		role, err := client.CreateRole(ctx, l, []database.ID{tc.User.ID})
 
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(role.System).To(gm.BeFalse())
+	})
+
+	t.Run("role by label", func(t *testing.T) {
+		l, err := primitives.NewLabel("coolguy-five")
+		gm.Expect(err).To(gm.BeNil())
+
+		role, err := client.CreateRole(ctx, l, []database.ID{tc.User.ID})
+		gm.Expect(err).To(gm.BeNil())
+
+		otherRole, err := client.GetRoleByLabel(ctx, role.Label)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(role).To(gm.Equal(otherRole))
 	})
 }
 

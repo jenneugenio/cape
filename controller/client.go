@@ -257,6 +257,30 @@ func (c *Client) GetRole(ctx context.Context, id database.ID) (*primitives.Role,
 	return &resp.Role, nil
 }
 
+// GetRoleByLabel returns a specific role by label
+func (c *Client) GetRoleByLabel(ctx context.Context, label primitives.Label) (*primitives.Role, error) {
+	var resp struct {
+		Role primitives.Role `json:"roleByLabel"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["label"] = label
+
+	err := c.Raw(ctx, `
+		query RoleByLabel($label: Label!) {
+			roleByLabel(label: $label) {
+				id
+				label
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Role, nil
+}
+
 // GetMembersRole returns the members of a role
 func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]primitives.Identity, error) {
 	var resp struct {

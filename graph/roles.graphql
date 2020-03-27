@@ -1,0 +1,36 @@
+type Role {
+  id: ID!
+  label: Label!
+  system: Boolean!
+  created_at: Time!
+  updated_at: Time!
+}
+
+input CreateRoleRequest {
+  label: Label!
+  identity_ids: [ID!]
+}
+
+input DeleteRoleRequest {
+  id: ID!
+}
+
+input AssignRoleRequest {
+  role_id: ID!
+  identity_id: ID!
+}
+
+extend type Query {
+  role(id: ID!): Role! @isAuthenticated()
+  roleByLabel(label: Label!): Role! @isAuthenticated()
+  roles: [Role!] @isAuthenticated()
+  roleMembers(role_id: ID!): [Identity!] @isAuthenticated()
+}
+
+extend type Mutation {
+  createRole(input: CreateRoleRequest!): Role! @isAuthenticated()
+  deleteRole(input: DeleteRoleRequest!): String @isAuthenticated()
+
+  assignRole(input: AssignRoleRequest!): Assignment! @isAuthenticated()
+  unassignRole(input: AssignRoleRequest!): String @isAuthenticated()
+}

@@ -51,14 +51,6 @@ type Source {
   endpoint: URL!
 }
 
-type Role {
-  id: ID!
-  label: Label!
-  system: Boolean!
-  created_at: Time!
-  updated_at: Time!
-}
-
 type Assignment {
   id: ID!
   role: Role!
@@ -103,20 +95,6 @@ input AddSourceRequest {
   credentials: URL!
 }
 
-input CreateRoleRequest {
-  label: Label!
-  identity_ids: [ID!]
-}
-
-input DeleteRoleRequest {
-  id: ID!
-}
-
-input AssignRoleRequest {
-  role_id: ID!
-  identity_id: ID!
-}
-
 # ------------------------------------------------------------------
 # END INPUTS
 # ------------------------------------------------------------------
@@ -129,10 +107,6 @@ type Query {
 
   sources: [Source!]! @isAuthenticated()
   source(id: ID!): Source! @isAuthenticated()
-
-  role(id: ID!): Role! @isAuthenticated()
-  roles: [Role!] @isAuthenticated()
-  roleMembers(role_id: ID!): [Identity!] @isAuthenticated()
 }
 
 type Mutation {
@@ -144,12 +118,6 @@ type Mutation {
   createLoginSession(input: LoginSessionRequest!): Session!
   createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
   deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
-
-  createRole(input: CreateRoleRequest!): Role! @isAuthenticated()
-  deleteRole(input: DeleteRoleRequest!): String @isAuthenticated()
-
-  assignRole(input: AssignRoleRequest!): Assignment! @isAuthenticated()
-  unassignRole(input: AssignRoleRequest!): String @isAuthenticated()
 }
 
 # Scalar definitions
