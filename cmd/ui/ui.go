@@ -3,6 +3,8 @@
 package ui
 
 import (
+	"fmt"
+	"github.com/juju/ansiterm"
 	"os"
 
 	"github.com/chzyer/readline"
@@ -18,6 +20,20 @@ type UI struct {
 	Config   *config.Config
 	Attached bool
 }
+
+// TableHeader is used with the `Table` function. It will print the header of your table in bold.
+// E.g.
+// [ "Name", "Number", "Gibberish" ]
+type TableHeader []string
+
+// TableBody is used with the `Table` function. It is a slice of string slices that contain the body of your table.
+// E.g.
+// [
+//   [ "Ben", "100", "jdkslajdklas" ],
+//   [ "Ian", "100", "jdklsajdklsa" ],
+//   [ "Justin", "100", "kljdaslkdaskjl" ],
+// ]
+type TableBody [][]string
 
 // NewUI returns a configured UI struct
 func NewUI(cfg *config.Config) (*UI, error) {
@@ -89,6 +105,32 @@ func (u *UI) Confirm(question string) error {
 	}
 
 	return nil
+}
+
+// Table prints the provided header and body to the UI.
+func (u *UI) Table(header TableHeader, body TableBody) error {
+	w := ansiterm.NewTabWriter(os.Stdout, 2, 0, 4, ' ', 0)
+
+	if u.Config.UI.Colors && u.Attached {
+		w.SetStyle(ansiterm.Bold)
+	}
+
+	for _, h := range header {
+		fmt.Fprintf(w, "%s\t", h)
+	}
+
+	w.Reset()
+	fmt.Fprintln(w)
+
+	for _, row := range body {
+		for _, itm := range row {
+			fmt.Fprintf(w, "%s\t", itm)
+		}
+
+		fmt.Fprintln(w)
+	}
+
+	return w.Flush()
 }
 
 // Attached return a boolean representing whether or not the current session is

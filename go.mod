@@ -25,8 +25,10 @@ require (
 	github.com/jackc/pgx/v4 v4.4.1
 	github.com/jackc/tern v1.9.1
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
+	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 	github.com/justinas/alice v1.2.0
 	github.com/lib/pq v1.3.0 // indirect
+	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/machinebox/graphql v0.2.2
 	github.com/manifoldco/go-base32 v1.0.4
 	github.com/manifoldco/go-base64 v1.0.3
@@ -50,7 +52,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.0.1
 	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
-	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 // indirect
+	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	gopkg.in/ini.v1 v1.55.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1
 	mvdan.cc/unparam v0.0.0-20200314162735-0ac8026f7d06 // indirect
