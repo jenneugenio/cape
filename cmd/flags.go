@@ -7,6 +7,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/dropoutlabs/cape/logging"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func versionFlag() cli.Flag {
@@ -109,5 +110,21 @@ func clusterFlag() cli.Flag {
 		Name:    "cluster",
 		Usage:   usage,
 		EnvVars: []string{"CAPE_CLUSTER"},
+	}
+}
+
+func serviceTypeFlag() cli.Flag {
+	options := []string{}
+	for _, str := range primitives.ServiceTypes() {
+		options = append(options, str)
+	}
+
+	str := "The type of the service (options: %s)"
+	usage := fmt.Sprintf(str, strings.Join(options, ", "))
+	return &cli.StringFlag{
+		Name:    "type",
+		Usage:   usage,
+		Value:   primitives.UserServiceType.String(),
+		EnvVars: []string{"CAPE_TYPE"},
 	}
 }

@@ -144,7 +144,12 @@ func createServicePrimitive(email primitives.Email, secret []byte) (*primitives.
 		return nil, err
 	}
 
-	service, err := primitives.NewService(email, creds.Package())
+	typ, err := primitives.NewServiceType("user")
+	if err != nil {
+		return nil, err
+	}
+
+	service, err := primitives.NewService(email, typ, creds.Package())
 	if err != nil {
 		return nil, err
 	}

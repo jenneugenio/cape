@@ -292,7 +292,7 @@ func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRol
 	var identity primitives.Identity
 	if typ == primitives.UserType {
 		identity = &primitives.User{}
-	} else if typ == primitives.ServiceType {
+	} else if typ == primitives.ServicePrimitiveType {
 		identity = &primitives.Service{}
 	}
 
@@ -410,7 +410,7 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 
 		if typ == primitives.UserType {
 			userIDs = append(userIDs, assignment.IdentityID)
-		} else if typ == primitives.ServiceType {
+		} else if typ == primitives.ServicePrimitiveType {
 			serviceIDs = append(serviceIDs, assignment.IdentityID)
 		}
 	}

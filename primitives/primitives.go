@@ -1,3 +1,5 @@
+// Package primitives contains all the primitive data types used by the controller
+// and the connector.
 package primitives
 
 import (
@@ -8,8 +10,8 @@ var (
 	// UserType represents a user (ie a person)
 	UserType types.Type = 0x000
 
-	// ServiceType is a service (e.g. another machine)
-	ServiceType types.Type = 0x001
+	// ServicePrimitiveType is a service (e.g. another machine)
+	ServicePrimitiveType types.Type = 0x001
 
 	// TokenPrimitiveType is a token representing an authenticated user
 	TokenPrimitiveType types.Type = 0x002
@@ -38,7 +40,7 @@ var (
 
 func init() {
 	types.Register(UserType, "users", true)
-	types.Register(ServiceType, "services", true)
+	types.Register(ServicePrimitiveType, "services", true)
 	types.Register(TokenPrimitiveType, "tokens", false)
 	types.Register(RoleType, "roles", true)
 	types.Register(PolicyType, "policies", true)

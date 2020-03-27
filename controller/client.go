@@ -293,7 +293,7 @@ func clientIdentitiesToPrimitive(identities []primitives.IdentityImpl) ([]primit
 			pIdentities[i] = &primitives.User{
 				IdentityImpl: &identity,
 			}
-		} else if typ == primitives.ServiceType {
+		} else if typ == primitives.ServicePrimitiveType {
 			pIdentities[i] = &primitives.Service{
 				IdentityImpl: &identity,
 			}
@@ -339,7 +339,7 @@ func (a *AssignmentResponse) UnmarshalJSON(data []byte) error {
 		a.Identity = &primitives.User{
 			IdentityImpl: aux.Identity,
 		}
-	} else if typ == primitives.ServiceType {
+	} else if typ == primitives.ServicePrimitiveType {
 		a.Identity = &primitives.Service{
 			IdentityImpl: aux.Identity,
 		}
@@ -588,12 +588,14 @@ func (c *Client) CreateService(ctx context.Context, service *primitives.Service)
 	variables["email"] = service.Email
 	variables["public_key"] = service.Credentials.PublicKey
 	variables["salt"] = service.Credentials.Salt
+	variables["type"] = service.Type
 
 	err := c.Raw(ctx, `
-		mutation CreateService($email: Email!, $public_key: Base64!, $salt: Base64!) {
-			createService(input: { email: $email, public_key: $public_key, salt: $salt, alg: "EDDSA"}) {
+		mutation CreateService($email: Email!, $type: ServiceType!, $public_key: Base64!, $salt: Base64!) {
+			createService(input: { email: $email, type: $type, public_key: $public_key, salt: $salt, alg: "EDDSA"}) {
 				id
 				email
+				type
 			}
 		}
 	`, variables, &resp)
@@ -631,6 +633,7 @@ func (c *Client) GetService(ctx context.Context, id database.ID) (*primitives.Se
 			service(id: $id) {
 				id
 				email
+				type
 			}
 		}
 	`, variables, &resp)
@@ -655,6 +658,7 @@ func (c *Client) GetServiceByEmail(ctx context.Context, email primitives.Email) 
 			serviceByEmail(email: $email) {
 				id
 				email
+				type
 			}
 		}
 	`, variables, &resp)
@@ -676,6 +680,7 @@ func (c *Client) ListServices(ctx context.Context) ([]*primitives.Service, error
 			services {
 				id
 				email
+				type
 			}
 		}
 	`, nil, &resp)

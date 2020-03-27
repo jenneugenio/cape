@@ -18,7 +18,7 @@ func (r *mutationResolver) CreateService(ctx context.Context, input model.Create
 		Alg:       input.Alg,
 	}
 
-	service, err := primitives.NewService(input.Email, creds)
+	service, err := primitives.NewService(input.Email, input.Type, creds)
 	if err != nil {
 		return nil, err
 	}

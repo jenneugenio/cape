@@ -52,7 +52,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 				return nil, ErrAuthentication
 			}
 			identity = user
-		} else if typ == primitives.ServiceType {
+		} else if typ == primitives.ServicePrimitiveType {
 			service := &primitives.Service{}
 			err = db.Get(ctx, session.IdentityID, service)
 			if err != nil {

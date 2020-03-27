@@ -1,0 +1,237 @@
+package main
+
+import (
+	"fmt"
+
+	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/controller"
+	"github.com/dropoutlabs/cape/primitives"
+	"github.com/urfave/cli/v2"
+)
+
+func init() {
+	createCmd := &Command{
+		Usage:     "Create a new service",
+		Arguments: []*Argument{ServiceIdentifierArg},
+		Examples: []*Example{
+			{
+				Example:     "cape services create pipeline@prod.mycompany.com",
+				Description: "Creates a new service with the email 'pipeline@prod.mycompany.com'.",
+			},
+			{
+				Example:     "CAPE_CLUSTER=production cape services create pipeline@prod.mycompany.com",
+				Description: "Creates a service call pipeline@prod.mycompany.com on the cape cluster called production.",
+			},
+			{
+				Example:     "cape services create --type data-connector pipeline@prod.mycompany.com",
+				Description: "Creates a service called pipeline@prod.mycompany.com representing a Cape data connector.",
+			},
+		},
+		Command: &cli.Command{
+			Name:   "create",
+			Action: servicesCreateCmd,
+			Flags: []cli.Flag{
+				clusterFlag(),
+				serviceTypeFlag(),
+			},
+		},
+	}
+
+	removeCmd := &Command{
+		Usage:     "Remove command removes a service",
+		Arguments: []*Argument{ServiceIdentifierArg},
+		Examples: []*Example{
+			{
+				Example:     "cape services remove pipeline@prod.mycompany.com",
+				Description: "Removes a new service with the email 'pipeline@prod.mycompany.com'.",
+			},
+			{
+				Example:     "cape services remove --yes pipeline@prod.mycompany.com",
+				Description: "Removes a service skipping the confirm dialog.",
+			},
+		},
+		Command: &cli.Command{
+			Name:   "remove",
+			Action: servicesRemoveCmd,
+			Flags: []cli.Flag{
+				clusterFlag(),
+				yesFlag(),
+			},
+		},
+	}
+
+	listCmd := &Command{
+		Usage: "Lists all the services on the cluster",
+		Examples: []*Example{
+			{
+				Example:     "cape services list",
+				Description: "Lists all services",
+			},
+		},
+		Command: &cli.Command{
+			Name:   "list",
+			Action: servicesListCmd,
+			Flags: []cli.Flag{
+				clusterFlag(),
+			},
+		},
+	}
+
+	servicesCmd := &Command{
+		Usage: "Commands for querying information about services and modifying them",
+		Command: &cli.Command{
+			Name: "services",
+			Subcommands: []*cli.Command{
+				createCmd.Package(),
+				removeCmd.Package(),
+				listCmd.Package(),
+			},
+		},
+	}
+
+	commands = append(commands, servicesCmd.Package())
+}
+
+func servicesCreateCmd(c *cli.Context) error {
+	args := Arguments(c.Context)
+	cfgSession := Session(c.Context)
+	typeStr := c.String("type")
+
+	cluster, err := cfgSession.Cluster()
+	if err != nil {
+		return err
+	}
+
+	URL, err := cluster.GetURL()
+	if err != nil {
+		return err
+	}
+
+	token, err := cluster.Token()
+	if err != nil {
+		return err
+	}
+
+	typ, err := primitives.NewServiceType(typeStr)
+	if err != nil {
+		return err
+	}
+
+	email := args["identifier"].(primitives.Email)
+
+	apiToken, err := auth.NewAPIToken(email, URL)
+	if err != nil {
+		return err
+	}
+
+	creds, err := apiToken.Credentials()
+	if err != nil {
+		return err
+	}
+
+	service, err := primitives.NewService(email, typ, creds.Package())
+	if err != nil {
+		return err
+	}
+
+	client := controller.NewClient(URL, token)
+	_, err = client.CreateService(c.Context, service)
+	if err != nil {
+		return err
+	}
+
+	tokenStr, err := apiToken.Marshal()
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("The service '%s' with type '%s' has been created. The following token "+
+		"can be used to authenticate as that service:\n", email, typ)
+
+	fmt.Printf("Token: %s\n", tokenStr)
+	fmt.Println("Remember: Please keep the token safe and share it securely as\n" +
+		"it enables anyone with access to the cluster the ability to authenticate as this service.")
+
+	return nil
+}
+
+func servicesRemoveCmd(c *cli.Context) error {
+	skipConfirm := c.Bool("yes")
+	ui := UI(c.Context)
+
+	args := Arguments(c.Context)
+
+	cfgSession := Session(c.Context)
+	cluster, err := cfgSession.Cluster()
+	if err != nil {
+		return err
+	}
+
+	URL, err := cluster.GetURL()
+	if err != nil {
+		return err
+	}
+
+	token, err := cluster.Token()
+	if err != nil {
+		return err
+	}
+
+	email := args["identifier"].(primitives.Email)
+
+	if !skipConfirm {
+		err := ui.Confirm(fmt.Sprintf("Do you really want to delete %s and all of its tokens?", email))
+		if err != nil {
+			return err
+		}
+	}
+
+	client := controller.NewClient(URL, token)
+	service, err := client.GetServiceByEmail(c.Context, email)
+	if err != nil {
+		return err
+	}
+
+	err = client.DeleteService(c.Context, service.ID)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("The '%s' service has been deleted.", email)
+
+	return nil
+}
+
+func servicesListCmd(c *cli.Context) error {
+	ui := UI(c.Context)
+
+	cfgSession := Session(c.Context)
+	cluster, err := cfgSession.Cluster()
+	if err != nil {
+		return err
+	}
+
+	URL, err := cluster.GetURL()
+	if err != nil {
+		return err
+	}
+
+	token, err := cluster.Token()
+	if err != nil {
+		return err
+	}
+
+	client := controller.NewClient(URL, token)
+	services, err := client.ListServices(c.Context)
+	if err != nil {
+		return err
+	}
+
+	header := []string{"Label", "Type"}
+	body := make([][]string, len(services))
+	for i, s := range services {
+		body[i] = []string{s.Email.String(), s.Type.String()}
+	}
+
+	return ui.Table(header, body)
+}

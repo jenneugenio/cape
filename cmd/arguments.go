@@ -45,7 +45,17 @@ var (
 
 	UserEmailArg = &Argument{
 		Name:        "email",
-		Description: "An email for a user or service",
+		Description: "An email for a user",
+		Required:    true,
+		Processor: func(in string) (interface{}, error) {
+			// validates!!
+			return primitives.NewEmail(in)
+		},
+	}
+
+	ServiceIdentifierArg = &Argument{
+		Name:        "identifier",
+		Description: "An identifier for a service in the form of an email",
 		Required:    true,
 		Processor: func(in string) (interface{}, error) {
 			// validates!!

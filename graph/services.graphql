@@ -1,12 +1,14 @@
 type Service implements Identity {
     id: ID!
     email: Email!
+    type: ServiceType!
     created_at: Time!
     updated_at: Time!
 }
 
 input CreateServiceRequest {
     email: Email!
+    type: ServiceType!
     public_key: Base64!
     salt: Base64!
     alg: CredentialsAlgType!
@@ -26,3 +28,5 @@ extend type Mutation {
     createService(input: CreateServiceRequest!): Service! @isAuthenticated()
     deleteService(input: DeleteServiceRequest!): String @isAuthenticated()
 }
+
+scalar ServiceType

@@ -25,12 +25,12 @@ func (c *CredentialsAlgType) String() string {
 func (c *CredentialsAlgType) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
-		return errors.New(InvalidAlgType, "Cannot unmarshal credentials algorithm type")
+		return errors.New(InvalidAlgType, "Cannot unmarshal CredentialsAlgType")
 	}
 
 	*c = CredentialsAlgType(str)
 	if *c != EDDSA {
-		return errors.New(InvalidTokenType, "%s is not a valid CredentialsAlgType", str)
+		return errors.New(InvalidAlgType, "%s is not a valid CredentialsAlgType", str)
 	}
 	return nil
 }

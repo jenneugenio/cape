@@ -128,6 +128,7 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		Email     func(childComplexity int) int
 		ID        func(childComplexity int) int
+		Type      func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
 	}
 
@@ -729,6 +730,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Service.ID(childComplexity), true
 
+	case "Service.type":
+		if e.complexity.Service.Type == nil {
+			break
+		}
+
+		return e.complexity.Service.Type(childComplexity), true
+
 	case "Service.updated_at":
 		if e.complexity.Service.UpdatedAt == nil {
 			break
@@ -1118,12 +1126,14 @@ scalar Label
 	&ast.Source{Name: "graph/services.graphql", Input: `type Service implements Identity {
     id: ID!
     email: Email!
+    type: ServiceType!
     created_at: Time!
     updated_at: Time!
 }
 
 input CreateServiceRequest {
     email: Email!
+    type: ServiceType!
     public_key: Base64!
     salt: Base64!
     alg: CredentialsAlgType!
@@ -1143,6 +1153,8 @@ extend type Mutation {
     createService(input: CreateServiceRequest!): Service! @isAuthenticated()
     deleteService(input: DeleteServiceRequest!): String @isAuthenticated()
 }
+
+scalar ServiceType
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -4029,6 +4041,40 @@ func (ec *executionContext) _Service_email(ctx context.Context, field graphql.Co
 	return ec.marshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Service_type(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Service",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(primitives.ServiceType)
+	fc.Result = res
+	return ec.marshalNServiceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐServiceType(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Service_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5769,6 +5815,12 @@ func (ec *executionContext) unmarshalInputCreateServiceRequest(ctx context.Conte
 			if err != nil {
 				return it, err
 			}
+		case "type":
+			var err error
+			it.Type, err = ec.unmarshalNServiceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐServiceType(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "public_key":
 			var err error
 			it.PublicKey, err = ec.unmarshalNBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, v)
@@ -6509,6 +6561,11 @@ func (ec *executionContext) _Service(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "type":
+			out.Values[i] = ec._Service_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "created_at":
 			out.Values[i] = ec._Service_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7141,6 +7198,15 @@ func (ec *executionContext) marshalNService2ᚖgithubᚗcomᚋdropoutlabsᚋcape
 		return graphql.Null
 	}
 	return ec._Service(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNServiceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐServiceType(ctx context.Context, v interface{}) (primitives.ServiceType, error) {
+	var res primitives.ServiceType
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNServiceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐServiceType(ctx context.Context, sel ast.SelectionSet, v primitives.ServiceType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNSession2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSession(ctx context.Context, sel ast.SelectionSet, v primitives.Session) graphql.Marshaler {

@@ -9,16 +9,17 @@ import (
 // running a pipeline).
 type Service struct {
 	*IdentityImpl
+	Type ServiceType `json:"type"`
 }
 
 // GetType returns the type for this entity
 func (s *Service) GetType() types.Type {
-	return ServiceType
+	return ServicePrimitiveType
 }
 
 // NewService returns a mutable service struct
-func NewService(email Email, creds *Credentials) (*Service, error) {
-	p, err := database.NewPrimitive(ServiceType)
+func NewService(email Email, typ ServiceType, creds *Credentials) (*Service, error) {
+	p, err := database.NewPrimitive(ServicePrimitiveType)
 	if err != nil {
 		return nil, err
 	}
@@ -29,6 +30,7 @@ func NewService(email Email, creds *Credentials) (*Service, error) {
 			Email:       email,
 			Credentials: creds,
 		},
+		Type: typ,
 	}, nil
 }
 

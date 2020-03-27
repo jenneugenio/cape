@@ -3,9 +3,10 @@ package auth
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/dropoutlabs/cape/primitives"
 	"net/url"
 	"strings"
+
+	"github.com/dropoutlabs/cape/primitives"
 
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/manifoldco/go-base64"
@@ -42,6 +43,17 @@ func NewAPIToken(email primitives.Email, url *url.URL) (*APIToken, error) {
 		Version: tokenVersion,
 		Secret:  secretBytes,
 	}, nil
+}
+
+// Credentials returns Credentials with the secret stored on
+// the auth token.
+func (a *APIToken) Credentials() (*Credentials, error) {
+	creds, err := NewCredentials(a.Secret, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return creds, nil
 }
 
 // Marshal marshals the api token into a string.

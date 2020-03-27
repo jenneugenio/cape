@@ -37,6 +37,8 @@ models:
     model: github.com/dropoutlabs/cape/primitives.CredentialsAlgType
   TokenType:
     model: github.com/dropoutlabs/cape/primitives.TokenType
+  ServiceType:
+    model: github.com/dropoutlabs/cape/primitives.ServiceType
   AuthCredentials:
     model: github.com/dropoutlabs/cape/primitives.AuthCredentials
   IdentityImpl:
