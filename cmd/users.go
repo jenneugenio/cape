@@ -4,11 +4,11 @@ import (
 	"crypto/rand"
 	"fmt"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/controller"
-	"github.com/dropoutlabs/cape/primitives"
 	"github.com/manifoldco/go-base64"
 	"github.com/urfave/cli/v2"
+
+	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 const (
@@ -60,16 +60,6 @@ func usersCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	URL, err := cluster.GetURL()
-	if err != nil {
-		return err
-	}
-
-	token, err := cluster.Token()
-	if err != nil {
-		return err
-	}
-
 	email := args["email"].(primitives.Email)
 
 	validateName := func(input string) error {
@@ -108,7 +98,11 @@ func usersCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	client := controller.NewClient(URL, token)
+	client, err := cluster.Client()
+	if err != nil {
+		return err
+	}
+
 	_, err = client.CreateUser(c.Context, user)
 	if err != nil {
 		return err

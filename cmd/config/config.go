@@ -10,11 +10,12 @@ import (
 	"os"
 	"path"
 
+	"github.com/manifoldco/go-base64"
 	"sigs.k8s.io/yaml"
 
+	"github.com/dropoutlabs/cape/controller"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
-	"github.com/manifoldco/go-base64"
 )
 
 // All files and folders that contain cape cli configuration must only be
@@ -237,6 +238,10 @@ func (c *Cluster) Validate() error {
 
 // GetURL parses the url and returns it
 func (c *Cluster) GetURL() (*url.URL, error) {
+	if c.URL == "" {
+		return nil, errors.New(InvalidConfigCause, "Missing url property for '%s' cluster", c.Label)
+	}
+
 	return url.Parse(c.URL)
 }
 
@@ -247,11 +252,30 @@ func (c *Cluster) Token() (*base64.Value, error) {
 
 // SetToken sets the token on the cluster
 func (c *Cluster) SetToken(token *base64.Value) {
+	if token == nil {
+		c.AuthToken = ""
+	}
+
 	c.AuthToken = token.String()
 }
 
 func (c *Cluster) String() string {
 	return fmt.Sprintf("%s (%s)", c.Label, c.URL)
+}
+
+// Client returns a configured client for this cluster.
+func (c *Cluster) Client() (*controller.Client, error) {
+	clusterURL, err := c.GetURL()
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := c.Token()
+	if err != nil {
+		return nil, err
+	}
+
+	return controller.NewClient(clusterURL, token), nil
 }
 
 // Path returns the path to local configuration yaml file.

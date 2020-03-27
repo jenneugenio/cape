@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/controller"
-	"github.com/dropoutlabs/cape/primitives"
 	"github.com/urfave/cli/v2"
+
+	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func init() {
@@ -102,16 +102,6 @@ func servicesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	URL, err := cluster.GetURL()
-	if err != nil {
-		return err
-	}
-
-	token, err := cluster.Token()
-	if err != nil {
-		return err
-	}
-
 	typ, err := primitives.NewServiceType(typeStr)
 	if err != nil {
 		return err
@@ -119,7 +109,12 @@ func servicesCreateCmd(c *cli.Context) error {
 
 	email := args["identifier"].(primitives.Email)
 
-	apiToken, err := auth.NewAPIToken(email, URL)
+	clusterURL, err := cluster.GetURL()
+	if err != nil {
+		return err
+	}
+
+	apiToken, err := auth.NewAPIToken(email, clusterURL)
 	if err != nil {
 		return err
 	}
@@ -134,7 +129,11 @@ func servicesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	client := controller.NewClient(URL, token)
+	client, err := cluster.Client()
+	if err != nil {
+		return err
+	}
+
 	_, err = client.CreateService(c.Context, service)
 	if err != nil {
 		return err
@@ -167,16 +166,6 @@ func servicesRemoveCmd(c *cli.Context) error {
 		return err
 	}
 
-	URL, err := cluster.GetURL()
-	if err != nil {
-		return err
-	}
-
-	token, err := cluster.Token()
-	if err != nil {
-		return err
-	}
-
 	email := args["identifier"].(primitives.Email)
 
 	if !skipConfirm {
@@ -186,7 +175,11 @@ func servicesRemoveCmd(c *cli.Context) error {
 		}
 	}
 
-	client := controller.NewClient(URL, token)
+	client, err := cluster.Client()
+	if err != nil {
+		return err
+	}
+
 	service, err := client.GetServiceByEmail(c.Context, email)
 	if err != nil {
 		return err
@@ -211,17 +204,11 @@ func servicesListCmd(c *cli.Context) error {
 		return err
 	}
 
-	URL, err := cluster.GetURL()
+	client, err := cluster.Client()
 	if err != nil {
 		return err
 	}
 
-	token, err := cluster.Token()
-	if err != nil {
-		return err
-	}
-
-	client := controller.NewClient(URL, token)
 	services, err := client.ListServices(c.Context)
 	if err != nil {
 		return err

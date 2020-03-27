@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/dropoutlabs/cape/controller"
-	"github.com/dropoutlabs/cape/primitives"
-	"github.com/manifoldco/go-base64"
-	"github.com/urfave/cli/v2"
 	"net/url"
+
+	"github.com/urfave/cli/v2"
+
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func init() {
@@ -63,17 +63,11 @@ func sourcesAdd(c *cli.Context) error {
 	label := args["label"].(primitives.Label)
 	credentials := args["connection-string"].(*url.URL)
 
-	clusterURL, err := url.Parse(cluster.URL)
+	client, err := cluster.Client()
 	if err != nil {
 		return err
 	}
 
-	token, err := base64.NewFromString(cluster.AuthToken)
-	if err != nil {
-		return err
-	}
-
-	client := controller.NewClient(clusterURL, token)
 	source, err := client.AddSource(c.Context, label, credentials)
 	if err != nil {
 		return err
@@ -86,22 +80,15 @@ func sourcesAdd(c *cli.Context) error {
 func sourcesList(c *cli.Context) error {
 	cfgSession := Session(c.Context)
 	cluster, err := cfgSession.Cluster()
-
 	if err != nil {
 		return err
 	}
 
-	clusterURL, err := url.Parse(cluster.URL)
+	client, err := cluster.Client()
 	if err != nil {
 		return err
 	}
 
-	token, err := base64.NewFromString(cluster.AuthToken)
-	if err != nil {
-		return err
-	}
-
-	client := controller.NewClient(clusterURL, token)
 	sources, err := client.ListSources(c.Context)
 	if err != nil {
 		return err

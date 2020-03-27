@@ -2,9 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/urfave/cli/v2"
 
-	"github.com/dropoutlabs/cape/controller"
+	"github.com/urfave/cli/v2"
 )
 
 func init() {
@@ -33,30 +32,22 @@ func logoutCmd(c *cli.Context) error {
 		return err
 	}
 
-	URL, err := cluster.GetURL()
+	client, err := cluster.Client()
 	if err != nil {
 		return err
 	}
 
-	token, err := cluster.Token()
+	err = client.Logout(c.Context, nil)
 	if err != nil {
 		return err
 	}
 
-	client := controller.NewClient(URL, token)
-	err = client.Logout(c.Context, token)
-	if err != nil {
-		return err
-	}
-
-	cluster.AuthToken = ""
-
+	cluster.SetToken(nil)
 	err = cfg.Write()
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("You have been logged out of '%s'.\n", cluster.String())
-
 	return nil
 }

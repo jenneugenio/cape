@@ -8,8 +8,6 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 
 	"github.com/urfave/cli/v2"
-
-	"github.com/dropoutlabs/cape/controller"
 )
 
 func init() {
@@ -75,12 +73,11 @@ func loginCmd(c *cli.Context) error {
 		}
 	}
 
-	URL, err := cluster.GetURL()
+	client, err := cluster.Client()
 	if err != nil {
 		return err
 	}
 
-	client := controller.NewClient(URL, nil)
 	session, err := client.Login(c.Context, email, []byte(password))
 	if err != nil {
 		return err
@@ -94,6 +91,5 @@ func loginCmd(c *cli.Context) error {
 	}
 
 	fmt.Printf("You are now authenticated as %s to '%s'.\n", email, cluster.String())
-
 	return nil
 }
