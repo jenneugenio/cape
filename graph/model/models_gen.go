@@ -90,3 +90,7 @@ type NewUserRequest struct {
 	Salt      base64.Value                  `json:"salt"`
 	Alg       primitives.CredentialsAlgType `json:"alg"`
 }
+
+type RemoveSourceRequest struct {
+	Label primitives.Label `json:"label"`
+}

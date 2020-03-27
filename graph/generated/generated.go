@@ -86,6 +86,7 @@ type ComplexityRoot struct {
 		DeleteService      func(childComplexity int, input model.DeleteServiceRequest) int
 		DeleteSession      func(childComplexity int, input model.DeleteSessionRequest) int
 		DetachPolicy       func(childComplexity int, input model.AttachPolicyRequest) int
+		RemoveSource       func(childComplexity int, input model.RemoveSourceRequest) int
 		Setup              func(childComplexity int, input model.NewUserRequest) int
 		UnassignRole       func(childComplexity int, input model.AssignRoleRequest) int
 	}
@@ -161,6 +162,7 @@ type MutationResolver interface {
 	Setup(ctx context.Context, input model.NewUserRequest) (*primitives.User, error)
 	CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error)
 	AddSource(ctx context.Context, input model.AddSourceRequest) (*primitives.Source, error)
+	RemoveSource(ctx context.Context, input model.RemoveSourceRequest) (*string, error)
 	CreateLoginSession(ctx context.Context, input model.LoginSessionRequest) (*primitives.Session, error)
 	CreateAuthSession(ctx context.Context, input model.AuthSessionRequest) (*primitives.Session, error)
 	DeleteSession(ctx context.Context, input model.DeleteSessionRequest) (*string, error)
@@ -461,6 +463,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DetachPolicy(childComplexity, args["input"].(model.AttachPolicyRequest)), true
+
+	case "Mutation.removeSource":
+		if e.complexity.Mutation.RemoveSource == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_removeSource_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RemoveSource(childComplexity, args["input"].(model.RemoveSourceRequest)), true
 
 	case "Mutation.setup":
 		if e.complexity.Mutation.Setup == nil {
@@ -1106,6 +1120,10 @@ input AddSourceRequest {
   credentials: URL!
 }
 
+input RemoveSourceRequest {
+  label: Label!
+}
+
 # ------------------------------------------------------------------
 # END INPUTS
 # ------------------------------------------------------------------
@@ -1125,6 +1143,7 @@ type Mutation {
 
   createUser(input: NewUserRequest!): User! @isAuthenticated()
   addSource(input: AddSourceRequest!): Source! @isAuthenticated()
+  removeSource(input: RemoveSourceRequest!): String @isAuthenticated()
 
   createLoginSession(input: LoginSessionRequest!): Session!
   createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
@@ -1384,6 +1403,20 @@ func (ec *executionContext) field_Mutation_detachPolicy_args(ctx context.Context
 	var arg0 model.AttachPolicyRequest
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalNAttachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAttachPolicyRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_removeSource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.RemoveSourceRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNRemoveSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐRemoveSourceRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2209,6 +2242,68 @@ func (ec *executionContext) _Mutation_addSource(ctx context.Context, field graph
 	res := resTmp.(*primitives.Source)
 	fc.Result = res
 	return ec.marshalNSource2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_removeSource(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_removeSource_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().RemoveSource(rctx, args["input"].(model.RemoveSourceRequest))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createLoginSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6075,6 +6170,24 @@ func (ec *executionContext) unmarshalInputNewUserRequest(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputRemoveSourceRequest(ctx context.Context, obj interface{}) (model.RemoveSourceRequest, error) {
+	var it model.RemoveSourceRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "label":
+			var err error
+			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -6258,6 +6371,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "removeSource":
+			out.Values[i] = ec._Mutation_removeSource(ctx, field)
 		case "createLoginSession":
 			out.Values[i] = ec._Mutation_createLoginSession(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -7282,6 +7397,10 @@ func (ec *executionContext) marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcape�
 		return graphql.Null
 	}
 	return ec._Policy(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNRemoveSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐRemoveSourceRequest(ctx context.Context, v interface{}) (model.RemoveSourceRequest, error) {
+	return ec.unmarshalInputRemoveSourceRequest(ctx, v)
 }
 
 func (ec *executionContext) marshalNRole2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx context.Context, sel ast.SelectionSet, v primitives.Role) graphql.Marshaler {

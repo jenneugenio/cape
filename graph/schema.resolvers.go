@@ -114,6 +114,18 @@ func (r *mutationResolver) AddSource(ctx context.Context, input model.AddSourceR
 	return source, nil
 }
 
+func (r *mutationResolver) RemoveSource(ctx context.Context, input model.RemoveSourceRequest) (*string, error) {
+	var source primitives.Source
+	filter := database.Filter{Where: database.Where{"label": input.Label}}
+	err := r.Backend.QueryOne(ctx, &source, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Backend.Delete(ctx, source.ID)
+	return nil, err
+}
+
 func (r *mutationResolver) CreateLoginSession(ctx context.Context, input model.LoginSessionRequest) (*primitives.Session, error) {
 	logger := fw.Logger(ctx)
 

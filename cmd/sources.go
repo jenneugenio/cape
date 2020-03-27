@@ -28,6 +28,23 @@ func init() {
 		},
 	}
 
+	sourcesRemoveCmd := &Command{
+		Usage:       "Removes a data source to Cape",
+		Description: "Removes a data source to Cape",
+		Arguments:   []*Argument{LabelArg("source")},
+		Examples: []*Example{
+			{
+				Example:     "cape sources remove transactions",
+				Description: "Removes the database labelled `transactions` from cape",
+			},
+		},
+		Command: &cli.Command{
+			Name:   "remove",
+			Action: sourcesRemove,
+			Flags:  []cli.Flag{clusterFlag()},
+		},
+	}
+
 	sourcesListCmd := &Command{
 		Usage: "Lists all of your data sources",
 		Command: &cli.Command{
@@ -43,6 +60,7 @@ func init() {
 			Name: "sources",
 			Subcommands: []*cli.Command{
 				sourcesAddCmd.Package(),
+				sourcesRemoveCmd.Package(),
 				sourcesListCmd.Package(),
 			},
 		},
@@ -74,6 +92,30 @@ func sourcesAdd(c *cli.Context) error {
 	}
 
 	fmt.Printf("Added source %s to Cape\n", source.Label)
+	return nil
+}
+
+func sourcesRemove(c *cli.Context) error {
+	cfgSession := Session(c.Context)
+	args := Arguments(c.Context)
+
+	cluster, err := cfgSession.Cluster()
+	if err != nil {
+		return err
+	}
+
+	label := args["label"].(primitives.Label)
+	client, err := cluster.Client()
+	if err != nil {
+		return err
+	}
+
+	err = client.RemoveSource(c.Context, label)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Removed source %s from Cape\n", label)
 	return nil
 }
 

@@ -88,4 +88,27 @@ func TestSource(t *testing.T) {
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(source).To(gm.BeNil())
 	})
+
+	t.Run("delete a source", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		l, err := primitives.NewLabel("delete-me")
+		gm.Expect(err).To(gm.BeNil())
+
+		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/deleteme")
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = client.AddSource(ctx, l, u)
+		gm.Expect(err).To(gm.BeNil())
+
+		err = client.RemoveSource(ctx, l)
+		gm.Expect(err).To(gm.BeNil())
+
+		// Now, there should be no sources!
+		sources, err := client.ListSources(ctx)
+		gm.Expect(err).To(gm.BeNil())
+
+		// 1 left from above
+		gm.Expect(len(sources)).To(gm.Equal(1))
+	})
 }

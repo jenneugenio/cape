@@ -95,6 +95,10 @@ input AddSourceRequest {
   credentials: URL!
 }
 
+input RemoveSourceRequest {
+  label: Label!
+}
+
 # ------------------------------------------------------------------
 # END INPUTS
 # ------------------------------------------------------------------
@@ -114,6 +118,7 @@ type Mutation {
 
   createUser(input: NewUserRequest!): User! @isAuthenticated()
   addSource(input: AddSourceRequest!): Source! @isAuthenticated()
+  removeSource(input: RemoveSourceRequest!): String @isAuthenticated()
 
   createLoginSession(input: LoginSessionRequest!): Session!
   createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)

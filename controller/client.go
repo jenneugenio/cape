@@ -553,6 +553,19 @@ func (c *Client) ListSources(ctx context.Context) ([]*primitives.Source, error) 
 	return sources, nil
 }
 
+func (c *Client) RemoveSource(ctx context.Context, label primitives.Label) error {
+	variables := make(map[string]interface{})
+	variables["label"] = label
+
+	// We only care if this errors
+	var resp interface{}
+	return c.Raw(ctx, `
+		mutation RemoveSource($label: Label!) {
+			  removeSource(input: { label: $label })
+			}
+	`, variables, &resp)
+}
+
 // GetSource returns a specific data source
 func (c *Client) GetSource(ctx context.Context, id database.ID) (*primitives.Source, error) {
 	var resp struct {
