@@ -46,7 +46,7 @@ func TestAPIToken(t *testing.T) {
 		gm.Expect(len(otherToken.Secret)).To(gm.Equal(secretBytes))
 		gm.Expect(otherToken.Secret).To(gm.Equal(token.Secret))
 
-		t.Logf("token: %s", tokenStr)
+		gm.Expect(otherToken.Validate()).To(gm.BeNil())
 	})
 
 	t.Run("test unmarshal on raw string", func(t *testing.T) {
@@ -60,5 +60,7 @@ func TestAPIToken(t *testing.T) {
 		gm.Expect(token.URL.String()).To(gm.Equal(host))
 		gm.Expect(token.Version).To(gm.Equal(uint8(tokenVersion)))
 		gm.Expect(len(token.Secret)).To(gm.Equal(secretBytes))
+
+		gm.Expect(token.Validate()).To(gm.BeNil())
 	})
 }

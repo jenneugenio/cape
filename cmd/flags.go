@@ -107,15 +107,6 @@ func emailFlag() cli.Flag {
 	}
 }
 
-func passwordFlag() cli.Flag {
-	usage := "The password used to log into the cluster"
-	return &cli.StringFlag{
-		Name:    "password",
-		Usage:   usage,
-		EnvVars: []string{"CAPE_PASSWORD"},
-	}
-}
-
 func clusterFlag() cli.Flag {
 	usage := "The cluster to login to"
 	return &cli.StringFlag{

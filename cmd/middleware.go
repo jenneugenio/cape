@@ -110,7 +110,7 @@ func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 			}
 
 			if input == "" {
-				return nil
+				continue
 			}
 
 			value, err := e.Processor(input)
@@ -129,7 +129,7 @@ func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 			}
 
 			if input == "" {
-				return nil
+				continue
 			}
 
 			value, err := arg.Processor(input)
@@ -142,6 +142,7 @@ func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 
 		c.Context = context.WithValue(c.Context, ArgumentContextKey, argValues)
 		c.Context = context.WithValue(c.Context, EnvVarContextKey, envValues)
+
 		return next(c)
 	})
 }

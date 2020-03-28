@@ -3,22 +3,21 @@ package main
 import (
 	"fmt"
 
-	"github.com/dropoutlabs/cape/auth"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
-
 	"github.com/urfave/cli/v2"
+
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func init() {
 	loginCmd := &Command{
-		Usage: "Creates a session on the controller",
+
+		Usage:     "Creates a session on the controller",
+		Variables: []*EnvVar{capePasswordVar},
 		Command: &cli.Command{
 			Name:   "login",
 			Action: handleSessionOverrides(loginCmd),
 			Flags: []cli.Flag{
 				emailFlag(),
-				passwordFlag(),
 				clusterFlag(),
 			},
 		},
@@ -28,7 +27,6 @@ func init() {
 }
 
 func loginCmd(c *cli.Context) error {
-	ui := UI(c.Context)
 	cfg := Config(c.Context)
 	cfgSession := Session(c.Context)
 
@@ -37,40 +35,13 @@ func loginCmd(c *cli.Context) error {
 		return err
 	}
 
-	emailStr := c.String("email")
-	password := c.String("password")
-
-	if emailStr == "" {
-		tmpE, err := ui.Question("Please enter your email address", nil)
-		if err != nil {
-			return err
-		}
-		emailStr = tmpE
-	}
-
-	email, err := primitives.NewEmail(emailStr)
+	email, err := getEmail(c)
 	if err != nil {
 		return err
 	}
-
-	validatePassword := func(input string) error {
-		if len(input) < auth.SecretLength {
-			return errors.New(InvalidLengthCause, "Password is too short")
-		}
-
-		return nil
-	}
-
-	if password == "" {
-		password, err = ui.Secret("Please enter a password", validatePassword)
-		if err != nil {
-			return err
-		}
-	} else {
-		err = validatePassword(password)
-		if err != nil {
-			return err
-		}
+	password, err := getPassword(c)
+	if err != nil {
+		return err
 	}
 
 	client, err := cluster.Client()
@@ -78,13 +49,12 @@ func loginCmd(c *cli.Context) error {
 		return err
 	}
 
-	session, err := client.Login(c.Context, email, []byte(password))
+	session, err := client.Login(c.Context, email, []byte(string(password)))
 	if err != nil {
 		return err
 	}
 
 	cluster.SetToken(session.Token)
-
 	err = cfg.Write()
 	if err != nil {
 		return err
@@ -92,4 +62,45 @@ func loginCmd(c *cli.Context) error {
 
 	fmt.Printf("You are now authenticated as %s to '%s'.\n", email, cluster.String())
 	return nil
+}
+
+func getEmail(c *cli.Context) (primitives.Email, error) {
+	in := c.String("email")
+	if in != "" {
+		return primitives.NewEmail(in)
+	}
+
+	ui := UI(c.Context)
+	out, err := ui.Question("Please enter your email address", func(input string) error {
+		_, err := primitives.NewEmail(input)
+		return err
+	})
+	if err != nil {
+		return primitives.Email(""), err
+	}
+
+	return primitives.NewEmail(out)
+}
+
+func getPassword(c *cli.Context) (primitives.Password, error) {
+	envVars := EnvVariables(c.Context)
+	ui := UI(c.Context)
+
+	pw, ok := envVars["CAPE_PASSWORD"].(primitives.Password)
+	if ok {
+		return pw, nil
+	}
+
+	// XXX: It'd be nice if we didn't need to do this weird type creation
+	// manipulation. If we could just reuse the `.Validate()` function that'd
+	// be awesome butthat's not how the promptui ValidatorFunc works!
+	out, err := ui.Secret("Please enter a password", func(input string) error {
+		_, err := primitives.NewPassword(input)
+		return err
+	})
+	if err != nil {
+		return pw, err
+	}
+
+	return primitives.NewPassword(out)
 }

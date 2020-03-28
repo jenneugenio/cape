@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/dropoutlabs/cape/auth"
 	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 var (
@@ -16,6 +17,18 @@ var (
 			}
 
 			return auth.ParseAPIToken(in)
+		},
+	}
+	capePasswordVar = &EnvVar{
+		Name:        "CAPE_PASSWORD",
+		Required:    false,
+		Description: "The password used by a human to log into their Cape account",
+		Processor: func(in string) (interface{}, error) {
+			if in == "" {
+				return nil, nil
+			}
+
+			return primitives.NewPassword(in)
 		},
 	}
 )

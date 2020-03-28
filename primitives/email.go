@@ -2,10 +2,12 @@ package primitives
 
 import (
 	"fmt"
-	"github.com/badoux/checkmail"
-	errors "github.com/dropoutlabs/cape/partyerrors"
 	"io"
 	"strconv"
+
+	"github.com/badoux/checkmail"
+
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 // Email represents a valid email for use within Cape
@@ -20,7 +22,12 @@ func NewEmail(in string) (Email, error) {
 
 // Validate returns an error if the contents of the label are invalid
 func (e Email) Validate() error {
-	return checkmail.ValidateFormat(string(e))
+	err := checkmail.ValidateFormat(string(e))
+	if err != nil {
+		return errors.New(InvalidEmail, "A valid email address must be provided")
+	}
+
+	return nil
 }
 
 // String returns the string representation of the label
