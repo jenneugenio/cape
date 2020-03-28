@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	SaltLength   = 16
-	SecretLength = 8
+	SaltLength                = 16
+	SecretLength              = 8
+	GeneratedSecretByteLength = 8
 
 	// N , R, P are used by scrypt, see scrypt docs below
 	// https://godoc.org/golang.org/x/crypto/scrypt#Key

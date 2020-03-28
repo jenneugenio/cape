@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/urfave/cli/v2"
-
-	"github.com/dropoutlabs/cape/primitives"
 )
 
 func init() {
@@ -35,7 +33,7 @@ func loginCmd(c *cli.Context) error {
 		return err
 	}
 
-	email, err := getEmail(c)
+	email, err := getEmail(c, c.String("email"))
 	if err != nil {
 		return err
 	}
@@ -49,7 +47,7 @@ func loginCmd(c *cli.Context) error {
 		return err
 	}
 
-	session, err := client.Login(c.Context, email, []byte(string(password)))
+	session, err := client.Login(c.Context, email, password.Bytes())
 	if err != nil {
 		return err
 	}
@@ -62,45 +60,4 @@ func loginCmd(c *cli.Context) error {
 
 	fmt.Printf("You are now authenticated as %s to '%s'.\n", email, cluster.String())
 	return nil
-}
-
-func getEmail(c *cli.Context) (primitives.Email, error) {
-	in := c.String("email")
-	if in != "" {
-		return primitives.NewEmail(in)
-	}
-
-	ui := UI(c.Context)
-	out, err := ui.Question("Please enter your email address", func(input string) error {
-		_, err := primitives.NewEmail(input)
-		return err
-	})
-	if err != nil {
-		return primitives.Email(""), err
-	}
-
-	return primitives.NewEmail(out)
-}
-
-func getPassword(c *cli.Context) (primitives.Password, error) {
-	envVars := EnvVariables(c.Context)
-	ui := UI(c.Context)
-
-	pw, ok := envVars["CAPE_PASSWORD"].(primitives.Password)
-	if ok {
-		return pw, nil
-	}
-
-	// XXX: It'd be nice if we didn't need to do this weird type creation
-	// manipulation. If we could just reuse the `.Validate()` function that'd
-	// be awesome butthat's not how the promptui ValidatorFunc works!
-	out, err := ui.Secret("Please enter a password", func(input string) error {
-		_, err := primitives.NewPassword(input)
-		return err
-	})
-	if err != nil {
-		return pw, err
-	}
-
-	return primitives.NewPassword(out)
 }

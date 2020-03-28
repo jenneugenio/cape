@@ -11,10 +11,6 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 )
 
-const (
-	secretBytesLength = 8
-)
-
 func init() {
 	createCmd := &Command{
 		Usage:     "Create a new user",
@@ -51,7 +47,6 @@ func init() {
 }
 
 func usersCreateCmd(c *cli.Context) error {
-	ui := UI(c.Context)
 	args := Arguments(c.Context)
 
 	cfgSession := Session(c.Context)
@@ -61,27 +56,12 @@ func usersCreateCmd(c *cli.Context) error {
 	}
 
 	email := args["email"].(primitives.Email)
-
-	validateName := func(input string) error {
-		_, err := primitives.NewName(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-
-	nameStr, err := ui.Question("Name", validateName)
+	name, err := getName(c, "Please enter the persons name")
 	if err != nil {
 		return err
 	}
 
-	name, err := primitives.NewName(nameStr)
-	if err != nil {
-		return err
-	}
-
-	secretBytes := make([]byte, secretBytesLength)
+	secretBytes := make([]byte, auth.GeneratedSecretByteLength)
 	_, err = rand.Read(secretBytes)
 	if err != nil {
 		return err
@@ -110,8 +90,8 @@ func usersCreateCmd(c *cli.Context) error {
 
 	fmt.Println("A user has been created with the following credentials:")
 	fmt.Printf("Name: %s\n", name)
-	fmt.Printf("Emai: %s\n", email)
-	fmt.Printf("Passowrd %s\n", password)
+	fmt.Printf("Email: %s\n", email)
+	fmt.Printf("Password %s\n", password)
 	fmt.Println("Remember: Please keep the password safe and share with the user securely.")
 
 	return nil

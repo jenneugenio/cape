@@ -8,15 +8,13 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/badoux/checkmail"
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/primitives"
-
 	"github.com/urfave/cli/v2"
 
+	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/controller"
 	"github.com/dropoutlabs/cape/logging"
 	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func init() {
@@ -109,63 +107,22 @@ func setupControllerCmd(c *cli.Context) error {
 	label := args["label"].(primitives.Label)
 	clusterURL := args["url"].(*primitives.URL)
 
-	validateName := func(input string) error {
-		_, err := primitives.NewName(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-
-	ui := UI(c.Context)
-	nameStr, err := ui.Question("Please enter your name", validateName)
+	name, err := getName(c, "")
 	if err != nil {
 		return err
 	}
 
-	name, err := primitives.NewName(nameStr)
+	email, err := getEmail(c, "")
 	if err != nil {
 		return err
 	}
 
-	validateEmail := func(input string) error {
-		return checkmail.ValidateFormat(input)
-	}
-
-	emailStr, err := ui.Question("Please enter your email address", validateEmail)
+	password, err := getConfirmedPassword(c)
 	if err != nil {
 		return err
 	}
 
-	email, err := primitives.NewEmail(emailStr)
-	if err != nil {
-		return err
-	}
-
-	validatePassword := func(input string) error {
-		if len(input) < auth.SecretLength {
-			return errors.New(InvalidLengthCause, "Password is too short")
-		}
-
-		return nil
-	}
-
-	password, err := ui.Secret("Please enter a password", validatePassword)
-	if err != nil {
-		return err
-	}
-
-	passwordConf, err := ui.Secret("Please re-enter your password", validatePassword)
-	if err != nil {
-		return err
-	}
-
-	if password != passwordConf {
-		return errors.New(PasswordNoMatch, "Passwords do not match")
-	}
-
-	creds, err := auth.NewCredentials([]byte(password), nil)
+	creds, err := auth.NewCredentials(password.Bytes(), nil)
 	if err != nil {
 		return err
 	}
@@ -176,7 +133,6 @@ func setupControllerCmd(c *cli.Context) error {
 	}
 
 	client := controller.NewClient(clusterURL, nil)
-
 	_, err = client.Setup(c.Context, user)
 	if err != nil {
 		return err
