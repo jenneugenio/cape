@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/url"
 	"os"
 	"path"
 
@@ -102,7 +101,7 @@ func (c *Config) Print(w io.Writer) error {
 }
 
 // AddCluster attempts to add the cluster to the configuration
-func (c *Config) AddCluster(label primitives.Label, url *url.URL, authToken string) (*Cluster, error) {
+func (c *Config) AddCluster(label primitives.Label, url *primitives.URL, authToken string) (*Cluster, error) {
 	for _, cluster := range c.Clusters {
 		if cluster.Label == label {
 			return nil, errors.New(ExistingClusterCause, "A cluster labeled %s already exists", label)
@@ -111,8 +110,12 @@ func (c *Config) AddCluster(label primitives.Label, url *url.URL, authToken stri
 
 	cluster := &Cluster{
 		Label:     label,
-		URL:       url.String(),
+		URL:       url,
 		AuthToken: authToken,
+	}
+
+	if err := cluster.Validate(); err != nil {
+		return nil, err
 	}
 
 	c.Clusters = append(c.Clusters, cluster)
@@ -227,22 +230,30 @@ func (c *Context) Validate() error {
 // Cluster represents configuration for a Cape cluster
 type Cluster struct {
 	AuthToken string           `json:"auth_token,omitempty"`
-	URL       string           `json:"url"`
+	URL       *primitives.URL  `json:"url"`
 	Label     primitives.Label `json:"label"`
 }
 
 // Validate returns an error if the cluster configuration is invalid
 func (c *Cluster) Validate() error {
-	return c.Label.Validate()
+	if err := c.Label.Validate(); err != nil {
+		return err
+	}
+
+	if c.URL == nil {
+		return errors.New(InvalidConfigCause, "Missing url property for '%s' cluster", c.Label)
+	}
+
+	return c.URL.Validate()
 }
 
 // GetURL parses the url and returns it
-func (c *Cluster) GetURL() (*url.URL, error) {
-	if c.URL == "" {
+func (c *Cluster) GetURL() (*primitives.URL, error) {
+	if c.URL == nil {
 		return nil, errors.New(InvalidConfigCause, "Missing url property for '%s' cluster", c.Label)
 	}
 
-	return url.Parse(c.URL)
+	return c.URL, nil
 }
 
 // Token parses the auth token and returns the base64 value
@@ -260,7 +271,7 @@ func (c *Cluster) SetToken(token *base64.Value) {
 }
 
 func (c *Cluster) String() string {
-	return fmt.Sprintf("%s (%s)", c.Label, c.URL)
+	return fmt.Sprintf("%s (%s)", c.Label, c.URL.String())
 }
 
 // Client returns a configured client for this cluster.
@@ -330,6 +341,11 @@ func Parse() (*Config, error) {
 	}
 
 	err = yaml.Unmarshal(b, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cfg.Validate()
 	if err != nil {
 		return nil, err
 	}

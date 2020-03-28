@@ -11,10 +11,8 @@ func init() {
 		Usage: "Removes session on the client and the server",
 		Command: &cli.Command{
 			Name:   "logout",
-			Action: logoutCmd,
+			Action: handleSessionOverrides(logoutCmd),
 			Flags: []cli.Flag{
-				emailFlag(),
-				passwordFlag(),
 				clusterFlag(),
 			},
 		},

@@ -29,7 +29,7 @@ func init() {
 		},
 		Command: &cli.Command{
 			Name:   "create",
-			Action: servicesCreateCmd,
+			Action: handleSessionOverrides(servicesCreateCmd),
 			Flags: []cli.Flag{
 				clusterFlag(),
 				serviceTypeFlag(),
@@ -52,7 +52,7 @@ func init() {
 		},
 		Command: &cli.Command{
 			Name:   "remove",
-			Action: servicesRemoveCmd,
+			Action: handleSessionOverrides(servicesRemoveCmd),
 			Flags: []cli.Flag{
 				clusterFlag(),
 				yesFlag(),
@@ -70,7 +70,7 @@ func init() {
 		},
 		Command: &cli.Command{
 			Name:   "list",
-			Action: servicesListCmd,
+			Action: handleSessionOverrides(servicesListCmd),
 			Flags: []cli.Flag{
 				clusterFlag(),
 			},

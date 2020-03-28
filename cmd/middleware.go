@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/urfave/cli/v2"
 
@@ -20,6 +21,9 @@ const (
 	// ArgumentContextKey is the name of the key storing argument values for a command
 	ArgumentContextKey ContextKey = "arguments"
 
+	// EnvVarContextKey is the name of the key storing environment variable values for a command
+	EnvVarContextKey ContextKey = "environment_variables"
+
 	// UIContextKey is the name of the key storing the ui.UI struct for a command
 	UIContextKey ContextKey = "ui"
 
@@ -37,14 +41,24 @@ func Config(ctx context.Context) *config.Config {
 	return cfg.(*config.Config)
 }
 
-// Arguments returns the ArgumentValues object stored on the context
-func Arguments(ctx context.Context) ArgumentValues {
+// Arguments returns the argument values object stored on the context
+func Arguments(ctx context.Context) VariableValues {
 	args := ctx.Value(ArgumentContextKey)
 	if args == nil {
 		panic("argument values not available on context")
 	}
 
-	return args.(ArgumentValues)
+	return args.(VariableValues)
+}
+
+// EnvVariables returns the environment values object stored on the context
+func EnvVariables(ctx context.Context) VariableValues {
+	vars := ctx.Value(EnvVarContextKey)
+	if vars == nil {
+		panic("environment values not available on context")
+	}
+
+	return vars.(VariableValues)
 }
 
 // UI returns the UI object stored on the context
@@ -86,9 +100,28 @@ func retrieveConfig(next cli.ActionFunc) cli.ActionFunc {
 	})
 }
 
-func processArguments(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
+func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 	return cli.ActionFunc(func(c *cli.Context) error {
-		values := ArgumentValues{}
+		envValues := VariableValues{}
+		for _, e := range cmd.Variables {
+			input := os.Getenv(e.Name)
+			if input == "" && e.Required {
+				return errors.New(MissingEnvVarCause, "The environment variable %s is required but was not provided", e.Name)
+			}
+
+			if input == "" {
+				return nil
+			}
+
+			value, err := e.Processor(input)
+			if err != nil {
+				return err
+			}
+
+			envValues[e.Name] = value
+		}
+
+		argValues := VariableValues{}
 		for i, arg := range cmd.Arguments {
 			input := c.Args().Get(i)
 			if input == "" && arg.Required {
@@ -104,14 +137,17 @@ func processArguments(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 				return err
 			}
 
-			values[arg.Name] = value
+			argValues[arg.Name] = value
 		}
 
-		c.Context = context.WithValue(c.Context, ArgumentContextKey, values)
+		c.Context = context.WithValue(c.Context, ArgumentContextKey, argValues)
+		c.Context = context.WithValue(c.Context, EnvVarContextKey, envValues)
 		return next(c)
 	})
 }
 
+// Apply this middleware to commands that need to run actions against a cape
+// cluster.
 func handleSessionOverrides(next cli.ActionFunc) cli.ActionFunc {
 	return cli.ActionFunc(func(c *cli.Context) error {
 		cfg := Config(c.Context)

@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"github.com/dropoutlabs/cape/primitives"
-	"net/url"
 	"testing"
 
 	gm "github.com/onsi/gomega"
+
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func TestAPIToken(t *testing.T) {
@@ -14,12 +14,11 @@ func TestAPIToken(t *testing.T) {
 	email, err := primitives.NewEmail("email@email.com")
 	gm.Expect(err).To(gm.BeNil())
 
+	host := "https://my.controller.com"
+	u, err := primitives.NewURL(host)
+	gm.Expect(err).To(gm.BeNil())
+
 	t.Run("new api token", func(t *testing.T) {
-		host := "host.controller.com"
-
-		u, err := url.Parse(host)
-		gm.Expect(err).To(gm.BeNil())
-
 		token, err := NewAPIToken(email, u)
 		gm.Expect(err).To(gm.BeNil())
 
@@ -30,11 +29,6 @@ func TestAPIToken(t *testing.T) {
 	})
 
 	t.Run("marhsal unmarhal token", func(t *testing.T) {
-		host := "host.controller.com"
-
-		u, err := url.Parse(host)
-		gm.Expect(err).To(gm.BeNil())
-
 		token, err := NewAPIToken(email, u)
 		gm.Expect(err).To(gm.BeNil())
 
@@ -51,12 +45,12 @@ func TestAPIToken(t *testing.T) {
 		gm.Expect(otherToken.Version).To(gm.Equal(uint8(tokenVersion)))
 		gm.Expect(len(otherToken.Secret)).To(gm.Equal(secretBytes))
 		gm.Expect(otherToken.Secret).To(gm.Equal(token.Secret))
+
+		t.Logf("token: %s", tokenStr)
 	})
 
 	t.Run("test unmarshal on raw string", func(t *testing.T) {
-		host := "host.controller.com"
-
-		tokenStr := "email@email.com,AYqMLOkUUbK58Qr66G1a5v1ob3N0LmNvbnRyb2xsZXIuY29t"
+		tokenStr := "email@email.com,AQCiZ3kSIRgctnHV66K-SnxodHRwczovL215LmNvbnRyb2xsZXIuY29t"
 
 		token := &APIToken{}
 		err := token.Unmarshal(tokenStr)

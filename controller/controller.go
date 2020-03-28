@@ -6,13 +6,12 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/NYTimes/gziphandler"
-	"github.com/justinas/alice"
-	"github.com/rs/cors"
-
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/NYTimes/gziphandler"
+	"github.com/justinas/alice"
 	"github.com/manifoldco/healthz"
+	"github.com/rs/cors"
 	"github.com/rs/zerolog"
 
 	"github.com/dropoutlabs/cape/auth"

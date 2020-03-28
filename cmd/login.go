@@ -15,7 +15,7 @@ func init() {
 		Usage: "Creates a session on the controller",
 		Command: &cli.Command{
 			Name:   "login",
-			Action: loginCmd,
+			Action: handleSessionOverrides(loginCmd),
 			Flags: []cli.Flag{
 				emailFlag(),
 				passwordFlag(),

@@ -20,9 +20,7 @@ USAGE:
    {{.HelpName}}{{if .VisibleFlags}} [command options]{{end}} [arguments...]{{if .Aliases}}
 
 ALIASES:
-	 {{range $i, $v := .Aliases}}{{if $i}}, {{$v}}{{else}}{{$v}}{{end}}{{end}}{{end}}{{if .ArgsUsage}}
-
-ARGUMENTS:
+	 {{range $i, $v := .Aliases}}{{if $i}}, {{$v}}{{else}}{{$v}}{{end}}{{end}}{{end}}{{if .ArgsUsage}}   
    {{.ArgsUsage}}{{end}}{{if .VisibleFlags}}
 
 OPTIONS:

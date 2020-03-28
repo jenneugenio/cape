@@ -107,7 +107,7 @@ func setupControllerCmd(c *cli.Context) error {
 	cfg := Config(c.Context)
 
 	label := args["label"].(primitives.Label)
-	clusterURL := args["url"].(*url.URL)
+	clusterURL := args["url"].(*primitives.URL)
 
 	validateName := func(input string) error {
 		_, err := primitives.NewName(input)

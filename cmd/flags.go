@@ -17,9 +17,20 @@ func versionFlag() cli.Flag {
 	}
 }
 
+func portFlag(value int) cli.Flag {
+	return &cli.IntFlag{
+		Name:    "port",
+		Aliases: []string{"p"},
+		Usage:   "The `PORT` the service should listen on for incoming requests",
+		Value:   value,
+		EnvVars: []string{"CAPE_PORT"},
+	}
+}
+
 func yesFlag() cli.Flag {
 	return &cli.BoolFlag{
-		Name:    "yes, y",
+		Name:    "yes",
+		Aliases: []string{"y"},
 		Usage:   "If specified, the user will not be prompted to confirm their action before proceeding",
 		Value:   false,
 		EnvVars: []string{"CAPE_YES"},
@@ -28,7 +39,8 @@ func yesFlag() cli.Flag {
 
 func useClusterFlag() cli.Flag {
 	return &cli.BoolFlag{
-		Name:    "use, u",
+		Name:    "use",
+		Aliases: []string{"u"},
 		Usage:   "If provided, the cluster being created will also be set as the current cluster",
 		EnvVars: []string{"CAPE_USE"},
 	}

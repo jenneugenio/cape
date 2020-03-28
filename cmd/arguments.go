@@ -26,24 +26,7 @@ var (
 		Description: "A url for the cluster",
 		Required:    true,
 		Processor: func(in string) (interface{}, error) {
-			if in == "" {
-				return nil, errors.New(InvalidURLCause, "A valid url must be provided")
-			}
-
-			u, err := url.Parse(in)
-			if err != nil {
-				return nil, errors.New(InvalidURLCause, "could not parse: %s", err)
-			}
-
-			if u.Scheme != "https" && u.Scheme != "http" {
-				return nil, errors.New(InvalidURLCause, "invalid scheme, must be http or https")
-			}
-
-			if u.Host == "" {
-				return nil, errors.New(InvalidURLCause, "A host must be provided")
-			}
-
-			return u, nil
+			return primitives.NewURL(in)
 		},
 	}
 

@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"net/http"
-	"net/url"
 	"os"
 	"time"
 
@@ -156,7 +155,7 @@ func (t *TestController) Client() (*Client, error) {
 }
 
 // URL returns the URL for the test controller
-func (t *TestController) URL() *url.URL {
-	u, _ := url.Parse("http://localhost:8081")
+func (t *TestController) URL() *primitives.URL {
+	u, _ := primitives.NewURL("http://localhost:8081")
 	return u
 }

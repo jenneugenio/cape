@@ -32,7 +32,7 @@ func init() {
 		},
 		Command: &cli.Command{
 			Name:   "create",
-			Action: usersCreateCmd,
+			Action: handleSessionOverrides(usersCreateCmd),
 			Flags: []cli.Flag{
 				clusterFlag(),
 			},

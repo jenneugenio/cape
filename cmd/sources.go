@@ -23,7 +23,7 @@ func init() {
 		},
 		Command: &cli.Command{
 			Name:   "add",
-			Action: sourcesAdd,
+			Action: handleSessionOverrides(sourcesAdd),
 			Flags:  []cli.Flag{clusterFlag()},
 		},
 	}
@@ -32,7 +32,7 @@ func init() {
 		Usage: "Lists all of your data sources",
 		Command: &cli.Command{
 			Name:   "list",
-			Action: sourcesList,
+			Action: handleSessionOverrides(sourcesList),
 			Flags:  []cli.Flag{clusterFlag()},
 		},
 	}

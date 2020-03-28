@@ -13,6 +13,7 @@ var (
 
 	SignatureNotValid = errors.NewCause(errors.UnauthorizedCategory, "signature_not_valid")
 
+	BadAPITokenVersion = errors.NewCause(errors.BadRequestCategory, "bad_apitoken_version")
 	BadSaltLength      = errors.NewCause(errors.BadRequestCategory, "bad_salt_length")
 	BadSecretLength    = errors.NewCause(errors.BadRequestCategory, "bad_secret_length")
 	BadPublicKeyLength = errors.NewCause(errors.BadRequestCategory, "bad_public_key_length")

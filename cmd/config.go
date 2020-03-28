@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 
 	"github.com/urfave/cli/v2"
@@ -119,7 +118,7 @@ func addCluster(c *cli.Context) error {
 	cfg := Config(c.Context)
 
 	label := args["label"].(primitives.Label)
-	clusterURL := args["url"].(*url.URL)
+	clusterURL := args["url"].(*primitives.URL)
 
 	cluster, err := cfg.AddCluster(label, clusterURL, "")
 	if err != nil {

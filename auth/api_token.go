@@ -3,7 +3,6 @@ package auth
 import (
 	"crypto/rand"
 	"fmt"
-	"net/url"
 	"strings"
 
 	"github.com/dropoutlabs/cape/primitives"
@@ -17,6 +16,18 @@ const (
 	secretBytes  = 16
 )
 
+// Secret represents a Secret stored inside of an APIToken
+type Secret []byte
+
+// Validate returns whether or not the underlying secret is valid
+func (s Secret) Validate() error {
+	if len([]byte(s)) != secretBytes {
+		return errors.New(BadSecretLength, "APIToken secret length is not the correct length")
+	}
+
+	return nil
+}
+
 // APIToken represents a token that is used by a service or user
 // to authenticate with a controller. Currently we're using the email
 // so that we can use the normal user login flow but in the future
@@ -24,13 +35,13 @@ const (
 // that is tied to an identity (user or service)
 type APIToken struct {
 	Email   primitives.Email
-	URL     *url.URL
+	URL     *primitives.URL
 	Version byte
-	Secret  []byte
+	Secret  Secret
 }
 
 // NewAPIToken returns a new api token from email and url
-func NewAPIToken(email primitives.Email, url *url.URL) (*APIToken, error) {
+func NewAPIToken(email primitives.Email, u *primitives.URL) (*APIToken, error) {
 	secretBytes := make([]byte, secretBytes)
 	_, err := rand.Read(secretBytes)
 	if err != nil {
@@ -39,10 +50,32 @@ func NewAPIToken(email primitives.Email, url *url.URL) (*APIToken, error) {
 
 	return &APIToken{
 		Email:   email,
-		URL:     url,
+		URL:     u,
 		Version: tokenVersion,
 		Secret:  secretBytes,
 	}, nil
+}
+
+// Validate returns an error if the underlying APIToken has invalid contents in
+// its fields.
+func (a *APIToken) Validate() error {
+	if err := a.Email.Validate(); err != nil {
+		return err
+	}
+
+	if err := a.URL.Validate(); err != nil {
+		return err
+	}
+
+	if a.Version != tokenVersion {
+		return errors.New(BadAPITokenVersion, "Expected version: %x", tokenVersion)
+	}
+
+	if err := a.Secret.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Credentials returns Credentials with the secret stored on
@@ -66,7 +99,7 @@ func (a *APIToken) Marshal() (string, error) {
 	bytes := make([]byte, len(urlBytes)+1+secretBytes)
 	bytes[0] = a.Version
 
-	copy(bytes[1:secretBytes+1], a.Secret)
+	copy(bytes[1:secretBytes+1], []byte(a.Secret))
 	copy(bytes[secretBytes+1:], urlBytes)
 
 	val := base64.New(bytes)
@@ -79,8 +112,8 @@ func (a *APIToken) Marshal() (string, error) {
 // Unmarshal unmarshals the string into the APIToken struct
 func (a *APIToken) Unmarshal(token string) error {
 	strs := strings.Split(token, ",")
-	if len(strs) > 2 {
-		return errors.New(BadTokenFormat, "API Token only has two parts, email and base64 encoded data")
+	if len(strs) != 2 {
+		return errors.New(BadTokenFormat, "Invalid API Token provided")
 	}
 
 	email, err := primitives.NewEmail(strs[0])
@@ -98,14 +131,25 @@ func (a *APIToken) Unmarshal(token string) error {
 	tokenBytes := []byte(*val)
 
 	a.Version = tokenBytes[0]
-	a.Secret = tokenBytes[1 : secretBytes+1]
+	a.Secret = Secret(tokenBytes[1 : secretBytes+1])
 
-	u, err := url.Parse(string(tokenBytes[secretBytes+1:]))
+	u, err := primitives.NewURL(string(tokenBytes[secretBytes+1:]))
 	if err != nil {
 		return err
 	}
 
 	a.URL = u
+	return a.Validate()
+}
 
-	return nil
+// Parse returns an APIToken from a given string and validates the underlying
+// APIToken is sensical.
+func ParseAPIToken(in string) (*APIToken, error) {
+	token := &APIToken{}
+	err := token.Unmarshal(in)
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
 }

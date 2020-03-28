@@ -3,17 +3,20 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"net"
 	"net/url"
-
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/graph/model"
 
 	"github.com/machinebox/graphql"
 	"github.com/manifoldco/go-base64"
 
 	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/graph/model"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 )
+
+var NetworkCause = errors.NewCause(errors.RequestTimeoutCategory, "network_error")
 
 // Client is a wrapper around the graphql client that
 // connects to the controller and sends queries
@@ -24,7 +27,7 @@ type Client struct {
 
 // NewClient returns a new client that connects to the given
 // url and set the struct required struct members
-func NewClient(controllerURL *url.URL, authToken *base64.Value) *Client {
+func NewClient(controllerURL *primitives.URL, authToken *base64.Value) *Client {
 	return &Client{
 		client:    graphql.NewClient(controllerURL.String() + "/v1/query"),
 		authToken: authToken,
@@ -47,6 +50,9 @@ func (c *Client) Raw(ctx context.Context, query string,
 
 	err := c.client.Run(ctx, req, resp)
 	if err != nil {
+		if nerr, ok := err.(net.Error); ok {
+			return errors.New(NetworkCause, "Could not contact controller: %s", nerr.Error())
+		}
 		return err
 	}
 
