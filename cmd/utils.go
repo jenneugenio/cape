@@ -63,7 +63,7 @@ func getName(c *cli.Context, question string) (primitives.Name, error) {
 	}
 
 	ui := UI(c.Context)
-	nameStr, err := ui.Question(question, validateName)
+	nameStr, err := ui.Question(msg, validateName)
 	if err != nil {
 		return primitives.Name(""), err
 	}

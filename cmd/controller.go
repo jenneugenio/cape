@@ -36,13 +36,13 @@ func init() {
 	}
 
 	startCmd := &Command{
-		Usage: "Start an instance of the Cape controller",
+		Usage:     "Start an instance of the Cape controller",
+		Variables: []*EnvVar{capeDBPassword},
 		Command: &cli.Command{
 			Name:   "start",
 			Action: startControllerCmd,
 			Flags: []cli.Flag{
 				dbURLFlag(),
-				dbPasswordFlag(),
 				instanceIDFlag(),
 				loggingTypeFlag(),
 				loggingLevelFlag(),
@@ -82,7 +82,8 @@ func getDBURL(c *cli.Context) (*url.URL, error) {
 	// URL. If the password is contained in the CAPE_DB_URL then it should be
 	// passed entirely as a secret inside a kubernetes orchestration system.
 	dbURL := c.String("db-url")
-	password := c.String("db-password")
+	envVars := EnvVariables(c.Context)
+	password, _ := envVars["CAPE_DB_PASSWORD"].(string)
 
 	u, err := url.Parse(dbURL)
 	if err != nil {
@@ -92,9 +93,7 @@ func getDBURL(c *cli.Context) (*url.URL, error) {
 	// If the password is passed in via environment variables
 	// instead of part of the connection string
 	if password != "" {
-		query := u.Query()
-		query.Add("password", password)
-		u.RawQuery = query.Encode()
+		u.User = url.UserPassword(u.User.Username(), password)
 	}
 
 	return u, nil

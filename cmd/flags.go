@@ -55,14 +55,6 @@ func dbURLFlag() cli.Flag {
 	}
 }
 
-func dbPasswordFlag() cli.Flag {
-	return &cli.StringFlag{
-		Name:    "db-password",
-		Usage:   "The database password",
-		EnvVars: []string{"CAPE_DB_PASSWORD"},
-	}
-}
-
 func instanceIDFlag() cli.Flag {
 	return &cli.StringFlag{
 		Name:    "instance-id",
