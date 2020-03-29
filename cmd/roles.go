@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/dropoutlabs/cape/controller"
-	"github.com/dropoutlabs/cape/primitives"
 	"github.com/urfave/cli/v2"
+
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func init() {
@@ -114,19 +114,12 @@ func rolesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	URL, err := cluster.GetURL()
-	if err != nil {
-		return err
-	}
-
-	token, err := cluster.Token()
-	if err != nil {
-		return err
-	}
-
 	label := args["label"].(primitives.Label)
 
-	client := controller.NewClient(URL, token)
+	client, err := cluster.Client()
+	if err != nil {
+		return err
+	}
 
 	// TODO specify identities
 	_, err = client.CreateRole(c.Context, label, nil)
@@ -135,7 +128,6 @@ func rolesCreateCmd(c *cli.Context) error {
 	}
 
 	fmt.Printf("Created the role '%s'.", label)
-
 	return nil
 }
 
@@ -151,18 +143,7 @@ func rolesRemoveCmd(c *cli.Context) error {
 		return err
 	}
 
-	URL, err := cluster.GetURL()
-	if err != nil {
-		return err
-	}
-
-	token, err := cluster.Token()
-	if err != nil {
-		return err
-	}
-
 	label := args["label"].(primitives.Label)
-
 	if !skipConfirm {
 		err := ui.Confirm(fmt.Sprintf("Do you really want to delete the role %s and all of its assignments?", label))
 		if err != nil {
@@ -170,7 +151,10 @@ func rolesRemoveCmd(c *cli.Context) error {
 		}
 	}
 
-	client := controller.NewClient(URL, token)
+	client, err := cluster.Client()
+	if err != nil {
+		return err
+	}
 
 	role, err := client.GetRoleByLabel(c.Context, label)
 	if err != nil {
@@ -196,17 +180,11 @@ func rolesListCmd(c *cli.Context) error {
 		return err
 	}
 
-	URL, err := cluster.GetURL()
+	client, err := cluster.Client()
 	if err != nil {
 		return err
 	}
 
-	token, err := cluster.Token()
-	if err != nil {
-		return err
-	}
-
-	client := controller.NewClient(URL, token)
 	roles, err := client.ListRoles(c.Context)
 	if err != nil {
 		return err
@@ -231,19 +209,12 @@ func rolesMembersCmd(c *cli.Context) error {
 		return err
 	}
 
-	URL, err := cluster.GetURL()
-	if err != nil {
-		return err
-	}
-
-	token, err := cluster.Token()
-	if err != nil {
-		return err
-	}
-
 	label := args["label"].(primitives.Label)
 
-	client := controller.NewClient(URL, token)
+	client, err := cluster.Client()
+	if err != nil {
+		return err
+	}
 
 	role, err := client.GetRoleByLabel(c.Context, label)
 	if err != nil {
