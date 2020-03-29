@@ -11,7 +11,10 @@ import (
 func TestNewSession(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	user, err := NewUser("bob", "bob@bob.com", &Credentials{})
+	email, err := NewEmail("bob@bob.com")
+	gm.Expect(err).To(gm.BeNil())
+
+	user, err := NewUser("bob", email, &Credentials{})
 	gm.Expect(err).To(gm.BeNil())
 
 	ti := time.Now()

@@ -199,11 +199,15 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 
 	identities := make([]primitives.Identity, len(a))
 	for i, user := range users {
-		identities[i] = &user
+		u := &primitives.User{}
+		*u = user
+		identities[i] = u
 	}
 
 	for i, service := range services {
-		identities[i+len(users)] = &service
+		s := &primitives.Service{}
+		*s = service
+		identities[i+len(users)] = s
 	}
 
 	return identities, nil

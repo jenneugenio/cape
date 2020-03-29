@@ -101,6 +101,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Attachment       func(childComplexity int, roleID database.ID, policyID database.ID) int
+		Identities       func(childComplexity int, emails []*primitives.Email) int
 		IdentityPolicies func(childComplexity int, identityID database.ID) int
 		Policies         func(childComplexity int) int
 		Policy           func(childComplexity int, id database.ID) int
@@ -185,6 +186,7 @@ type QueryResolver interface {
 	Session(ctx context.Context) (*primitives.Session, error)
 	Sources(ctx context.Context) ([]*primitives.Source, error)
 	Source(ctx context.Context, id database.ID) (*primitives.Source, error)
+	Identities(ctx context.Context, emails []*primitives.Email) ([]primitives.Identity, error)
 	Policy(ctx context.Context, id database.ID) (*primitives.Policy, error)
 	Policies(ctx context.Context) ([]*primitives.Policy, error)
 	RolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error)
@@ -544,6 +546,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Attachment(childComplexity, args["role_id"].(database.ID), args["policy_id"].(database.ID)), true
+
+	case "Query.identities":
+		if e.complexity.Query.Identities == nil {
+			break
+		}
+
+		args, err := ec.field_Query_identities_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Identities(childComplexity, args["emails"].([]*primitives.Email)), true
 
 	case "Query.identityPolicies":
 		if e.complexity.Query.IdentityPolicies == nil {
@@ -1148,6 +1162,8 @@ type Query {
 
   sources: [Source!]! @isAuthenticated()
   source(id: ID!): Source! @isAuthenticated()
+
+  identities(emails: [Email!]): [Identity!]
 }
 
 type Mutation {
@@ -1170,8 +1186,9 @@ scalar CredentialsAlgType
 scalar TokenType
 scalar URL
 scalar Name
-scalar Email
 scalar Label
+scalar EmailType
+scalar Email
 `, BuiltIn: false},
 	&ast.Source{Name: "graph/services.graphql", Input: `type Service implements Identity {
     id: ID!
@@ -1499,6 +1516,20 @@ func (ec *executionContext) field_Query_attachment_args(ctx context.Context, raw
 		}
 	}
 	args["policy_id"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_identities_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*primitives.Email
+	if tmp, ok := rawArgs["emails"]; ok {
+		arg0, err = ec.unmarshalOEmail2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmailᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["emails"] = arg0
 	return args, nil
 }
 
@@ -3389,6 +3420,44 @@ func (ec *executionContext) _Query_source(ctx context.Context, field graphql.Col
 	res := resTmp.(*primitives.Source)
 	fc.Result = res
 	return ec.marshalNSource2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_identities(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_identities_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Identities(rctx, args["emails"].([]*primitives.Email))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]primitives.Identity)
+	fc.Result = res
+	return ec.marshalOIdentity2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentityᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_policy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6671,6 +6740,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "identities":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_identities(ctx, field)
+				return res
+			})
 		case "policy":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -7455,6 +7535,24 @@ func (ec *executionContext) marshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋpr
 	return v
 }
 
+func (ec *executionContext) unmarshalNEmail2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx context.Context, v interface{}) (*primitives.Email, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalNEmail2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx context.Context, sel ast.SelectionSet, v *primitives.Email) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
 	var res database.ID
 	return res, res.UnmarshalGQL(v)
@@ -7955,6 +8053,38 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalOEmail2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmailᚄ(ctx context.Context, v interface{}) ([]*primitives.Email, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*primitives.Email, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNEmail2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmailᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Email) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNEmail2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐIDᚄ(ctx context.Context, v interface{}) ([]database.ID, error) {

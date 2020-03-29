@@ -319,13 +319,15 @@ func clientIdentitiesToPrimitive(identities []primitives.IdentityImpl) ([]primit
 			return nil, err
 		}
 
+		identityImpl := &primitives.IdentityImpl{}
+		*identityImpl = identity
 		if typ == primitives.UserType {
 			pIdentities[i] = &primitives.User{
-				IdentityImpl: &identity,
+				IdentityImpl: identityImpl,
 			}
 		} else if typ == primitives.ServicePrimitiveType {
 			pIdentities[i] = &primitives.Service{
-				IdentityImpl: &identity,
+				IdentityImpl: identityImpl,
 			}
 		}
 	}
@@ -920,4 +922,28 @@ func (c *Client) GetIdentityPolicies(ctx context.Context, identityID database.ID
 	}
 
 	return resp.Policies, nil
+}
+
+// GetIdentities returns all identities for the given emails
+func (c *Client) GetIdentities(ctx context.Context, emails []primitives.Email) ([]primitives.Identity, error) {
+	var resp struct {
+		Identities []primitives.IdentityImpl `json:"identities"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["emails"] = emails
+
+	err := c.Raw(ctx, `
+		query IdentityPolicies($emails: [Email!]) {
+			identities(emails: $emails) {
+				id
+				email
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientIdentitiesToPrimitive(resp.Identities)
 }

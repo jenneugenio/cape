@@ -44,7 +44,12 @@ func (m *Manager) Setup(ctx context.Context) (*controller.Client, error) {
 		return nil, err
 	}
 
-	u, err := primitives.NewUser(AdminName, AdminEmail, creds.Package())
+	email, err := primitives.NewEmail(AdminEmail)
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := primitives.NewUser(AdminName, email, creds.Package())
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +65,7 @@ func (m *Manager) Setup(ctx context.Context) (*controller.Client, error) {
 		Password: pw,
 	}
 
-	_, err = client.Login(ctx, "admin@cape.com", pw)
+	_, err = client.Login(ctx, email, pw)
 	if err != nil {
 		return nil, err
 	}

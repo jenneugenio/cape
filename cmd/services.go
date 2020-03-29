@@ -16,16 +16,21 @@ func init() {
 		Arguments: []*Argument{ServiceIdentifierArg},
 		Examples: []*Example{
 			{
-				Example:     "cape services create pipeline@prod.mycompany.com",
+				Example:     "cape services create service:pipeline@prod.mycompany.com",
 				Description: "Creates a new service with the email 'pipeline@prod.mycompany.com'.",
 			},
 			{
-				Example:     "CAPE_CLUSTER=production cape services create pipeline@prod.mycompany.com",
-				Description: "Creates a service call pipeline@prod.mycompany.com on the cape cluster called production.",
+				Example:     "CAPE_CLUSTER=production cape services create service:pipeline@prod.mycompany.com",
+				Description: "Creates a service called service:pipeline@prod.mycompany.com on the cape cluster called production.",
 			},
 			{
-				Example:     "cape services create --type data-connector pipeline@prod.mycompany.com",
-				Description: "Creates a service called pipeline@prod.mycompany.com representing a Cape data connector.",
+				Example:     "cape services create --type data-connector service:pipeline@prod.mycompany.com",
+				Description: "Creates a service called service:pipeline@prod.mycompany.com representing a Cape data connector.",
+			},
+			{
+				Example: "cape services create pipeline@prod.mycompany.com",
+				Description: "Creates a new service with the email 'service:pipeline@prod.mycompany.com'.\n" +
+					"'service:' is prepended for you if its not included in the given email",
 			},
 		},
 		Command: &cli.Command{
@@ -43,12 +48,17 @@ func init() {
 		Arguments: []*Argument{ServiceIdentifierArg},
 		Examples: []*Example{
 			{
-				Example:     "cape services remove pipeline@prod.mycompany.com",
-				Description: "Removes a new service with the email 'pipeline@prod.mycompany.com'.",
+				Example:     "cape services remove servce:pipeline@prod.mycompany.com",
+				Description: "Removes a new service with the email 'service:pipeline@prod.mycompany.com'.",
 			},
 			{
-				Example:     "cape services remove --yes pipeline@prod.mycompany.com",
+				Example:     "cape services remove --yes service:pipeline@prod.mycompany.com",
 				Description: "Removes a service skipping the confirm dialog.",
+			},
+			{
+				Example: "cape services remove pipeline@prod.mycompany.com",
+				Description: "Removes a service skipping the confirm dialog. " +
+					"'service:' is prepended for you if its not included in the given email",
 			},
 		},
 		Command: &cli.Command{
@@ -146,7 +156,7 @@ func servicesCreateCmd(c *cli.Context) error {
 	}
 
 	fmt.Printf("The service '%s' with type '%s' has been created. The following token "+
-		"can be used to authenticate as that service:\n", email, typ)
+		"can be used to authenticate as that service:\n", service.Email, service.Type)
 
 	fmt.Printf("Token: %s\n", tokenStr)
 	fmt.Println("Remember: Please keep the token safe and share it securely as\n" +
@@ -168,6 +178,7 @@ func servicesRemoveCmd(c *cli.Context) error {
 	}
 
 	email := args["identifier"].(primitives.Email)
+	email.SetType(primitives.ServiceEmail)
 
 	if !skipConfirm {
 		err := ui.Confirm(fmt.Sprintf("Do you really want to delete %s and all of its tokens?", email))
@@ -191,7 +202,7 @@ func servicesRemoveCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("The '%s' service has been deleted.", email)
+	fmt.Printf("The service '%s' has been deleted.", email)
 
 	return nil
 }

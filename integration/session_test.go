@@ -48,7 +48,10 @@ func TestSessions(t *testing.T) {
 		client, err := h.Client()
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := client.Login(ctx, "fake@fake.com", []byte("newpasswordwhodis"))
+		email, err := primitives.NewEmail("fake@fake.com")
+		gm.Expect(err).To(gm.BeNil())
+
+		session, err := client.Login(ctx, email, []byte("newpasswordwhodis"))
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(session).To(gm.BeNil())
 

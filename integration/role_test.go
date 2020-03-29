@@ -8,6 +8,7 @@ import (
 
 	gm "github.com/onsi/gomega"
 
+	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/controller/harness"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/primitives"
@@ -79,16 +80,37 @@ func TestRoles(t *testing.T) {
 		gm.Expect(identities[0].GetID()).To(gm.Equal(m.Admin.User.ID))
 	})
 
-	t.Run("list roles", func(t *testing.T) {
+	t.Run("create role with multiple members", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		roles, err := client.ListRoles(ctx)
+		label, err := primitives.NewLabel("ceoooo")
 		gm.Expect(err).To(gm.BeNil())
 
-		// create three early in the tests and then delete one + the system role
-		gm.Expect(len(roles)).To(gm.Equal(3))
-		gm.Expect(roles[1].Label.String()).To(gm.Equal("data-scientist"))
-		gm.Expect(roles[2].Label.String()).To(gm.Equal("cto-person"))
+		email, err := primitives.NewEmail("jye@jdfjkf.com")
+		gm.Expect(err).To(gm.BeNil())
+
+		name, err := primitives.NewName("Jye Jdfjkf")
+		gm.Expect(err).To(gm.BeNil())
+
+		creds, err := auth.NewCredentials([]byte("randompassword"), nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err := primitives.NewUser(name, email, creds.Package())
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err = client.CreateUser(ctx, user)
+		gm.Expect(err).To(gm.BeNil())
+
+		role, err := client.CreateRole(ctx, label, []database.ID{m.Admin.User.ID, user.ID})
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(role).ToNot(gm.BeNil())
+
+		identities, err := client.GetMembersRole(ctx, role.ID)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(len(identities)).To(gm.Equal(2))
+
+		gm.Expect(identities[0].GetID()).To(gm.Equal(m.Admin.User.ID))
+		gm.Expect(identities[1].GetID()).To(gm.Equal(user.ID))
 	})
 
 	t.Run("Roles will not default to system roles", func(t *testing.T) {

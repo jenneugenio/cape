@@ -10,7 +10,7 @@ import (
 )
 
 func queryIdentity(ctx context.Context, db database.Backend, email primitives.Email) (primitives.Identity, error) {
-	filter := database.NewFilter(database.Where{"email": email}, nil, nil)
+	filter := database.NewFilter(database.Where{"email": email.String()}, nil, nil)
 
 	user := &primitives.User{}
 	err := db.QueryOne(ctx, user, filter)

@@ -82,7 +82,7 @@ func getEmail(c *cli.Context, in string) (primitives.Email, error) {
 		return err
 	})
 	if err != nil {
-		return primitives.Email(""), err
+		return primitives.Email{Email: ""}, err
 	}
 
 	return primitives.NewEmail(out)

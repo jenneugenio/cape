@@ -123,3 +123,13 @@ func serviceTypeFlag() cli.Flag {
 		EnvVars: []string{"CAPE_TYPE"},
 	}
 }
+
+func membersFlag() cli.Flag {
+	usage := "Members to assign the specified role to"
+	return &cli.StringSliceFlag{
+		Name:    "member",
+		Aliases: []string{"m"},
+		Usage:   usage,
+		EnvVars: []string{"CAPE_MEMBERS"},
+	}
+}

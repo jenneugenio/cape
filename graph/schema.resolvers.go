@@ -267,6 +267,50 @@ func (r *queryResolver) Source(ctx context.Context, id database.ID) (*primitives
 	return &primitive, nil
 }
 
+func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Email) ([]primitives.Identity, error) {
+	serviceEmails := database.In{}
+	userEmails := database.In{}
+
+	for _, email := range emails {
+		if email.Type == primitives.ServiceEmail {
+			serviceEmails = append(serviceEmails, email.String())
+		} else {
+			userEmails = append(userEmails, email.String())
+		}
+	}
+
+	users := []primitives.User{}
+	if len(userEmails) > 0 {
+		err := r.Backend.Query(ctx, &users, database.NewFilter(database.Where{"email": userEmails}, nil, nil))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	services := []primitives.Service{}
+	if len(serviceEmails) > 0 {
+		err := r.Backend.Query(ctx, &services, database.NewFilter(database.Where{"email": serviceEmails}, nil, nil))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	identities := make([]primitives.Identity, len(users)+len(services))
+	for i, user := range users {
+		u := &primitives.User{}
+		*u = user
+		identities[i] = u
+	}
+
+	for i, service := range services {
+		s := &primitives.Service{}
+		*s = service
+		identities[i+len(users)] = s
+	}
+
+	return identities, nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

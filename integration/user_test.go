@@ -36,7 +36,10 @@ func TestUsers(t *testing.T) {
 		creds, err := auth.NewCredentials([]byte("jerryberrybuddyboy"), nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		user, err := primitives.NewUser("Jerry Berry", "jerry@jerry.berry", creds.Package())
+		email, err := primitives.NewEmail("jerry@jerry.berry")
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err := primitives.NewUser("Jerry Berry", email, creds.Package())
 		gm.Expect(err).To(gm.BeNil())
 
 		otherUser, err := client.CreateUser(ctx, user)

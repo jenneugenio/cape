@@ -5,6 +5,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
+	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -27,6 +28,7 @@ func init() {
 			Action: handleSessionOverrides(rolesCreateCmd),
 			Flags: []cli.Flag{
 				clusterFlag(),
+				membersFlag(),
 			},
 		},
 	}
@@ -107,6 +109,7 @@ func init() {
 
 func rolesCreateCmd(c *cli.Context) error {
 	args := Arguments(c.Context)
+	members := c.StringSlice("member")
 
 	cfgSession := Session(c.Context)
 	cluster, err := cfgSession.Cluster()
@@ -121,8 +124,26 @@ func rolesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	// TODO specify identities
-	_, err = client.CreateRole(c.Context, label, nil)
+	emails := make([]primitives.Email, len(members))
+	for i, emailStr := range members {
+		email, err := primitives.NewEmail(emailStr)
+		if err != nil {
+			return err
+		}
+		emails[i] = email
+	}
+
+	identities, err := client.GetIdentities(c.Context, emails)
+	if err != nil {
+		return err
+	}
+
+	identityIDs := make([]database.ID, len(identities))
+	for i, identity := range identities {
+		identityIDs[i] = identity.GetID()
+	}
+
+	_, err = client.CreateRole(c.Context, label, identityIDs)
 	if err != nil {
 		return err
 	}

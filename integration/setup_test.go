@@ -37,7 +37,10 @@ func TestSetup(t *testing.T) {
 		creds, err := auth.NewCredentials([]byte("jerryberrybuddyboy"), nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		user, err := primitives.NewUser("ben", "ben@capeprivacy.com", creds.Package())
+		email, err := primitives.NewEmail("ben@capeprivacy.com")
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err := primitives.NewUser("ben", email, creds.Package())
 		gm.Expect(err).To(gm.BeNil())
 
 		admin, err := client.Setup(ctx, user)
@@ -56,7 +59,10 @@ func TestSetup(t *testing.T) {
 		creds, err := auth.NewCredentials([]byte("jerryberrybuddyboy"), nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		user, err := primitives.NewUser("ben", "ben@capeprivacy.com", creds.Package())
+		email, err := primitives.NewEmail("ben@capeprivacy.com")
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err := primitives.NewUser("ben", email, creds.Package())
 		gm.Expect(err).To(gm.BeNil())
 
 		_, err = client.Setup(ctx, user)
@@ -72,7 +78,10 @@ func TestSetup(t *testing.T) {
 		creds, err := auth.NewCredentials([]byte("berryjerrybuddyboy"), nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		user, err := primitives.NewUser("justin", "justin@capeprivacy.com", creds.Package())
+		email, err := primitives.NewEmail("justin@capeprivacy.com")
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err := primitives.NewUser("justin", email, creds.Package())
 		gm.Expect(err).To(gm.BeNil())
 
 		_, err = client.Setup(ctx, user)

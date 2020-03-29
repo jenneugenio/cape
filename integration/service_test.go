@@ -70,7 +70,7 @@ func TestServices(t *testing.T) {
 	})
 
 	t.Run("get service by email", func(t *testing.T) {
-		email, err := primitives.NewEmail("email@connector-cape.com")
+		email, err := primitives.NewEmail("service:email@connector-cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
 		s, err := createServicePrimitive(email, []byte("randompassword"))
@@ -88,10 +88,12 @@ func TestServices(t *testing.T) {
 
 	t.Run("cannot create multiple services with same email", func(t *testing.T) {
 		email, err := primitives.NewEmail("fresh-email@bomb.com")
+		gm.Expect(err).To(gm.BeNil())
+
 		s, err := createServicePrimitive(email, []byte("randompassword"))
 		gm.Expect(err).To(gm.BeNil())
 
-		service, err := client.CreateService(ctx, s)
+		_, err = client.CreateService(ctx, s)
 		gm.Expect(err).To(gm.BeNil())
 
 		email, err = primitives.NewEmail("fresh-email@bomb.com")
@@ -99,7 +101,7 @@ func TestServices(t *testing.T) {
 		s, err = createServicePrimitive(email, []byte("randompassword"))
 		gm.Expect(err).To(gm.BeNil())
 
-		service, err = client.CreateService(ctx, s)
+		service, err := client.CreateService(ctx, s)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(service).To(gm.BeNil())
 	})
@@ -198,7 +200,7 @@ func TestServiceLogin(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	email, err := primitives.NewEmail("service@connector-cape.com")
+	email, err := primitives.NewEmail("service:service@connector-cape.com")
 	gm.Expect(err).To(gm.BeNil())
 
 	url, err := h.URL()

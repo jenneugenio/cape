@@ -14,7 +14,7 @@ import (
 // account with the controller
 func NewFakeIdentity(email primitives.Email) (primitives.Identity, error) {
 	h := sha256.New()
-	_, err := h.Write([]byte(email))
+	_, err := h.Write([]byte(email.String()))
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func NewFakeIdentity(email primitives.Email) (primitives.Identity, error) {
 	}
 
 	// It doesn't matter whether this is a user or a service
-	user, err := primitives.NewUser("", "", &primitives.Credentials{
+	user, err := primitives.NewUser("", primitives.Email{Email: ""}, &primitives.Credentials{
 		Salt: base64.New(salt),
 		Alg:  primitives.EDDSA,
 	})
