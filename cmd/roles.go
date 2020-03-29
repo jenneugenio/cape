@@ -24,7 +24,7 @@ func init() {
 		},
 		Command: &cli.Command{
 			Name:   "create",
-			Action: rolesCreateCmd,
+			Action: handleSessionOverrides(rolesCreateCmd),
 			Flags: []cli.Flag{
 				clusterFlag(),
 			},
@@ -46,7 +46,7 @@ func init() {
 		},
 		Command: &cli.Command{
 			Name:   "remove",
-			Action: rolesRemoveCmd,
+			Action: handleSessionOverrides(rolesRemoveCmd),
 			Flags: []cli.Flag{
 				clusterFlag(),
 				yesFlag(),
@@ -64,7 +64,7 @@ func init() {
 		},
 		Command: &cli.Command{
 			Name:   "list",
-			Action: rolesListCmd,
+			Action: handleSessionOverrides(rolesListCmd),
 			Flags: []cli.Flag{
 				clusterFlag(),
 			},
@@ -82,7 +82,7 @@ func init() {
 		},
 		Command: &cli.Command{
 			Name:   "members",
-			Action: rolesMembersCmd,
+			Action: handleSessionOverrides(rolesMembersCmd),
 			Flags: []cli.Flag{
 				clusterFlag(),
 			},

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/urfave/cli/v2"
 
@@ -214,10 +215,15 @@ func servicesListCmd(c *cli.Context) error {
 		return err
 	}
 
-	header := []string{"Label", "Type"}
+	header := []string{"Label", "Type", "Roles"}
 	body := make([][]string, len(services))
 	for i, s := range services {
-		body[i] = []string{s.Email.String(), s.Type.String()}
+		roleLabels := make([]string, len(s.Roles))
+		for i, role := range s.Roles {
+			roleLabels[i] = role.Label.String()
+		}
+		roles := strings.Join(roleLabels, ",")
+		body[i] = []string{s.Email.String(), s.Type.String(), roles}
 	}
 
 	return ui.Table(header, body)

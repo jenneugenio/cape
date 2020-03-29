@@ -43,6 +43,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	Service() ServiceResolver
 }
 
 type DirectiveRoot struct {
@@ -130,6 +131,7 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		Email     func(childComplexity int) int
 		ID        func(childComplexity int) int
+		Roles     func(childComplexity int) int
 		Type      func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
 	}
@@ -195,6 +197,9 @@ type QueryResolver interface {
 	Service(ctx context.Context, id database.ID) (*primitives.Service, error)
 	ServiceByEmail(ctx context.Context, email primitives.Email) (*primitives.Service, error)
 	Services(ctx context.Context) ([]*primitives.Service, error)
+}
+type ServiceResolver interface {
+	Roles(ctx context.Context, obj *primitives.Service) ([]*primitives.Role, error)
 }
 
 type executableSchema struct {
@@ -758,6 +763,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Service.ID(childComplexity), true
 
+	case "Service.roles":
+		if e.complexity.Service.Roles == nil {
+			break
+		}
+
+		return e.complexity.Service.Roles(childComplexity), true
+
 	case "Service.type":
 		if e.complexity.Service.Type == nil {
 			break
@@ -1167,6 +1179,7 @@ scalar Label
     type: ServiceType!
     created_at: Time!
     updated_at: Time!
+    roles: [Role!]
 }
 
 input CreateServiceRequest {
@@ -1182,9 +1195,9 @@ input DeleteServiceRequest {
 }
 
 extend type Query {
-    service(id: ID!): Service!
-    serviceByEmail(email: Email!): Service!
-    services: [Service!]
+    service(id: ID!): Service! @isAuthenticated()
+    serviceByEmail(email: Email!): Service! @isAuthenticated()
+    services: [Service!] @isAuthenticated()
 }
 
 extend type Mutation {
@@ -3837,8 +3850,32 @@ func (ec *executionContext) _Query_service(ctx context.Context, field graphql.Co
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Service(rctx, args["id"].(database.ID))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Service(rctx, args["id"].(database.ID))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*primitives.Service); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Service`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3878,8 +3915,32 @@ func (ec *executionContext) _Query_serviceByEmail(ctx context.Context, field gra
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ServiceByEmail(rctx, args["email"].(primitives.Email))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().ServiceByEmail(rctx, args["email"].(primitives.Email))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*primitives.Service); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Service`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3912,8 +3973,32 @@ func (ec *executionContext) _Query_services(ctx context.Context, field graphql.C
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Services(rctx)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Services(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*primitives.Service); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/dropoutlabs/cape/primitives.Service`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4334,6 +4419,37 @@ func (ec *executionContext) _Service_updated_at(ctx context.Context, field graph
 	res := resTmp.(time.Time)
 	fc.Result = res
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Service_roles(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Service",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Service().Roles(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*primitives.Role)
+	fc.Result = res
+	return ec.marshalORole2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRoleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Session_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Session) (ret graphql.Marshaler) {
@@ -6781,28 +6897,39 @@ func (ec *executionContext) _Service(ctx context.Context, sel ast.SelectionSet, 
 		case "id":
 			out.Values[i] = ec._Service_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "email":
 			out.Values[i] = ec._Service_email(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "type":
 			out.Values[i] = ec._Service_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "created_at":
 			out.Values[i] = ec._Service_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "updated_at":
 			out.Values[i] = ec._Service_updated_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
+		case "roles":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Service_roles(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

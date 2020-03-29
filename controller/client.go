@@ -621,10 +621,17 @@ func (c *Client) Setup(ctx context.Context, user *primitives.User) (*primitives.
 	return &resp.User, nil
 }
 
+// ServiceResponse is a primitive Service with an extra
+// Roles field
+type ServiceResponse struct {
+	*primitives.Service
+	Roles []*primitives.Role `json:"roles"`
+}
+
 // CreateService creates a new service
 func (c *Client) CreateService(ctx context.Context, service *primitives.Service) (*primitives.Service, error) {
 	var resp struct {
-		Service primitives.Service `json:"createService"`
+		Service ServiceResponse `json:"createService"`
 	}
 
 	variables := make(map[string]interface{})
@@ -647,7 +654,7 @@ func (c *Client) CreateService(ctx context.Context, service *primitives.Service)
 		return nil, err
 	}
 
-	return &resp.Service, nil
+	return resp.Service.Service, nil
 }
 
 // DeleteService deletes a service
@@ -665,7 +672,7 @@ func (c *Client) DeleteService(ctx context.Context, id database.ID) error {
 // GetService returns a service by id
 func (c *Client) GetService(ctx context.Context, id database.ID) (*primitives.Service, error) {
 	var resp struct {
-		Service primitives.Service `json:"service"`
+		Service ServiceResponse `json:"service"`
 	}
 
 	variables := make(map[string]interface{})
@@ -684,13 +691,13 @@ func (c *Client) GetService(ctx context.Context, id database.ID) (*primitives.Se
 		return nil, err
 	}
 
-	return &resp.Service, nil
+	return resp.Service.Service, nil
 }
 
 // GetServiceByEmail returns a service by email
 func (c *Client) GetServiceByEmail(ctx context.Context, email primitives.Email) (*primitives.Service, error) {
 	var resp struct {
-		Service primitives.Service `json:"serviceByEmail"`
+		Service ServiceResponse `json:"serviceByEmail"`
 	}
 
 	variables := make(map[string]interface{})
@@ -709,13 +716,13 @@ func (c *Client) GetServiceByEmail(ctx context.Context, email primitives.Email) 
 		return nil, err
 	}
 
-	return &resp.Service, nil
+	return resp.Service.Service, nil
 }
 
 // ListServices returns all services
-func (c *Client) ListServices(ctx context.Context) ([]*primitives.Service, error) {
+func (c *Client) ListServices(ctx context.Context) ([]*ServiceResponse, error) {
 	var resp struct {
-		Services []*primitives.Service `json:"services"`
+		Services []*ServiceResponse `json:"services"`
 	}
 
 	err := c.Raw(ctx, `
@@ -724,6 +731,10 @@ func (c *Client) ListServices(ctx context.Context) ([]*primitives.Service, error
 				id
 				email
 				type
+				roles {
+					id
+					label
+				}
 			}
 		}
 	`, nil, &resp)

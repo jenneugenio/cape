@@ -117,8 +117,14 @@ func TestListServices(t *testing.T) {
 	client, err := tc.Client()
 	gm.Expect(err).To(gm.BeNil())
 
+	cRole, err := client.CreateRole(ctx, "connector", nil)
+	gm.Expect(err).To(gm.BeNil())
+
+	dsRole, err := client.CreateRole(ctx, "ds-role", nil)
+	gm.Expect(err).To(gm.BeNil())
+
 	emails := []string{"connector1@email.com", "connector2@email.com", "connector3@email.com"}
-	services := make([]*primitives.Service, 3)
+	services := make([]*controller.ServiceResponse, 3)
 	for i, email := range emails {
 		e, err := primitives.NewEmail(email)
 		gm.Expect(err).To(gm.BeNil())
@@ -129,7 +135,16 @@ func TestListServices(t *testing.T) {
 		service, err := client.CreateService(ctx, s)
 		gm.Expect(err).To(gm.BeNil())
 
-		services[i] = service
+		_, err = client.AssignRole(ctx, service.ID, cRole.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = client.AssignRole(ctx, service.ID, dsRole.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		services[i] = &controller.ServiceResponse{
+			Service: service,
+			Roles:   []*primitives.Role{cRole, dsRole},
+		}
 	}
 
 	otherServices, err := client.ListServices(ctx)

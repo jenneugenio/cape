@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/graph/generated"
 	"github.com/dropoutlabs/cape/graph/model"
 	"github.com/dropoutlabs/cape/primitives"
 )
@@ -74,3 +75,38 @@ func (r *queryResolver) Services(ctx context.Context) ([]*primitives.Service, er
 
 	return services, nil
 }
+
+func (r *serviceResolver) Roles(ctx context.Context, obj *primitives.Service) ([]*primitives.Role, error) {
+	assignments := []primitives.Assignment{}
+	err := r.Backend.Query(ctx, &assignments, database.NewFilter(database.Where{"identity_id": obj.ID.String()}, nil, nil))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(assignments) == 0 {
+		return nil, nil
+	}
+
+	roleIDs := make(database.In, len(assignments))
+	for i, assignment := range assignments {
+		roleIDs[i] = assignment.RoleID
+	}
+
+	tmpR := []primitives.Role{}
+	err = r.Backend.Query(ctx, &tmpR, database.NewFilter(database.Where{"id": roleIDs}, nil, nil))
+	if err != nil {
+		return nil, err
+	}
+
+	roles := make([]*primitives.Role, len(tmpR))
+	for i := 0; i < len(roles); i++ {
+		roles[i] = &(tmpR[i])
+	}
+
+	return roles, nil
+}
+
+// Service returns generated.ServiceResolver implementation.
+func (r *Resolver) Service() generated.ServiceResolver { return &serviceResolver{r} }
+
+type serviceResolver struct{ *Resolver }
