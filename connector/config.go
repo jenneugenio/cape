@@ -3,11 +3,12 @@ package connector
 import (
 	"github.com/dropoutlabs/cape/auth"
 	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 // Config is a configuration object for the Connector
 type Config struct {
-	InstanceID string
+	InstanceID primitives.Label
 	Port       int
 	Token      *auth.APIToken
 }

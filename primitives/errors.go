@@ -13,4 +13,5 @@ var (
 	InvalidEmail         = errors.NewCause(errors.BadRequestCategory, "invalid_email")
 	InvalidName          = errors.NewCause(errors.BadRequestCategory, "invalid_name")
 	InvalidPasswordCause = errors.NewCause(errors.BadRequestCategory, "invalid_password")
+	InvalidDBURLCause    = errors.NewCause(errors.BadRequestCategory, "invalid_db_url")
 )

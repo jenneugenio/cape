@@ -9,7 +9,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/controller"
+	"github.com/dropoutlabs/cape/controller/harness"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -17,16 +17,19 @@ func TestUsers(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = tc.Setup(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer tc.Teardown(ctx) // nolint: errcheck
+	defer h.Teardown(ctx) // nolint: errcheck
 
-	client, err := tc.Client()
+	m := h.Manager()
+	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("create user", func(t *testing.T) {
@@ -72,7 +75,5 @@ func TestUsers(t *testing.T) {
 		otherUser, err = client.CreateUser(ctx, user)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(otherUser).To(gm.BeNil())
-
-
 	})
 }

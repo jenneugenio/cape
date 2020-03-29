@@ -13,6 +13,7 @@ import (
 
 	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/controller"
+	"github.com/dropoutlabs/cape/framework"
 	"github.com/dropoutlabs/cape/logging"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
@@ -47,6 +48,7 @@ func init() {
 				instanceIDFlag(),
 				loggingTypeFlag(),
 				loggingLevelFlag(),
+				portFlag("controller", 8080),
 			},
 		},
 	}
@@ -79,7 +81,7 @@ func catchShutdown(ctx context.Context, quit chan os.Signal, c *controller.Contr
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	err := c.Stop(ctx)
+	err := c.Teardown(ctx)
 	if err != nil {
 		return err
 	}
@@ -177,6 +179,7 @@ func setupControllerCmd(c *cli.Context) error {
 }
 
 func startControllerCmd(c *cli.Context) error {
+	port := c.Int("port")
 	instanceID, err := getInstanceID(c, "controller")
 	if err != nil {
 		return err
@@ -187,20 +190,34 @@ func startControllerCmd(c *cli.Context) error {
 		return err
 	}
 
-	logger, err := logging.Logger(c.String("logger"), c.String("log-level"), instanceID)
+	// TODO: Consider having the "logger" be configured by the server?
+	logger, err := logging.Logger(c.String("logger"), c.String("log-level"), instanceID.String())
 	if err != nil {
 		return err
 	}
 
-	ctrl, err := controller.New(dbURL, logger, instanceID)
+	// TODO: Turn instanceID into one of our primitives
+	cfg := &controller.Config{
+		DBURL:      dbURL,
+		InstanceID: instanceID,
+		Port:       port,
+	}
+
+	ctrl, err := controller.New(cfg, logger)
 	if err != nil {
 		return err
 	}
 
+	server, err := framework.NewServer(cfg, ctrl)
+	if err != nil {
+		return err
+	}
+
+	// TODO: Move all of the signal bits into framework.Server
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	defer signal.Stop(quit)
 
 	go catchShutdown(c.Context, quit, ctrl, logger) //nolint: errcheck
-	return ctrl.Start(c.Context)
+	return server.Start(c.Context)
 }

@@ -1,51 +1,59 @@
 // +build integration
 
-package controller
+package harness
 
 import (
 	"context"
-	gm "github.com/onsi/gomega"
 	"net/http"
 	"testing"
+
+	gm "github.com/onsi/gomega"
 )
 
-func TestControllerLifecycle(t *testing.T) {
+func TestHarness(t *testing.T) {
 	gm.RegisterTestingT(t)
+	cfg, err := NewConfig()
+	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("Can start the controller", func(t *testing.T) {
 		ctx := context.Background()
-		tc, err := NewTestController()
+		h, err := NewHarness(cfg)
 		gm.Expect(err).To(gm.BeNil())
-		defer tc.Teardown(ctx) //nolint: errcheck
+		defer h.Teardown(ctx) //nolint: errcheck
 
-		_, err = tc.Setup(ctx)
+		err = h.Setup(ctx)
+		gm.Expect(err).To(gm.BeNil())
+
+		url, err := h.URL()
 		gm.Expect(err).To(gm.BeNil())
 
 		// ensure the controller is running
-		resp, err := http.Get("http://localhost:8081/_healthz")
+		resp, err := http.Get(url.String() + "/_healthz")
 		gm.Expect(err).To(gm.BeNil())
-
 		gm.Expect(resp.StatusCode).To(gm.Equal(200))
 	})
 
 	t.Run("Can start and stop the controller", func(t *testing.T) {
 		ctx := context.Background()
-		tc, err := NewTestController()
+		h, err := NewHarness(cfg)
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = tc.Setup(ctx)
+		err = h.Setup(ctx)
+		gm.Expect(err).To(gm.BeNil())
+
+		url, err := h.URL()
 		gm.Expect(err).To(gm.BeNil())
 
 		// ensure the controller is running
-		resp, err := http.Get("http://localhost:8081/_healthz")
+		resp, err := http.Get(url.String() + "/_healthz")
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(resp.StatusCode).To(gm.Equal(200))
 
-		err = tc.Teardown(ctx)
+		err = h.Teardown(ctx)
 		gm.Expect(err).To(gm.BeNil())
 
 		// now this should fail
-		_, err = http.Get("http://localhost:8081/_healthz")
+		_, err = http.Get(url.String() + "/_healthz")
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 }

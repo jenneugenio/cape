@@ -6,34 +6,38 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dropoutlabs/cape/controller"
-	"github.com/dropoutlabs/cape/primitives"
 	gm "github.com/onsi/gomega"
+
+	"github.com/dropoutlabs/cape/controller/harness"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func TestSessions(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = tc.Setup(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer tc.Teardown(ctx) // nolint: errcheck
+	defer h.Teardown(ctx) // nolint: errcheck
 
-	client, err := tc.Client()
+	m := h.Manager()
+	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("test client login", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		session, err := client.Login(ctx, tc.User.Email, tc.UserPassword)
+		session, err := client.Login(ctx, m.Admin.User.Email, m.Admin.Password)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(session.IdentityID).To(gm.Equal(tc.User.ID))
+		gm.Expect(session.IdentityID).To(gm.Equal(m.Admin.User.ID))
 		gm.Expect(session.Type).To(gm.Equal(primitives.Authenticated))
 		gm.Expect(session.Token).ToNot(gm.BeNil())
 	})
@@ -41,7 +45,8 @@ func TestSessions(t *testing.T) {
 	t.Run("test fake user fails", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		client := controller.NewClient(tc.URL(), nil)
+		client, err := h.Client()
+		gm.Expect(err).To(gm.BeNil())
 
 		session, err := client.Login(ctx, "fake@fake.com", []byte("newpasswordwhodis"))
 		gm.Expect(err).ToNot(gm.BeNil())
@@ -54,7 +59,7 @@ func TestSessions(t *testing.T) {
 		gm.RegisterTestingT(t)
 
 		// fail because credentials inside login won't be right
-		session, err := client.Login(ctx, tc.User.Email, []byte("idontknowmypassword"))
+		session, err := client.Login(ctx, m.Admin.User.Email, []byte("idontknowmypassword"))
 		gm.Expect(session).To(gm.BeNil())
 
 		gm.Expect(err).ToNot(gm.BeNil())
@@ -66,7 +71,7 @@ func TestSessions(t *testing.T) {
 	t.Run("test delete session", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		session, err := client.Login(ctx, tc.User.Email, tc.UserPassword)
+		session, err := client.Login(ctx, m.Admin.User.Email, m.Admin.Password)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(session).ToNot(gm.BeNil())
 

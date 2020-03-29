@@ -8,7 +8,7 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/cape/controller"
+	"github.com/dropoutlabs/cape/controller/harness"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -16,16 +16,19 @@ func TestPolicies(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = tc.Setup(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer tc.Teardown(ctx) // nolint: errcheck
+	defer h.Teardown(ctx) // nolint: errcheck
 
-	client, err := tc.Client()
+	m := h.Manager()
+	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("create policy", func(t *testing.T) {
@@ -69,16 +72,19 @@ func TestListPolicies(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = tc.Setup(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer tc.Teardown(ctx) // nolint: errcheck
+	defer h.Teardown(ctx) // nolint: errcheck
 
-	client, err := tc.Client()
+	m := h.Manager()
+	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	labelStrs := []string{"cool-policy", "sad-policy", "wow-policy"}
@@ -110,16 +116,19 @@ func TestAttachments(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = tc.Setup(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer tc.Teardown(ctx) // nolint: errcheck
+	defer h.Teardown(ctx) // nolint: errcheck
 
-	client, err := tc.Client()
+	m := h.Manager()
+	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("attach policy", func(t *testing.T) {
@@ -191,13 +200,13 @@ func TestAttachments(t *testing.T) {
 		role, err := client.CreateRole(ctx, "cio", nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.AssignRole(ctx, tc.User.ID, role.ID)
+		_, err = client.AssignRole(ctx, m.Admin.User.ID, role.ID)
 		gm.Expect(err).To(gm.BeNil())
 
 		_, err = client.AttachPolicy(ctx, policy.ID, role.ID)
 		gm.Expect(err).To(gm.BeNil())
 
-		policies, err := client.GetIdentityPolicies(ctx, tc.User.ID)
+		policies, err := client.GetIdentityPolicies(ctx, m.Admin.User.ID)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(len(policies)).To(gm.Equal(1))

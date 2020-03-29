@@ -10,6 +10,7 @@ import (
 
 	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/controller"
+	"github.com/dropoutlabs/cape/controller/harness"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -17,16 +18,19 @@ func TestServices(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = tc.Setup(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer tc.Teardown(ctx) // nolint: errcheck
+	defer h.Teardown(ctx) // nolint: errcheck
 
-	client, err := tc.Client()
+	m := h.Manager()
+	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("create service", func(t *testing.T) {
@@ -105,16 +109,19 @@ func TestListServices(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = tc.Setup(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer tc.Teardown(ctx) // nolint: errcheck
+	defer h.Teardown(ctx) // nolint: errcheck
 
-	client, err := tc.Client()
+	m := h.Manager()
+	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	cRole, err := client.CreateRole(ctx, "connector", nil)
@@ -176,22 +183,28 @@ func TestServiceLogin(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = tc.Setup(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer tc.Teardown(ctx) // nolint: errcheck
+	defer h.Teardown(ctx) // nolint: errcheck
 
-	client, err := tc.Client()
+	m := h.Manager()
+	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	email, err := primitives.NewEmail("service@connector-cape.com")
 	gm.Expect(err).To(gm.BeNil())
 
-	token, err := auth.NewAPIToken(email, tc.URL())
+	url, err := h.URL()
+	gm.Expect(err).To(gm.BeNil())
+
+	token, err := auth.NewAPIToken(email, url)
 	gm.Expect(err).To(gm.BeNil())
 
 	s, err := createServicePrimitive(email, token.Secret)
@@ -201,7 +214,8 @@ func TestServiceLogin(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(service.Email).To(gm.Equal(email))
 
-	serviceClient := controller.NewClient(tc.URL(), nil)
+	serviceClient, err := h.Client()
+	gm.Expect(err).To(gm.BeNil())
 
 	_, err = serviceClient.Login(ctx, token.Email, token.Secret)
 	gm.Expect(err).To(gm.BeNil())

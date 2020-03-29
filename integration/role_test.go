@@ -6,27 +6,30 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dropoutlabs/cape/primitives"
-
-	"github.com/dropoutlabs/cape/controller"
-	"github.com/dropoutlabs/cape/database"
 	gm "github.com/onsi/gomega"
+
+	"github.com/dropoutlabs/cape/controller/harness"
+	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func TestRoles(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = tc.Setup(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer tc.Teardown(ctx) // nolint: errcheck
+	defer h.Teardown(ctx) // nolint: errcheck
 
-	client, err := tc.Client()
+	m := h.Manager()
+	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("create role", func(t *testing.T) {
@@ -65,7 +68,7 @@ func TestRoles(t *testing.T) {
 
 		label, err := primitives.NewLabel("cto-person")
 		gm.Expect(err).To(gm.BeNil())
-		role, err := client.CreateRole(ctx, label, []database.ID{tc.User.ID})
+		role, err := client.CreateRole(ctx, label, []database.ID{m.Admin.User.ID})
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(role).ToNot(gm.BeNil())
 
@@ -73,7 +76,7 @@ func TestRoles(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(len(identities)).To(gm.Equal(1))
 
-		gm.Expect(identities[0].GetID()).To(gm.Equal(tc.User.ID))
+		gm.Expect(identities[0].GetID()).To(gm.Equal(m.Admin.User.ID))
 	})
 
 	t.Run("list roles", func(t *testing.T) {
@@ -92,7 +95,7 @@ func TestRoles(t *testing.T) {
 		l, err := primitives.NewLabel("coolguy")
 		gm.Expect(err).To(gm.BeNil())
 
-		role, err := client.CreateRole(ctx, l, []database.ID{tc.User.ID})
+		role, err := client.CreateRole(ctx, l, []database.ID{m.Admin.User.ID})
 
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(role.System).To(gm.BeFalse())
@@ -102,7 +105,7 @@ func TestRoles(t *testing.T) {
 		l, err := primitives.NewLabel("coolguy-five")
 		gm.Expect(err).To(gm.BeNil())
 
-		role, err := client.CreateRole(ctx, l, []database.ID{tc.User.ID})
+		role, err := client.CreateRole(ctx, l, []database.ID{m.Admin.User.ID})
 		gm.Expect(err).To(gm.BeNil())
 
 		otherRole, err := client.GetRoleByLabel(ctx, role.Label)
@@ -116,16 +119,19 @@ func TestListRoles(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = tc.Setup(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer tc.Teardown(ctx) // nolint: errcheck
+	defer h.Teardown(ctx) // nolint: errcheck
 
-	client, err := tc.Client()
+	m := h.Manager()
+	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	dsRole, err := client.CreateRole(ctx, "data-scientist", nil)
@@ -146,16 +152,19 @@ func TestAssignments(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = tc.Setup(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer tc.Teardown(ctx) // nolint: errcheck
+	defer h.Teardown(ctx) // nolint: errcheck
 
-	client, err := tc.Client()
+	m := h.Manager()
+	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("assign role", func(t *testing.T) {
@@ -166,10 +175,10 @@ func TestAssignments(t *testing.T) {
 		role, err := client.CreateRole(ctx, label, nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		assignment, err := client.AssignRole(ctx, tc.User.ID, role.ID)
+		assignment, err := client.AssignRole(ctx, m.Admin.User.ID, role.ID)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(assignment).NotTo(gm.BeNil())
-		gm.Expect(assignment.Identity.GetID()).To(gm.Equal(tc.User.ID))
+		gm.Expect(assignment.Identity.GetID()).To(gm.Equal(m.Admin.User.ID))
 		gm.Expect(assignment.Role.Label).To(gm.Equal(label))
 
 		identities, err := client.GetMembersRole(ctx, role.ID)
@@ -177,7 +186,7 @@ func TestAssignments(t *testing.T) {
 
 		gm.Expect(len(identities)).To(gm.Equal(1))
 
-		gm.Expect(identities[0].GetID()).To(gm.Equal(tc.User.ID))
+		gm.Expect(identities[0].GetID()).To(gm.Equal(m.Admin.User.ID))
 	})
 
 	t.Run("unassign role", func(t *testing.T) {
@@ -188,11 +197,11 @@ func TestAssignments(t *testing.T) {
 		role, err := client.CreateRole(ctx, label, nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		assignment, err := client.AssignRole(ctx, tc.User.ID, role.ID)
+		assignment, err := client.AssignRole(ctx, m.Admin.User.ID, role.ID)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(assignment).NotTo(gm.BeNil())
 
-		err = client.UnassignRole(ctx, tc.User.ID, role.ID)
+		err = client.UnassignRole(ctx, m.Admin.User.ID, role.ID)
 		gm.Expect(err).To(gm.BeNil())
 
 		identities, err := client.GetMembersRole(ctx, role.ID)

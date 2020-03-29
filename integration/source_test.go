@@ -4,31 +4,35 @@ package integration
 
 import (
 	"context"
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/primitives"
 	"net/url"
 	"testing"
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/cape/controller"
+	"github.com/dropoutlabs/cape/controller/harness"
+	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func TestSource(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
-	gm.Expect(err).To(gm.BeNil())
-
-	_, err = tc.Setup(ctx)
-	gm.Expect(err).To(gm.BeNil())
-
-	defer tc.Teardown(ctx) // nolint: errcheck
 	var id database.ID
 
-	client, err := tc.Client()
+	ctx := context.Background()
+	cfg, err := harness.NewConfig()
+	gm.Expect(err).To(gm.BeNil())
+
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	defer h.Teardown(ctx) // nolint: errcheck
+
+	m := h.Manager()
+	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("create a new source", func(t *testing.T) {

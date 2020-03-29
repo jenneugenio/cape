@@ -2,9 +2,7 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -19,53 +17,49 @@ import (
 	"github.com/dropoutlabs/cape/framework"
 	"github.com/dropoutlabs/cape/graph"
 	"github.com/dropoutlabs/cape/graph/generated"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 // Controller is the central brain of Cape.  It keeps track of system
 // users, policy, etc
 type Controller struct {
-	backend    database.Backend
-	instanceID string
-	server     *http.Server
-	logger     *zerolog.Logger
+	cfg     *Config
+	backend database.Backend
+	handler http.Handler
+	logger  *zerolog.Logger
 }
 
-func (c *Controller) startGQLServer() error {
-	err := c.server.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
-		return err
-	}
-
-	return nil
-}
-
-// Start the controller
-func (c *Controller) Start(ctx context.Context) error {
+// Setup the controller so it's ready to be served!
+func (c *Controller) Setup(ctx context.Context) (http.Handler, error) {
 	err := c.backend.Open(ctx)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	c.logger.Info().Msg(fmt.Sprintf("Attempting to listen on: %s", c.server.Addr))
-	return c.startGQLServer()
-}
-
-// Stop the controller
-func (c *Controller) Stop(ctx context.Context) error {
-	defer c.backend.Close()
-
-	c.server.SetKeepAlivesEnabled(false)
-	return c.server.Shutdown(ctx)
-}
-
-// New returns a pointer to a controller instance
-func New(dbURL *url.URL, logger *zerolog.Logger, instanceID string) (*Controller, error) {
-	backend, err := database.New(dbURL, instanceID)
 	if err != nil {
 		return nil, err
 	}
 
-	tokenAuth, err := auth.NewTokenAuthority(instanceID)
+	return c.handler, nil
+}
+
+// Teardown the controller taking it back to it's start state!
+func (c *Controller) Teardown(ctx context.Context) error {
+	return c.backend.Close()
+}
+
+// New validates the input and returns a constructed Controller
+func New(cfg *Config, logger *zerolog.Logger) (*Controller, error) {
+	if cfg == nil {
+		return nil, errors.New(InvalidConfigCause, "Config must be provided")
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+
+	backend, err := database.New(cfg.DBURL, cfg.InstanceID.String())
+	if err != nil {
+		return nil, err
+	}
+
+	tokenAuth, err := auth.NewTokenAuthority(cfg.InstanceID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -76,13 +70,12 @@ func New(dbURL *url.URL, logger *zerolog.Logger, instanceID string) (*Controller
 	}}
 
 	config.Directives.IsAuthenticated = framework.IsAuthenticatedDirective(backend, tokenAuth)
-
 	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 
 	root := http.NewServeMux()
 	root.Handle("/v1", playground.Handler("GraphQL playground", "/query"))
 	root.Handle("/v1/query", gqlHandler)
-	root.Handle("/v1/version", framework.VersionHandler(instanceID))
+	root.Handle("/v1/version", framework.VersionHandler(cfg.InstanceID.String()))
 
 	health := healthz.NewHandler(root)
 	chain := alice.New(
@@ -95,16 +88,10 @@ func New(dbURL *url.URL, logger *zerolog.Logger, instanceID string) (*Controller
 		cors.Default().Handler,
 	).Then(health)
 
-	addr := ":8081"
-	srv := &http.Server{
-		Addr:    addr,
-		Handler: chain,
-	}
-
 	return &Controller{
-		backend:    backend,
-		instanceID: instanceID,
-		server:     srv,
-		logger:     logger,
+		cfg:     cfg,
+		handler: chain,
+		backend: backend,
+		logger:  logger,
 	}, nil
 }

@@ -28,10 +28,10 @@ func errorPrinter(err error) {
 	os.Exit(1)
 }
 
-func getInstanceID(c *cli.Context, serviceType string) (string, error) {
+func getInstanceID(c *cli.Context, serviceType string) (primitives.Label, error) {
 	instanceID := c.String("instance-id")
 	if instanceID != "" {
-		return formatInstanceID(instanceID, serviceType), nil
+		return formatInstanceID(instanceID, serviceType)
 	}
 
 	source := make([]byte, 4)
@@ -40,11 +40,11 @@ func getInstanceID(c *cli.Context, serviceType string) (string, error) {
 		return "", err
 	}
 
-	return formatInstanceID(base32.EncodeToString(source), serviceType), nil
+	return formatInstanceID(base32.EncodeToString(source), serviceType)
 }
 
-func formatInstanceID(serviceType, instanceID string) string {
-	return fmt.Sprintf("cape-%s-%s", serviceType, instanceID)
+func formatInstanceID(serviceType, instanceID string) (primitives.Label, error) {
+	return primitives.NewLabel(fmt.Sprintf("cape-%s-%s", serviceType, instanceID))
 }
 
 func getName(c *cli.Context, question string) (primitives.Name, error) {

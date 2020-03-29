@@ -17,7 +17,7 @@ func init() {
 			Action: startConnectorCmd,
 			Flags: []cli.Flag{
 				instanceIDFlag(),
-				portFlag(8081),
+				portFlag("connector", 8081),
 			},
 		},
 	}

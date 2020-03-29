@@ -10,20 +10,20 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 )
 
+func portFlag(name string, value int) cli.Flag {
+	return &cli.IntFlag{
+		Name:    "port",
+		Aliases: []string{"p"},
+		Usage:   fmt.Sprintf("The `PORT` the %s will attempt to listen on", name),
+		Value:   value,
+		EnvVars: []string{"CAPE_PORT"},
+	}
+}
+
 func versionFlag() cli.Flag {
 	return &cli.BoolFlag{
 		Name:  "version, v",
 		Usage: "Display the current version of Cape",
-	}
-}
-
-func portFlag(value int) cli.Flag {
-	return &cli.IntFlag{
-		Name:    "port",
-		Aliases: []string{"p"},
-		Usage:   "The `PORT` the service should listen on for incoming requests",
-		Value:   value,
-		EnvVars: []string{"CAPE_PORT"},
 	}
 }
 

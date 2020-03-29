@@ -4,32 +4,36 @@ package integration
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/controller"
-	"github.com/dropoutlabs/cape/primitives"
 	gm "github.com/onsi/gomega"
+
+	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/controller/harness"
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func TestSetup(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	tc, err := controller.NewTestController()
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = tc.Setup(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	fmt.Println("DB URL", tc.URL())
-	defer tc.Teardown(ctx) // nolint: errcheck
+	defer h.Teardown(ctx) // nolint: errcheck
 
 	t.Run("Setup cape", func(t *testing.T) {
 		gm.RegisterTestingT(t)
-		client := controller.NewClient(tc.URL(), nil)
+
+		client, err := h.Client()
+		gm.Expect(err).To(gm.BeNil())
+
 		creds, err := auth.NewCredentials([]byte("jerryberrybuddyboy"), nil)
 		gm.Expect(err).To(gm.BeNil())
 
@@ -45,7 +49,10 @@ func TestSetup(t *testing.T) {
 
 	t.Run("Setup cannot be called a second time", func(t *testing.T) {
 		gm.RegisterTestingT(t)
-		client := controller.NewClient(tc.URL(), nil)
+
+		client, err := h.Client()
+		gm.Expect(err).To(gm.BeNil())
+
 		creds, err := auth.NewCredentials([]byte("jerryberrybuddyboy"), nil)
 		gm.Expect(err).To(gm.BeNil())
 
@@ -58,7 +65,10 @@ func TestSetup(t *testing.T) {
 
 	t.Run("Setup cannot be called a second time with different information", func(t *testing.T) {
 		gm.RegisterTestingT(t)
-		client := controller.NewClient(tc.URL(), nil)
+
+		client, err := h.Client()
+		gm.Expect(err).To(gm.BeNil())
+
 		creds, err := auth.NewCredentials([]byte("berryjerrybuddyboy"), nil)
 		gm.Expect(err).To(gm.BeNil())
 
