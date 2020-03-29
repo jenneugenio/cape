@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
 
 	"github.com/dropoutlabs/cape/auth"
@@ -61,9 +62,20 @@ func init() {
 	commands = append(commands, controllerCmd.Package())
 }
 
-func catchShutdown(ctx context.Context, quit chan os.Signal, c *controller.Controller) error {
-	<-quit
+func catchShutdown(ctx context.Context, quit chan os.Signal, c *controller.Controller, logger *zerolog.Logger) error {
+	s := <-quit
 
+	// Once we've received a signal we will stop listening for additional
+	// signals. This will cause the behaviour to fall back to the underlying
+	// golang signal handler which will cause in the program immediately
+	// exiting.
+	//
+	// This is not desirable as we will not clean up all of the state but its
+	// the best option if we get stuck in an irrecoverable state (e.g. things
+	// are not timing out).
+	signal.Stop(quit)
+
+	logger.Warn().Msgf("Caught signal '%s': attempting to shutdown, 30 second timeout.", s.String())
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -187,7 +199,8 @@ func startControllerCmd(c *cli.Context) error {
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
+	defer signal.Stop(quit)
 
-	go catchShutdown(c.Context, quit, ctrl) //nolint: errcheck
+	go catchShutdown(c.Context, quit, ctrl, logger) //nolint: errcheck
 	return ctrl.Start(c.Context)
 }
