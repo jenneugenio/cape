@@ -48,7 +48,7 @@ func init() {
 				instanceIDFlag(),
 				loggingTypeFlag(),
 				loggingLevelFlag(),
-				portFlag("controller", 8080),
+				portFlag("controller", 8081),
 			},
 		},
 	}

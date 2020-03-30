@@ -25,3 +25,8 @@ func (c *Config) Validate() error {
 
 	return c.Token.Validate()
 }
+
+// GetPort satisfies the framework.Config interface
+func (c *Config) GetPort() int {
+	return c.Port
+}

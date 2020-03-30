@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/dropoutlabs/cape/framework"
 	"github.com/urfave/cli/v2"
 
 	"github.com/dropoutlabs/cape/auth"
@@ -44,14 +45,21 @@ func startConnectorCmd(c *cli.Context) error {
 		return err
 	}
 
-	conn, err := connector.New(&connector.Config{
+	cfg := &connector.Config{
 		InstanceID: instanceID,
 		Port:       port,
 		Token:      token,
-	})
+	}
+
+	conn, err := connector.New(cfg)
 	if err != nil {
 		return err
 	}
 
-	return conn.Start()
+	server, err := framework.NewServer(cfg, conn)
+	if err != nil {
+		return err
+	}
+
+	return server.Start(c.Context)
 }
