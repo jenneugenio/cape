@@ -6,6 +6,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
+	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -24,7 +25,10 @@ func init() {
 		Command: &cli.Command{
 			Name:   "add",
 			Action: handleSessionOverrides(sourcesAdd),
-			Flags:  []cli.Flag{clusterFlag()},
+			Flags: []cli.Flag{
+				clusterFlag(),
+				linkFlag(),
+			},
 		},
 	}
 
@@ -80,13 +84,29 @@ func sourcesAdd(c *cli.Context) error {
 
 	label := args["label"].(primitives.Label)
 	credentials := args["connection-string"].(*url.URL)
+	linkEmail := c.String("link")
 
 	client, err := cluster.Client()
 	if err != nil {
 		return err
 	}
 
-	source, err := client.AddSource(c.Context, label, credentials)
+	var serviceID *database.ID
+	if linkEmail != "" {
+		email, err := primitives.NewEmail(linkEmail)
+		if err != nil {
+			return err
+		}
+
+		service, err := client.GetServiceByEmail(c.Context, email)
+		if err != nil {
+			return err
+		}
+
+		serviceID = &service.ID
+	}
+
+	source, err := client.AddSource(c.Context, label, credentials, serviceID)
 	if err != nil {
 		return err
 	}

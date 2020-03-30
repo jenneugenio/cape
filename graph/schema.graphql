@@ -49,6 +49,7 @@ type Source {
   id: ID!
   label: Label!
   endpoint: URL!
+  service_id: ID
 }
 
 type Assignment {
@@ -78,7 +79,6 @@ input NewUserRequest {
 }
 
 input LoginSessionRequest {
-
   email: Email!
 }
 
@@ -93,6 +93,7 @@ input DeleteSessionRequest {
 input AddSourceRequest {
   label: Label!
   credentials: URL!
+  service_id: ID
 }
 
 input RemoveSourceRequest {

@@ -147,9 +147,10 @@ type ComplexityRoot struct {
 	}
 
 	Source struct {
-		Endpoint func(childComplexity int) int
-		ID       func(childComplexity int) int
-		Label    func(childComplexity int) int
+		Endpoint  func(childComplexity int) int
+		ID        func(childComplexity int) int
+		Label     func(childComplexity int) int
+		ServiceID func(childComplexity int) int
 	}
 
 	User struct {
@@ -861,6 +862,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Source.Label(childComplexity), true
 
+	case "Source.service_id":
+		if e.complexity.Source.ServiceID == nil {
+			break
+		}
+
+		return e.complexity.Source.ServiceID(childComplexity), true
+
 	case "User.created_at":
 		if e.complexity.User.CreatedAt == nil {
 			break
@@ -1100,6 +1108,7 @@ type Source {
   id: ID!
   label: Label!
   endpoint: URL!
+  service_id: ID
 }
 
 type Assignment {
@@ -1129,7 +1138,6 @@ input NewUserRequest {
 }
 
 input LoginSessionRequest {
-
   email: Email!
 }
 
@@ -1144,6 +1152,7 @@ input DeleteSessionRequest {
 input AddSourceRequest {
   label: Label!
   credentials: URL!
+  service_id: ID
 }
 
 input RemoveSourceRequest {
@@ -4824,6 +4833,37 @@ func (ec *executionContext) _Source_endpoint(ctx context.Context, field graphql.
 	return ec.marshalNURL2netᚋurlᚐURL(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Source_service_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Source",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ServiceID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(database.ID)
+	fc.Result = res
+	return ec.marshalOID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *primitives.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6067,6 +6107,12 @@ func (ec *executionContext) unmarshalInputAddSourceRequest(ctx context.Context, 
 			if err != nil {
 				return it, err
 			}
+		case "service_id":
+			var err error
+			it.ServiceID, err = ec.unmarshalOID2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -7096,6 +7142,8 @@ func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "service_id":
+			out.Values[i] = ec._Source_service_id(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8087,6 +8135,15 @@ func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcap
 	return ret
 }
 
+func (ec *executionContext) unmarshalOID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
+	var res database.ID
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalOID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v database.ID) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐIDᚄ(ctx context.Context, v interface{}) ([]database.ID, error) {
 	var vSlice []interface{}
 	if v != nil {
@@ -8117,6 +8174,21 @@ func (ec *executionContext) marshalOID2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋda
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (*database.ID, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v *database.ID) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOIdentity2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentityᚄ(ctx context.Context, sel ast.SelectionSet, v []primitives.Identity) graphql.Marshaler {

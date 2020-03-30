@@ -101,7 +101,22 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRe
 }
 
 func (r *mutationResolver) AddSource(ctx context.Context, input model.AddSourceRequest) (*primitives.Source, error) {
-	source, err := primitives.NewSource(input.Label, input.Credentials)
+	serviceID := database.EmptyID
+	if input.ServiceID != nil {
+		service := &primitives.Service{}
+		err := r.Backend.Get(ctx, *input.ServiceID, service)
+		if err != nil {
+			return nil, err
+		}
+
+		if service.Type != primitives.DataConnectorServiceType {
+			return nil, errs.New(MustBeDataConnector, "Linking service to data source must be a data connector")
+		}
+
+		serviceID = *input.ServiceID
+	}
+
+	source, err := primitives.NewSource(input.Label, input.Credentials, serviceID)
 	if err != nil {
 		return nil, err
 	}

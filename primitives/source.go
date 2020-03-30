@@ -1,9 +1,10 @@
 package primitives
 
 import (
+	"net/url"
+
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/database/types"
-	"net/url"
 )
 
 // Source represents the connection information for an external data source
@@ -12,7 +13,8 @@ type Source struct {
 	Label    Label   `json:"label"`
 	Endpoint url.URL `json:"endpoint"`
 
-	Credentials url.URL `json:"credentials"`
+	Credentials url.URL     `json:"credentials"`
+	ServiceID   database.ID `json:"service_id"`
 }
 
 // GetType returns the type for this entity
@@ -21,7 +23,7 @@ func (s *Source) GetType() types.Type {
 }
 
 // NewSource returns a new Source struct
-func NewSource(label Label, credentials url.URL) (*Source, error) {
+func NewSource(label Label, credentials url.URL, serviceID database.ID) (*Source, error) {
 	p, err := database.NewPrimitive(SourceType)
 	if err != nil {
 		return nil, err
@@ -40,5 +42,6 @@ func NewSource(label Label, credentials url.URL) (*Source, error) {
 		Label:       label,
 		Credentials: credentials,
 		Endpoint:    *credentialCopy,
+		ServiceID:   serviceID,
 	}, nil
 }

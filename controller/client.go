@@ -500,7 +500,8 @@ func (s *SourceResponse) UnmarshalJSON(data []byte) error {
 }
 
 // AddSource adds a new source to the database
-func (c *Client) AddSource(ctx context.Context, label primitives.Label, credentials *url.URL) (*primitives.Source, error) {
+func (c *Client) AddSource(ctx context.Context, label primitives.Label,
+	credentials *url.URL, serviceID *database.ID) (*primitives.Source, error) {
 	var resp struct {
 		Source SourceResponse `json:"addSource"`
 	}
@@ -508,13 +509,15 @@ func (c *Client) AddSource(ctx context.Context, label primitives.Label, credenti
 	variables := make(map[string]interface{})
 	variables["label"] = label
 	variables["credentials"] = *credentials
+	variables["service_id"] = serviceID
 
 	err := c.Raw(ctx, `
-		mutation AddSource($label: Label!, $credentials: URL!) {
-			  addSource(input: { label: $label, credentials: $credentials}) {
+		mutation AddSource($label: Label!, $credentials: URL!, $service_id: ID) {
+			  addSource(input: { label: $label, credentials: $credentials, service_id: $service_id}) {
 				id
 				label
 				endpoint
+				service_id
 			  }
 			}
 	`, variables, &resp)
@@ -538,6 +541,7 @@ func (c *Client) ListSources(ctx context.Context) ([]*primitives.Source, error) 
 					id
 					label
 					endpoint
+					service_id
 				}
 			}
 	`, nil, &resp)
