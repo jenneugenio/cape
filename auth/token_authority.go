@@ -24,22 +24,20 @@ var (
 // TokenAuthority is the authority over token, it generates
 // and verifies tokens based on the private/public keys it owns
 type TokenAuthority struct {
-	privateKey   ed25519.PrivateKey
-	PublicKey    ed25519.PublicKey
-	ServiceEmail string
+	keypair      *Keypair
+	serviceEmail string
 }
 
 // NewTokenAuthority returns a new token authority
 func NewTokenAuthority(serviceEmail string) (*TokenAuthority, error) {
-	pub, priv, err := newKey()
+	keypair, err := NewKeypair()
 	if err != nil {
 		return nil, err
 	}
 
 	return &TokenAuthority{
-		privateKey:   priv,
-		PublicKey:    pub,
-		ServiceEmail: serviceEmail,
+		keypair:      keypair,
+		serviceEmail: serviceEmail,
 	}, nil
 }
 
@@ -51,15 +49,20 @@ func (t *TokenAuthority) Verify(signedToken *base64.Value) error {
 	}
 
 	claims := jwt.Claims{}
-	err = tok.Claims(t.PublicKey, &claims)
+	err = tok.Claims(t.PublicKey(), &claims)
 	if err != nil {
 		return err
 	}
 
 	return claims.Validate(jwt.Expected{
-		Issuer: t.ServiceEmail,
+		Issuer: t.serviceEmail,
 		Time:   time.Now().UTC(), // time used to compare expiry and not before
 	})
+}
+
+// PublicKey returns a copy of the ed25519 PublicKey
+func (t *TokenAuthority) PublicKey() ed25519.PublicKey {
+	return t.keypair.PublicKey
 }
 
 // Generate generates a JWT with 4 claims:
@@ -69,7 +72,7 @@ func (t *TokenAuthority) Verify(signedToken *base64.Value) error {
 // - NotBefore: the JWT will not be accepted before this time has passed
 // - Issuer: the service email of the issuing controller
 func (t *TokenAuthority) Generate(tokenType primitives.TokenType) (*base64.Value, time.Time, error) {
-	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.EdDSA, Key: t.privateKey},
+	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.EdDSA, Key: t.keypair.privateKey},
 		(&jose.SignerOptions{}).WithType("JWT"))
 	if err != nil {
 		return nil, time.Time{}, err
@@ -95,7 +98,7 @@ func (t *TokenAuthority) Generate(tokenType primitives.TokenType) (*base64.Value
 
 	cl := jwt.Claims{
 		Subject:   u.String(),
-		Issuer:    t.ServiceEmail,
+		Issuer:    t.serviceEmail,
 		IssuedAt:  jwt.NewNumericDate(now),
 		NotBefore: jwt.NewNumericDate(now),
 		Expiry:    jwt.NewNumericDate(expiresIn),

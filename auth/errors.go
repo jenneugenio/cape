@@ -16,6 +16,8 @@ var (
 	BadAPITokenVersion = errors.NewCause(errors.BadRequestCategory, "bad_apitoken_version")
 	BadSaltLength      = errors.NewCause(errors.BadRequestCategory, "bad_salt_length")
 	BadSecretLength    = errors.NewCause(errors.BadRequestCategory, "bad_secret_length")
+	BadPackagedKeypair = errors.NewCause(errors.BadRequestCategory, "bad_packaged_keypair")
+	BadAlgType         = errors.NewCause(errors.BadRequestCategory, "bad_alg_type")
 	BadPublicKeyLength = errors.NewCause(errors.BadRequestCategory, "bad_public_key_length")
 
 	// BadTokenFormat happens when an APIToken has a bad format

@@ -4,9 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dropoutlabs/cape/primitives"
 	gm "github.com/onsi/gomega"
 	"gopkg.in/square/go-jose.v2"
+
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 func TestTokenAuthorityGenerate(t *testing.T) {

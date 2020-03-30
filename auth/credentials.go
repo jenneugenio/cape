@@ -1,28 +1,12 @@
 package auth
 
 import (
-	"bytes"
 	"crypto/ed25519"
-	"crypto/rand"
 
 	"github.com/manifoldco/go-base64"
-	"golang.org/x/crypto/scrypt"
 
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
-)
-
-const (
-	SaltLength                = 16
-	SecretLength              = 8
-	GeneratedSecretByteLength = 8
-
-	// N , R, P are used by scrypt, see scrypt docs below
-	// https://godoc.org/golang.org/x/crypto/scrypt#Key
-	N        = 32768
-	R        = 8
-	P        = 1
-	SeedSize = 32
 )
 
 // Credentials holds the public key and salt for a user
@@ -83,27 +67,25 @@ func (c *Credentials) Package() *primitives.Credentials {
 // NewCredentials returns a Credential struct for creating credentials & re-deriving credentials.
 // To rederive credentials you must provide the same secret & salt with the same Alg parameters as used previously.
 func NewCredentials(secret []byte, salt *base64.Value) (*Credentials, error) {
-	var saltBytes []byte
+	var keypair *Keypair
+	var err error
 	if salt == nil {
-		saltBytes = make([]byte, SaltLength)
-		_, err := rand.Read(saltBytes)
+		keypair, err = NewKeypairWithSecret(secret)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		saltBytes = []byte(*salt)
-	}
-
-	pub, priv, err := deriveKey(secret, saltBytes)
-	if err != nil {
-		return nil, err
+		keypair, err = DeriveKeypair(secret, []byte(*salt))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &Credentials{
-		privateKey: priv,
-		PublicKey:  base64.New([]byte(pub)),
-		Salt:       base64.New(saltBytes),
-		Alg:        primitives.EDDSA,
+		privateKey: keypair.privateKey,
+		PublicKey:  base64.New([]byte(keypair.PublicKey)),
+		Salt:       base64.New(keypair.salt),
+		Alg:        keypair.Alg,
 	}, nil
 }
 
@@ -124,29 +106,4 @@ func LoadCredentials(publicKey, salt *base64.Value) (*Credentials, error) {
 		Salt:      salt,
 		Alg:       primitives.EDDSA,
 	}, nil
-}
-
-func deriveKey(secret []byte, salt []byte) (ed25519.PublicKey, ed25519.PrivateKey, error) {
-	if len(salt) != SaltLength {
-		return nil, nil, errors.New(BadSaltLength, "Salt must be at least %d bytes long, saw %d",
-			SaltLength, len(salt))
-	}
-
-	if len(secret) < SecretLength {
-		return nil, nil, errors.New(BadSecretLength, "Secret must be at least %d bytes long, saw %d",
-			SecretLength, len(secret))
-	}
-
-	// Derive a key by stretching & salting the secret into 32 bytes
-	key, err := scrypt.Key(secret, salt, N, R, P, SeedSize)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Generate a ed25519 keypair from the derived key
-	return ed25519.GenerateKey(bytes.NewBuffer(key))
-}
-
-func newKey() (ed25519.PublicKey, ed25519.PrivateKey, error) {
-	return ed25519.GenerateKey(nil)
 }
