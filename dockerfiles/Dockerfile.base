@@ -2,7 +2,7 @@ FROM golang:1.14.0-alpine
 
 WORKDIR /go/src/github.com/dropoutlabs/cape
 
-COPY go.mod go.sum Makefile tools.go migrations ./
+COPY go.mod go.sum Makefile tools.go tools migrations ./
 RUN apk --no-cache add make gcc musl-dev \
     && make bootstrap
 

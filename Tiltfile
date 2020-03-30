@@ -35,8 +35,8 @@ docker_build('dropoutlabs/controller:latest', '.', dockerfile='dockerfiles/Docke
 docker_build('dropoutlabs/connector:latest', '.', dockerfile='dockerfiles/Dockerfile.connector')
 docker_build('dropoutlabs/update:latest', '.', dockerfile='dockerfiles/Dockerfile.update')
 
-k8s_resource('connector', port_forwards=8080, trigger_mode=TRIGGER_MODE_MANUAL)
-k8s_resource('controller', port_forwards=8081, trigger_mode=TRIGGER_MODE_MANUAL)
+k8s_resource('connector', port_forwards=8081, trigger_mode=TRIGGER_MODE_MANUAL)
+k8s_resource('controller', port_forwards=8080, trigger_mode=TRIGGER_MODE_MANUAL)
 
 ########################################################################################################################
 # Run a fake customer DB as well!
@@ -65,3 +65,5 @@ delete_pvc = 'kubectl delete pvc/data-' + customer_db_deployment_name + '-postgr
 delete_cmd = ' && '.join([delete_db_chart, delete_pvc])
 
 local_resource('delete customer db', cmd=delete_cmd, trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
+docker_build('dropoutlabs/customer_seed:latest', '.', dockerfile='tools/seed/Dockerfile.customer')
+k8s_yaml(helm('charts/customer', values=['charts/local_values/customer_values.yaml']))
