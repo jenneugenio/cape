@@ -17,6 +17,15 @@ DOCKER_REQUIRED_VERSION=18.
 GO_REQUIRED_VERSION=1.14.
 HELM_REQUIRED_VERSION=v3.0.
 GSUTIL_REQUIRED_VERSION=4.47
+PROTOC_REQUIRED_VERSION=3.11.4
+
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+	PROTOC_ZIP=protoc-$(PROTOC_REQUIRED_VERSION)-linux-x86_64.zip
+endif
+ifeq ($(UNAME_S),Darwin)
+	PROTOC_ZIP=protoc-$(PROTOC_REQUIRED_VERSION)-osx-x86_64.zip
+endif
 
 CURRENT_GO_VERSION := $(shell go version 2> /dev/null)
 gocheck:
@@ -56,6 +65,16 @@ ifeq (,$(shell command -v gsutil 2> /dev/null))
 ifeq (,$(findstring $(GSUTIL_REQUIRED_VERSION),$(CURRENT_GSUTIL_VERSION)))
 ifeq (,$(BYPASS_GSUTIL_CHECK))
 	$(error "gsutil version $(GSUTIL_REQUIRED_VERSION) is required, found $(CURRENT_GSUTIL_VERSION)")
+endif
+endif
+endif
+
+CURRENT_PROTOC_VERSION := $(shell protoc --version 2> /dev/null)
+protoccheck:
+ifeq (,$(shell command -v protoc 2> /dev/null))
+ifeq (,$(findstring $(PROTOC_REQUIRED_VERSION),$(PROTOC_GSUTIL_VERSION)))
+ifeq (,$(BYPASS_PROTOC_CHECK))
+	$(error "protoc version $(PROTOC_REQUIRED_VERSION) is required, found $(PROTOC_GSUTIL_VERSION)")
 endif
 endif
 endif
@@ -100,14 +119,23 @@ bootstrap: download install-tools
 download: gocheck
 	go mod download
 
-install-tools: gocheck download tools.go
+install-tools: gocheck install-protoc download tools.go
 	cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
+
+SUDO=$(shell which sudo)
+install-protoc:
+	# normal protoc doesn't work with alpine, assume its installed via apk
+	if [ ! -f "/etc/alpine-release" ]; then \
+		curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v$(PROTOC_REQUIRED_VERSION)/$(PROTOC_ZIP); \
+		$(SUDO) unzip -o $(PROTOC_ZIP) -d /usr/local bin/protoc; \
+		$(SUDO) unzip -o $(PROTOC_ZIP) -d /usr/local 'include/*'; \
+	fi; \
 
 clean: gocheck
 	go clean
 	rm $(PREFIX)bin/cape
 
-gogen: gocheck gqlgen.yml graph/schema.graphql
+gogen: gocheck protoccheck gqlgen.yml graph/schema.graphql
 	go generate ./...
 
 .PHONY: bootstrap clean gogen
