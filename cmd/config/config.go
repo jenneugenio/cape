@@ -7,7 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/manifoldco/go-base64"
 	"sigs.k8s.io/yaml"
@@ -271,6 +271,7 @@ func (c *Cluster) SetToken(token *base64.Value) {
 	c.AuthToken = token.String()
 }
 
+// String completes the Stringer interface
 func (c *Cluster) String() string {
 	return fmt.Sprintf("%s (%s)", c.Label, c.URL.String())
 }
@@ -297,7 +298,7 @@ func Path() (string, error) {
 		return "", err
 	}
 
-	return path.Join(base, "config.yaml"), nil
+	return filepath.Join(base, "config.yaml"), nil
 }
 
 // FolderPath returns the path to the local folder that holds user-space wide
@@ -306,12 +307,17 @@ func Path() (string, error) {
 // TODO: Add support for XDG_CONFIG standard which can be found at
 // https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
 func FolderPath() (string, error) {
+	capeHome := os.Getenv("CAPE_HOME")
+	if capeHome != "" {
+		return filepath.Clean(capeHome), nil
+	}
+
 	home := os.Getenv("HOME")
 	if home == "" {
 		return "", ErrMissingHome
 	}
 
-	return path.Join(home, ".cape"), nil
+	return filepath.Join(home, ".cape"), nil
 }
 
 // Parse reads the given file path and returns a Config object or returns an
