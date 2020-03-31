@@ -4,6 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+
+	"github.com/rs/zerolog"
+
+	"github.com/dropoutlabs/cape/primitives"
 )
 
 // Component represents the business logic and functionality that is served by
@@ -22,6 +26,7 @@ type Component interface {
 // long as they satisfy the needs of the Server
 type Config interface {
 	GetPort() int
+	GetInstanceID() primitives.Label
 	Validate() error
 }
 
@@ -31,11 +36,12 @@ type Server struct {
 	server    *http.Server
 	component Component
 	cfg       Config
+	logger    *zerolog.Logger
 }
 
 // NewServer returns a new server that will be able to serve the provided
 // Component and configuration.
-func NewServer(cfg Config, s Component) (*Server, error) {
+func NewServer(cfg Config, s Component, logger *zerolog.Logger) (*Server, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -43,6 +49,7 @@ func NewServer(cfg Config, s Component) (*Server, error) {
 	return &Server{
 		component: s,
 		cfg:       cfg,
+		logger:    logger,
 	}, nil
 }
 
@@ -59,6 +66,7 @@ func (s *Server) Start(ctx context.Context) error {
 		Handler: handler,
 	}
 
+	s.logger.Info().Msgf("%s attempting to listen %s", s.cfg.GetInstanceID(), s.Addr())
 	err = s.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		return err

@@ -218,7 +218,7 @@ func startControllerCmd(c *cli.Context) error {
 		return err
 	}
 
-	server, err := framework.NewServer(cfg, ctrl)
+	server, err := framework.NewServer(cfg, ctrl, logger)
 	if err != nil {
 		return err
 	}

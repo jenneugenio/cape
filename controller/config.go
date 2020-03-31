@@ -50,6 +50,12 @@ func (c *Config) GetPort() int {
 	return c.Port
 }
 
+// GetInstanceID returns the instance id to satisfy the framework.Component
+// interface
+func (c *Config) GetInstanceID() primitives.Label {
+	return c.InstanceID
+}
+
 // Validate returns an error if the config is invalid
 func (c *Config) Validate() error {
 	if c.Port > 65535 || c.Port < 1 {

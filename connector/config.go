@@ -30,3 +30,8 @@ func (c *Config) Validate() error {
 func (c *Config) GetPort() int {
 	return c.Port
 }
+
+// GetInstanceID satisfies the framework.Config interface
+func (c *Config) GetInstanceID() primitives.Label {
+	return c.InstanceID
+}
