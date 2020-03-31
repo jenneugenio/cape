@@ -29,6 +29,18 @@ func NewURL(in string) (*URL, error) {
 	return c, nil
 }
 
+// NewURLFromStdLib creates a new url from the std lib url
+// type from net/url
+func NewURLFromStdLib(u *url.URL) (*URL, error) {
+	c := &URL{URL: u}
+	err := c.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
 // URL contains a url to a Cape controller
 type URL struct {
 	*url.URL

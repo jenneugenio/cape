@@ -105,6 +105,26 @@ func TestServices(t *testing.T) {
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(service).To(gm.BeNil())
 	})
+
+	t.Run("can create data connector service", func(t *testing.T) {
+		email, err := primitives.NewEmail("dc@cape.com")
+		gm.Expect(err).To(gm.BeNil())
+
+		creds, err := auth.NewCredentials([]byte("randompassword"), nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		url, err := primitives.NewURL("https://cape.com")
+		gm.Expect(err).To(gm.BeNil())
+
+		s, err := primitives.NewService(email, primitives.DataConnectorServiceType, url, creds.Package())
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err := client.CreateService(ctx, s)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(service.Type).To(gm.Equal(s.Type))
+		gm.Expect(service.Endpoint).To(gm.Equal(s.Endpoint))
+	})
 }
 
 func TestListServices(t *testing.T) {
@@ -173,7 +193,7 @@ func createServicePrimitive(email primitives.Email, secret []byte) (*primitives.
 		return nil, err
 	}
 
-	service, err := primitives.NewService(email, typ, creds.Package())
+	service, err := primitives.NewService(email, typ, nil, creds.Package())
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package primitives
 
 import (
 	"encoding/json"
+	"net/url"
 	"testing"
 
 	gm "github.com/onsi/gomega"
@@ -43,6 +44,16 @@ func TestNewURL(t *testing.T) {
 
 		gm.Expect(new.String()).To(gm.Equal(u))
 		gm.Expect(new.Validate()).To(gm.BeNil())
+	})
+
+	t.Run("create url from std lib", func(t *testing.T) {
+		u, err := url.Parse("http://localhost.com")
+		gm.Expect(err).To(gm.BeNil())
+
+		out, err := NewURLFromStdLib(u)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(out.String()).To(gm.Equal(u.String()))
 	})
 
 	t.Run("catches bad errors", func(t *testing.T) {

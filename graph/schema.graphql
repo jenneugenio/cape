@@ -112,6 +112,7 @@ type Query {
 
   sources: [Source!]! @isAuthenticated()
   source(id: ID!): Source! @isAuthenticated()
+  sourceByLabel(label: Label!): Source! @isAuthenticated()
 
   identities(emails: [Email!]): [Identity!]
 }

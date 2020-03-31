@@ -13,10 +13,24 @@ import (
 
 func init() {
 	pullCmd := &Command{
-		Usage: "Pull data!",
+		Usage: "The command pulls data from the given data source using the supplied query.",
+		Examples: []*Example{
+			{
+				Example: "cape pull creditcards 'SELECT * FROM transactions'",
+				Description: "Queries the table transactions from the data source creditcards. Policy " +
+					"is applied to this query and some fields may be redacted/obfuscated or hidden in some " +
+					"other privacy preserving manner.",
+			},
+			{
+				Example: "cape pull creditcards transactions",
+				Description: "Alias for querying data like 'SELECT * FROM transactions'. Any data that has " +
+					"policy attached will be redacted/obfuscated or hidden in some other privacy preserving manner.",
+			},
+		},
+		Arguments: []*Argument{LabelArg("source"), PullQueryArgument},
 		Command: &cli.Command{
 			Name:   "pull",
-			Action: pullDataCmd,
+			Action: handleSessionOverrides(pullDataCmd),
 		},
 	}
 
@@ -24,7 +38,28 @@ func init() {
 }
 
 func pullDataCmd(c *cli.Context) error {
-	url, err := primitives.NewURL("https://localhost:8081")
+	cfgSession := Session(c.Context)
+	args := Arguments(c.Context)
+
+	cluster, err := cfgSession.Cluster()
+	if err != nil {
+		return err
+	}
+
+	sourceLabel := args["source"].(primitives.Label)
+	query := args["query"].(string)
+
+	client, err := cluster.Client()
+	if err != nil {
+		return err
+	}
+
+	source, err := client.GetSourceByLabel(c.Context, sourceLabel)
+	if err != nil {
+		return err
+	}
+
+	service, err := client.GetService(c.Context, source.ServiceID)
 	if err != nil {
 		return err
 	}
@@ -40,17 +75,12 @@ func pullDataCmd(c *cli.Context) error {
 		return errors.New(BadCertificate, "Bad certificate for TLS")
 	}
 
-	client, err := connector.NewClient(url, certPool)
+	connClient, err := connector.NewClient(service.Endpoint, certPool)
 	if err != nil {
 		return err
 	}
 
-	source, err := primitives.NewLabel("source")
-	if err != nil {
-		return err
-	}
-
-	err = client.Query(c.Context, source, "SELECT * FROM ALLDATA;")
+	err = connClient.Query(c.Context, sourceLabel, query)
 	if err != nil {
 		return err
 	}

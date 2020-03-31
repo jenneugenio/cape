@@ -72,7 +72,11 @@ func TestSource(t *testing.T) {
 		creds, err := auth.NewCredentials([]byte("random-password"), nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, creds.Package())
+		serviceURL, err := primitives.NewURL("https://localhost:8081")
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, serviceURL,
+			creds.Package())
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err = client.CreateService(ctx, service)
@@ -103,7 +107,7 @@ func TestSource(t *testing.T) {
 		creds, err := auth.NewCredentials([]byte("random-password"), nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		service, err := primitives.NewService(email, primitives.UserServiceType, creds.Package())
+		service, err := primitives.NewService(email, primitives.UserServiceType, nil, creds.Package())
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err = client.CreateService(ctx, service)
@@ -125,6 +129,25 @@ func TestSource(t *testing.T) {
 
 		gm.Expect(source.Label).To(gm.Equal(expectedLabel))
 		gm.Expect(source.Endpoint.String()).To(gm.Equal("postgres://my.cool.website.com:5432/mydb"))
+	})
+
+	t.Run("pull a single data source by label", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
+		gm.Expect(err).To(gm.BeNil())
+
+		l, err := primitives.NewLabel("my-super-transactions")
+		gm.Expect(err).To(gm.BeNil())
+
+		source, err := client.AddSource(ctx, l, u, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		otherSource, err := client.GetSourceByLabel(ctx, l)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(otherSource.Label).To(gm.Equal(source.Label))
+		gm.Expect(otherSource.Endpoint).To(gm.Equal(source.Endpoint))
 	})
 
 	t.Run("insert the same data source", func(t *testing.T) {

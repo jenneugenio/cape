@@ -19,5 +19,9 @@ var (
 	PasswordNoMatch = errors.NewCause(errors.BadRequestCategory, "passwords_dont_match")
 
 	// BadCertificate happens when the server cert is bad
-	BadCertificate = errors.NewCause(errors.BadRequestCategory, "Bad certificate")
+	BadCertificate = errors.NewCause(errors.BadRequestCategory, "bad_certificate")
+
+	// MustSupplyEndpoint is used with the service create command to make sure an endpoint is
+	// supplied when creating a data connector
+	MustSupplyEndpoint = errors.NewCause(errors.BadRequestCategory, "must_supply_endpoint")
 )

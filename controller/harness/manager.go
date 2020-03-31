@@ -12,8 +12,6 @@ const AdminEmail = "admin@cape.com"
 const AdminName = "admin"
 const AdminPassword = "iamtheadmin"
 
-const ConnectorEmail = "service:data-connector@cape.com"
-
 // User represents a user in the cape controller
 type User struct {
 	Client   *controller.Client
@@ -80,36 +78,17 @@ func (m *Manager) Setup(ctx context.Context) (*controller.Client, error) {
 
 	m.Admin = user
 
-	err = m.createService(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	return client, nil
 }
 
-func (m *Manager) createService(ctx context.Context) error {
-	url, err := m.h.URL()
-	if err != nil {
-		return err
-	}
-
-	email, err := primitives.NewEmail(ConnectorEmail)
-	if err != nil {
-		return err
-	}
-
-	apiToken, err := auth.NewAPIToken(email, url)
-	if err != nil {
-		return err
-	}
-
+// CreateService creates a service on the controller with the given APIToken and URL
+func (m *Manager) CreateService(ctx context.Context, apiToken *auth.APIToken, serviceURL *primitives.URL) error {
 	creds, err := apiToken.Credentials()
 	if err != nil {
 		return err
 	}
 
-	service, err := primitives.NewService(email, primitives.DataConnectorServiceType, creds.Package())
+	service, err := primitives.NewService(apiToken.Email, primitives.DataConnectorServiceType, serviceURL, creds.Package())
 	if err != nil {
 		return err
 	}
@@ -124,4 +103,8 @@ func (m *Manager) createService(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (m *Manager) URL() (*primitives.URL, error) {
+	return m.h.URL()
 }

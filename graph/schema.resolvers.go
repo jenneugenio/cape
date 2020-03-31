@@ -283,6 +283,16 @@ func (r *queryResolver) Source(ctx context.Context, id database.ID) (*primitives
 	return &primitive, nil
 }
 
+func (r *queryResolver) SourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error) {
+	source := &primitives.Source{}
+	err := r.Backend.QueryOne(ctx, source, database.NewFilter(database.Where{"label": label.String()}, nil, nil))
+	if err != nil {
+		return nil, err
+	}
+
+	return source, nil
+}
+
 func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Email) ([]primitives.Identity, error) {
 	serviceEmails := database.In{}
 	userEmails := database.In{}

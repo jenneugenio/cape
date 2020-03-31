@@ -6,21 +6,21 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/primitives"
 	gm "github.com/onsi/gomega"
 )
 
 func TestHarness(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	tokenStr := "service:data-connector@cape.com,AfA3ELnv83JzfI09XxTJZBRodHRwOi8vbG9jYWxob3N0OjgwODA"
-	token, err := auth.ParseAPIToken(tokenStr)
+	controllerURL, err := primitives.NewURL("http://localhost:8080")
 	gm.Expect(err).To(gm.BeNil())
-
-	cfg := &Config{Token: token}
 
 	t.Run("Can start the connector", func(t *testing.T) {
 		ctx := context.Background()
+
+		cfg := &Config{ControllerURL: controllerURL}
+
 		h, err := NewHarness(cfg)
 		gm.Expect(err).To(gm.BeNil())
 		defer h.Teardown(ctx) //nolint: errcheck
@@ -39,6 +39,9 @@ func TestHarness(t *testing.T) {
 
 	t.Run("Can start and stop the connector", func(t *testing.T) {
 		ctx := context.Background()
+
+		cfg := &Config{ControllerURL: controllerURL}
+
 		h, err := NewHarness(cfg)
 		gm.Expect(err).To(gm.BeNil())
 

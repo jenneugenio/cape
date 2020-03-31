@@ -8,6 +8,7 @@ import (
 
 	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/cmd/ui"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -25,8 +26,9 @@ func init() {
 				Description: "Creates a service called service:pipeline@prod.mycompany.com on the cape cluster called production.",
 			},
 			{
-				Example:     "cape services create --type data-connector service:pipeline@prod.mycompany.com",
-				Description: "Creates a service called service:pipeline@prod.mycompany.com representing a Cape data connector.",
+				Example: "cape services create --type data-connector --endpoint connector.prod.mycompany.com service:dc@prod.mycompany.com",
+				Description: "Creates a service called service:dc@prod.mycompany.com with the endpoint connector.prod.mycompany.com " +
+					"representing a Cape data connector.",
 			},
 			{
 				Example: "cape services create pipeline@prod.mycompany.com",
@@ -40,6 +42,7 @@ func init() {
 			Flags: []cli.Flag{
 				clusterFlag(),
 				serviceTypeFlag(),
+				dataConnectorEndpointFlag(),
 			},
 		},
 	}
@@ -109,6 +112,7 @@ func servicesCreateCmd(c *cli.Context) error {
 	cfgSession := Session(c.Context)
 	u := UI(c.Context)
 	typeStr := c.String("type")
+	endpointStr := c.String("endpoint")
 
 	cluster, err := cfgSession.Cluster()
 	if err != nil {
@@ -118,6 +122,15 @@ func servicesCreateCmd(c *cli.Context) error {
 	typ, err := primitives.NewServiceType(typeStr)
 	if err != nil {
 		return err
+	}
+
+	var endpoint *primitives.URL
+	if typ == primitives.DataConnectorServiceType {
+		url, err := primitives.NewURL(endpointStr)
+		if err != nil {
+			return errors.New(MustSupplyEndpoint, "Must supply a valid endpoint when creating a data-connector service")
+		}
+		endpoint = url
 	}
 
 	email := args["identifier"].(primitives.Email)
@@ -137,7 +150,7 @@ func servicesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	service, err := primitives.NewService(email, typ, creds.Package())
+	service, err := primitives.NewService(email, typ, endpoint, creds.Package())
 	if err != nil {
 		return err
 	}
@@ -234,7 +247,7 @@ func servicesListCmd(c *cli.Context) error {
 		return err
 	}
 
-	header := []string{"Label", "Type", "Roles"}
+	header := []string{"Label", "Type", "Endpoint", "Roles"}
 	body := make([][]string, len(services))
 	for i, s := range services {
 		roleLabels := make([]string, len(s.Roles))
@@ -242,7 +255,13 @@ func servicesListCmd(c *cli.Context) error {
 			roleLabels[i] = role.Label.String()
 		}
 		roles := strings.Join(roleLabels, ",")
-		body[i] = []string{s.Email.String(), s.Type.String(), roles}
+
+		endpoint := ""
+		if s.Endpoint != nil {
+			endpoint = s.Endpoint.String()
+		}
+
+		body[i] = []string{s.Email.String(), s.Type.String(), endpoint, roles}
 	}
 
 	return ui.Table(header, body)

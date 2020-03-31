@@ -85,4 +85,13 @@ var (
 			return u, nil
 		},
 	}
+
+	PullQueryArgument = &Argument{
+		Name:        "query",
+		Description: "The SQL query to query the data with.",
+		Required:    true,
+		Processor: func(in string) (interface{}, error) {
+			return in, nil
+		},
+	}
 )

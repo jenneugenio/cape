@@ -630,6 +630,33 @@ func (c *Client) GetSource(ctx context.Context, id database.ID) (*primitives.Sou
 	return &source, nil
 }
 
+// GetSourceByLabel returns a specific data source given its label
+func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error) {
+	var resp struct {
+		Source SourceResponse `json:"sourceByLabel"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["label"] = label
+
+	err := c.Raw(ctx, `
+		query Sources($label: Label!) {
+				sourceByLabel(label: $label) {
+					id
+					label
+					endpoint
+					service_id
+				}
+			}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	source := primitives.Source(resp.Source)
+	return &source, nil
+}
+
 // Setup calls the setup command to bootstrap cape
 func (c *Client) Setup(ctx context.Context, user *primitives.User) (*primitives.User, error) {
 	var resp struct {
@@ -677,13 +704,15 @@ func (c *Client) CreateService(ctx context.Context, service *primitives.Service)
 	variables["public_key"] = service.Credentials.PublicKey
 	variables["salt"] = service.Credentials.Salt
 	variables["type"] = service.Type
+	variables["endpoint"] = service.Endpoint
 
 	err := c.Raw(ctx, `
-		mutation CreateService($email: Email!, $type: ServiceType!, $public_key: Base64!, $salt: Base64!) {
-			createService(input: { email: $email, type: $type, public_key: $public_key, salt: $salt, alg: "EDDSA"}) {
+		mutation CreateService($email: Email!, $type: ServiceType!, $endpoint: URL, $public_key: Base64!, $salt: Base64!) {
+			createService(input: { email: $email, type: $type, endpoint: $endpoint, public_key: $public_key, salt: $salt, alg: "EDDSA"}) {
 				id
 				email
 				type
+				endpoint
 			}
 		}
 	`, variables, &resp)
@@ -722,6 +751,7 @@ func (c *Client) GetService(ctx context.Context, id database.ID) (*primitives.Se
 				id
 				email
 				type
+				endpoint
 			}
 		}
 	`, variables, &resp)
@@ -747,6 +777,7 @@ func (c *Client) GetServiceByEmail(ctx context.Context, email primitives.Email) 
 				id
 				email
 				type
+				endpoint
 			}
 		}
 	`, variables, &resp)
@@ -769,6 +800,7 @@ func (c *Client) ListServices(ctx context.Context) ([]*ServiceResponse, error) {
 				id
 				email
 				type
+				endpoint
 				roles {
 					id
 					label

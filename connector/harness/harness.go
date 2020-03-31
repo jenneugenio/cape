@@ -15,10 +15,21 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 )
 
+// ConnectorEmail is the email of the connector
+const ConnectorEmail = "service:data-connector@cape.com"
+
 var (
-	TimeoutCause    = errors.NewCause(errors.RequestTimeoutCategory, "start_timeout")
+	// TimeoutCause the connector took to long to start
+	TimeoutCause = errors.NewCause(errors.RequestTimeoutCategory, "start_timeout")
+
+	// NotStartedCause the connector has not started yet
 	NotStartedCause = errors.NewCause(errors.BadRequestCategory, "connector_not_started")
 )
+
+// Config is the harness config
+type Config struct {
+	ControllerURL *primitives.URL
+}
 
 // Harness represents a http server used for testing. Its responsibility is to
 // provide the transport layer for the application contained within the
@@ -46,16 +57,25 @@ type Harness struct {
 	server    *httptest.Server
 	component framework.Component
 	logger    *zerolog.Logger
-}
-
-// Config holds the config for the harness
-type Config struct {
-	Token *auth.APIToken
+	apiToken  *auth.APIToken
 }
 
 // NewHarness returns a new harness that's configured and ready to be setup!
 func NewHarness(cfg *Config) (*Harness, error) {
-	return &Harness{cfg: cfg}, nil
+	email, err := primitives.NewEmail(ConnectorEmail)
+	if err != nil {
+		return nil, err
+	}
+
+	apiToken, err := auth.NewAPIToken(email, cfg.ControllerURL)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Harness{
+		cfg:      cfg,
+		apiToken: apiToken,
+	}, nil
 }
 
 // Setup sets up the testing harness to test the connector component
@@ -88,7 +108,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 	connector, err := connector.New(&connector.Config{
 		InstanceID: "cape-connector",
 		Port:       1, // This port is ignored!
-		Token:      h.cfg.Token,
+		Token:      h.apiToken,
 	})
 	if err != nil {
 		return err
@@ -185,4 +205,9 @@ func (h *Harness) URL() (*primitives.URL, error) {
 	h.server.Client()
 
 	return primitives.NewURL(h.server.URL)
+}
+
+// APIToken returns the APIToken needed by the connector
+func (h *Harness) APIToken() *auth.APIToken {
+	return h.apiToken
 }

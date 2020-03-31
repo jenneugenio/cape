@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"net/url"
 
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/graph/generated"
@@ -19,7 +20,17 @@ func (r *mutationResolver) CreateService(ctx context.Context, input model.Create
 		Alg:       input.Alg,
 	}
 
-	service, err := primitives.NewService(input.Email, input.Type, creds)
+	var endpoint *primitives.URL
+	if input.Type == primitives.DataConnectorServiceType {
+		url, err := primitives.NewURLFromStdLib(input.Endpoint)
+		if err != nil {
+			return nil, err
+		}
+
+		endpoint = url
+	}
+
+	service, err := primitives.NewService(input.Email, input.Type, endpoint, creds)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +85,13 @@ func (r *queryResolver) Services(ctx context.Context) ([]*primitives.Service, er
 	}
 
 	return services, nil
+}
+
+func (r *serviceResolver) Endpoint(ctx context.Context, obj *primitives.Service) (*url.URL, error) {
+	if obj.Endpoint != nil {
+		return obj.Endpoint.URL, nil
+	}
+	return nil, nil
 }
 
 func (r *serviceResolver) Roles(ctx context.Context, obj *primitives.Service) ([]*primitives.Role, error) {

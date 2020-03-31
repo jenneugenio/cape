@@ -124,6 +124,14 @@ func serviceTypeFlag() cli.Flag {
 	}
 }
 
+func dataConnectorEndpointFlag() cli.Flag {
+	return &cli.StringFlag{
+		Name:    "endpoint",
+		Usage:   "The endpoint to connect to a data connector. Must be supplied when creating a data-connector",
+		EnvVars: []string{"CAPE_ENDPOINT"},
+	}
+}
+
 func membersFlag() cli.Flag {
 	usage := "Members to assign the specified role to"
 	return &cli.StringSliceFlag{

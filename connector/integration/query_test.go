@@ -3,13 +3,13 @@
 package integration
 
 import (
-	"testing"
 	"context"
+	"testing"
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/cape/controller/harness"
 	connHarness "github.com/dropoutlabs/cape/connector/harness"
+	"github.com/dropoutlabs/cape/controller/harness"
 )
 
 func TestQuery(t *testing.T) {
@@ -31,11 +31,21 @@ func TestQuery(t *testing.T) {
 	_, err = m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	connCfg := &connHarness.Config{Token: m.Connector.Token}
+	controllerURL, err := m.URL()
+	gm.Expect(err).To(gm.BeNil())
+
+	connCfg := &connHarness.Config{ControllerURL: controllerURL}
+
 	connH, err := connHarness.NewHarness(connCfg)
 	gm.Expect(err).To(gm.BeNil())
 
 	err = connH.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	connectorURL, err := connH.URL()
+	gm.Expect(err).To(gm.BeNil())
+
+	err = m.CreateService(ctx, connH.APIToken(), connectorURL)
 	gm.Expect(err).To(gm.BeNil())
 
 	connClient, err := connH.Client()
