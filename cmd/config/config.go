@@ -265,6 +265,7 @@ func (c *Cluster) Token() (*base64.Value, error) {
 func (c *Cluster) SetToken(token *base64.Value) {
 	if token == nil {
 		c.AuthToken = ""
+		return
 	}
 
 	c.AuthToken = token.String()
