@@ -292,6 +292,8 @@ github.com/manifoldco/healthz v1.2.0 h1:kvE24XD3qOC9FAhV+Zge+4zViPoB9zM1MG/T9VSG
 github.com/manifoldco/healthz v1.2.0/go.mod h1:i9V6dTxdXThdndn6WyMfaCF8i0xD7bf4ihwT8qUDVbc=
 github.com/manifoldco/promptui v0.7.0 h1:3l11YT8tm9MnwGFQ4kETwkzpAwY2Jt9lCrumCUW4+z4=
 github.com/manifoldco/promptui v0.7.0/go.mod h1:n4zTdgP0vr0S3w7/O/g98U+e0gwLScEXGwov2nIKuGQ=
+github.com/marianogappa/sqlparser v0.0.0-20190512194142-a82c3f44d2fc h1:VLv9JIO5nsRtI8BnihNFxSZa3WyumP3pcaSwtsQeqMM=
+github.com/marianogappa/sqlparser v0.0.0-20190512194142-a82c3f44d2fc/go.mod h1:IV4wqowJaFgLP4otdhEe5K/u43AolikVPWq4ruJ5nuE=
 github.com/matoous/godox v0.0.0-20190911065817-5d6d842e92eb h1:RHba4YImhrUVQDHUCe2BNSOz4tVy2yGyXhvYDvxGgeE=
 github.com/matoous/godox v0.0.0-20190911065817-5d6d842e92eb/go.mod h1:1BELzlh859Sh1c6+90blK8lbYy0kwQf1bYlBhBysy1s=
 github.com/matryer/is v1.3.0 h1:9qiso3jaJrOe6qBRJRBt2Ldht05qDiFP9le0JOIhRSI=
