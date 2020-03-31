@@ -17,4 +17,7 @@ var (
 
 	// PasswordNoMatch happens when you confirm you password and it doesn't match your initial input
 	PasswordNoMatch = errors.NewCause(errors.BadRequestCategory, "passwords_dont_match")
+
+	// BadCertificate happens when the server cert is bad
+	BadCertificate = errors.NewCause(errors.BadRequestCategory, "Bad certificate")
 )

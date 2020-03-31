@@ -18,6 +18,7 @@ import (
 type Component interface {
 	Setup(context.Context) (http.Handler, error)
 	Teardown(context.Context) error
+	CertFiles() (certFile string, keyFile string)
 }
 
 // Config represents a configuration object for a component.
@@ -67,6 +68,16 @@ func (s *Server) Start(ctx context.Context) error {
 	}
 
 	s.logger.Info().Msgf("%s attempting to listen %s", s.cfg.GetInstanceID(), s.Addr())
+
+	certFile, keyFile := s.component.CertFiles()
+	if certFile != "" && keyFile != "" {
+		err = s.server.ListenAndServeTLS(certFile, keyFile)
+		if err != nil && err != http.ErrServerClosed {
+			return err
+		}
+		return nil
+	}
+
 	err = s.server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		return err

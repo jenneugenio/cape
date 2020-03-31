@@ -12,6 +12,8 @@ const AdminEmail = "admin@cape.com"
 const AdminName = "admin"
 const AdminPassword = "iamtheadmin"
 
+const ConnectorEmail = "service:data-connector@cape.com"
+
 // User represents a user in the cape controller
 type User struct {
 	Client   *controller.Client
@@ -19,13 +21,19 @@ type User struct {
 	Password []byte
 }
 
+// Service represents a service in the cape controller
+type Service struct {
+	Token *auth.APIToken
+}
+
 // Manager represents an application state manager on-top of the Controller's
 // harness. It's job is to provide convenience functions for setting up a
 // controller's application state, managing users, and other utilities that
 // make it write end-to-end integration tests.
 type Manager struct {
-	h     *Harness
-	Admin *User
+	h         *Harness
+	Admin     *User
+	Connector *Service
 }
 
 // Setup sets up the application state for the cluster (e.g. the `setup`
@@ -71,5 +79,49 @@ func (m *Manager) Setup(ctx context.Context) (*controller.Client, error) {
 	}
 
 	m.Admin = user
+
+	err = m.createService(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return client, nil
+}
+
+func (m *Manager) createService(ctx context.Context) error {
+	url, err := m.h.URL()
+	if err != nil {
+		return err
+	}
+
+	email, err := primitives.NewEmail(ConnectorEmail)
+	if err != nil {
+		return err
+	}
+
+	apiToken, err := auth.NewAPIToken(email, url)
+	if err != nil {
+		return err
+	}
+
+	creds, err := apiToken.Credentials()
+	if err != nil {
+		return err
+	}
+
+	service, err := primitives.NewService(email, primitives.DataConnectorServiceType, creds.Package())
+	if err != nil {
+		return err
+	}
+
+	_, err = m.Admin.Client.CreateService(ctx, service)
+	if err != nil {
+		return err
+	}
+
+	m.Connector = &Service{
+		Token: apiToken,
+	}
+
+	return nil
 }

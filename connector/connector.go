@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
+	"strings"
 
 	"github.com/justinas/alice"
 	"github.com/manifoldco/healthz"
@@ -14,6 +14,9 @@ import (
 
 	pb "github.com/dropoutlabs/cape/connector/proto"
 )
+
+const connectorCertFile = "connector/certs/localhost.crt"
+const connectorKeyFile = "connector/certs/localhost.key"
 
 // Connector is the central brain of Cape.  It keeps track of system
 // users, policy, etc
@@ -26,8 +29,6 @@ type Connector struct {
 
 // Setup starts the connector
 func (c *Connector) Setup(ctx context.Context) (http.Handler, error) {
-	time.Sleep(5 * time.Minute)
-
 	return c.handler, nil
 }
 
@@ -36,13 +37,31 @@ func (c *Connector) Teardown(ctx context.Context) error {
 	return nil
 }
 
-// New returns a pointer to a controller instance
+func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.ProtoMajor == 2 && strings.HasPrefix(
+			r.Header.Get("Content-Type"), "application/grpc") {
+			grpcServer.ServeHTTP(w, r)
+		} else {
+			otherHandler.ServeHTTP(w, r)
+		}
+	})
+}
+
+// CertFiles returns the cert files used by ListenAndServeTLS
+func (c *Connector) CertFiles() (certFile string, keyFile string) {
+	certFile = connectorCertFile
+	keyFile = connectorKeyFile
+	return
+}
+
+// New returns a pointer to a Connector instance
 func New(cfg *Config) (*Connector, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
-	grpcServer := grpc.NewServer(grpc.StreamInterceptor(authServerInterceptor()))
+	grpcServer := grpc.NewServer()
 	pb.RegisterDataConnectorServer(grpcServer, &grpcHandler{})
 
 	mux := http.NewServeMux()
@@ -54,6 +73,6 @@ func New(cfg *Config) (*Connector, error) {
 		InstanceID: fmt.Sprintf("cape-connector-%s", cfg.InstanceID),
 		Port:       cfg.Port,
 		Token:      cfg.Token,
-		handler:    chain,
+		handler:    grpcHandlerFunc(grpcServer, chain),
 	}, nil
 }

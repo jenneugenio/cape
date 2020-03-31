@@ -2,15 +2,15 @@ package connector
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	"io"
-	"net/url"
 
 	"github.com/manifoldco/go-base64"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	pb "github.com/dropoutlabs/cape/connector/proto"
-	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -18,24 +18,23 @@ import (
 // connects to the connector and sends queries
 type Client struct {
 	client    pb.DataConnectorClient
-	authToken *base64.Value
+	authToken *base64.Value // nolint: unused, structcheck
 }
 
 // NewClient dials the connector and creates a client
-func NewClient(connectorURL *url.URL, authToken *base64.Value) (*Client, error) {
-	if authToken == nil {
-		return nil, errors.New(MissingAuthToken, "Must supply auth token when creating client")
-	}
+func NewClient(connectorURL *primitives.URL, certPool *x509.CertPool) (*Client, error) {
+	// TODO log in here
+	creds := credentials.NewClientTLSFromCert(certPool, "")
 
-	conn, err := grpc.Dial(connectorURL.String(), grpc.WithInsecure(),
-		grpc.WithBlock(), grpc.WithStreamInterceptor(authClientInterceptor(authToken)))
+	// strip https from url, dial expects the protocol not be specified
+	conn, err := grpc.Dial(connectorURL.String()[8:], grpc.WithBlock(),
+		grpc.WithTransportCredentials(creds))
 	if err != nil {
 		return nil, err
 	}
 
 	return &Client{
-		client:    pb.NewDataConnectorClient(conn),
-		authToken: authToken,
+		client: pb.NewDataConnectorClient(conn),
 	}, nil
 }
 

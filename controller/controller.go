@@ -44,6 +44,12 @@ func (c *Controller) Teardown(ctx context.Context) error {
 	return c.backend.Close()
 }
 
+// CertFiles implements the Component interface. Controller doesn't support
+// TLS right now so not needed!
+func (c *Controller) CertFiles() (certFile string, keyFile string) {
+	return
+}
+
 // New validates the input and returns a constructed Controller
 func New(cfg *Config, logger *zerolog.Logger) (*Controller, error) {
 	if cfg == nil {
