@@ -7,11 +7,10 @@ import (
 type grpcHandler struct{}
 
 func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryServer) error {
-	datasource := req.GetDataSource()
+	dataSource := req.GetDataSource()
 
 	// TODO pull schema/data
-	schema := &pb.Schema{DataSource: datasource}
-
+	schema := &pb.Schema{DataSource: dataSource}
 	r := &pb.Record{Schema: schema}
 
 	err := server.Send(r)
