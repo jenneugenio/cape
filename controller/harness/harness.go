@@ -8,6 +8,7 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/controller"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/database/dbtest"
@@ -120,10 +121,25 @@ func (h *Harness) Setup(ctx context.Context) error {
 		return cleanup(err)
 	}
 
+	dbURL, err := primitives.DBURLFromURL(db.URL())
+	if err != nil {
+		return cleanup(err)
+	}
+
+	kp, err := auth.NewKeypair()
+	if err != nil {
+		return cleanup(err)
+	}
+
 	controller, err := controller.New(&controller.Config{
-		DBURL:      db.URL(),
+		DB: &controller.DBConfig{
+			Addr: dbURL,
+		},
 		InstanceID: "cape",
 		Port:       1, // This port is ignored!
+		Auth: &controller.AuthConfig{
+			KeypairPackage: kp.Package(),
+		},
 	}, logger)
 	if err != nil {
 		return err

@@ -22,6 +22,17 @@ func NewDBURL(in string) (*DBURL, error) {
 	return d, nil
 }
 
+// DBURLFromURL returns a DBURL from a net/url.URL
+func DBURLFromURL(u *url.URL) (*DBURL, error) {
+	d := &DBURL{URL: u}
+	err := d.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return d, nil
+}
+
 // DBURL contains a url for a database
 type DBURL struct {
 	*url.URL
@@ -46,6 +57,16 @@ func (d *DBURL) Validate() error {
 	}
 
 	return nil
+}
+
+// ToURL returns the underlying url.URL
+func (d *DBURL) ToURL() *url.URL {
+	return d.URL
+}
+
+// SetPassword sets the password
+func (d *DBURL) SetPassword(pw string) {
+	d.User = url.UserPassword(d.User.Username(), pw)
 }
 
 // MarshalJSON implements the JSON.Marshaller interface

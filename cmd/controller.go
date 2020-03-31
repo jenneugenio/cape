@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"os/signal"
 	"time"
@@ -15,7 +14,6 @@ import (
 	"github.com/dropoutlabs/cape/controller"
 	"github.com/dropoutlabs/cape/framework"
 	"github.com/dropoutlabs/cape/logging"
-	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -91,7 +89,7 @@ func catchShutdown(ctx context.Context, quit chan os.Signal, c *controller.Contr
 
 // getDBURL looks at the environment and generates the database address if
 // needed.
-func getDBURL(c *cli.Context) (*url.URL, error) {
+func getDBURL(c *cli.Context) (*primitives.DBURL, error) {
 	// We support passing the password in separately or as a part of the DB
 	// URL. If the password is contained in the CAPE_DB_URL then it should be
 	// passed entirely as a secret inside a kubernetes orchestration system.
@@ -99,15 +97,15 @@ func getDBURL(c *cli.Context) (*url.URL, error) {
 	envVars := EnvVariables(c.Context)
 	password, _ := envVars["CAPE_DB_PASSWORD"].(string)
 
-	u, err := url.Parse(dbURL)
+	u, err := primitives.NewDBURL(dbURL)
 	if err != nil {
-		return nil, errors.Wrap(InvalidURLCause, err)
+		return nil, err
 	}
 
 	// If the password is passed in via environment variables
 	// instead of part of the connection string
 	if password != "" {
-		u.User = url.UserPassword(u.User.Username(), password)
+		u.SetPassword(password)
 	}
 
 	return u, nil
@@ -196,9 +194,21 @@ func startControllerCmd(c *cli.Context) error {
 		return err
 	}
 
-	// TODO: Turn instanceID into one of our primitives
+	// TODO: Finish integrating loading config from a file and enabling
+	// overwriting of flags. This includes figuring out the local development
+	// environment and configuration workflow.
+	keypair, err := auth.NewKeypair()
+	if err != nil {
+		return nil
+	}
+
 	cfg := &controller.Config{
-		DBURL:      dbURL,
+		DB: &controller.DBConfig{
+			Addr: dbURL,
+		},
+		Auth: &controller.AuthConfig{
+			KeypairPackage: keypair.Package(),
+		},
 		InstanceID: instanceID,
 		Port:       port,
 	}

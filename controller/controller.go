@@ -54,12 +54,17 @@ func New(cfg *Config, logger *zerolog.Logger) (*Controller, error) {
 		return nil, err
 	}
 
-	backend, err := database.New(cfg.DBURL, cfg.InstanceID.String())
+	backend, err := database.New(cfg.DB.Addr.ToURL(), cfg.InstanceID.String())
 	if err != nil {
 		return nil, err
 	}
 
-	tokenAuth, err := auth.NewTokenAuthority(cfg.InstanceID.String())
+	keypair, err := cfg.Auth.Unpackage()
+	if err != nil {
+		return nil, err
+	}
+
+	tokenAuth, err := auth.NewTokenAuthority(keypair, cfg.InstanceID.String())
 	if err != nil {
 		return nil, err
 	}

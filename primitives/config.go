@@ -15,6 +15,7 @@ func (c *Config) GetType() types.Type {
 	return ConfigType
 }
 
+// NewConfig returns a new Config primitive
 func NewConfig() (*Config, error) {
 	p, err := database.NewPrimitive(ConfigType)
 	if err != nil {

@@ -29,12 +29,7 @@ type TokenAuthority struct {
 }
 
 // NewTokenAuthority returns a new token authority
-func NewTokenAuthority(serviceEmail string) (*TokenAuthority, error) {
-	keypair, err := NewKeypair()
-	if err != nil {
-		return nil, err
-	}
-
+func NewTokenAuthority(keypair *Keypair, serviceEmail string) (*TokenAuthority, error) {
 	return &TokenAuthority{
 		keypair:      keypair,
 		serviceEmail: serviceEmail,

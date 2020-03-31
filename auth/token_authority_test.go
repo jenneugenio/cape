@@ -10,47 +10,69 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 )
 
-func TestTokenAuthorityGenerate(t *testing.T) {
+func TestTokenAuthority(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	tokenAuth, err := NewTokenAuthority("controller@controller.ai")
+	keypair, err := NewKeypair()
 	gm.Expect(err).To(gm.BeNil())
 
-	sig, expiresIn, err := tokenAuth.Generate(primitives.Login)
-	gm.Expect(err).To(gm.BeNil())
-	gm.Expect(sig).ToNot(gm.BeNil())
-	gm.Expect(expiresIn).To(gm.BeTemporally(">", time.Now().UTC()))
-}
+	t.Run("Generate Token", func(t *testing.T) {
+		tokenAuth, err := NewTokenAuthority(keypair, "controller@controller.ai")
+		gm.Expect(err).To(gm.BeNil())
 
-func TestTokenAuthorityVerify(t *testing.T) {
-	gm.RegisterTestingT(t)
+		sig, expiresIn, err := tokenAuth.Generate(primitives.Login)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(sig).ToNot(gm.BeNil())
+		gm.Expect(expiresIn).To(gm.BeTemporally(">", time.Now().UTC()))
+	})
 
-	tokenAuth, err := NewTokenAuthority("controller@controller.ai")
-	gm.Expect(err).To(gm.BeNil())
+	t.Run("Can Verify Token", func(t *testing.T) {
+		tokenAuth, err := NewTokenAuthority(keypair, "controller@controller.ai")
+		gm.Expect(err).To(gm.BeNil())
 
-	sig, expiresIn, err := tokenAuth.Generate(primitives.Login)
-	gm.Expect(err).To(gm.BeNil())
-	gm.Expect(sig).ToNot(gm.BeNil())
-	gm.Expect(expiresIn).To(gm.BeTemporally(">", time.Now().UTC()))
+		sig, expiresIn, err := tokenAuth.Generate(primitives.Login)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(sig).ToNot(gm.BeNil())
+		gm.Expect(expiresIn).To(gm.BeTemporally(">", time.Now().UTC()))
 
-	err = tokenAuth.Verify(sig)
-	gm.Expect(err).To(gm.BeNil())
-}
+		err = tokenAuth.Verify(sig)
+		gm.Expect(err).To(gm.BeNil())
+	})
 
-func TestTokenAuthorityVerifyError(t *testing.T) {
-	gm.RegisterTestingT(t)
+	t.Run("Can verify from another authority - same keypair", func(t *testing.T) {
+		tokenAuth, err := NewTokenAuthority(keypair, "controller@controller.ai")
+		gm.Expect(err).To(gm.BeNil())
 
-	tokenAuth, err := NewTokenAuthority("controller@controller.ai")
-	gm.Expect(err).To(gm.BeNil())
+		sig, expiresIn, err := tokenAuth.Generate(primitives.Login)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(sig).ToNot(gm.BeNil())
+		gm.Expect(expiresIn).To(gm.BeTemporally(">", time.Now().UTC()))
 
-	otherTokenAuth, err := NewTokenAuthority("controller2@controller.ai")
-	gm.Expect(err).To(gm.BeNil())
+		err = tokenAuth.Verify(sig)
+		gm.Expect(err).To(gm.BeNil())
 
-	sig, expiresIn, err := tokenAuth.Generate(primitives.Login)
-	gm.Expect(err).To(gm.BeNil())
-	gm.Expect(sig).ToNot(gm.BeNil())
-	gm.Expect(expiresIn).To(gm.BeTemporally(">", time.Now().UTC()))
+		other, err := NewTokenAuthority(keypair, "controller@controller.ai")
+		gm.Expect(err).To(gm.BeNil())
 
-	err = otherTokenAuth.Verify(sig)
-	gm.Expect(err).To(gm.Equal(jose.ErrCryptoFailure))
+		gm.Expect(other.Verify(sig)).To(gm.BeNil())
+	})
+
+	t.Run("Can't verify from another authority with different keypair", func(t *testing.T) {
+		tokenAuth, err := NewTokenAuthority(keypair, "controller@controller.ai")
+		gm.Expect(err).To(gm.BeNil())
+
+		otherKeypair, err := NewKeypair()
+		gm.Expect(err).To(gm.BeNil())
+
+		otherTokenAuth, err := NewTokenAuthority(otherKeypair, "controller2@controller.ai")
+		gm.Expect(err).To(gm.BeNil())
+
+		sig, expiresIn, err := tokenAuth.Generate(primitives.Login)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(sig).ToNot(gm.BeNil())
+		gm.Expect(expiresIn).To(gm.BeTemporally(">", time.Now().UTC()))
+
+		err = otherTokenAuth.Verify(sig)
+		gm.Expect(err).To(gm.Equal(jose.ErrCryptoFailure))
+	})
 }

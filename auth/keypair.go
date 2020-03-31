@@ -83,12 +83,12 @@ func (kp *KeypairPackage) Unpackage() (*Keypair, error) {
 }
 
 // Package returns a KeypairPackage which can be serialized to JSON
-func (k *Keypair) Package() (*KeypairPackage, error) {
-	return &KeypairPackage{
+func (k *Keypair) Package() KeypairPackage {
+	return KeypairPackage{
 		Secret: base64.New(k.secret),
 		Salt:   base64.New(k.salt),
 		Alg:    k.Alg,
-	}, nil
+	}
 }
 
 // DeriveKeypair returns a new keypair for

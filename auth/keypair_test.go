@@ -19,9 +19,7 @@ func TestKeypair(t *testing.T) {
 		kp, err := NewKeypair()
 		gm.Expect(err).To(gm.BeNil())
 
-		pkg, err := kp.Package()
-		gm.Expect(err).To(gm.BeNil())
-
+		pkg := kp.Package()
 		unpkg, err := pkg.Unpackage()
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(unpkg).To(gm.Equal(kp))
@@ -31,9 +29,7 @@ func TestKeypair(t *testing.T) {
 		kp, err := NewKeypair()
 		gm.Expect(err).To(gm.BeNil())
 
-		pkg, err := kp.Package()
-		gm.Expect(err).To(gm.BeNil())
-
+		pkg := kp.Package()
 		out, err := json.Marshal(pkg)
 		gm.Expect(err).To(gm.BeNil())
 
