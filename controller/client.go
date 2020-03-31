@@ -16,7 +16,12 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 )
 
+// NetworkCause occurs when the client cannot reach the server
 var NetworkCause = errors.NewCause(errors.RequestTimeoutCategory, "network_error")
+
+// UnrecognizedIdentityType occurs when the client encounters an identity type
+// it doesn't recognize.
+var UnrecognizedIdentityType = errors.NewCause(errors.BadRequestCategory, "unrecognized_identity")
 
 // Client is a wrapper around the graphql client that
 // connects to the controller and sends queries
@@ -57,6 +62,27 @@ func (c *Client) Raw(ctx context.Context, query string,
 	}
 
 	return nil
+}
+
+// Me returns the identity of the current authenticated session
+func (c *Client) Me(ctx context.Context) (primitives.Identity, error) {
+	var resp struct {
+		Identity *primitives.IdentityImpl `json:"me"`
+	}
+
+	err := c.Raw(ctx, `
+		query Me {
+			me {
+				id
+				email
+			}
+		}
+	`, nil, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return identityImplToIdentity(resp.Identity)
 }
 
 // createLoginSession runs a CreateLoginSession mutation that creates a
@@ -290,7 +316,7 @@ func (c *Client) GetRoleByLabel(ctx context.Context, label primitives.Label) (*p
 // GetMembersRole returns the members of a role
 func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]primitives.Identity, error) {
 	var resp struct {
-		Identities []primitives.IdentityImpl `json:"roleMembers"`
+		Identities []*primitives.IdentityImpl `json:"roleMembers"`
 	}
 
 	variables := make(map[string]interface{})
@@ -311,28 +337,34 @@ func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]prim
 	return clientIdentitiesToPrimitive(resp.Identities)
 }
 
-func clientIdentitiesToPrimitive(identities []primitives.IdentityImpl) ([]primitives.Identity, error) {
-	pIdentities := make([]primitives.Identity, len(identities))
+func clientIdentitiesToPrimitive(identities []*primitives.IdentityImpl) ([]primitives.Identity, error) {
+	out := make([]primitives.Identity, len(identities))
 	for i, identity := range identities {
-		typ, err := identity.ID.Type()
+		result, err := identityImplToIdentity(identity)
 		if err != nil {
 			return nil, err
 		}
 
-		identityImpl := &primitives.IdentityImpl{}
-		*identityImpl = identity
-		if typ == primitives.UserType {
-			pIdentities[i] = &primitives.User{
-				IdentityImpl: identityImpl,
-			}
-		} else if typ == primitives.ServicePrimitiveType {
-			pIdentities[i] = &primitives.Service{
-				IdentityImpl: identityImpl,
-			}
-		}
+		out[i] = result
 	}
 
-	return pIdentities, nil
+	return out, nil
+}
+
+func identityImplToIdentity(identity *primitives.IdentityImpl) (primitives.Identity, error) {
+	typ, err := identity.ID.Type()
+	if err != nil {
+		return nil, err
+	}
+
+	switch typ {
+	case primitives.UserType:
+		return &primitives.User{IdentityImpl: identity}, nil
+	case primitives.ServicePrimitiveType:
+		return &primitives.Service{IdentityImpl: identity}, nil
+	default:
+		return nil, errors.New(UnrecognizedIdentityType, "Unknown Type: %s", typ.String())
+	}
 }
 
 // AssignmentResponse is a type alias to easily decode the
@@ -931,7 +963,7 @@ func (c *Client) GetIdentityPolicies(ctx context.Context, identityID database.ID
 // GetIdentities returns all identities for the given emails
 func (c *Client) GetIdentities(ctx context.Context, emails []primitives.Email) ([]primitives.Identity, error) {
 	var resp struct {
-		Identities []primitives.IdentityImpl `json:"identities"`
+		Identities []*primitives.IdentityImpl `json:"identities"`
 	}
 
 	variables := make(map[string]interface{})

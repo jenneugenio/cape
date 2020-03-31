@@ -20,6 +20,12 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 		logger := Logger(ctx)
 		token := AuthToken(ctx)
 
+		if token == nil {
+			msg := "Could not authenticate. Token missing"
+			logger.Info().Msg(msg)
+			return nil, ErrAuthentication
+		}
+
 		err := tokenAuthority.Verify(token)
 		if err != nil {
 			msg := "Could not authenticate. Unable to verify auth token"

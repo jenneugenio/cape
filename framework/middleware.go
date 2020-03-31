@@ -56,11 +56,13 @@ func Logger(ctx context.Context) zerolog.Logger {
 	return logger.(zerolog.Logger)
 }
 
-// AuthToken returns the auth token stored on the given context
+// AuthToken returns the auth token stored on the given context.
+//
+// Returns nil if the token is not available on the context.
 func AuthToken(ctx context.Context) *base64.Value {
 	token := ctx.Value(AuthTokenContextKey)
 	if token == nil {
-		panic("auth token not available on context")
+		return nil
 	}
 
 	return token.(*base64.Value)

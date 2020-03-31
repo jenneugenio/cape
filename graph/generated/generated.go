@@ -103,6 +103,7 @@ type ComplexityRoot struct {
 		Attachment       func(childComplexity int, roleID database.ID, policyID database.ID) int
 		Identities       func(childComplexity int, emails []*primitives.Email) int
 		IdentityPolicies func(childComplexity int, identityID database.ID) int
+		Me               func(childComplexity int) int
 		Policies         func(childComplexity int) int
 		Policy           func(childComplexity int, id database.ID) int
 		Role             func(childComplexity int, id database.ID) int
@@ -184,6 +185,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	User(ctx context.Context, id database.ID) (*primitives.User, error)
 	Users(ctx context.Context) ([]*primitives.User, error)
+	Me(ctx context.Context) (primitives.Identity, error)
 	Session(ctx context.Context) (*primitives.Session, error)
 	Sources(ctx context.Context) ([]*primitives.Source, error)
 	Source(ctx context.Context, id database.ID) (*primitives.Source, error)
@@ -571,6 +573,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.IdentityPolicies(childComplexity, args["identity_id"].(database.ID)), true
+
+	case "Query.me":
+		if e.complexity.Query.Me == nil {
+			break
+		}
+
+		return e.complexity.Query.Me(childComplexity), true
 
 	case "Query.policies":
 		if e.complexity.Query.Policies == nil {
@@ -1167,6 +1176,7 @@ type Query {
   user(id: ID!): User!
   users: [User!]
 
+  me: Identity! @isAuthenticated()
   session: Session!
 
   sources: [Source!]! @isAuthenticated()
@@ -3272,6 +3282,64 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	res := resTmp.([]*primitives.User)
 	fc.Result = res
 	return ec.marshalOUser2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐUserᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Me(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(primitives.Identity); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/dropoutlabs/cape/primitives.Identity`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(primitives.Identity)
+	fc.Result = res
+	return ec.marshalNIdentity2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentity(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_session(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6742,6 +6810,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_users(ctx, field)
+				return res
+			})
+		case "me":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_me(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "session":

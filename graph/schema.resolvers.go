@@ -253,6 +253,11 @@ func (r *queryResolver) Users(ctx context.Context) ([]*primitives.User, error) {
 	return nil, errs.New(RouteNotImplemented, "Users query not implemented")
 }
 
+func (r *queryResolver) Me(ctx context.Context) (primitives.Identity, error) {
+	identity := fw.Identity(ctx)
+	return identity, nil
+}
+
 func (r *queryResolver) Session(ctx context.Context) (*primitives.Session, error) {
 	return nil, errs.New(RouteNotImplemented, "Session query not implemented")
 }
