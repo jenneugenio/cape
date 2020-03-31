@@ -5,5 +5,6 @@ import (
 )
 
 var (
-	InvalidQueryCause = errors.NewCause(errors.BadRequestCategory, "invalid_query")
+	InvalidQueryCause     = errors.NewCause(errors.BadRequestCategory, "invalid_query")
+	NoPossibleFieldsCause = errors.NewCause(errors.BadRequestCategory, "no_possible_fields")
 )
