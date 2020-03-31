@@ -148,7 +148,7 @@ func rolesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("Created the role '%s'.", label)
+	fmt.Printf("Created the role '%s'.\n", label)
 	return nil
 }
 
@@ -187,7 +187,7 @@ func rolesRemoveCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("The role '%s' has been deleted.", label)
+	fmt.Printf("The role '%s' has been deleted.\n", label)
 
 	return nil
 }

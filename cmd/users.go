@@ -88,10 +88,10 @@ func usersCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Println("A user has been created with the following credentials:")
+	fmt.Printf("A user has been created with the following credentials:\n\n")
 	fmt.Printf("Name: %s\n", name)
 	fmt.Printf("Email: %s\n", email)
-	fmt.Printf("Password %s\n", password)
+	fmt.Printf("Password %s\n\n", password)
 	fmt.Println("Remember: Please keep the password safe and share with the user securely.")
 
 	return nil

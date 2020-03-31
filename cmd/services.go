@@ -156,9 +156,9 @@ func servicesCreateCmd(c *cli.Context) error {
 	}
 
 	fmt.Printf("The service '%s' with type '%s' has been created. The following token "+
-		"can be used to authenticate as that service:\n", service.Email, service.Type)
+		"can be used to authenticate as that service:\n\n", service.Email, service.Type)
 
-	fmt.Printf("Token: %s\n", tokenStr)
+	fmt.Printf("Token: %s\n\n", tokenStr)
 	fmt.Println("Remember: Please keep the token safe and share it securely as\n" +
 		"it enables anyone with access to the cluster the ability to authenticate as this service.")
 
