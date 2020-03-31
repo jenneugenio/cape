@@ -3,12 +3,11 @@ package connector
 import (
 	"context"
 	"fmt"
+	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/controller"
 	"github.com/justinas/alice"
 	"github.com/manifoldco/healthz"
 	"net/http"
-	"time"
-
-	"github.com/dropoutlabs/cape/auth"
 )
 
 // Connector is the central brain of Cape.  It keeps track of system
@@ -20,9 +19,19 @@ type Connector struct {
 	handler    http.Handler
 }
 
+func (c *Connector) login(ctx context.Context) (*controller.Client, error) {
+	client := controller.NewClient(c.Token.URL, nil)
+	_, err := client.Login(ctx, c.Token.Email, c.Token.Secret)
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
 // Start the connector
 func (c *Connector) Setup(ctx context.Context) (http.Handler, error) {
-	time.Sleep(5 * time.Minute)
+	c.login(ctx)
 
 	return c.handler, nil
 }
@@ -39,7 +48,6 @@ func New(cfg *Config) (*Connector, error) {
 
 	mux := http.NewServeMux()
 	health := healthz.NewHandler(mux)
-
 	chain := alice.New().Then(health)
 
 	return &Connector{
