@@ -8,6 +8,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/cmd/ui"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -48,8 +49,9 @@ func init() {
 
 func usersCreateCmd(c *cli.Context) error {
 	args := Arguments(c.Context)
-
+	u := UI(c.Context)
 	cfgSession := Session(c.Context)
+
 	cluster, err := cfgSession.Cluster()
 	if err != nil {
 		return err
@@ -89,10 +91,17 @@ func usersCreateCmd(c *cli.Context) error {
 	}
 
 	fmt.Printf("A user has been created with the following credentials:\n\n")
-	fmt.Printf("Name: %s\n", name)
-	fmt.Printf("Email: %s\n", email)
-	fmt.Printf("Password %s\n\n", password)
-	fmt.Println("Remember: Please keep the password safe and share with the user securely.")
+
+	err = u.Details(ui.Details{
+		"Name":     name,
+		"Email":    email,
+		"Password": password,
+	})
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("\nRemember: Please keep the password safe and share with the user securely.\n")
 
 	return nil
 }

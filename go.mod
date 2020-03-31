@@ -51,7 +51,7 @@ require (
 	github.com/urfave/cli/v2 v2.1.1
 	github.com/vektah/gqlparser/v2 v2.0.1
 	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d
-	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
+	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	google.golang.org/grpc v1.28.0
 	gopkg.in/ini.v1 v1.55.0 // indirect

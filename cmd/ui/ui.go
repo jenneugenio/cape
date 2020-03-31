@@ -35,6 +35,10 @@ type TableHeader []string
 // ]
 type TableBody [][]string
 
+// Details is used to colorize a series of key and value pairs when listing
+// colors in the UI
+type Details map[string]interface{}
+
 // NewUI returns a configured UI struct
 func NewUI(cfg *config.Config) (*UI, error) {
 	return &UI{
@@ -111,7 +115,7 @@ func (u *UI) Confirm(question string) error {
 func (u *UI) Table(header TableHeader, body TableBody) error {
 	w := ansiterm.NewTabWriter(os.Stdout, 2, 0, 4, ' ', 0)
 
-	if u.Config.UI.Colors && u.Attached {
+	if u.CanColorize() {
 		w.SetStyle(ansiterm.Bold)
 	}
 
@@ -131,6 +135,36 @@ func (u *UI) Table(header TableHeader, body TableBody) error {
 	}
 
 	return w.Flush()
+}
+
+// Details prints the provided details to the UI. Details is a UI Component
+// with labelled key and value pairs.
+func (u *UI) Details(details Details) error {
+	w := ansiterm.NewTabWriter(os.Stdout, 2, 0, 4, ' ', 0)
+	for label, value := range details {
+		if u.CanColorize() {
+			label = faded(label)
+		}
+
+		out := ""
+		switch v := value.(type) {
+		case fmt.Stringer:
+			out = v.String()
+		case string:
+			out = v
+		default:
+			return ErrCantDisplay
+		}
+
+		fmt.Fprintf(w, "%s:\t%s\n", label, out)
+	}
+
+	return w.Flush()
+}
+
+// CanColorized returns whether or not colorization can be supported
+func (u *UI) CanColorize() bool {
+	return u.Config.UI.Colors && u.Attached
 }
 
 // Attached return a boolean representing whether or not the current session is

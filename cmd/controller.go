@@ -170,7 +170,7 @@ func setupControllerCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Println("Setup Complete! Welcome to Cape!")
+	fmt.Printf("\nSetup Complete! Welcome to Cape!\n\n")
 	fmt.Printf("Your current cluster has been set to '%s'.\n", label)
 
 	return nil

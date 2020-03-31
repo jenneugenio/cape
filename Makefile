@@ -72,9 +72,9 @@ endif
 CURRENT_PROTOC_VERSION := $(shell protoc --version 2> /dev/null)
 protoccheck:
 ifeq (,$(shell command -v protoc 2> /dev/null))
-ifeq (,$(findstring $(PROTOC_REQUIRED_VERSION),$(PROTOC_GSUTIL_VERSION)))
+ifeq (,$(findstring $(PROTOC_REQUIRED_VERSION),$(PROTOC_REQUIRED_VERSION)))
 ifeq (,$(BYPASS_PROTOC_CHECK))
-	$(error "protoc version $(PROTOC_REQUIRED_VERSION) is required, found $(PROTOC_GSUTIL_VERSION)")
+	$(error "protoc version $(PROTOC_REQUIRED_VERSION) is required, found $(PROTOC_REQUIRED_VERSION)")
 endif
 endif
 endif

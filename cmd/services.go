@@ -7,6 +7,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/cmd/ui"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -106,6 +107,7 @@ func init() {
 func servicesCreateCmd(c *cli.Context) error {
 	args := Arguments(c.Context)
 	cfgSession := Session(c.Context)
+	u := UI(c.Context)
 	typeStr := c.String("type")
 
 	cluster, err := cfgSession.Cluster()
@@ -158,7 +160,13 @@ func servicesCreateCmd(c *cli.Context) error {
 	fmt.Printf("The service '%s' with type '%s' has been created. The following token "+
 		"can be used to authenticate as that service:\n\n", service.Email, service.Type)
 
-	fmt.Printf("Token: %s\n\n", tokenStr)
+	err = u.Details(ui.Details{
+		"Token": tokenStr,
+	})
+	if err != nil {
+		return err
+	}
+
 	fmt.Println("Remember: Please keep the token safe and share it securely as\n" +
 		"it enables anyone with access to the cluster the ability to authenticate as this service.")
 
@@ -167,7 +175,7 @@ func servicesCreateCmd(c *cli.Context) error {
 
 func servicesRemoveCmd(c *cli.Context) error {
 	skipConfirm := c.Bool("yes")
-	ui := UI(c.Context)
+	u := UI(c.Context)
 
 	args := Arguments(c.Context)
 
@@ -181,7 +189,7 @@ func servicesRemoveCmd(c *cli.Context) error {
 	email.SetType(primitives.ServiceEmail)
 
 	if !skipConfirm {
-		err := ui.Confirm(fmt.Sprintf("Do you really want to delete %s and all of its tokens?", email))
+		err := u.Confirm(fmt.Sprintf("Do you really want to delete %s and all of its tokens?", email))
 		if err != nil {
 			return err
 		}
