@@ -109,7 +109,6 @@ type Query {
   users: [User!]
 
   me: Identity! @isAuthenticated()
-  session: Session!
 
   sources: [Source!]! @isAuthenticated()
   source(id: ID!): Source! @isAuthenticated()

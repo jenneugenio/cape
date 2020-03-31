@@ -114,7 +114,6 @@ type ComplexityRoot struct {
 		Service          func(childComplexity int, id database.ID) int
 		ServiceByEmail   func(childComplexity int, email primitives.Email) int
 		Services         func(childComplexity int) int
-		Session          func(childComplexity int) int
 		Source           func(childComplexity int, id database.ID) int
 		Sources          func(childComplexity int) int
 		User             func(childComplexity int, id database.ID) int
@@ -186,7 +185,6 @@ type QueryResolver interface {
 	User(ctx context.Context, id database.ID) (*primitives.User, error)
 	Users(ctx context.Context) ([]*primitives.User, error)
 	Me(ctx context.Context) (primitives.Identity, error)
-	Session(ctx context.Context) (*primitives.Session, error)
 	Sources(ctx context.Context) ([]*primitives.Source, error)
 	Source(ctx context.Context, id database.ID) (*primitives.Source, error)
 	Identities(ctx context.Context, emails []*primitives.Email) ([]primitives.Identity, error)
@@ -686,13 +684,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Services(childComplexity), true
 
-	case "Query.session":
-		if e.complexity.Query.Session == nil {
-			break
-		}
-
-		return e.complexity.Query.Session(childComplexity), true
-
 	case "Query.source":
 		if e.complexity.Query.Source == nil {
 			break
@@ -1177,7 +1168,6 @@ type Query {
   users: [User!]
 
   me: Identity! @isAuthenticated()
-  session: Session!
 
   sources: [Source!]! @isAuthenticated()
   source(id: ID!): Source! @isAuthenticated()
@@ -3340,40 +3330,6 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 	res := resTmp.(primitives.Identity)
 	fc.Result = res
 	return ec.marshalNIdentity2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentity(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_session(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Session(rctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*primitives.Session)
-	fc.Result = res
-	return ec.marshalNSession2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSession(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6821,20 +6777,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_me(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "session":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_session(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

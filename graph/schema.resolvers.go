@@ -258,10 +258,6 @@ func (r *queryResolver) Me(ctx context.Context) (primitives.Identity, error) {
 	return identity, nil
 }
 
-func (r *queryResolver) Session(ctx context.Context) (*primitives.Session, error) {
-	return nil, errs.New(RouteNotImplemented, "Session query not implemented")
-}
-
 func (r *queryResolver) Sources(ctx context.Context) ([]*primitives.Source, error) {
 	var s []primitives.Source
 	err := r.Backend.Query(ctx, &s, database.NewEmptyFilter())
