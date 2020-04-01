@@ -18,12 +18,17 @@ TODO
 
 ## Getting Started
 
-You can install everything you need with ```make bootstrap```. We also leverage helm to run the database with tilt (see below).
-If you do not have helm you can install it with ```make bootstrap-local-dev```.
+TODO
 
 ## Development
 
-Cape requires go1.14.X to build and run the executable. You can follow the official instructions to install it [here](https://golang.org/doc/install) or use [gvm](https://github.com/moovweb/gvm) to manage multiple go installations.
+Cape requires the following software to build and run locally:
+
+- **Go 1.14** You can install Go using the official instructions found [here](https://golang.org/doc/install) or use [gvm](https://github.com/moovweb/gvm) to manage multiple go installations.
+- **Protobuf** You can install the Protobuf compiler (`protoc`) using instructions found [here](https://developers.google.com/protocol-buffers/docs/downloads). We suggest using `brew` or your local system package manager (e.g. `apt`, `yum`, etc) to manage your version of `protoc`.
+- **Docker** You can install Docker by following the instructions found [here](https://docs.docker.com/install/). 
+
+Once you've installed the pre-requisite software you should be able to install additional tooling using `make bootstrap` in the root of your checkout of Cape.
 
 We're using [Github Actions](https://github.com/features/actions) to automate our CI/CD. To test basic CI locally you can run the following command:
 

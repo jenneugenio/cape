@@ -14,10 +14,10 @@ all: ci
 # Git.
 # ###############################################
 DOCKER_REQUIRED_VERSION=18.
-GO_REQUIRED_VERSION=1.14.
+GO_REQUIRED_VERSION=1.14
 HELM_REQUIRED_VERSION=v3.0.
 GSUTIL_REQUIRED_VERSION=4.47
-PROTOC_REQUIRED_VERSION=3.11.4
+PROTOC_REQUIRED_VERSION=3.11.
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
@@ -29,54 +29,32 @@ endif
 
 CURRENT_GO_VERSION := $(shell go version 2> /dev/null)
 gocheck:
-ifndef CURRENT_GO_VERSION
 ifeq (,$(findstring $(GO_REQUIRED_VERSION),$(CURRENT_GO_VERSION)))
-ifeq (,$(BYPASS_GO_CHECK))
 	$(error "Go Version $(GO_REQUIRED_VERSION) is required, found $(CURRENT_GO_VERSION)")
-endif
-endif
 endif
 
 CURRENT_DOCKER_VERSION := $(shell docker version 2> /dev/null)
 dockercheck:
-ifeq (,$(DOCKER_PATH))
-ifeq (,$(shell command -v docker 2> /dev/null))
 ifeq (,$(findstring $(DOCKER_REQUIRED_VERSION),$(CURRENT_DOCKER_VERSION)))
-ifeq (,$(BYPASS_DOCKER_CHECK))
 	$(error "Docker version $(DOCKER_REQUIRED_VERSION) is required, found $(CURRENT_DOCKER_VERSION)")
-endif
-endif
-endif
 endif
 
 CURRENT_HELM_VERSION := $(shell helm version 2> /dev/null)
 helmcheck:
-ifeq (,$(shell command -v helm 2> /dev/null))
 ifeq (,$(findstring $(HELM_REQUIRED_VERSION),$(CURRENT_HELM_VERSION)))
-ifeq (,$(BYPASS_HELM_CHECK))
 	$(error "Helm version $(HELM_REQUIRED_VERSION) is required, found $(CURRENT_HELM_VERSION).")
-endif
-endif
 endif
 
 CURRENT_GSUTIL_VERSION := $(shell gsutil version 2> /dev/null)
 gsutilcheck:
-ifeq (,$(shell command -v gsutil 2> /dev/null))
 ifeq (,$(findstring $(GSUTIL_REQUIRED_VERSION),$(CURRENT_GSUTIL_VERSION)))
-ifeq (,$(BYPASS_GSUTIL_CHECK))
 	$(error "gsutil version $(GSUTIL_REQUIRED_VERSION) is required, found $(CURRENT_GSUTIL_VERSION)")
-endif
-endif
 endif
 
 CURRENT_PROTOC_VERSION := $(shell protoc --version 2> /dev/null)
 protoccheck:
-ifeq (,$(shell command -v protoc 2> /dev/null))
-ifeq (,$(findstring $(PROTOC_REQUIRED_VERSION),$(PROTOC_REQUIRED_VERSION)))
-ifeq (,$(BYPASS_PROTOC_CHECK))
-	$(error "protoc version $(PROTOC_REQUIRED_VERSION) is required, found $(PROTOC_REQUIRED_VERSION)")
-endif
-endif
+ifeq (,$(findstring $(PROTOC_REQUIRED_VERSION),$(CURRENT_PROTOC_VERSION)))
+	$(error "protoc version $(PROTOC_REQUIRED_VERSION) is required, found $(CURRENT_PROTOC_VERSION)")
 endif
 
 .PHONY: gocheck dockercheck
@@ -113,23 +91,14 @@ endif
 # scratch.
 # ###############################################
 
-bootstrap: download install-tools
+bootstrap: gocheck protoccheck download install-tools
 	$(info All dependencies and tooling have been installed!)
 
 download: gocheck
 	go mod download
 
-install-tools: gocheck install-protoc download tools.go
+install-tools: gocheck download tools.go
 	cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % go install %
-
-SUDO=$(shell which sudo)
-install-protoc:
-	# normal protoc doesn't work with alpine, assume its installed via apk
-	if [ ! -f "/etc/alpine-release" ]; then \
-		curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v$(PROTOC_REQUIRED_VERSION)/$(PROTOC_ZIP); \
-		$(SUDO) unzip -o $(PROTOC_ZIP) -d /usr/local bin/protoc; \
-		$(SUDO) unzip -o $(PROTOC_ZIP) -d /usr/local 'include/*'; \
-	fi; \
 
 clean: gocheck
 	go clean
