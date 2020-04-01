@@ -2,15 +2,13 @@ package connector
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/justinas/alice"
 	"github.com/manifoldco/healthz"
+	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
-
-	"github.com/dropoutlabs/cape/auth"
 
 	pb "github.com/dropoutlabs/cape/connector/proto"
 )
@@ -21,10 +19,10 @@ const connectorKeyFile = "connector/certs/localhost.key"
 // Connector is the central brain of Cape.  It keeps track of system
 // users, policy, etc
 type Connector struct {
-	InstanceID string
-	Port       int
-	Token      *auth.APIToken
+	cfg        *Config
 	handler    http.Handler
+	controller *Controller
+	logger     *zerolog.Logger
 }
 
 // Setup starts the connector
@@ -56,13 +54,19 @@ func (c *Connector) CertFiles() (certFile string, keyFile string) {
 }
 
 // New returns a pointer to a Connector instance
-func New(cfg *Config) (*Connector, error) {
+func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
+	controller := NewController(cfg.Token, logger)
+
+	hndler := &grpcHandler{
+		controller: controller,
+	}
+
 	grpcServer := grpc.NewServer()
-	pb.RegisterDataConnectorServer(grpcServer, &grpcHandler{})
+	pb.RegisterDataConnectorServer(grpcServer, hndler)
 
 	mux := http.NewServeMux()
 	health := healthz.NewHandler(mux)
@@ -70,9 +74,9 @@ func New(cfg *Config) (*Connector, error) {
 	chain := alice.New().Then(health)
 
 	return &Connector{
-		InstanceID: fmt.Sprintf("cape-connector-%s", cfg.InstanceID),
-		Port:       cfg.Port,
-		Token:      cfg.Token,
+		cfg:        cfg,
 		handler:    grpcHandlerFunc(grpcServer, chain),
+		controller: controller,
+		logger:     logger,
 	}, nil
 }

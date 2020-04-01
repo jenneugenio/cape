@@ -5,19 +5,28 @@ import (
 
 	"github.com/manifoldco/go-base64"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 )
-
-func authServerInterceptor() grpc.StreamServerInterceptor { // nolint: deadcode, unused
-	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-		return nil
-	}
-}
 
 func authClientInterceptor(authToken *base64.Value) grpc.StreamClientInterceptor { // nolint: deadcode,unused
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn,
 		method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-		ctx = metadata.AppendToOutgoingContext(ctx, "token", authToken.String())
+		creds := tokenAccess{token: authToken}
+		opts = append(opts, grpc.PerRPCCredentials(creds))
+
 		return streamer(ctx, desc, cc, method, opts...)
 	}
+}
+
+type tokenAccess struct {
+	token *base64.Value
+}
+
+func (t tokenAccess) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return map[string]string{
+		"authorization": "Bearer " + t.token.String(),
+	}, nil
+}
+
+func (t tokenAccess) RequireTransportSecurity() bool {
+	return true
 }

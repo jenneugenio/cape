@@ -54,13 +54,13 @@ func startConnectorCmd(c *cli.Context) error {
 		Token:      token,
 	}
 
-	conn, err := connector.New(cfg)
+	// TODO: Consider having the "logger" be configured by the server?
+	logger, err := logging.Logger(c.String("logger"), c.String("log-level"), instanceID.String())
 	if err != nil {
 		return err
 	}
 
-	// TODO: Consider having the "logger" be configured by the server?
-	logger, err := logging.Logger(c.String("logger"), c.String("log-level"), instanceID.String())
+	conn, err := connector.New(cfg, logger)
 	if err != nil {
 		return err
 	}

@@ -31,7 +31,7 @@ type Client struct {
 }
 
 // NewClient returns a new client that connects to the given
-// url and set the struct required struct members
+// url and sets the required struct members
 func NewClient(controllerURL *primitives.URL, authToken *base64.Value) *Client {
 	return &Client{
 		client:    graphql.NewClient(controllerURL.String() + "/v1/query"),
@@ -62,6 +62,12 @@ func (c *Client) Raw(ctx context.Context, query string,
 	}
 
 	return nil
+}
+
+// Authenticated returns whether the client is authenticated or not.
+// If the authToken is not nil then its authenticated!
+func (c *Client) Authenticated() bool {
+	return c.authToken != nil
 }
 
 // Me returns the identity of the current authenticated session
@@ -180,7 +186,7 @@ func (c *Client) CreateUser(ctx context.Context, user *primitives.User) (*primit
 
 // Login calls the CreateLoginSession and CreateAuthSession
 // mutations
-func (c *Client) Login(ctx context.Context, email primitives.Email, password []byte) (*primitives.Session, error) {
+func (c *Client) Login(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
 	session, err := c.createLoginSession(ctx, email)
 	if err != nil {
 		return nil, err

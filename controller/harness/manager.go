@@ -6,6 +6,7 @@ import (
 	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/controller"
 	"github.com/dropoutlabs/cape/primitives"
+	"github.com/manifoldco/go-base64"
 )
 
 const AdminEmail = "admin@cape.com"
@@ -17,6 +18,7 @@ type User struct {
 	Client   *controller.Client
 	User     *primitives.User
 	Password []byte
+	Token    *base64.Value
 }
 
 // Service represents a service in the cape controller
@@ -71,11 +73,12 @@ func (m *Manager) Setup(ctx context.Context) (*controller.Client, error) {
 		Password: pw,
 	}
 
-	_, err = client.Login(ctx, email, pw)
+	session, err := client.Login(ctx, email, pw)
 	if err != nil {
 		return nil, err
 	}
 
+	user.Token = session.Token
 	m.Admin = user
 
 	return client, nil

@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"github.com/manifoldco/go-base64"
 	"github.com/rs/zerolog"
 
 	"github.com/dropoutlabs/cape/auth"
@@ -109,7 +110,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 		InstanceID: "cape-connector",
 		Port:       1, // This port is ignored!
 		Token:      h.apiToken,
-	})
+	}, logger)
 	if err != nil {
 		return err
 	}
@@ -184,7 +185,7 @@ func (h *Harness) Teardown(ctx context.Context) error {
 
 // Client returns an unauthenticated Client for the underlying instance of the
 // connector.
-func (h *Harness) Client() (*connector.Client, error) {
+func (h *Harness) Client(authToken *base64.Value) (*connector.Client, error) {
 	u, err := h.URL()
 	if err != nil {
 		return nil, err
@@ -193,7 +194,7 @@ func (h *Harness) Client() (*connector.Client, error) {
 	certPool := x509.NewCertPool()
 	certPool.AddCert(h.server.Certificate())
 
-	return connector.NewClient(u, certPool)
+	return connector.NewClient(u, authToken, certPool)
 }
 
 // URL returns the url to the running connector once the harness has been started.

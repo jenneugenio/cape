@@ -22,4 +22,7 @@ var (
 
 	// BadTokenFormat happens when an APIToken has a bad format
 	BadTokenFormat = errors.NewCause(errors.BadRequestCategory, "bad_token_format")
+
+	// InvalidAuthHeader occurs when the auth header is in the wrong format
+	InvalidAuthHeader = errors.NewCause(errors.BadRequestCategory, "invalid_auth_header")
 )

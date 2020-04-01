@@ -18,23 +18,24 @@ import (
 // connects to the connector and sends queries
 type Client struct {
 	client    pb.DataConnectorClient
-	authToken *base64.Value // nolint: unused, structcheck
+	authToken *base64.Value
 }
 
 // NewClient dials the connector and creates a client
-func NewClient(connectorURL *primitives.URL, certPool *x509.CertPool) (*Client, error) {
+func NewClient(connectorURL *primitives.URL, authToken *base64.Value, certPool *x509.CertPool) (*Client, error) {
 	// TODO log in here
 	creds := credentials.NewClientTLSFromCert(certPool, "")
 
 	// strip https from url, dial expects the protocol not be specified
 	conn, err := grpc.Dial(connectorURL.String()[8:], grpc.WithBlock(),
-		grpc.WithTransportCredentials(creds))
+		grpc.WithTransportCredentials(creds), grpc.WithStreamInterceptor(authClientInterceptor(authToken)))
 	if err != nil {
 		return nil, err
 	}
 
 	return &Client{
-		client: pb.NewDataConnectorClient(conn),
+		client:    pb.NewDataConnectorClient(conn),
+		authToken: authToken,
 	}, nil
 }
 

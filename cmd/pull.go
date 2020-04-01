@@ -54,6 +54,11 @@ func pullDataCmd(c *cli.Context) error {
 		return err
 	}
 
+	token, err := cluster.Token()
+	if err != nil {
+		return err
+	}
+
 	source, err := client.GetSourceByLabel(c.Context, sourceLabel)
 	if err != nil {
 		return err
@@ -75,7 +80,7 @@ func pullDataCmd(c *cli.Context) error {
 		return errors.New(BadCertificate, "Bad certificate for TLS")
 	}
 
-	connClient, err := connector.NewClient(service.Endpoint, certPool)
+	connClient, err := connector.NewClient(service.Endpoint, token, certPool)
 	if err != nil {
 		return err
 	}

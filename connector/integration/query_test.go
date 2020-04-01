@@ -48,7 +48,7 @@ func TestQuery(t *testing.T) {
 	err = m.CreateService(ctx, connH.APIToken(), connectorURL)
 	gm.Expect(err).To(gm.BeNil())
 
-	connClient, err := connH.Client()
+	connClient, err := connH.Client(m.Admin.Token)
 	gm.Expect(err).To(gm.BeNil())
 
 	err = connClient.Query(ctx, "test-datasource", "SELECT * FROM ALLDATA;")

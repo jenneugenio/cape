@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
 
 	"github.com/felixge/httpsnoop"
 	"github.com/gofrs/uuid"
 	"github.com/manifoldco/go-base64"
 	"github.com/rs/zerolog"
 
+	"github.com/dropoutlabs/cape/auth"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 )
@@ -127,17 +127,15 @@ func AuthTokenMiddleware(next http.Handler) http.Handler {
 		ctx := req.Context()
 
 		authHeader := req.Header.Get("Authorization")
-		r := regexp.MustCompile(`Bearer\s(?P<bearer_token>[^\s]+)$`)
-		authHeaderParts := r.FindStringSubmatch(authHeader)
-		if len(authHeaderParts) != 2 {
+		if authHeader == "" {
 			next.ServeHTTP(rw, req)
 			return
 		}
 
-		token, err := base64.NewFromString(authHeaderParts[1])
+		token, err := auth.GetBearerToken(authHeader)
 		if err != nil {
-			err := errors.New(InvalidAuthHeader, "Unable to parse auth header")
 			respondWithError(rw, err)
+			return
 		}
 
 		ctx = context.WithValue(ctx, AuthTokenContextKey, token)
