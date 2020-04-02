@@ -40,24 +40,16 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest
 		return nil, err
 	}
 
-	// Make the role
-	role, err := primitives.NewRole("admin", true)
+	systemRoles := []primitives.Label{primitives.AdminRole, primitives.GlobalRole, primitives.DataConnectorRole}
+	roles, err := createSystemRoles(ctx, tx, systemRoles)
 	if err != nil {
 		return nil, err
 	}
 
-	err = tx.Create(ctx, role)
-	if err != nil {
-		return nil, err
-	}
+	// assign admin and global roles to setup user
+	roles = roles[:2]
 
-	// Assign the role
-	assignment, err := primitives.NewAssignment(user.ID, role.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.Create(ctx, assignment)
+	err = createAssignmentsForUser(ctx, tx, user, roles)
 	if err != nil {
 		return nil, err
 	}

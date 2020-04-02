@@ -135,6 +135,17 @@ func TestRoles(t *testing.T) {
 
 		gm.Expect(role).To(gm.Equal(otherRole))
 	})
+
+	t.Run("cannot delete system role", func(t *testing.T) {
+		admin, err := primitives.NewLabel("admin")
+		gm.Expect(err).To(gm.BeNil())
+
+		role, err := client.GetRoleByLabel(ctx, admin)
+		gm.Expect(err).To(gm.BeNil())
+
+		err = client.DeleteRole(ctx, role.ID)
+		gm.Expect(err).ToNot(gm.BeNil())
+	})
 }
 
 func TestListRoles(t *testing.T) {
@@ -165,8 +176,8 @@ func TestListRoles(t *testing.T) {
 	roles, err := client.ListRoles(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	// create two roles + the system role
-	gm.Expect(len(roles)).To(gm.Equal(3))
+	// create two roles + the system roles
+	gm.Expect(len(roles)).To(gm.Equal(5))
 	gm.Expect(roles).To(gm.ContainElements(dsRole, ctoRole))
 }
 

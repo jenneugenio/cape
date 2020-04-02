@@ -124,6 +124,14 @@ func TestServices(t *testing.T) {
 
 		gm.Expect(service.Type).To(gm.Equal(s.Type))
 		gm.Expect(service.Endpoint).To(gm.Equal(s.Endpoint))
+
+		connectorRole, err := client.GetRoleByLabel(ctx, primitives.DataConnectorRole)
+		gm.Expect(err).To(gm.BeNil())
+
+		members, err := client.GetMembersRole(ctx, connectorRole.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(members[0].GetEmail()).To(gm.Equal(service.Email))
 	})
 }
 

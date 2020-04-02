@@ -54,3 +54,102 @@ func buildAttachment(ctx context.Context, db database.Backend,
 		Policy:    policy,
 	}, nil
 }
+
+// createSystemRoles is a helper intended to be used by the Setup graphql route.
+// It creates all the roles given by the list of role labels and makes sure
+// they are system roles
+func createSystemRoles(ctx context.Context, tx database.Transaction, roleLabels []primitives.Label) ([]*primitives.Role, error) {
+	// this is silly, need to create two arrays, one to be able to easily
+	// add to the database and another to return so the roles can be used
+	// later!!
+	entities := make([]database.Entity, len(roleLabels))
+	roles := make([]*primitives.Role, len(roleLabels))
+
+	for i, roleLabel := range roleLabels {
+		role, err := primitives.NewRole(roleLabel, true)
+		if err != nil {
+			return nil, err
+		}
+
+		entities[i] = role
+		roles[i] = role
+	}
+
+	err := tx.Create(ctx, entities...)
+	if err != nil {
+		return nil, err
+	}
+
+	return roles, nil
+}
+
+// createAssignmentsForUser is a helper function intended to be used by the Setup
+// graphql route. Its used in tandem with the above function create a
+func createAssignmentsForUser(ctx context.Context, tx database.Transaction,
+	user *primitives.User, roles []*primitives.Role) error {
+	assignments := make([]database.Entity, len(roles))
+
+	for i, role := range roles {
+		assignment, err := primitives.NewAssignment(user.ID, role.ID)
+		if err != nil {
+			return err
+		}
+
+		assignments[i] = assignment
+	}
+
+	return tx.Create(ctx, assignments...)
+}
+
+func createDataConnector(ctx context.Context, db database.Backend, input model.CreateServiceRequest) (*primitives.Service, error) {
+	creds := &primitives.Credentials{
+		PublicKey: &input.PublicKey,
+		Salt:      &input.Salt,
+		Alg:       input.Alg,
+	}
+
+	url, err := primitives.NewURLFromStdLib(input.Endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	role := &primitives.Role{}
+	err = db.QueryOne(ctx, role, database.NewFilter(database.Where{"label": primitives.DataConnectorRole}, nil, nil))
+	if err != nil {
+		return nil, err
+	}
+
+	service, err := primitives.NewService(input.Email, input.Type, url, creds)
+	if err != nil {
+		return nil, err
+	}
+
+	assignment, err := primitives.NewAssignment(service.ID, role.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err := db.Transaction(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	defer tx.Rollback(ctx) // nolint: errcheck
+
+	err = tx.Create(ctx, service)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Create(ctx, assignment)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return service, nil
+}

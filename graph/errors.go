@@ -16,6 +16,9 @@ var (
 	// of data connector type
 	MustBeDataConnector = errors.NewCause(errors.BadRequestCategory, "must_be_data_connector")
 
+	// CannotDeleteSystemRole occurs when deletion of a system role is attempted
+	CannotDeleteSystemRole = errors.NewCause(errors.ForbiddenCategory, "cannot_delete_system_role")
+
 	// PolicyNotSupplied occurs when a policy has not been supplied for attachPolicy route.
 	// Must either supply policy ID or a policy input object
 	PolicyNotSupplied = errors.NewCause(errors.BadRequestCategory, "policy_not_supplied")

@@ -14,23 +14,18 @@ import (
 )
 
 func (r *mutationResolver) CreateService(ctx context.Context, input model.CreateServiceRequest) (*primitives.Service, error) {
+	if input.Type == primitives.DataConnectorServiceType {
+		return createDataConnector(ctx, r.Backend, input)
+	}
+
+	// create a non-data connector service!!!
 	creds := &primitives.Credentials{
 		PublicKey: &input.PublicKey,
 		Salt:      &input.Salt,
 		Alg:       input.Alg,
 	}
 
-	var endpoint *primitives.URL
-	if input.Type == primitives.DataConnectorServiceType {
-		url, err := primitives.NewURLFromStdLib(input.Endpoint)
-		if err != nil {
-			return nil, err
-		}
-
-		endpoint = url
-	}
-
-	service, err := primitives.NewService(input.Email, input.Type, endpoint, creds)
+	service, err := primitives.NewService(input.Email, input.Type, nil, creds)
 	if err != nil {
 		return nil, err
 	}

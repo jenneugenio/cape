@@ -8,6 +8,7 @@ import (
 
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/graph/model"
+	errs "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -52,7 +53,17 @@ func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRol
 }
 
 func (r *mutationResolver) DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error) {
-	err := r.Backend.Delete(ctx, input.ID)
+	role := &primitives.Role{}
+	err := r.Backend.Get(ctx, input.ID, role)
+	if err != nil {
+		return nil, err
+	}
+
+	if role.System {
+		return nil, errs.New(CannotDeleteSystemRole, "Role %s is a system role. Cannot delete", role.Label)
+	}
+
+	err = r.Backend.Delete(ctx, input.ID)
 	if err != nil {
 		return nil, err
 	}

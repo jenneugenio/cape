@@ -5,6 +5,17 @@ import (
 	"github.com/dropoutlabs/cape/database/types"
 )
 
+const (
+	// AdminRole is the label of the admin role
+	AdminRole = Label("admin")
+
+	// GlobalRole is the label of the global role
+	GlobalRole = Label("global")
+
+	// DataConnectorRole is the label of the data connector roles
+	DataConnectorRole = Label("data-connector")
+)
+
 // Role in a role in the system (e.g. Admin, user, etc)
 type Role struct {
 	*database.Primitive

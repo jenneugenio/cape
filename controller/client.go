@@ -477,6 +477,7 @@ func (c *Client) ListRoles(ctx context.Context) ([]*primitives.Role, error) {
 			roles {
 				id
 				label
+				system
 			}
 		}
 	`, nil, &resp)
