@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 
 	"github.com/dropoutlabs/cape/primitives"
 	"github.com/urfave/cli/v2"
@@ -112,7 +113,12 @@ func policyAttachCmd(c *cli.Context) error {
 
 	var policy *primitives.Policy
 	if file != "" {
-		policyInput, err := primitives.ParsePolicy(file)
+		data, err := ioutil.ReadFile(file)
+		if err != nil {
+			return err
+		}
+
+		policyInput, err := primitives.ParsePolicy(data)
 		if err != nil {
 			return err
 		}
