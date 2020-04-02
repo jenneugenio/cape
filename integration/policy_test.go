@@ -66,6 +66,20 @@ func TestPolicies(t *testing.T) {
 		gm.Expect(err).NotTo(gm.BeNil())
 		gm.Expect(otherPolicy).To(gm.BeNil())
 	})
+
+	t.Run("get policy by label", func(t *testing.T) {
+		label, err := primitives.NewLabel("wow-policy-is-cool")
+		gm.Expect(err).To(gm.BeNil())
+
+		p, err := primitives.NewPolicy(label)
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = client.CreatePolicy(ctx, p)
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = client.GetPolicyByLabel(ctx, label)
+		gm.Expect(err).To(gm.BeNil())
+	})
 }
 
 func TestListPolicies(t *testing.T) {

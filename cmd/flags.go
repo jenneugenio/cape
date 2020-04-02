@@ -151,3 +151,11 @@ func linkFlag() cli.Flag {
 		EnvVars: []string{"CAPE_LINK"},
 	}
 }
+
+func fileFlag() cli.Flag {
+	return &cli.StringFlag{
+		Name:    "from-file",
+		Usage:   "Loads a policy from a file and creates it",
+		EnvVars: []string{"CAPE_FILEPATH"},
+	}
+}

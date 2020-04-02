@@ -883,6 +883,30 @@ func (c *Client) GetPolicy(ctx context.Context, id database.ID) (*primitives.Pol
 	return &resp.Policy, nil
 }
 
+// GetPolicyByLabel returns a specific policy by label
+func (c *Client) GetPolicyByLabel(ctx context.Context, label primitives.Label) (*primitives.Policy, error) {
+	var resp struct {
+		Policy primitives.Policy `json:"policyByLabel"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["label"] = label
+
+	err := c.Raw(ctx, `
+		query PolicyByLabel($label: Label!) {
+			policyByLabel(label: $label) {
+				id
+				label
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Policy, nil
+}
+
 // ListPolicies returns all policies
 func (c *Client) ListPolicies(ctx context.Context) ([]*primitives.Policy, error) {
 	var resp struct {

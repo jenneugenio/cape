@@ -12,7 +12,7 @@ import (
 func init() {
 	createCmd := &Command{
 		Usage:     "Create a new role",
-		Arguments: []*Argument{RoleLabelArg},
+		Arguments: []*Argument{LabelArg("role")},
 		Examples: []*Example{
 			{
 				Example:     "cape roles create data-scientist",
@@ -35,7 +35,7 @@ func init() {
 
 	removeCmd := &Command{
 		Usage:     "Remove command removes a role",
-		Arguments: []*Argument{RoleLabelArg},
+		Arguments: []*Argument{LabelArg("role")},
 		Examples: []*Example{
 			{
 				Example:     "cape roles remove data-scientist",
@@ -75,7 +75,7 @@ func init() {
 
 	membersCmd := &Command{
 		Usage:     "Lists all the identities assigned a role",
-		Arguments: []*Argument{RoleLabelArg},
+		Arguments: []*Argument{LabelArg("role")},
 		Examples: []*Example{
 			{
 				Example:     "cape roles members admin",

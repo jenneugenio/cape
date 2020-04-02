@@ -81,6 +81,11 @@ type DeleteSessionRequest struct {
 	Token base64.Value `json:"token"`
 }
 
+type DetachPolicyRequest struct {
+	PolicyID database.ID `json:"policy_id"`
+	RoleID   database.ID `json:"role_id"`
+}
+
 type LoginSessionRequest struct {
 	Email primitives.Email `json:"email"`
 }
@@ -91,6 +96,10 @@ type NewUserRequest struct {
 	PublicKey base64.Value                  `json:"public_key"`
 	Salt      base64.Value                  `json:"salt"`
 	Alg       primitives.CredentialsAlgType `json:"alg"`
+}
+
+type PolicyInput struct {
+	Label primitives.Label `json:"label"`
 }
 
 type RemoveSourceRequest struct {

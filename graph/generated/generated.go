@@ -86,7 +86,7 @@ type ComplexityRoot struct {
 		DeleteRole         func(childComplexity int, input model.DeleteRoleRequest) int
 		DeleteService      func(childComplexity int, input model.DeleteServiceRequest) int
 		DeleteSession      func(childComplexity int, input model.DeleteSessionRequest) int
-		DetachPolicy       func(childComplexity int, input model.AttachPolicyRequest) int
+		DetachPolicy       func(childComplexity int, input model.DetachPolicyRequest) int
 		RemoveSource       func(childComplexity int, input model.RemoveSourceRequest) int
 		Setup              func(childComplexity int, input model.NewUserRequest) int
 		UnassignRole       func(childComplexity int, input model.AssignRoleRequest) int
@@ -106,6 +106,7 @@ type ComplexityRoot struct {
 		Me               func(childComplexity int) int
 		Policies         func(childComplexity int) int
 		Policy           func(childComplexity int, id database.ID) int
+		PolicyByLabel    func(childComplexity int, label primitives.Label) int
 		Role             func(childComplexity int, id database.ID) int
 		RoleByLabel      func(childComplexity int, label primitives.Label) int
 		RoleMembers      func(childComplexity int, roleID database.ID) int
@@ -175,7 +176,7 @@ type MutationResolver interface {
 	CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*primitives.Policy, error)
 	DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error)
 	AttachPolicy(ctx context.Context, input model.AttachPolicyRequest) (*model.Attachment, error)
-	DetachPolicy(ctx context.Context, input model.AttachPolicyRequest) (*string, error)
+	DetachPolicy(ctx context.Context, input model.DetachPolicyRequest) (*string, error)
 	CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error)
 	DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error)
 	AssignRole(ctx context.Context, input model.AssignRoleRequest) (*model.Assignment, error)
@@ -192,6 +193,7 @@ type QueryResolver interface {
 	SourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error)
 	Identities(ctx context.Context, emails []*primitives.Email) ([]primitives.Identity, error)
 	Policy(ctx context.Context, id database.ID) (*primitives.Policy, error)
+	PolicyByLabel(ctx context.Context, label primitives.Label) (*primitives.Policy, error)
 	Policies(ctx context.Context) ([]*primitives.Policy, error)
 	RolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error)
 	IdentityPolicies(ctx context.Context, identityID database.ID) ([]*primitives.Policy, error)
@@ -475,7 +477,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DetachPolicy(childComplexity, args["input"].(model.AttachPolicyRequest)), true
+		return e.complexity.Mutation.DetachPolicy(childComplexity, args["input"].(model.DetachPolicyRequest)), true
 
 	case "Mutation.removeSource":
 		if e.complexity.Mutation.RemoveSource == nil {
@@ -602,6 +604,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Policy(childComplexity, args["id"].(database.ID)), true
+
+	case "Query.policyByLabel":
+		if e.complexity.Query.PolicyByLabel == nil {
+			break
+		}
+
+		args, err := ec.field_Query_policyByLabel_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.PolicyByLabel(childComplexity, args["label"].(primitives.Label)), true
 
 	case "Query.role":
 		if e.complexity.Query.Role == nil {
@@ -1023,13 +1037,24 @@ input DeletePolicyRequest {
   id: ID!
 }
 
+input PolicyInput {
+  label: Label!
+}
+
 input AttachPolicyRequest {
+  policy_id: ID!
+  role_id: ID!
+}
+
+input DetachPolicyRequest {
   policy_id: ID!
   role_id: ID!
 }
 
 extend type Query {
   policy(id: ID!): Policy!
+  policyByLabel(label: Label!): Policy!
+
   policies: [Policy!]
   rolePolicies(role_id: ID!): [Policy!]
   identityPolicies(identity_id: ID!): [Policy!]
@@ -1042,7 +1067,7 @@ extend type Mutation {
   deletePolicy(input: DeletePolicyRequest!): String
 
   attachPolicy(input: AttachPolicyRequest!): Attachment!
-  detachPolicy(input: AttachPolicyRequest!): String
+  detachPolicy(input: DetachPolicyRequest!): String
 }`, BuiltIn: false},
 	&ast.Source{Name: "graph/roles.graphql", Input: `type Role {
   id: ID!
@@ -1466,9 +1491,9 @@ func (ec *executionContext) field_Mutation_deleteSession_args(ctx context.Contex
 func (ec *executionContext) field_Mutation_detachPolicy_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.AttachPolicyRequest
+	var arg0 model.DetachPolicyRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNAttachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐAttachPolicyRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNDetachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDetachPolicyRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1580,6 +1605,20 @@ func (ec *executionContext) field_Query_identityPolicies_args(ctx context.Contex
 		}
 	}
 	args["identity_id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_policyByLabel_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 primitives.Label
+	if tmp, ok := rawArgs["label"]; ok {
+		arg0, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["label"] = arg0
 	return args, nil
 }
 
@@ -2712,7 +2751,7 @@ func (ec *executionContext) _Mutation_detachPolicy(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DetachPolicy(rctx, args["input"].(model.AttachPolicyRequest))
+		return ec.resolvers.Mutation().DetachPolicy(rctx, args["input"].(model.DetachPolicyRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3624,6 +3663,47 @@ func (ec *executionContext) _Query_policy(ctx context.Context, field graphql.Col
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().Policy(rctx, args["id"].(database.ID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*primitives.Policy)
+	fc.Result = res
+	return ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_policyByLabel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_policyByLabel_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PolicyByLabel(rctx, args["label"].(primitives.Label))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6508,6 +6588,30 @@ func (ec *executionContext) unmarshalInputDeleteSessionRequest(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputDetachPolicyRequest(ctx context.Context, obj interface{}) (model.DetachPolicyRequest, error) {
+	var it model.DetachPolicyRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "policy_id":
+			var err error
+			it.PolicyID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "role_id":
+			var err error
+			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputLoginSessionRequest(ctx context.Context, obj interface{}) (model.LoginSessionRequest, error) {
 	var it model.LoginSessionRequest
 	var asMap = obj.(map[string]interface{})
@@ -6559,6 +6663,24 @@ func (ec *executionContext) unmarshalInputNewUserRequest(ctx context.Context, ob
 		case "alg":
 			var err error
 			it.Alg, err = ec.unmarshalNCredentialsAlgType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPolicyInput(ctx context.Context, obj interface{}) (model.PolicyInput, error) {
+	var it model.PolicyInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "label":
+			var err error
+			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6987,6 +7109,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_policy(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "policyByLabel":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_policyByLabel(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -7764,6 +7900,10 @@ func (ec *executionContext) unmarshalNDeleteServiceRequest2githubᚗcomᚋdropou
 
 func (ec *executionContext) unmarshalNDeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDeleteSessionRequest(ctx context.Context, v interface{}) (model.DeleteSessionRequest, error) {
 	return ec.unmarshalInputDeleteSessionRequest(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNDetachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDetachPolicyRequest(ctx context.Context, v interface{}) (model.DetachPolicyRequest, error) {
+	return ec.unmarshalInputDetachPolicyRequest(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx context.Context, v interface{}) (primitives.Email, error) {

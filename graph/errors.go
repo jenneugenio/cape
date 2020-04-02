@@ -15,4 +15,8 @@ var (
 	// MustBeDataConnector occurs when linking a service to a data source. The service must be
 	// of data connector type
 	MustBeDataConnector = errors.NewCause(errors.BadRequestCategory, "must_be_data_connector")
+
+	// PolicyNotSupplied occurs when a policy has not been supplied for attachPolicy route.
+	// Must either supply policy ID or a policy input object
+	PolicyNotSupplied = errors.NewCause(errors.BadRequestCategory, "policy_not_supplied")
 )

@@ -48,7 +48,7 @@ func (r *mutationResolver) AttachPolicy(ctx context.Context, input model.AttachP
 	return buildAttachment(ctx, r.Backend, attachment)
 }
 
-func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.AttachPolicyRequest) (*string, error) {
+func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachPolicyRequest) (*string, error) {
 	attachment := &primitives.Attachment{}
 
 	filter := database.NewFilter(database.Where{
@@ -72,6 +72,16 @@ func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.AttachP
 func (r *queryResolver) Policy(ctx context.Context, id database.ID) (*primitives.Policy, error) {
 	policy := &primitives.Policy{}
 	err := r.Backend.Get(ctx, id, policy)
+	if err != nil {
+		return nil, err
+	}
+
+	return policy, nil
+}
+
+func (r *queryResolver) PolicyByLabel(ctx context.Context, label primitives.Label) (*primitives.Policy, error) {
+	policy := &primitives.Policy{}
+	err := r.Backend.QueryOne(ctx, policy, database.NewFilter(database.Where{"label": label}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
