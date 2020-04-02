@@ -31,8 +31,8 @@ var (
 	// SessionType represents a session between a user/services & the system
 	SessionType types.Type = 0x007
 
-	// SourceType represents an external database/dataset
-	SourceType types.Type = 0x008
+	// SourcePrimitiveType represents an external database/dataset
+	SourcePrimitiveType types.Type = 0x008
 
 	// ConfigType represents the config object for cape
 	ConfigType types.Type = 0x009
@@ -47,6 +47,6 @@ func init() {
 	types.Register(AttachmentType, "attachments", false)
 	types.Register(AssignmentType, "assignments", false)
 	types.Register(SessionType, "sessions", false)
-	types.Register(SourceType, "sources", true)
+	types.Register(SourcePrimitiveType, "sources", true)
 	types.Register(ConfigType, "config", true)
 }

@@ -52,7 +52,7 @@ func TestSource(t *testing.T) {
 		gm.Expect(source.ID).ToNot(gm.BeNil())
 		gm.Expect(source.Type).To(gm.Equal(primitives.PostgresType))
 		gm.Expect(source.Endpoint.String()).To(gm.Equal("postgres://my.cool.website.com:5432/mydb"))
-		gm.Expect(source.ServiceID).To(gm.Equal(database.EmptyID))
+		gm.Expect(source.ServiceID).To(gm.BeNil())
 
 		id = source.ID
 	})
@@ -89,7 +89,24 @@ func TestSource(t *testing.T) {
 		gm.Expect(source.Label).To(gm.Equal(l))
 		gm.Expect(source.ID).ToNot(gm.BeNil())
 		gm.Expect(source.Endpoint.String()).To(gm.Equal("postgres://my.cool.website.com:5432/mydb"))
-		gm.Expect(source.ServiceID).To(gm.Equal(service.ID))
+		gm.Expect(source.ServiceID).ToNot(gm.BeNil())
+		gm.Expect(*source.ServiceID).To(gm.Equal(service.ID))
+	})
+
+	t.Run("can't create link to a non-existent data connector", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
+		gm.Expect(err).To(gm.BeNil())
+
+		l, err := primitives.NewLabel("card-transactions-service-dooesnt-exist")
+		gm.Expect(err).To(gm.BeNil())
+
+		serviceID, err := database.GenerateID(primitives.ServicePrimitiveType)
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = client.AddSource(ctx, l, u, &serviceID)
+		gm.Expect(err).ToNot(gm.BeNil())
 	})
 
 	t.Run("can't create link that is not a data connector", func(t *testing.T) {
@@ -122,6 +139,7 @@ func TestSource(t *testing.T) {
 	t.Run("pull a single data source", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
+		gm.Expect(err).To(gm.BeNil())
 		source, err := client.GetSource(ctx, id)
 		gm.Expect(err).To(gm.BeNil())
 

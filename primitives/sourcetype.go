@@ -3,6 +3,7 @@ package primitives
 import (
 	"fmt"
 	"io"
+	"strconv"
 
 	errors "github.com/dropoutlabs/cape/partyerrors"
 )
@@ -11,7 +12,7 @@ import (
 type SourceType string
 
 var (
-	// Postgres source type
+	// PostgresType represents a Postgres database source
 	PostgresType SourceType = "postgres"
 )
 
@@ -27,10 +28,10 @@ func (s SourceType) String() string {
 	return string(s)
 }
 
-// Valiate returns whether or not the SourceType is a valid
+// Validate returns whether or not the SourceType is a valid
 func (s SourceType) Validate() error {
 	switch s {
-	case Postgres:
+	case PostgresType:
 		return nil
 	default:
 		return errors.New(InvalidSourceType, "Invalid source type provided")
@@ -44,11 +45,11 @@ func (s *SourceType) UnmarshalGQL(v interface{}) error {
 		return errors.New(InvalidSourceType, "Invalid source type provided")
 	}
 
-	t = SourceType(str)
-	return t.Validate()
+	*s = SourceType(str)
+	return s.Validate()
 }
 
 // MarshalGQL marshals a SourceType enum to a string
-func (s *SourceType) MarshalGQL(w io.Writer) {
-	fmt.Fprintf(w, strconv.Quote(s.String()))
+func (s SourceType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(s.String()))
 }

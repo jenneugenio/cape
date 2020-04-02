@@ -50,6 +50,7 @@ type Source {
   label: Label!
   type: SourceType!
   endpoint: URL!
+  credentials: URL
   service_id: ID
 }
 

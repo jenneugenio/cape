@@ -505,10 +505,12 @@ func (s *SourceResponse) MarshalJSON() ([]byte, error) {
 	// this object.  The type alias drops the Marshal & Unmarshal functions from "this" object.
 	type SourceAlias SourceResponse
 	return json.Marshal(&struct {
-		Endpoint string `json:"endpoint"`
+		Endpoint    string `json:"endpoint"`
+		Credentials string `json:"credentials"`
 		*SourceAlias
 	}{
 		Endpoint:    s.Endpoint.String(),
+		Credentials: s.Credentials.String(),
 		SourceAlias: (*SourceAlias)(s),
 	})
 }
@@ -518,7 +520,8 @@ func (s *SourceResponse) UnmarshalJSON(data []byte) error {
 	// See MarshalJSON for an explanation of this weird type alias
 	type SourceAlias SourceResponse
 	aux := &struct {
-		Endpoint string `json:"endpoint"`
+		Endpoint    string `json:"endpoint"`
+		Credentials string `json:"credentials"`
 		*SourceAlias
 	}{
 		SourceAlias: (*SourceAlias)(s),
@@ -532,6 +535,15 @@ func (s *SourceResponse) UnmarshalJSON(data []byte) error {
 	e, err := url.Parse(aux.Endpoint)
 	if err != nil {
 		return err
+	}
+
+	if aux.Credentials != "" {
+		c, err := url.Parse(aux.Credentials)
+		if err != nil {
+			return err
+		}
+
+		s.Credentials = *c
 	}
 
 	s.Endpoint = *e
@@ -555,6 +567,8 @@ func (c *Client) AddSource(ctx context.Context, label primitives.Label,
 			  addSource(input: { label: $label, credentials: $credentials, service_id: $service_id}) {
 				id
 				label
+				type
+				credentials
 				endpoint
 				service_id
 			  }
@@ -579,6 +593,8 @@ func (c *Client) ListSources(ctx context.Context) ([]*primitives.Source, error) 
 				sources {
 					id
 					label
+					credentials
+					type
 					endpoint
 					service_id
 				}
@@ -625,7 +641,10 @@ func (c *Client) GetSource(ctx context.Context, id database.ID) (*primitives.Sou
 				source(id: $id) {
 					id
 					label
+					type
+					credentials
 					endpoint
+					service_id
 				}
 			}
 	`, variables, &resp)
@@ -651,6 +670,8 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (
 				sourceByLabel(label: $label) {
 					id
 					label
+					type
+					credentials
 					endpoint
 					service_id
 				}

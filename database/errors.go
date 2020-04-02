@@ -31,4 +31,7 @@ var (
 
 	// InvalidIDCause occurs when an invalid value was provided for an ID type
 	InvalidIDCause = errors.NewCause(errors.BadRequestCategory, "invalid_id")
+
+	// InvalidVersionCause occurs when an invalid version was provided for a primitive
+	InvalidVersionCause = errors.NewCause(errors.BadRequestCategory, "invalid_version")
 )

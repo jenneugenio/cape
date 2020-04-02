@@ -150,10 +150,12 @@ type ComplexityRoot struct {
 	}
 
 	Source struct {
-		Endpoint  func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Label     func(childComplexity int) int
-		ServiceID func(childComplexity int) int
+		Credentials func(childComplexity int) int
+		Endpoint    func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Label       func(childComplexity int) int
+		ServiceID   func(childComplexity int) int
+		Type        func(childComplexity int) int
 	}
 
 	User struct {
@@ -879,6 +881,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Session.Type(childComplexity), true
 
+	case "Source.credentials":
+		if e.complexity.Source.Credentials == nil {
+			break
+		}
+
+		return e.complexity.Source.Credentials(childComplexity), true
+
 	case "Source.endpoint":
 		if e.complexity.Source.Endpoint == nil {
 			break
@@ -906,6 +915,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Source.ServiceID(childComplexity), true
+
+	case "Source.type":
+		if e.complexity.Source.Type == nil {
+			break
+		}
+
+		return e.complexity.Source.Type(childComplexity), true
 
 	case "User.created_at":
 		if e.complexity.User.CreatedAt == nil {
@@ -1156,7 +1172,9 @@ type Session {
 type Source {
   id: ID!
   label: Label!
+  type: SourceType!
   endpoint: URL!
+  credentials: URL
   service_id: ID
 }
 
@@ -1248,6 +1266,7 @@ scalar Name
 scalar Label
 scalar EmailType
 scalar Email
+scalar SourceType
 `, BuiltIn: false},
 	&ast.Source{Name: "graph/services.graphql", Input: `type Service implements Identity {
     id: ID!
@@ -5040,6 +5059,40 @@ func (ec *executionContext) _Source_label(ctx context.Context, field graphql.Col
 	return ec.marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Source_type(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Source",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(primitives.SourceType)
+	fc.Result = res
+	return ec.marshalNSourceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSourceType(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Source_endpoint(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5074,6 +5127,37 @@ func (ec *executionContext) _Source_endpoint(ctx context.Context, field graphql.
 	return ec.marshalNURL2netᚋurlᚐURL(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Source_credentials(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Source",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Credentials, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(url.URL)
+	fc.Result = res
+	return ec.marshalOURL2netᚋurlᚐURL(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Source_service_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5100,9 +5184,9 @@ func (ec *executionContext) _Source_service_id(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(database.ID)
+	res := resTmp.(*database.ID)
 	fc.Result = res
-	return ec.marshalOID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *primitives.User) (ret graphql.Marshaler) {
@@ -7465,11 +7549,18 @@ func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "type":
+			out.Values[i] = ec._Source_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "endpoint":
 			out.Values[i] = ec._Source_endpoint(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "credentials":
+			out.Values[i] = ec._Source_credentials(ctx, field, obj)
 		case "service_id":
 			out.Values[i] = ec._Source_service_id(ctx, field, obj)
 		default:
@@ -8108,6 +8199,15 @@ func (ec *executionContext) marshalNSource2ᚖgithubᚗcomᚋdropoutlabsᚋcape�
 		return graphql.Null
 	}
 	return ec._Source(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNSourceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSourceType(ctx context.Context, v interface{}) (primitives.SourceType, error) {
+	var res primitives.SourceType
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNSourceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSourceType(ctx context.Context, sel ast.SelectionSet, v primitives.SourceType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

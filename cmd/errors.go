@@ -24,4 +24,7 @@ var (
 	// MustSupplyEndpoint is used with the service create command to make sure an endpoint is
 	// supplied when creating a data connector
 	MustSupplyEndpoint = errors.NewCause(errors.BadRequestCategory, "must_supply_endpoint")
+
+	// NoLinkedService occurs when a service has not been linked to a source
+	NoLinkedService = errors.NewCause(errors.BadRequestCategory, "no_linked_service")
 )

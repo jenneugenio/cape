@@ -64,7 +64,11 @@ func pullDataCmd(c *cli.Context) error {
 		return err
 	}
 
-	service, err := client.GetService(c.Context, source.ServiceID)
+	if source.ServiceID == nil {
+		return errors.New(NoLinkedService, "Source has not been linked to a data-connector")
+	}
+
+	service, err := client.GetService(c.Context, *source.ServiceID)
 	if err != nil {
 		return err
 	}

@@ -66,7 +66,7 @@ func (q *postgresQuerier) Get(ctx context.Context, id ID, e Entity) error {
 
 	switch err := r.Scan(e); err {
 	case pgx.ErrNoRows:
-		return errors.New(NotFoundCause, "could not find entity: %s", id)
+		return errors.New(NotFoundCause, "could not find %s: %s", t.String(), id)
 	default:
 		return err
 	}
@@ -82,12 +82,13 @@ func (q *postgresQuerier) QueryOne(ctx context.Context, e Entity, f Filter) erro
 
 	where, params := buildFilter(f)
 
-	sql := fmt.Sprintf(`SELECT data from %s %s`, e.GetType().String(), where)
+	t := e.GetType()
+	sql := fmt.Sprintf(`SELECT data from %s %s`, t.String(), where)
 	r := q.conn.QueryRow(ctx, sql, params...)
 
 	switch err := r.Scan(e); err {
 	case pgx.ErrNoRows:
-		return errors.New(NotFoundCause, "could not find entity")
+		return errors.New(NotFoundCause, "could not find %s", t.String())
 	default:
 		return err
 	}
@@ -156,7 +157,7 @@ func (q *postgresQuerier) Delete(ctx context.Context, id ID) error {
 	}
 
 	if ct.RowsAffected() != 1 {
-		return errors.New(NotFoundCause, "could not find entity: %s", id)
+		return errors.New(NotFoundCause, "could not find %s: %s", t.String(), id)
 	}
 
 	return nil
@@ -181,7 +182,7 @@ func (q *postgresQuerier) Update(ctx context.Context, e Entity) error {
 	}
 
 	if ct.RowsAffected() != 1 {
-		return errors.New(NotFoundCause, "could not find entity: %s", e.GetID())
+		return errors.New(NotFoundCause, "could not find %s: %s", t.String(), e.GetID())
 	}
 
 	return nil

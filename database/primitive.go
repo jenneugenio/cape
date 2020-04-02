@@ -52,6 +52,23 @@ func (p *Primitive) SetUpdatedAt(t time.Time) error {
 	return nil
 }
 
+// Validate returns whether or not the Primitive is valid
+func (p *Primitive) Validate() error {
+	if err := p.ID.Validate(); err != nil {
+		return err
+	}
+
+	if p.Version < 1 {
+		return errors.New(InvalidVersionCause, "Version must be greater than zero")
+	}
+
+	if p.UpdatedAt.Before(p.CreatedAt) {
+		return errors.New(InvalidTimeCause, "UpdatedAt cannot be before CreatedAt")
+	}
+
+	return nil
+}
+
 // NewPrimitive returns a new primitive entity object
 //
 // If the type is mutable then this function will also generate an ID. For
