@@ -50,6 +50,7 @@ func TestSource(t *testing.T) {
 
 		gm.Expect(source.Label).To(gm.Equal(l))
 		gm.Expect(source.ID).ToNot(gm.BeNil())
+		gm.Expect(source.Type).To(gm.Equal(primitives.PostgresType))
 		gm.Expect(source.Endpoint.String()).To(gm.Equal("postgres://my.cool.website.com:5432/mydb"))
 		gm.Expect(source.ServiceID).To(gm.Equal(database.EmptyID))
 

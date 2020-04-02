@@ -35,6 +35,8 @@ models:
     model: github.com/dropoutlabs/cape/primitives.URL
   CredentialsAlgType:
     model: github.com/dropoutlabs/cape/primitives.CredentialsAlgType
+  SourceType:
+    model: github.com/dropoutlabs/cape/primitives.SourceType
   TokenType:
     model: github.com/dropoutlabs/cape/primitives.TokenType
   ServiceType:

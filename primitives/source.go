@@ -10,9 +10,9 @@ import (
 // Source represents the connection information for an external data source
 type Source struct {
 	*database.Primitive
-	Label    Label   `json:"label"`
-	Endpoint url.URL `json:"endpoint"`
-
+	Label       Label       `json:"label"`
+	Endpoint    url.URL     `json:"endpoint"`
+	Type        SourceType  `json:"type"`
 	Credentials url.URL     `json:"credentials"`
 	ServiceID   database.ID `json:"service_id"`
 }
@@ -29,6 +29,11 @@ func NewSource(label Label, credentials url.URL, serviceID database.ID) (*Source
 		return nil, err
 	}
 
+	t, err := NewSourceType(credentials.Scheme)
+	if err != nil {
+		return nil, err
+	}
+
 	credentialCopy, err := url.Parse(credentials.String())
 	if err != nil {
 		return nil, err
@@ -40,6 +45,7 @@ func NewSource(label Label, credentials url.URL, serviceID database.ID) (*Source
 	return &Source{
 		Primitive:   p,
 		Label:       label,
+		Type:        t,
 		Credentials: credentials,
 		Endpoint:    *credentialCopy,
 		ServiceID:   serviceID,

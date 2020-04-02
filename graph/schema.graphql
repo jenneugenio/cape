@@ -48,6 +48,7 @@ type Session {
 type Source {
   id: ID!
   label: Label!
+  type: SourceType!
   endpoint: URL!
   service_id: ID
 }
@@ -140,3 +141,4 @@ scalar Name
 scalar Label
 scalar EmailType
 scalar Email
+scalar SourceType
