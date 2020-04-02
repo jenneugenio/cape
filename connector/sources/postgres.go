@@ -61,7 +61,7 @@ func (p *PostgresSource) Close(ctx context.Context) error {
 
 // init registers the PostgresSource with the global sources registry
 func init() {
-	err := registerSource(primitives.PostgresType, NewPostgresSource)
+	err := registry.Register(primitives.PostgresType, NewPostgresSource)
 	if err != nil {
 		panic("Could not register source: " + err.Error())
 	}

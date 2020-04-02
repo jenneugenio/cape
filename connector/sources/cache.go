@@ -26,18 +26,25 @@ type ControllerClient interface {
 // requests. In future, if a source is not actively being used it will be aged
 // off and closed using behaviour similar to an LRUCache.
 type Cache struct {
-	closed  bool
-	lock    *sync.RWMutex
-	client  ControllerClient
-	sources map[primitives.Label]Source
+	closed   bool
+	lock     *sync.RWMutex
+	client   ControllerClient
+	sources  map[primitives.Label]Source
+	registry *Registry
 }
 
 // NewCache returns a Manager if valid configuration is provided.
-func NewCache(c ControllerClient) (*Cache, error) {
+func NewCache(c ControllerClient, r *Registry) (*Cache, error) {
+	if r == nil {
+		r = registry
+	}
+
 	return &Cache{
-		lock:    &sync.RWMutex{},
-		client:  c,
-		sources: map[primitives.Label]Source{},
+		lock:     &sync.RWMutex{},
+		client:   c,
+		closed:   false,
+		sources:  map[primitives.Label]Source{},
+		registry: r,
 	}, nil
 }
 
@@ -52,26 +59,7 @@ func (c *Cache) Get(ctx context.Context, label primitives.Label) (Source, error)
 		return s, nil
 	}
 
-	c.lock.Lock()
-	defer c.lock.Unlock()
-
-	primitive, err := c.client.GetSource(ctx, label)
-	if err != nil {
-		return nil, err
-	}
-
-	ctor, err := getSource(primitive.Type)
-	if err != nil {
-		return nil, err
-	}
-
-	s, err = ctor(primitive)
-	if err != nil {
-		return nil, err
-	}
-
-	c.sources[label] = s
-	return s, nil
+	return c.add(ctx, label)
 }
 
 func (c *Cache) get(label primitives.Label) (Source, error) {
@@ -87,6 +75,29 @@ func (c *Cache) get(label primitives.Label) (Source, error) {
 		return nil, ErrCacheNotFound
 	}
 
+	return s, nil
+}
+
+func (c *Cache) add(ctx context.Context, label primitives.Label) (Source, error) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	primitive, err := c.client.GetSource(ctx, label)
+	if err != nil {
+		return nil, err
+	}
+
+	ctor, err := c.registry.Get(primitive.Type)
+	if err != nil {
+		return nil, err
+	}
+
+	s, err = ctor(primitive)
+	if err != nil {
+		return nil, err
+	}
+
+	c.sources[label] = s
 	return s, nil
 }
 
@@ -109,6 +120,8 @@ func (c *Cache) Close(ctx context.Context) error {
 	}
 
 	c.closed = true
+	c.sources = map[primitives.Label]Source{}
+
 	if len(errs) > 0 {
 		return errors.NewMulti(ClosingCause, errs)
 	}

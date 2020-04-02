@@ -32,14 +32,4 @@ func (r Registry) Get(t primitives.SourceType) (NewSourceFunc, error) {
 	return f, nil
 }
 
-var registry = Registry{}
-
-// Register exposes a global function for registering a source constructor
-func registerSource(t primitives.SourceType, f NewSourceFunc) error {
-	return registry.Register(t, f)
-}
-
-// Get exposes a global function for retreiving a source constructor
-func getSource(t primitives.SourceType) (NewSourceFunc, error) {
-	return registry.Get(t)
-}
+var registry = &Registry{}
