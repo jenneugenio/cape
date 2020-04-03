@@ -20,23 +20,23 @@ type Field struct {
 }
 
 var postgresDataTypeToProtoField = map[string]*Field{
-	"integer": &Field{ // nolint: gofmt
+	"integer": {
 		FieldType: proto.FieldType_INT,
 		Size:      4,
 	},
-	"text": &Field{ // nolint: gofmt
+	"text": {
 		FieldType: proto.FieldType_TEXT,
 		Size:      VariableSize,
 	},
-	"timestamp without time zone": &Field{ // nolint: gofmt
+	"timestamp without time zone": {
 		FieldType: proto.FieldType_TIMESTAMP,
 		Size:      8,
 	},
-	"bigint": &Field{ // nolint: gofmt
+	"bigint": {
 		FieldType: proto.FieldType_BIGINT,
 		Size:      8,
 	},
-	"double precision": &Field{ // nolint: gofmt
+	"double precision": {
 		FieldType: proto.FieldType_DOUBLE,
 		Size:      8,
 	},
