@@ -1,0 +1,10 @@
+label: protect-ssn
+rules:
+- action: read
+  effect: deny
+  fields:
+  - card_number
+  target: records:creditcards.transactions
+  where:
+  - partner: visa
+version: 1

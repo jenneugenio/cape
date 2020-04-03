@@ -852,10 +852,11 @@ func (c *Client) CreatePolicy(ctx context.Context, policy *primitives.Policy) (*
 
 	variables := make(map[string]interface{})
 	variables["label"] = policy.Label
+	variables["spec"] = policy.Spec
 
 	err := c.Raw(ctx, `
-		mutation CreatePolicy($label: Label!) {
-			createPolicy(input: { label: $label }) {
+		mutation CreatePolicy($label: Label!, $spec: PolicySpec!) {
+			createPolicy(input: { label: $label, spec: $spec }) {
 				id
 				label
 			}

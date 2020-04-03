@@ -34,16 +34,19 @@ func (p *Policy) Validate() error {
 }
 
 // NewPolicy returns a mutable policy struct
-func NewPolicy(label Label) (*Policy, error) {
+func NewPolicy(label Label, spec *PolicySpec) (*Policy, error) {
 	p, err := database.NewPrimitive(PolicyType)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Policy{
+	policy := &Policy{
 		Primitive: p,
 		Label:     label,
-	}, nil
+		Spec:      spec,
+	}
+
+	return policy, policy.Validate()
 }
 
 // ParsePolicy can convert a yaml document into a Policy

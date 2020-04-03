@@ -1,3 +1,5 @@
+scalar PolicySpec
+
 type Policy {
   id: ID!
   created_at: Time!
@@ -21,8 +23,7 @@ type Attachment {
 
 input CreatePolicyRequest {
   label: Label!
-  # The rest of the fields that make up a policy
-  # will go here!
+  spec: PolicySpec!
 }
 
 input DeletePolicyRequest {

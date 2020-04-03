@@ -1022,7 +1022,9 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	&ast.Source{Name: "graph/policy.graphql", Input: `type Policy {
+	&ast.Source{Name: "graph/policy.graphql", Input: `scalar PolicySpec
+
+type Policy {
   id: ID!
   created_at: Time!
   updated_at: Time!
@@ -1045,8 +1047,7 @@ type Attachment {
 
 input CreatePolicyRequest {
   label: Label!
-  # The rest of the fields that make up a policy
-  # will go here!
+  spec: PolicySpec!
 }
 
 input DeletePolicyRequest {
@@ -6522,6 +6523,12 @@ func (ec *executionContext) unmarshalInputCreatePolicyRequest(ctx context.Contex
 			if err != nil {
 				return it, err
 			}
+		case "spec":
+			var err error
+			it.Spec, err = ec.unmarshalNPolicySpec2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -8093,6 +8100,20 @@ func (ec *executionContext) marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcape�
 		return graphql.Null
 	}
 	return ec._Policy(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNPolicySpec2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, v interface{}) (primitives.PolicySpec, error) {
+	return primitives.UnmarshalPolicySpec(v)
+}
+
+func (ec *executionContext) marshalNPolicySpec2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v primitives.PolicySpec) graphql.Marshaler {
+	res := primitives.MarshalPolicySpec(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNRemoveSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐRemoveSourceRequest(ctx context.Context, v interface{}) (model.RemoveSourceRequest, error) {

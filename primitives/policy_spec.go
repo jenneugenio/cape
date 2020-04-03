@@ -2,8 +2,11 @@ package primitives
 
 import (
 	"fmt"
+	"github.com/99designs/gqlgen/graphql"
 	errors "github.com/dropoutlabs/cape/partyerrors"
+	"io"
 	"sigs.k8s.io/yaml"
+	"strconv"
 )
 
 // Version represents which version of policy we are using
@@ -40,6 +43,35 @@ func (ps *PolicySpec) Validate() error {
 	return nil
 }
 
+// MarshalPolicySpec gql implementation
+func MarshalPolicySpec(ps PolicySpec) graphql.Marshaler {
+	return graphql.WriterFunc(func(w io.Writer) {
+		yaml, err := yaml.Marshal(ps)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Fprint(w, strconv.Quote(string(yaml)))
+	})
+}
+
+// UnmarshalPolicySpec gql implementation
+func UnmarshalPolicySpec(v interface{}) (PolicySpec, error) {
+	var ps PolicySpec
+	bytes, err := yaml.Marshal(v)
+	if err != nil {
+		return ps, err
+	}
+
+	err = yaml.Unmarshal(bytes, &ps)
+	if err != nil {
+		return ps, err
+	}
+
+	return PolicySpec{}, nil
+}
+
+// ToBytes writes the policy spec to bytes representing the policy file
 func (ps *PolicySpec) ToBytes() ([]byte, error) {
 	return yaml.Marshal(ps)
 }

@@ -12,7 +12,7 @@ import (
 )
 
 func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*primitives.Policy, error) {
-	policy, err := primitives.NewPolicy(input.Label)
+	policy, err := primitives.NewPolicy(input.Label, &input.Spec)
 	if err != nil {
 		return nil, err
 	}

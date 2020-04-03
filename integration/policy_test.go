@@ -4,6 +4,7 @@ package integration
 
 import (
 	"context"
+	"io/ioutil"
 	"testing"
 
 	gm "github.com/onsi/gomega"
@@ -11,6 +12,15 @@ import (
 	"github.com/dropoutlabs/cape/controller/harness"
 	"github.com/dropoutlabs/cape/primitives"
 )
+
+func mockSpec() (*primitives.PolicySpec, error) {
+	mockSpec, err := ioutil.ReadFile("./testdata/policy.yaml")
+	if err != nil {
+		return nil, err
+	}
+
+	return primitives.ParsePolicySpec(mockSpec)
+}
 
 func TestPolicies(t *testing.T) {
 	gm.RegisterTestingT(t)
@@ -31,11 +41,14 @@ func TestPolicies(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
+	spec, err := mockSpec()
+	gm.Expect(err).To(gm.BeNil())
+
 	t.Run("create policy", func(t *testing.T) {
 		label, err := primitives.NewLabel("admin-disallowed")
 		gm.Expect(err).To(gm.BeNil())
 
-		p, err := primitives.NewPolicy(label)
+		p, err := primitives.NewPolicy(label, spec)
 		gm.Expect(err).To(gm.BeNil())
 
 		policy, err := client.CreatePolicy(ctx, p)
@@ -53,7 +66,7 @@ func TestPolicies(t *testing.T) {
 		label, err := primitives.NewLabel("ds-dl-data")
 		gm.Expect(err).To(gm.BeNil())
 
-		p, err := primitives.NewPolicy(label)
+		p, err := primitives.NewPolicy(label, spec)
 		gm.Expect(err).To(gm.BeNil())
 
 		policy, err := client.CreatePolicy(ctx, p)
@@ -71,7 +84,7 @@ func TestPolicies(t *testing.T) {
 		label, err := primitives.NewLabel("wow-policy-is-cool")
 		gm.Expect(err).To(gm.BeNil())
 
-		p, err := primitives.NewPolicy(label)
+		p, err := primitives.NewPolicy(label, spec)
 		gm.Expect(err).To(gm.BeNil())
 
 		_, err = client.CreatePolicy(ctx, p)
@@ -97,6 +110,9 @@ func TestListPolicies(t *testing.T) {
 
 	defer h.Teardown(ctx) // nolint: errcheck
 
+	spec, err := mockSpec()
+	gm.Expect(err).To(gm.BeNil())
+
 	m := h.Manager()
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
@@ -111,7 +127,7 @@ func TestListPolicies(t *testing.T) {
 
 		labels[i] = label
 
-		p, err := primitives.NewPolicy(label)
+		p, err := primitives.NewPolicy(label, spec)
 		gm.Expect(err).To(gm.BeNil())
 
 		policy, err := client.CreatePolicy(ctx, p)
@@ -145,13 +161,16 @@ func TestAttachments(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
+	spec, err := mockSpec()
+	gm.Expect(err).To(gm.BeNil())
+
 	t.Run("attach policy", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
 		label, err := primitives.NewLabel("admin-disallowed")
 		gm.Expect(err).To(gm.BeNil())
 
-		p, err := primitives.NewPolicy(label)
+		p, err := primitives.NewPolicy(label, spec)
 		gm.Expect(err).To(gm.BeNil())
 
 		policy, err := client.CreatePolicy(ctx, p)
@@ -178,7 +197,7 @@ func TestAttachments(t *testing.T) {
 		label, err := primitives.NewLabel("ds-allowed")
 		gm.Expect(err).To(gm.BeNil())
 
-		p, err := primitives.NewPolicy(label)
+		p, err := primitives.NewPolicy(label, spec)
 		gm.Expect(err).To(gm.BeNil())
 
 		policy, err := client.CreatePolicy(ctx, p)
@@ -205,7 +224,7 @@ func TestAttachments(t *testing.T) {
 		label, err := primitives.NewLabel("cio-allowed")
 		gm.Expect(err).To(gm.BeNil())
 
-		p, err := primitives.NewPolicy(label)
+		p, err := primitives.NewPolicy(label, spec)
 		gm.Expect(err).To(gm.BeNil())
 
 		policy, err := client.CreatePolicy(ctx, p)

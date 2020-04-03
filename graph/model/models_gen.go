@@ -48,7 +48,8 @@ type AuthSessionRequest struct {
 }
 
 type CreatePolicyRequest struct {
-	Label primitives.Label `json:"label"`
+	Label primitives.Label      `json:"label"`
+	Spec  primitives.PolicySpec `json:"spec"`
 }
 
 type CreateRoleRequest struct {
