@@ -47,3 +47,19 @@ func TestTargetEntity(t *testing.T) {
 
 	gm.Expect(target.Entity()).To(gm.Equal(Entity("transactions")))
 }
+
+func TestCollectionWildcard(t *testing.T) {
+	gm.RegisterTestingT(t)
+	target, err := NewTarget("records:*")
+	gm.Expect(err).To(gm.BeNil())
+	gm.Expect(target.Collection().String()).To(gm.Equal("*"))
+	gm.Expect(target.Entity().String()).To(gm.Equal("*"))
+}
+
+func TestEntityWildcard(t *testing.T) {
+	gm.RegisterTestingT(t)
+	target, err := NewTarget("records:mycollection.*")
+	gm.Expect(err).To(gm.BeNil())
+	gm.Expect(target.Collection().String()).To(gm.Equal("mycollection"))
+	gm.Expect(target.Entity().String()).To(gm.Equal("*"))
+}

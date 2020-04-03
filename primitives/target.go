@@ -6,6 +6,12 @@ import (
 )
 
 // Target is in the form <target>:<collection>.<entity>
+// However, the target can also specify wildcards such as <target>:<collection>.*
+// or <target>:*
+//
+// If the fully specified regex fails, we will try against the other wildcard regex
+var fullySpecifiedRegex = regexp.MustCompile(`^records:(.*)\.(.*)+$`)
+var collectionWildcardRegex = regexp.MustCompile(`^records:(\*)$`)
 
 // Collection for this target
 type Collection string
@@ -33,12 +39,9 @@ const (
 // Target of a policy
 type Target string
 
-// only records are supported right now
-var targetRegex = regexp.MustCompile(`^records:(.*)\.(.*)+$`)
-
 // Validate that target is valid
 func (t Target) Validate() error {
-	if !targetRegex.MatchString(string(t)) {
+	if !fullySpecifiedRegex.MatchString(string(t)) && !collectionWildcardRegex.MatchString(string(t)) {
 		msg := "Target must be in the form <type>:<collection>.<entity>"
 		return errors.New(InvalidTargetCause, msg)
 	}
@@ -53,14 +56,24 @@ func (t Target) Type() TargetType {
 
 // Collection returns which collection this target refers to
 func (t Target) Collection() Collection {
-	res := targetRegex.FindStringSubmatch(t.String())
+	res := fullySpecifiedRegex.FindStringSubmatch(t.String())
+	if res != nil {
+		return Collection(res[1])
+	}
+
+	res = collectionWildcardRegex.FindStringSubmatch(t.String())
 	return Collection(res[1])
 }
 
 // Entity returns which entity this target refers to
 func (t Target) Entity() Entity {
-	res := targetRegex.FindStringSubmatch(t.String())
-	return Entity(res[2])
+	// if the collection was wildcarded, then this won't match
+	res := fullySpecifiedRegex.FindStringSubmatch(t.String())
+	if res != nil {
+		return Entity(res[2])
+	}
+
+	return "*"
 }
 
 // String turns the Target into a string
