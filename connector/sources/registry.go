@@ -5,9 +5,6 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 )
 
-// NewSourceFunc represents a function constructor for a Source
-type NewSourceFunc func(*primitives.Source) (Source, error)
-
 // Registry represents a NewSourceFunc registry
 type Registry map[primitives.SourceType]NewSourceFunc
 

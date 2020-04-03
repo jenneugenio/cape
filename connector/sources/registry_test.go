@@ -1,43 +1,12 @@
 package sources
 
 import (
-	"context"
 	"testing"
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/cape/connector/proto"
 	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
 )
-
-var testSourceType primitives.SourceType = "test"
-
-type testSource struct {
-	source *primitives.Source
-}
-
-func (t *testSource) Label() primitives.Label {
-	return primitives.Label("test")
-}
-func (t *testSource) Type() primitives.SourceType {
-	return testSourceType
-}
-func (t *testSource) Schema(_ context.Context, _ Query) (*proto.Schema, error) {
-	return &proto.Schema{}, nil
-}
-func (t *testSource) Query(_ context.Context, _ Query, _ *proto.Schema, _ Stream) error {
-	return nil
-}
-func (t *testSource) Close(_ context.Context) error {
-	return nil
-}
-
-func newTestSource(s *primitives.Source) (Source, error) {
-	return &testSource{
-		source: s,
-	}, nil
-}
 
 func TestSourcesRegistry(t *testing.T) {
 	gm.RegisterTestingT(t)

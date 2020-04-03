@@ -31,16 +31,18 @@ type Cache struct {
 	client   ControllerClient
 	sources  map[primitives.Label]Source
 	registry *Registry
+	cfg      *Config
 }
 
 // NewCache returns a Manager if valid configuration is provided.
-func NewCache(c ControllerClient, r *Registry) (*Cache, error) {
+func NewCache(cfg *Config, c ControllerClient, r *Registry) (*Cache, error) {
 	if r == nil {
 		r = registry
 	}
 
 	return &Cache{
 		lock:     &sync.RWMutex{},
+		cfg:      cfg,
 		client:   c,
 		closed:   false,
 		sources:  map[primitives.Label]Source{},
@@ -92,7 +94,7 @@ func (c *Cache) add(ctx context.Context, label primitives.Label) (Source, error)
 		return nil, err
 	}
 
-	s, err = ctor(primitive)
+	s, err := ctor(ctx, c.cfg, primitive)
 	if err != nil {
 		return nil, err
 	}

@@ -10,7 +10,10 @@ var (
 	SourceAlreadyExists = errors.NewCause(errors.BadRequestCategory, "source_already_exists")
 	ClosedCause         = errors.NewCause(errors.BadRequestCategory, "closed")
 	NotFoundCause       = errors.NewCause(errors.NotFoundCategory, "source_not_found")
+	WrongSourceCause    = errors.NewCause(errors.BadRequestCategory, "wrong_source")
+	InvalidConfig       = errors.NewCause(errors.BadRequestCategory, "invalid_config")
 
 	ErrCacheClosed   = errors.New(ClosedCause, "Cache has been closed")
 	ErrCacheNotFound = errors.New(NotFoundCause, "Source not found in cache")
+	ErrWrongSource   = errors.New(WrongSourceCause, "Query made against wrong source")
 )
