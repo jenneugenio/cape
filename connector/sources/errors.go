@@ -13,6 +13,9 @@ var (
 	WrongSourceCause    = errors.NewCause(errors.BadRequestCategory, "wrong_source")
 	InvalidConfig       = errors.NewCause(errors.BadRequestCategory, "invalid_config")
 
+	// UnknownFieldType occurs when an unknown field type is encountered
+	UnknownFieldType = errors.NewCause(errors.InternalServerErrorCategory, "unknown_field_type")
+
 	ErrCacheClosed   = errors.New(ClosedCause, "Cache has been closed")
 	ErrCacheNotFound = errors.New(NotFoundCause, "Source not found in cache")
 	ErrWrongSource   = errors.New(WrongSourceCause, "Query made against wrong source")

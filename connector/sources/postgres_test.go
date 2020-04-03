@@ -10,6 +10,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/dropoutlabs/cape/connector/proto"
+	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/database/dbtest"
 	"github.com/dropoutlabs/cape/framework"
 	"github.com/dropoutlabs/cape/primitives"
@@ -25,17 +26,28 @@ func TestPostgresSource(t *testing.T) {
 	db, err := dbtest.New(os.Getenv("CAPE_DB_URL"))
 	gm.Expect(err).To(gm.BeNil())
 
+	seedMigrations := os.Getenv("CAPE_DB_SEED_MIGRATIONS")
+
 	err = db.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer db.Teardown(ctx) // nolint: errcheck
+	migrator, err := database.NewMigrator(db.URL(), seedMigrations)
+	gm.Expect(err).To(gm.BeNil())
+
+	defer func() {
+		migrator.Down(ctx) // nolint: errcheck
+		db.Teardown(ctx)
+	}()
+
+	err = migrator.Up(ctx)
+	gm.Expect(err).To(gm.BeNil())
 
 	cfg := &Config{
 		InstanceID: primitives.Label("cape-source-tester"),
 		Logger:     framework.TestLogger(),
 	}
 
-	src, err := primitives.NewSource(primitives.Label("hello"), *db.URL(), nil)
+	src, err := primitives.NewSource(primitives.Label("test"), *db.URL(), nil)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("can create and close", func(t *testing.T) {
@@ -50,13 +62,65 @@ func TestPostgresSource(t *testing.T) {
 		source, err := NewPostgresSource(ctx, cfg, src)
 		gm.Expect(err).To(gm.BeNil())
 
-		// TODO: Implement tests for checking whether or not schema is being
-		// returned (and properly) for a given set of test data.
-		//
-		// It's imperative that this Schema is set to use the right types and
-		// encoding values otherwise our clients will _not_ be able to decode
-		// them.
 		defer source.Close(ctx) // nolint: errcheck
+
+		query := &testQuery{}
+		schema, err := source.Schema(ctx, query)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(schema).ToNot(gm.BeNil())
+
+		gm.Expect(schema.DataSource).To(gm.Equal(src.Label.String()))
+		gm.Expect(schema.Target).To(gm.Equal(query.Collection()))
+		gm.Expect(schema.Type).To(gm.Equal(proto.RecordType_DOCUMENT))
+
+		gm.Expect(len(schema.Fields)).To(gm.Equal(8))
+
+		expectedFields := []*proto.Field{
+			&proto.Field{
+				Field: proto.FieldType_INT,
+				Name:  "id",
+				Size:  4,
+			},
+			&proto.Field{
+				Field: proto.FieldType_TEXT,
+				Name:  "processor",
+				Size:  VariableSize,
+			},
+			&proto.Field{
+				Field: proto.FieldType_TIMESTAMP,
+				Name:  "timestamp",
+				Size:  8,
+			},
+			&proto.Field{
+				Field: proto.FieldType_INT,
+				Name:  "card_id",
+				Size:  4,
+			},
+			&proto.Field{
+				Field: proto.FieldType_BIGINT,
+				Name:  "card_number",
+				Size:  8,
+			},
+			&proto.Field{
+				Field: proto.FieldType_DOUBLE,
+				Name:  "value",
+				Size:  8,
+			},
+			&proto.Field{
+				Field: proto.FieldType_INT,
+				Name:  "ssn",
+				Size:  4,
+			},
+			&proto.Field{
+				Field: proto.FieldType_TEXT,
+				Name:  "vendor",
+				Size:  VariableSize,
+			},
+		}
+
+		for i, field := range schema.Fields {
+			gm.Expect(field).To(gm.Equal(expectedFields[i]))
+		}
 	})
 
 	t.Run("can stream rows back for query", func(t *testing.T) {

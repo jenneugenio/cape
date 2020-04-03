@@ -186,8 +186,9 @@ unit: gocheck
 CAPE_DB_URL?="postgres://postgres:dev@localhost:5432/postgres?sslmode=disable"
 CAPE_DB_MIGRATIONS?="$(shell pwd)/migrations"
 CAPE_DB_TEST_MIGRATIONS?="$(shell pwd)/database/dbtest/migrations"
+CAPE_DB_SEED_MIGRATIONS?="$(shell pwd)/tools/seed"
 integration: gocheck
-	CAPE_DB_URL=$(CAPE_DB_URL) CAPE_DB_TEST_MIGRATIONS=$(CAPE_DB_TEST_MIGRATIONS) CAPE_DB_MIGRATIONS=$(CAPE_DB_MIGRATIONS) go test -v ./... -tags=integration
+	CAPE_DB_URL=$(CAPE_DB_URL) CAPE_DB_SEED_MIGRATIONS=$(CAPE_DB_SEED_MIGRATIONS) CAPE_DB_TEST_MIGRATIONS=$(CAPE_DB_TEST_MIGRATIONS) CAPE_DB_MIGRATIONS=$(CAPE_DB_MIGRATIONS) go test -v ./... -tags=integration
 
 fmt: gocheck
 	gofmt -s -l -w $(SRC)

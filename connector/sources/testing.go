@@ -97,5 +97,5 @@ func (t *testQuery) Source() primitives.Label {
 }
 
 func (t *testQuery) Collection() string {
-	return "testing"
+	return "transactions"
 }

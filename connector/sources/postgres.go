@@ -74,9 +74,53 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 		return nil, ErrWrongSource
 	}
 
-	// TODO: Do the work with postgres here to extract the schema information
-	// we need to pull data out of pg and mutate it into our format.
-	return nil, nil
+	schema := &proto.Schema{
+		DataSource: p.source.Label.String(),
+		Target:     q.Collection(),
+		Type:       proto.RecordType_DOCUMENT,
+	}
+	fields := []*proto.Field{}
+
+	rows, err := p.pool.Query(ctx, "SELECT column_name, data_type, character_maximum_length FROM "+
+		"information_schema.columns WHERE table_name = $1", q.Collection())
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var columnName string
+		var dataType string
+
+		// maxLength is a pointer because it can be null
+		var maxLength *int64
+		err = rows.Scan(&columnName, &dataType, &maxLength)
+		if err != nil {
+			return nil, err
+		}
+
+		f, err := DataTypeToProtoField(p.Type(), dataType)
+		if err != nil {
+			return nil, err
+		}
+
+		size := f.Size
+		if maxLength != nil {
+			size = *maxLength
+		}
+
+		field := &proto.Field{
+			Field: f.FieldType,
+			Size:  size,
+			Name:  columnName,
+		}
+
+		fields = append(fields, field)
+	}
+
+	schema.Fields = fields
+
+	return schema, nil
 }
 
 // Query issues the given query against the targeted collection from the query.
