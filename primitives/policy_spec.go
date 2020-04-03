@@ -72,6 +72,7 @@ func UnmarshalPolicySpec(v interface{}) (PolicySpec, error) {
 }
 
 // ToBytes writes the policy spec to bytes representing the policy file
+
 func (ps *PolicySpec) ToBytes() ([]byte, error) {
 	return yaml.Marshal(ps)
 }

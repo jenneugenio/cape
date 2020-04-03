@@ -28,6 +28,7 @@ func TestYamlUnmarshalling(t *testing.T) {
 	gm.Expect(len(spec.Rules)).To(gm.Equal(1))
 
 	rule := spec.Rules[0]
+
 	gm.Expect(rule.Target).To(gm.Equal(Target("records:creditcards.transactions")))
 	gm.Expect(rule.Action).To(gm.Equal(Read))
 	gm.Expect(rule.Effect).To(gm.Equal(Deny))

@@ -68,3 +68,19 @@ func ParsePolicy(data []byte) (*Policy, error) {
 
 	return policy, policy.Validate()
 }
+
+// PolicyFromYAML can convert a yaml document into a Policy
+func PolicyFromYAML(data []byte) (*Policy, error) {
+	ps, err := ParsePolicySpec(data)
+	if err != nil {
+		return nil, err
+	}
+
+	p, err := database.NewPrimitive(PolicyType)
+	policy := &Policy{
+		Primitive: p,
+		Spec:      ps,
+	}
+
+	return policy, err
+}
