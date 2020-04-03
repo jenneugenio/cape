@@ -20,6 +20,11 @@ func (f Field) Validate() error {
 	return nil
 }
 
+// String turns the field into a string
+func (f Field) String() string {
+	return string(f)
+}
+
 // NewField validates and returns a new field
 func NewField(in string) (Field, error) {
 	field := Field(in)

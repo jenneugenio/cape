@@ -27,7 +27,23 @@ func TestTarget(t *testing.T) {
 		t.Run(fmt.Sprintf("Invalid target: %s", invalid), func(t *testing.T) {
 			gm.RegisterTestingT(t)
 			_, err := NewTarget(invalid)
-			gm.Expect(err.Error()).To(gm.Equal("invalid_target: Target must be in the form <type>:<collection>.<collection>"))
+			gm.Expect(err.Error()).To(gm.Equal("invalid_target: Target must be in the form <type>:<collection>.<entity>"))
 		})
 	}
+}
+
+func TestTargetCollection(t *testing.T) {
+	gm.RegisterTestingT(t)
+	target, err := NewTarget("records:mycollection.transactions")
+	gm.Expect(err).To(gm.BeNil())
+
+	gm.Expect(target.Collection()).To(gm.Equal(Collection("mycollection")))
+}
+
+func TestTargetEntity(t *testing.T) {
+	gm.RegisterTestingT(t)
+	target, err := NewTarget("records:mycollection.transactions")
+	gm.Expect(err).To(gm.BeNil())
+
+	gm.Expect(target.Entity()).To(gm.Equal(Entity("transactions")))
 }
