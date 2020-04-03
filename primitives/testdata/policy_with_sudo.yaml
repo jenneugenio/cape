@@ -3,9 +3,9 @@ rules:
 - action: read
   effect: deny
   fields:
-  - card_number
-  sudo: false
+    - card_number
   target: records:creditcards.transactions
   where:
   - partner: visa
+  sudo: true
 version: 1

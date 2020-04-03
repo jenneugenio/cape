@@ -22,6 +22,7 @@ type Rule struct {
 	Effect Effect  `json:"effect"`
 	Fields []Field `json:"fields"`
 	Where  []Where `json:"where,omitempty"`
+	Sudo   bool    `json:"sudo"`
 }
 
 // PolicySpec defines the policy (e.g. the yaml file)
