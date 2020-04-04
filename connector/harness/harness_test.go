@@ -19,7 +19,8 @@ func TestHarness(t *testing.T) {
 	t.Run("Can start the connector", func(t *testing.T) {
 		ctx := context.Background()
 
-		cfg := &Config{ControllerURL: controllerURL}
+		cfg, err := NewConfig(controllerURL)
+		gm.Expect(err).To(gm.BeNil())
 
 		h, err := NewHarness(cfg)
 		gm.Expect(err).To(gm.BeNil())
@@ -40,7 +41,8 @@ func TestHarness(t *testing.T) {
 	t.Run("Can start and stop the connector", func(t *testing.T) {
 		ctx := context.Background()
 
-		cfg := &Config{ControllerURL: controllerURL}
+		cfg, err := NewConfig(controllerURL)
+		gm.Expect(err).To(gm.BeNil())
 
 		h, err := NewHarness(cfg)
 		gm.Expect(err).To(gm.BeNil())

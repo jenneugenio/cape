@@ -211,7 +211,12 @@ func (h *Harness) Teardown(ctx context.Context) error {
 	h.server = nil
 	h.manager = nil
 
-	return db.Teardown(ctx)
+	err = db.Teardown(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Client returns an unauthenticated Client for the underlying instance of the

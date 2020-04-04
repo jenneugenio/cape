@@ -5,12 +5,15 @@ import (
 
 	"github.com/dropoutlabs/cape/auth"
 	pb "github.com/dropoutlabs/cape/connector/proto"
+	"github.com/dropoutlabs/cape/connector/sources"
 	"github.com/dropoutlabs/cape/primitives"
+	"github.com/dropoutlabs/cape/query"
 	"google.golang.org/grpc/metadata"
 )
 
 type grpcHandler struct {
 	controller *Controller
+	cache      *sources.Cache
 }
 
 func (g *grpcHandler) handleAuth(ctx context.Context) (primitives.Identity, error) {
@@ -33,18 +36,30 @@ func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryS
 		return err
 	}
 
-	dataSource := req.GetDataSource()
-
-	// TODO pull schema/data
-	schema := &pb.Schema{DataSource: dataSource}
-	r := &pb.Record{Schema: schema}
-
-	err = server.Send(r)
+	dataSource, err := primitives.NewLabel(req.GetDataSource())
 	if err != nil {
 		return err
 	}
 
-	// TODO loop over data and send more!!!
+	source, err := g.cache.Get(server.Context(), dataSource)
+	if err != nil {
+		return err
+	}
+
+	query, err := query.New(dataSource, req.GetQuery())
+	if err != nil {
+		return err
+	}
+
+	// This is using a new context because if its using the grpc context and
+	// if the grpc connection is closed grpc cancels that context. This
+	// causes pgx to ungracefully close the connection to postgres which
+	// was causing a problems with k8s port forwarding causing our tests
+	// to break.
+	err = source.Query(context.Background(), query, server)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

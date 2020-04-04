@@ -36,7 +36,8 @@ func TestLogin(t *testing.T) {
 	controllerURL, err := m.URL()
 	gm.Expect(err).To(gm.BeNil())
 
-	connCfg := &connHarness.Config{ControllerURL: controllerURL}
+	connCfg, err := connHarness.NewConfig(controllerURL)
+	gm.Expect(err).To(gm.BeNil())
 
 	connH, err := connHarness.NewHarness(connCfg)
 	gm.Expect(err).To(gm.BeNil())
@@ -52,16 +53,39 @@ func TestLogin(t *testing.T) {
 	err = m.CreateService(ctx, connH.APIToken(), connectorURL)
 	gm.Expect(err).To(gm.BeNil())
 
+	err = m.CreateSource(ctx, connH.SourceCredentials(), m.Connector.ID)
+	gm.Expect(err).To(gm.BeNil())
+
 	connClient, err := connH.Client(m.Admin.Token)
 	gm.Expect(err).To(gm.BeNil())
 
+	defer connClient.Close()
+
 	t.Run("can submit query that logs in", func(t *testing.T) {
-		err = connClient.Query(ctx, "test-datasource", "SELECT * FROM ALLDATA;")
+		stream, err := connClient.Query(ctx, m.TestSource.Label, "SELECT * FROM transactions")
+		gm.Expect(err).To(gm.BeNil())
+
+		defer stream.Close()
+
+		// NextRecord actually triggers the login
+		ok := stream.NextRecord()
+		gm.Expect(ok).To(gm.BeTrue())
+
+		err = stream.Error()
 		gm.Expect(err).To(gm.BeNil())
 	})
 
 	t.Run("can still submit query that logs in", func(t *testing.T) {
-		err = connClient.Query(ctx, "test-datasource", "SELECT * FROM ALLDATA;")
+		stream, err := connClient.Query(ctx, m.TestSource.Label, "SELECT * FROM transactions")
+		gm.Expect(err).To(gm.BeNil())
+
+		defer stream.Close()
+
+		// NextRecord actually triggers the login
+		ok := stream.NextRecord()
+		gm.Expect(ok).To(gm.BeTrue())
+
+		err = stream.Error()
 		gm.Expect(err).To(gm.BeNil())
 	})
 }
@@ -74,7 +98,8 @@ func TestLoginFail(t *testing.T) {
 	url, err := primitives.NewURL("http://localhost:8080")
 	gm.Expect(err).To(gm.BeNil())
 
-	cfg := &connHarness.Config{ControllerURL: url}
+	cfg, err := connHarness.NewConfig(url)
+	gm.Expect(err).To(gm.BeNil())
 
 	h, err := connHarness.NewHarness(cfg)
 	gm.Expect(err).To(gm.BeNil())
@@ -87,6 +112,12 @@ func TestLoginFail(t *testing.T) {
 	connClient, err := h.Client(base64.New([]byte("abcdefgh")))
 	gm.Expect(err).To(gm.BeNil())
 
-	err = connClient.Query(ctx, "test-datasource", "SELECT * FROM ALLDATA;")
-	gm.Expect(err).NotTo(gm.BeNil())
+	defer connClient.Close()
+
+	stream, err := connClient.Query(ctx, "test-datasource", "SELECT * FROM ALLDATA;")
+	gm.Expect(err).To(gm.BeNil())
+
+	// NextRecord actually triggers the login
+	ok := stream.NextRecord()
+	gm.Expect(ok).To(gm.BeFalse())
 }

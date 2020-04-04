@@ -5,12 +5,14 @@ package sources
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"google.golang.org/grpc/metadata"
 
 	"github.com/dropoutlabs/cape/connector/proto"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 var testSourceType primitives.SourceType = "test"
@@ -105,4 +107,30 @@ func (t *testQuery) Collection() string {
 
 func (t *testQuery) Raw() string {
 	return fmt.Sprintf("SELECT * FROM transactions LIMIT %d;", t.Limit)
+}
+
+// GetExpectedRows is a testing helper to query the expected rows from the database
+func GetExpectedRows(ctx context.Context, dbURL *url.URL, query string) ([][]interface{}, error) {
+	pool, err := pgxpool.Connect(ctx, dbURL.String())
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var outVals [][]interface{}
+	for rows.Next() {
+		vals, err := rows.Values()
+		if err != nil {
+			return nil, err
+		}
+		outVals = append(outVals, vals)
+	}
+
+	return outVals, nil
 }

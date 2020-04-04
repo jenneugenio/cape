@@ -4,11 +4,9 @@ package sources
 
 import (
 	"context"
-	"net/url"
 	"os"
 	"testing"
 
-	"github.com/jackc/pgx/v4/pgxpool"
 	gm "github.com/onsi/gomega"
 
 	"github.com/dropoutlabs/cape/connector/proto"
@@ -144,7 +142,7 @@ func TestPostgresSource(t *testing.T) {
 
 		gm.Expect(len(stream.Buffer)).To(gm.Equal(limit))
 
-		expectedRows, err := getExpectedRows(ctx, db.URL(), q.Raw())
+		expectedRows, err := GetExpectedRows(ctx, db.URL(), q.Raw())
 		gm.Expect(err).To(gm.BeNil())
 		for i, row := range stream.Buffer {
 			vals, err := Decode(stream.Buffer[0].Schema, row.Value)
@@ -157,29 +155,4 @@ func TestPostgresSource(t *testing.T) {
 			}
 		}
 	})
-}
-
-func getExpectedRows(ctx context.Context, dbURL *url.URL, query string) ([][]interface{}, error) {
-	pool, err := pgxpool.Connect(context.Background(), dbURL.String())
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := pool.Query(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
-
-	var outVals [][]interface{}
-	for rows.Next() {
-		vals, err := rows.Values()
-		if err != nil {
-			return nil, err
-		}
-		outVals = append(outVals, vals)
-	}
-
-	return outVals, nil
 }

@@ -77,6 +77,7 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 	}
 	fields := []*proto.Field{}
 
+	// See comment in Query below about why this is using its own context
 	rows, err := p.pool.Query(ctx, "SELECT column_name, data_type, character_maximum_length FROM "+
 		"information_schema.columns WHERE table_name = $1", q.Collection())
 	if err != nil {
@@ -112,6 +113,10 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 		}
 
 		fields = append(fields, field)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
 	}
 
 	schema.Fields = fields
@@ -163,6 +168,10 @@ func (p *PostgresSource) Query(ctx context.Context, q Query, stream Stream) erro
 
 		record.Value = values
 
+		// When the grpc connection is closed grpc calls
+		// cancel on their context but this Send call also
+		// returns an error and the rows get closed properly
+		// in the defer above.
 		err = stream.Send(record)
 		if err != nil {
 			return err
@@ -171,7 +180,7 @@ func (p *PostgresSource) Query(ctx context.Context, q Query, stream Stream) erro
 		i++
 	}
 
-	return nil
+	return rows.Err()
 }
 
 // Close issues a close to cancel all on-going requests and closes any

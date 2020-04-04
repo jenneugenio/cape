@@ -6,7 +6,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/dropoutlabs/cape/connector"
+	"github.com/dropoutlabs/cape/connector/client"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 )
@@ -49,7 +49,7 @@ func pullDataCmd(c *cli.Context) error {
 	sourceLabel := args["source"].(primitives.Label)
 	query := args["query"].(string)
 
-	client, err := cluster.Client()
+	ctrlClient, err := cluster.Client()
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func pullDataCmd(c *cli.Context) error {
 		return err
 	}
 
-	source, err := client.GetSourceByLabel(c.Context, sourceLabel)
+	source, err := ctrlClient.GetSourceByLabel(c.Context, sourceLabel)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func pullDataCmd(c *cli.Context) error {
 		return errors.New(NoLinkedService, "Source has not been linked to a data-connector")
 	}
 
-	service, err := client.GetService(c.Context, *source.ServiceID)
+	service, err := ctrlClient.GetService(c.Context, *source.ServiceID)
 	if err != nil {
 		return err
 	}
@@ -84,12 +84,12 @@ func pullDataCmd(c *cli.Context) error {
 		return errors.New(BadCertificate, "Bad certificate for TLS")
 	}
 
-	connClient, err := connector.NewClient(service.Endpoint, token, certPool)
+	connClient, err := client.NewClient(service.Endpoint, token, certPool)
 	if err != nil {
 		return err
 	}
 
-	err = connClient.Query(c.Context, sourceLabel, query)
+	_, err = connClient.Query(c.Context, sourceLabel, query)
 	if err != nil {
 		return err
 	}

@@ -466,11 +466,11 @@ var fileDescriptor_8084a2705774cfd7 = []byte{
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
-var _ grpc.ClientConnInterface
+var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion6
+const _ = grpc.SupportPackageIsVersion4
 
 // DataConnectorClient is the client API for DataConnector service.
 //
@@ -480,10 +480,10 @@ type DataConnectorClient interface {
 }
 
 type dataConnectorClient struct {
-	cc grpc.ClientConnInterface
+	cc *grpc.ClientConn
 }
 
-func NewDataConnectorClient(cc grpc.ClientConnInterface) DataConnectorClient {
+func NewDataConnectorClient(cc *grpc.ClientConn) DataConnectorClient {
 	return &dataConnectorClient{cc}
 }
 

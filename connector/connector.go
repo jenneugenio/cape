@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/dropoutlabs/cape/connector/proto"
+	"github.com/dropoutlabs/cape/connector/sources"
 )
 
 const connectorCertFile = "connector/certs/localhost.crt"
@@ -22,6 +23,7 @@ type Connector struct {
 	cfg        *Config
 	handler    http.Handler
 	controller *Controller
+	cache      *sources.Cache
 	logger     *zerolog.Logger
 }
 
@@ -32,7 +34,7 @@ func (c *Connector) Setup(ctx context.Context) (http.Handler, error) {
 
 // Teardown tears down the server
 func (c *Connector) Teardown(ctx context.Context) error {
-	return nil
+	return c.cache.Close(ctx)
 }
 
 func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
@@ -61,8 +63,18 @@ func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 
 	controller := NewController(cfg.Token, logger)
 
+	sCfg := &sources.Config{
+		InstanceID: cfg.InstanceID,
+		Logger:     logger,
+	}
+	cache, err := sources.NewCache(sCfg, controller, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	hndler := &grpcHandler{
 		controller: controller,
+		cache:      cache,
 	}
 
 	grpcServer := grpc.NewServer()
@@ -78,5 +90,6 @@ func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 		handler:    grpcHandlerFunc(grpcServer, chain),
 		controller: controller,
 		logger:     logger,
+		cache:      cache,
 	}, nil
 }

@@ -11,6 +11,9 @@ import (
 
 	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/connector"
+	"github.com/dropoutlabs/cape/connector/client"
+	"github.com/dropoutlabs/cape/database"
+	"github.com/dropoutlabs/cape/database/dbtest"
 	"github.com/dropoutlabs/cape/framework"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
@@ -26,11 +29,6 @@ var (
 	// NotStartedCause the connector has not started yet
 	NotStartedCause = errors.NewCause(errors.BadRequestCategory, "connector_not_started")
 )
-
-// Config is the harness config
-type Config struct {
-	ControllerURL *primitives.URL
-}
 
 // Harness represents a http server used for testing. Its responsibility is to
 // provide the transport layer for the application contained within the
@@ -56,6 +54,7 @@ type Config struct {
 type Harness struct {
 	cfg       *Config
 	server    *httptest.Server
+	db        dbtest.TestDatabase
 	component framework.Component
 	logger    *zerolog.Logger
 	apiToken  *auth.APIToken
@@ -83,6 +82,16 @@ func NewHarness(cfg *Config) (*Harness, error) {
 func (h *Harness) Setup(ctx context.Context) error {
 	logger := framework.TestLogger()
 
+	db, err := dbtest.NewTestPostgres(h.cfg.dbURL.String())
+	if err != nil {
+		return err
+	}
+
+	err = db.Setup(ctx)
+	if err != nil {
+		return err
+	}
+
 	cleanupWasCalled := false
 	cleanup := func(in error) error {
 		// XXX: Should we return a different error?
@@ -103,7 +112,22 @@ func (h *Harness) Setup(ctx context.Context) error {
 		h.server = nil
 		h.component = nil
 
+		err := db.Teardown(ctx)
+		if err != nil {
+			return err
+		}
+
 		return in
+	}
+
+	migrator, err := database.NewMigrator(db.URL(), h.cfg.sourceMigrationsDir)
+	if err != nil {
+		return cleanup(err)
+	}
+
+	err = migrator.Up(ctx)
+	if err != nil {
+		return cleanup(err)
 	}
 
 	connector, err := connector.New(&connector.Config{
@@ -122,6 +146,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 
 	h.logger = logger
 	h.component = connector
+	h.db = db
 
 	// httptest.NewServer starts listening immediately, it also picks a
 	// randomized port to listen on!
@@ -177,15 +202,22 @@ func (h *Harness) Teardown(ctx context.Context) error {
 		h.logger.Error().Msgf("Could not cleanly stop connector component: %s", err)
 	}
 
+	db := h.db
+	h.db = nil
 	h.component = nil
 	h.server = nil
+
+	err = db.Teardown(ctx)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 // Client returns an unauthenticated Client for the underlying instance of the
 // connector.
-func (h *Harness) Client(authToken *base64.Value) (*connector.Client, error) {
+func (h *Harness) Client(authToken *base64.Value) (*client.Client, error) {
 	u, err := h.URL()
 	if err != nil {
 		return nil, err
@@ -194,7 +226,7 @@ func (h *Harness) Client(authToken *base64.Value) (*connector.Client, error) {
 	certPool := x509.NewCertPool()
 	certPool.AddCert(h.server.Certificate())
 
-	return connector.NewClient(u, authToken, certPool)
+	return client.NewClient(u, authToken, certPool)
 }
 
 // URL returns the url to the running connector once the harness has been started.
@@ -203,12 +235,15 @@ func (h *Harness) URL() (*primitives.URL, error) {
 		return nil, errors.New(NotStartedCause, "Harness must be started to retrieve url")
 	}
 
-	h.server.Client()
-
 	return primitives.NewURL(h.server.URL)
 }
 
 // APIToken returns the APIToken needed by the connector
 func (h *Harness) APIToken() *auth.APIToken {
 	return h.apiToken
+}
+
+// SourceCredentials manages the source credentials
+func (h *Harness) SourceCredentials() *primitives.DBURL {
+	return &primitives.DBURL{URL: h.db.URL()}
 }

@@ -9,6 +9,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	connHarness "github.com/dropoutlabs/cape/connector/harness"
+	"github.com/dropoutlabs/cape/connector/sources"
 	"github.com/dropoutlabs/cape/controller/harness"
 )
 
@@ -34,7 +35,8 @@ func TestQuery(t *testing.T) {
 	controllerURL, err := m.URL()
 	gm.Expect(err).To(gm.BeNil())
 
-	connCfg := &connHarness.Config{ControllerURL: controllerURL}
+	connCfg, err := connHarness.NewConfig(controllerURL)
+	gm.Expect(err).To(gm.BeNil())
 
 	connH, err := connHarness.NewHarness(connCfg)
 	gm.Expect(err).To(gm.BeNil())
@@ -42,15 +44,45 @@ func TestQuery(t *testing.T) {
 	err = connH.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
+	defer connH.Teardown(ctx) // nolint: errcheck
+
 	connectorURL, err := connH.URL()
 	gm.Expect(err).To(gm.BeNil())
 
 	err = m.CreateService(ctx, connH.APIToken(), connectorURL)
 	gm.Expect(err).To(gm.BeNil())
 
+	err = m.CreateSource(ctx, connH.SourceCredentials(), m.Connector.ID)
+	gm.Expect(err).To(gm.BeNil())
+
 	connClient, err := connH.Client(m.Admin.Token)
 	gm.Expect(err).To(gm.BeNil())
 
-	err = connClient.Query(ctx, "test-datasource", "SELECT * FROM ALLDATA;")
+	defer connClient.Close()
+
+	query := "SELECT * FROM transactions"
+	stream, err := connClient.Query(context.Background(), m.TestSource.Label, query)
 	gm.Expect(err).To(gm.BeNil())
+
+	defer stream.Close()
+
+	expectedRows, err := sources.GetExpectedRows(ctx, connH.SourceCredentials().ToURL(), query)
+	gm.Expect(err).To(gm.BeNil())
+
+	i := 0
+	for stream.NextRecord() {
+		if i > 5 {
+			break
+		}
+		err := stream.Error()
+		gm.Expect(err).To(gm.BeNil())
+
+		record := stream.Record()
+		// could check row to row but this is easier to see
+		// if there are any errors
+		for j, val := range record.Values() {
+			gm.Expect(val).To(gm.Equal(expectedRows[i][j]))
+		}
+		i++
+	}
 }

@@ -3,11 +3,13 @@ package dbtest
 import (
 	"context"
 	"fmt"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	"net/url"
+
 	"github.com/jackc/pgconn"
 	pgx "github.com/jackc/pgx/v4"
 	pgxpool "github.com/jackc/pgx/v4/pgxpool"
-	"net/url"
+
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 // ConnectionError occurs when something can't be done because the database is

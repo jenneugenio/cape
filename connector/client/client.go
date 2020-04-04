@@ -1,10 +1,8 @@
-package connector
+package client
 
 import (
 	"context"
 	"crypto/x509"
-	"fmt"
-	"io"
 
 	"github.com/manifoldco/go-base64"
 	"google.golang.org/grpc"
@@ -19,6 +17,7 @@ import (
 type Client struct {
 	client    pb.DataConnectorClient
 	authToken *base64.Value
+	conn      *grpc.ClientConn
 }
 
 // NewClient dials the connector and creates a client
@@ -35,43 +34,29 @@ func NewClient(connectorURL *primitives.URL, authToken *base64.Value, certPool *
 
 	return &Client{
 		client:    pb.NewDataConnectorClient(conn),
+		conn:      conn,
 		authToken: authToken,
 	}, nil
 }
 
 // Query queries the datasource with the specified query
-func (c *Client) Query(ctx context.Context, dataSource primitives.Label, query string) error {
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
+func (c *Client) Query(ctx context.Context, dataSource primitives.Label, query string) (Stream, error) {
 	req := &pb.QueryRequest{
 		DataSource: dataSource.String(),
 		Query:      query,
 	}
 
-	stream, err := c.client.Query(ctx, req)
+	client, err := c.client.Query(ctx, req)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	i := 0
-	var schema *pb.Schema
-	for {
-		record, err := stream.Recv()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
+	stream := NewStream(ctx, client)
 
-		if i == 0 {
-			schema = record.GetSchema()
-		}
-		fmt.Println(schema.GetFields())
+	return stream, nil
+}
 
-		// TODO: handle record here
-	}
-
-	return nil
+// Close closes the client connection
+func (c *Client) Close() error {
+	return c.conn.Close()
 }

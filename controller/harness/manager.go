@@ -5,6 +5,7 @@ import (
 
 	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/controller"
+	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/primitives"
 	"github.com/manifoldco/go-base64"
 )
@@ -23,7 +24,13 @@ type User struct {
 
 // Service represents a service in the cape controller
 type Service struct {
+	ID    database.ID
 	Token *auth.APIToken
+}
+
+// Source represents a source on the cape controller
+type Source struct {
+	Label primitives.Label
 }
 
 // Manager represents an application state manager on-top of the Controller's
@@ -31,9 +38,10 @@ type Service struct {
 // controller's application state, managing users, and other utilities that
 // make it write end-to-end integration tests.
 type Manager struct {
-	h         *Harness
-	Admin     *User
-	Connector *Service
+	h          *Harness
+	Admin      *User
+	Connector  *Service
+	TestSource *Source
 }
 
 // Setup sets up the application state for the cluster (e.g. the `setup`
@@ -84,6 +92,21 @@ func (m *Manager) Setup(ctx context.Context) (*controller.Client, error) {
 	return client, nil
 }
 
+// CreateSource creates a source on the controller
+func (m *Manager) CreateSource(ctx context.Context, dbURL *primitives.DBURL, serviceID database.ID) error {
+	sourceLabel := primitives.Label("test-source")
+	_, err := m.Admin.Client.AddSource(ctx, sourceLabel, dbURL, &serviceID)
+	if err != nil {
+		return err
+	}
+
+	m.TestSource = &Source{
+		Label: sourceLabel,
+	}
+
+	return nil
+}
+
 // CreateService creates a service on the controller with the given APIToken and URL
 func (m *Manager) CreateService(ctx context.Context, apiToken *auth.APIToken, serviceURL *primitives.URL) error {
 	creds, err := apiToken.Credentials()
@@ -96,18 +119,20 @@ func (m *Manager) CreateService(ctx context.Context, apiToken *auth.APIToken, se
 		return err
 	}
 
-	_, err = m.Admin.Client.CreateService(ctx, service)
+	service, err = m.Admin.Client.CreateService(ctx, service)
 	if err != nil {
 		return err
 	}
 
 	m.Connector = &Service{
+		ID:    service.ID,
 		Token: apiToken,
 	}
 
 	return nil
 }
 
+// URL returns the url of the controller
 func (m *Manager) URL() (*primitives.URL, error) {
 	return m.h.URL()
 }
