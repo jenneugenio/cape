@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net"
-	"net/url"
 
 	"github.com/machinebox/graphql"
 	"github.com/manifoldco/go-base64"
@@ -532,38 +531,38 @@ func (s *SourceResponse) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	e, err := url.Parse(aux.Endpoint)
+	e, err := primitives.NewDBURL(aux.Endpoint)
 	if err != nil {
 		return err
 	}
 
 	if aux.Credentials != "" {
-		c, err := url.Parse(aux.Credentials)
+		c, err := primitives.NewDBURL(aux.Credentials)
 		if err != nil {
 			return err
 		}
 
-		s.Credentials = *c
+		s.Credentials = c
 	}
 
-	s.Endpoint = *e
+	s.Endpoint = e
 	return nil
 }
 
 // AddSource adds a new source to the database
 func (c *Client) AddSource(ctx context.Context, label primitives.Label,
-	credentials *url.URL, serviceID *database.ID) (*primitives.Source, error) {
+	credentials *primitives.DBURL, serviceID *database.ID) (*primitives.Source, error) {
 	var resp struct {
 		Source SourceResponse `json:"addSource"`
 	}
 
 	variables := make(map[string]interface{})
 	variables["label"] = label
-	variables["credentials"] = *credentials
+	variables["credentials"] = credentials.String()
 	variables["service_id"] = serviceID
 
 	err := c.Raw(ctx, `
-		mutation AddSource($label: Label!, $credentials: URL!, $service_id: ID) {
+		mutation AddSource($label: Label!, $credentials: DBURL!, $service_id: ID) {
 			  addSource(input: { label: $label, credentials: $credentials, service_id: $service_id}) {
 				id
 				label

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/url"
 
 	"github.com/urfave/cli/v2"
 
@@ -83,7 +82,7 @@ func sourcesAdd(c *cli.Context) error {
 	}
 
 	label := args["label"].(primitives.Label)
-	credentials := args["connection-string"].(*url.URL)
+	credentials := args["connection-string"].(*primitives.DBURL)
 	linkEmail := c.String("link")
 
 	client, err := cluster.Client()

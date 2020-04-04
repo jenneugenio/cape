@@ -2,7 +2,6 @@ package primitives
 
 import (
 	"encoding/json"
-	"net/url"
 	"testing"
 
 	gm "github.com/onsi/gomega"
@@ -17,28 +16,39 @@ func TestNewSource(t *testing.T) {
 	tests := map[string]struct {
 		label       Label
 		credentials string
-		sourceType  SourceType
 		serviceID   *database.ID
 
-		success bool
-		cause   errors.Cause
+		sourceType SourceType
+		endpoint   string
+		success    bool
+		cause      errors.Cause
 	}{
 		"sets type properly": {
 			label:       Label("hello"),
-			credentials: "postgres://my.cool.website.com:5432/test",
-			sourceType:  PostgresType,
+			credentials: "postgres://user:test@my.cool.website.com:5432/test",
 
-			serviceID: nil,
-			success:   true,
+			endpoint:   "postgres://my.cool.website.com:5432/test",
+			sourceType: PostgresType,
+			serviceID:  nil,
+			success:    true,
+		},
+		"returns error if credentials is nil": {
+			label:   Label("error-please"),
+			success: false,
+			cause:   InvalidSourceCause,
 		},
 	}
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			u, err := url.Parse(test.credentials)
-			gm.Expect(err).To(gm.BeNil())
+			var u *DBURL
+			var err error
+			if test.credentials != "" {
+				u, err = NewDBURL(test.credentials)
+				gm.Expect(err).To(gm.BeNil())
+			}
 
-			source, err := NewSource(test.label, *u, test.serviceID)
+			source, err := NewSource(test.label, u, test.serviceID)
 			if !test.success {
 				gm.Expect(errors.FromCause(err, test.cause)).To(gm.BeTrue())
 				return
@@ -47,14 +57,16 @@ func TestNewSource(t *testing.T) {
 			gm.Expect(source.Label).To(gm.Equal(test.label))
 			gm.Expect(source.Type).To(gm.Equal(test.sourceType))
 			gm.Expect(source.ServiceID).To(gm.Equal(test.serviceID))
+			gm.Expect(source.Credentials.String()).To(gm.Equal(test.credentials))
+			gm.Expect(source.Endpoint.String()).To(gm.Equal(test.endpoint))
 		})
 	}
 
-	u, err := url.Parse("postgres://my.cool.com:5432/test")
+	u, err := NewDBURL("postgres://user:test@my.cool.com:5432/test")
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("marshal to json", func(t *testing.T) {
-		source, err := NewSource("helllllo", *u, nil)
+		source, err := NewSource("helllllo", u, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		_, err = json.Marshal(source)
@@ -62,7 +74,7 @@ func TestNewSource(t *testing.T) {
 	})
 
 	t.Run("unmarshal from json", func(t *testing.T) {
-		source, err := NewSource("heyaaaa", *u, nil)
+		source, err := NewSource("heyaaaa", u, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		b, err := json.Marshal(source)

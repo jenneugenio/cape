@@ -3,9 +3,6 @@ package main
 import errors "github.com/dropoutlabs/cape/partyerrors"
 
 var (
-	// InvalidURLCause is when a parsed url is invalid
-	InvalidURLCause = errors.NewCause(errors.BadRequestCategory, "invalid_url")
-
 	// InvalidAPITokenCause is when a provided APIToken is not valid
 	InvalidAPITokenCause = errors.NewCause(errors.BadRequestCategory, "invalid_api_token")
 

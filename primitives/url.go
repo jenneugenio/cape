@@ -47,40 +47,45 @@ type URL struct {
 }
 
 // Validate returns an error if the controller url is _not_ valid
-func (c *URL) Validate() error {
-	if c.URL == nil {
+func (u *URL) Validate() error {
+	if u.URL == nil {
 		return errors.New(InvalidURLCause, "Missing url")
 	}
 
-	if c.URL.Scheme != "http" && c.URL.Scheme != "https" {
+	if u.URL.Scheme != "http" && u.URL.Scheme != "https" {
 		return errors.New(InvalidURLCause, "Invalid scheme, must be http or https")
 	}
 
-	if c.URL.Host == "" {
+	if u.URL.Host == "" {
 		return errors.New(InvalidURLCause, "A host must be provided")
 	}
 
 	return nil
 }
 
+// Copy returns a copy of the URL
+func (u *URL) Copy() (*URL, error) {
+	return NewURL(u.URL.String())
+}
+
 // MarshalJSON implements the JSON.Marshaller interface
-func (c *URL) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + c.URL.String() + "\""), nil
+func (u *URL) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + u.URL.String() + "\""), nil
 }
 
 // UnmarshalJSON implements the JSON.Unmarshaller interface
-func (c *URL) UnmarshalJSON(b []byte) error {
+func (u *URL) UnmarshalJSON(b []byte) error {
 	if len(b) < 2 || b[0] != byte('"') || b[len(b)-1] != byte('"') {
 		return errors.New(InvalidURLCause, "Invalid json provided")
 	}
 
-	u, err := url.Parse(string(b[1 : len(b)-1]))
+	out, err := url.Parse(string(b[1 : len(b)-1]))
 	if err != nil {
 		return err
 	}
 
-	c.URL = u
-	return c.Validate()
+	u.URL = out
+	return u.Validate()
 }
 
 // UnmarshalURL converts a url.URL into a string for usage in graphQL

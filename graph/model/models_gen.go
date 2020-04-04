@@ -13,7 +13,7 @@ import (
 
 type AddSourceRequest struct {
 	Label       primitives.Label `json:"label"`
-	Credentials url.URL          `json:"credentials"`
+	Credentials primitives.DBURL `json:"credentials"`
 	ServiceID   *database.ID     `json:"service_id"`
 }
 

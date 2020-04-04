@@ -4,7 +4,6 @@ package integration
 
 import (
 	"context"
-	"net/url"
 	"testing"
 
 	gm "github.com/onsi/gomega"
@@ -17,8 +16,6 @@ import (
 
 func TestSource(t *testing.T) {
 	gm.RegisterTestingT(t)
-
-	var id database.ID
 
 	ctx := context.Background()
 	cfg, err := harness.NewConfig()
@@ -36,32 +33,30 @@ func TestSource(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
+	dbURL, err := primitives.NewDBURL("postgres://postgres:dev@my.cool.website:5432/mydb")
+	gm.Expect(err).To(gm.BeNil())
+
+	endpoint := "postgres://my.cool.website:5432/mydb"
+
 	t.Run("create a new source", func(t *testing.T) {
 		gm.RegisterTestingT(t)
-
-		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
-		gm.Expect(err).To(gm.BeNil())
 
 		l, err := primitives.NewLabel("my-transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, u, nil)
+		source, err := client.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(source.Label).To(gm.Equal(l))
 		gm.Expect(source.ID).ToNot(gm.BeNil())
 		gm.Expect(source.Type).To(gm.Equal(primitives.PostgresType))
-		gm.Expect(source.Endpoint.String()).To(gm.Equal("postgres://my.cool.website.com:5432/mydb"))
+		gm.Expect(source.Endpoint.String()).To(gm.Equal(endpoint))
+		gm.Expect(source.Credentials.String()).To(gm.Equal(dbURL.String()))
 		gm.Expect(source.ServiceID).To(gm.BeNil())
-
-		id = source.ID
 	})
 
 	t.Run("create a new source with link", func(t *testing.T) {
 		gm.RegisterTestingT(t)
-
-		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
-		gm.Expect(err).To(gm.BeNil())
 
 		l, err := primitives.NewLabel("card-transactions")
 		gm.Expect(err).To(gm.BeNil())
@@ -83,12 +78,13 @@ func TestSource(t *testing.T) {
 		service, err = client.CreateService(ctx, service)
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, u, &service.ID)
+		source, err := client.AddSource(ctx, l, dbURL, &service.ID)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(source.Label).To(gm.Equal(l))
 		gm.Expect(source.ID).ToNot(gm.BeNil())
-		gm.Expect(source.Endpoint.String()).To(gm.Equal("postgres://my.cool.website.com:5432/mydb"))
+		gm.Expect(source.Endpoint.String()).To(gm.Equal(endpoint))
+		gm.Expect(source.Credentials.String()).To(gm.Equal(dbURL.String()))
 		gm.Expect(source.ServiceID).ToNot(gm.BeNil())
 		gm.Expect(*source.ServiceID).To(gm.Equal(service.ID))
 	})
@@ -96,24 +92,18 @@ func TestSource(t *testing.T) {
 	t.Run("can't create link to a non-existent data connector", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
-		gm.Expect(err).To(gm.BeNil())
-
 		l, err := primitives.NewLabel("card-transactions-service-dooesnt-exist")
 		gm.Expect(err).To(gm.BeNil())
 
 		serviceID, err := database.GenerateID(primitives.ServicePrimitiveType)
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.AddSource(ctx, l, u, &serviceID)
+		_, err = client.AddSource(ctx, l, dbURL, &serviceID)
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 
 	t.Run("can't create link that is not a data connector", func(t *testing.T) {
 		gm.RegisterTestingT(t)
-
-		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
-		gm.Expect(err).To(gm.BeNil())
 
 		l, err := primitives.NewLabel("card-transactions")
 		gm.Expect(err).To(gm.BeNil())
@@ -131,7 +121,7 @@ func TestSource(t *testing.T) {
 		service, err = client.CreateService(ctx, service)
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, u, &service.ID)
+		source, err := client.AddSource(ctx, l, dbURL, &service.ID)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(source).To(gm.BeNil())
 	})
@@ -139,27 +129,26 @@ func TestSource(t *testing.T) {
 	t.Run("pull a single data source", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		gm.Expect(err).To(gm.BeNil())
-		source, err := client.GetSource(ctx, id)
-		gm.Expect(err).To(gm.BeNil())
-
-		expectedLabel, err := primitives.NewLabel("my-transactions")
+		label, err := primitives.NewLabel("a-single-source")
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(source.Label).To(gm.Equal(expectedLabel))
-		gm.Expect(source.Endpoint.String()).To(gm.Equal("postgres://my.cool.website.com:5432/mydb"))
+		source, err := client.AddSource(ctx, label, dbURL, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		out, err := client.GetSource(ctx, source.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(out.Label).To(gm.Equal(label))
+		gm.Expect(out.Endpoint.String()).To(gm.Equal(endpoint))
 	})
 
 	t.Run("pull a single data source by label", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
-		gm.Expect(err).To(gm.BeNil())
-
 		l, err := primitives.NewLabel("my-super-transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, u, nil)
+		source, err := client.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		otherSource, err := client.GetSourceByLabel(ctx, l)
@@ -172,12 +161,10 @@ func TestSource(t *testing.T) {
 	t.Run("insert the same data source", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
-		gm.Expect(err).To(gm.BeNil())
 		l, err := primitives.NewLabel("my-transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, u, nil)
+		source, err := client.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(source).To(gm.BeNil())
 	})
@@ -188,10 +175,7 @@ func TestSource(t *testing.T) {
 		l, err := primitives.NewLabel("delete-me")
 		gm.Expect(err).To(gm.BeNil())
 
-		u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/deleteme")
-		gm.Expect(err).To(gm.BeNil())
-
-		source, err := client.AddSource(ctx, l, u, nil)
+		source, err := client.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		err = client.RemoveSource(ctx, l)
@@ -221,7 +205,7 @@ func TestListSources(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	u, err := url.Parse("postgres://postgres:dev@my.cool.website.com:5432/mydb")
+	dbURL, err := primitives.NewDBURL("postgres://postgres:dev@my.cool.website.com:5432/mydb")
 	gm.Expect(err).To(gm.BeNil())
 
 	l1, err := primitives.NewLabel("my-transactions")
@@ -230,10 +214,10 @@ func TestListSources(t *testing.T) {
 	l2, err := primitives.NewLabel("my-other-transactions")
 	gm.Expect(err).To(gm.BeNil())
 
-	source1, err := client.AddSource(ctx, l1, u, nil)
+	source1, err := client.AddSource(ctx, l1, dbURL, nil)
 	gm.Expect(err).To(gm.BeNil())
 
-	source2, err := client.AddSource(ctx, l2, u, nil)
+	source2, err := client.AddSource(ctx, l2, dbURL, nil)
 	gm.Expect(err).To(gm.BeNil())
 
 	sources, err := client.ListSources(ctx)

@@ -33,6 +33,8 @@ models:
     model: github.com/dropoutlabs/cape/primitives.Base64Value
   URL:
     model: github.com/dropoutlabs/cape/primitives.URL
+  DBURL:
+    model: github.com/dropoutlabs/cape/primitives.DBURL
   CredentialsAlgType:
     model: github.com/dropoutlabs/cape/primitives.CredentialsAlgType
   SourceType:

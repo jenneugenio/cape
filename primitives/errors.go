@@ -9,6 +9,7 @@ var (
 	InvalidServiceType     = errors.NewCause(errors.BadRequestCategory, "invalid_service_type")
 	InvalidTokenType       = errors.NewCause(errors.BadRequestCategory, "invalid_token_type")
 	InvalidSourceType      = errors.NewCause(errors.BadRequestCategory, "invalid_source_type")
+	InvalidSourceCause     = errors.NewCause(errors.BadRequestCategory, "invalid_source")
 	InvalidAlgType         = errors.NewCause(errors.BadRequestCategory, "invalid_alg_type")
 	InvalidLabelCause      = errors.NewCause(errors.BadRequestCategory, "invalid_label")
 	InvalidURLCause        = errors.NewCause(errors.BadRequestCategory, "invalid_url")

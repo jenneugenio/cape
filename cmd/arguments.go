@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"net/url"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -64,24 +62,7 @@ var (
 		Description: "The connection string for the database.",
 		Required:    true,
 		Processor: func(in string) (interface{}, error) {
-			if in == "" {
-				return nil, errors.New(InvalidURLCause, "A valid url must be provided")
-			}
-
-			u, err := url.Parse(in)
-			if err != nil {
-				return nil, errors.New(InvalidURLCause, "could not parse: %s", err)
-			}
-
-			if u.Scheme != "postgres" {
-				return nil, errors.New(InvalidURLCause, "Invalid database type. Currently only postgres is supported.")
-			}
-
-			if u.Host == "" {
-				return nil, errors.New(InvalidURLCause, "A host must be provided")
-			}
-
-			return u, nil
+			return primitives.NewDBURL(in)
 		},
 	}
 

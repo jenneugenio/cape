@@ -1,19 +1,24 @@
 package primitives
 
 import (
-	"net/url"
-
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/database/types"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 // Source represents the connection information for an external data source
 type Source struct {
 	*database.Primitive
-	Label       Label      `json:"label"`
-	Endpoint    url.URL    `json:"endpoint"`
-	Type        SourceType `json:"type"`
-	Credentials url.URL    `json:"credentials"`
+	Label Label      `json:"label"`
+	Type  SourceType `json:"type"`
+
+	// Endpoint is a "safe" version of the credential containing a hostname or
+	// identifier for the underlying credential
+	Endpoint *DBURL `json:"endpoint"`
+
+	// XXX: Credentials contains a secret (user and password); it should only
+	// _ever_ be returned to data connectors.
+	Credentials *DBURL `json:"credentials"`
 
 	// ServiceID can be nil as it's not set when a data connector has not been
 	// linked with the service.
@@ -39,18 +44,32 @@ func (s *Source) Validate() error {
 		return err
 	}
 
-	if s.ServiceID == nil {
-		return nil
+	if err := s.Endpoint.Validate(); err != nil {
+		return err
 	}
 
-	return s.ServiceID.Validate()
+	if err := s.Credentials.Validate(); err != nil {
+		return err
+	}
+
+	if s.ServiceID != nil {
+		if err := s.ServiceID.Validate(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // NewSource returns a new Source struct
-func NewSource(label Label, credentials url.URL, serviceID *database.ID) (*Source, error) {
+func NewSource(label Label, credentials *DBURL, serviceID *database.ID) (*Source, error) {
 	p, err := database.NewPrimitive(SourcePrimitiveType)
 	if err != nil {
 		return nil, err
+	}
+
+	if credentials == nil {
+		return nil, errors.New(InvalidSourceCause, "Credentials is a required field for a source")
 	}
 
 	t, err := NewSourceType(credentials.Scheme)
@@ -58,20 +77,20 @@ func NewSource(label Label, credentials url.URL, serviceID *database.ID) (*Sourc
 		return nil, err
 	}
 
-	credentialCopy, err := url.Parse(credentials.String())
+	endpoint, err := credentials.Copy()
 	if err != nil {
 		return nil, err
 	}
 
-	// delete the credential part of the URL
-	credentialCopy.User = nil
+	// delete the credential part of the URL for usage as the endpoint value.
+	endpoint.User = nil
 
 	return &Source{
 		Primitive:   p,
 		Label:       label,
 		Type:        t,
 		Credentials: credentials,
-		Endpoint:    *credentialCopy,
+		Endpoint:    endpoint,
 		ServiceID:   serviceID,
 	}, nil
 }

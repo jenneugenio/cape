@@ -47,7 +47,10 @@ func TestPostgresSource(t *testing.T) {
 		Logger:     framework.TestLogger(),
 	}
 
-	src, err := primitives.NewSource(primitives.Label("test"), *db.URL(), nil)
+	dbURL, err := primitives.DBURLFromURL(db.URL())
+	gm.Expect(err).To(gm.BeNil())
+
+	src, err := primitives.NewSource(primitives.Label("test"), dbURL, nil)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("can create and close", func(t *testing.T) {

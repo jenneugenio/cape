@@ -1,7 +1,10 @@
 package primitives
 
 import (
+	"fmt"
+	"io"
 	"net/url"
+	"strconv"
 
 	errors "github.com/dropoutlabs/cape/partyerrors"
 )
@@ -69,9 +72,14 @@ func (d *DBURL) SetPassword(pw string) {
 	d.User = url.UserPassword(d.User.Username(), pw)
 }
 
+// Copy creates a copy of this DBURL
+func (d *DBURL) Copy() (*DBURL, error) {
+	return NewDBURL(d.URL.String())
+}
+
 // MarshalJSON implements the JSON.Marshaller interface
 func (d *DBURL) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + d.URL.String() + "\""), nil
+	return []byte(strconv.Quote(d.URL.String())), nil
 }
 
 // UnmarshalJSON implements the JSON.Unmarshaller interface
@@ -87,4 +95,25 @@ func (d *DBURL) UnmarshalJSON(b []byte) error {
 
 	d.URL = u
 	return d.Validate()
+}
+
+// UnmarshalGQL impements the interface required to marshal this type to GraphQL
+func (d *DBURL) UnmarshalGQL(v interface{}) error {
+	switch s := v.(type) {
+	case string:
+		u, err := url.Parse(s)
+		if err != nil {
+			return err
+		}
+
+		d.URL = u
+		return d.Validate()
+	default:
+		return errors.New(InvalidDBURLCause, "Invalid DBURL value provided, expected a string, got %T", s)
+	}
+}
+
+// MarshalGQL implements the interface required to unmarshal this type from GraphQL
+func (d DBURL) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(d.URL.String()))
 }

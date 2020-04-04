@@ -1174,8 +1174,8 @@ type Source {
   id: ID!
   label: Label!
   type: SourceType!
-  endpoint: URL!
-  credentials: URL
+  endpoint: DBURL!
+  credentials: DBURL
   service_id: ID
 }
 
@@ -1219,7 +1219,7 @@ input DeleteSessionRequest {
 
 input AddSourceRequest {
   label: Label!
-  credentials: URL!
+  credentials: DBURL!
   service_id: ID
 }
 
@@ -1263,6 +1263,7 @@ scalar Base64
 scalar CredentialsAlgType
 scalar TokenType
 scalar URL
+scalar DBURL
 scalar Name
 scalar Label
 scalar EmailType
@@ -5123,9 +5124,9 @@ func (ec *executionContext) _Source_endpoint(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(url.URL)
+	res := resTmp.(*primitives.DBURL)
 	fc.Result = res
-	return ec.marshalNURL2netᚋurlᚐURL(ctx, field.Selections, res)
+	return ec.marshalNDBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_credentials(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
@@ -5154,9 +5155,9 @@ func (ec *executionContext) _Source_credentials(ctx context.Context, field graph
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(url.URL)
+	res := resTmp.(*primitives.DBURL)
 	fc.Result = res
-	return ec.marshalOURL2netᚋurlᚐURL(ctx, field.Selections, res)
+	return ec.marshalODBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_service_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
@@ -6429,7 +6430,7 @@ func (ec *executionContext) unmarshalInputAddSourceRequest(ctx context.Context, 
 			}
 		case "credentials":
 			var err error
-			it.Credentials, err = ec.unmarshalNURL2netᚋurlᚐURL(ctx, v)
+			it.Credentials, err = ec.unmarshalNDBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7984,6 +7985,33 @@ func (ec *executionContext) marshalNCredentialsAlgType2githubᚗcomᚋdropoutlab
 	return v
 }
 
+func (ec *executionContext) unmarshalNDBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, v interface{}) (primitives.DBURL, error) {
+	var res primitives.DBURL
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNDBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, sel ast.SelectionSet, v primitives.DBURL) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNDBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, v interface{}) (*primitives.DBURL, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNDBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalNDBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, sel ast.SelectionSet, v *primitives.DBURL) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) unmarshalNDeletePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋgraphᚋmodelᚐDeletePolicyRequest(ctx context.Context, v interface{}) (model.DeletePolicyRequest, error) {
 	return ec.unmarshalInputDeletePolicyRequest(ctx, v)
 }
@@ -8268,20 +8296,6 @@ func (ec *executionContext) marshalNTokenType2githubᚗcomᚋdropoutlabsᚋcape�
 	return v
 }
 
-func (ec *executionContext) unmarshalNURL2netᚋurlᚐURL(ctx context.Context, v interface{}) (url.URL, error) {
-	return primitives.UnmarshalURL(v)
-}
-
-func (ec *executionContext) marshalNURL2netᚋurlᚐURL(ctx context.Context, sel ast.SelectionSet, v url.URL) graphql.Marshaler {
-	res := primitives.MarshalURL(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
 func (ec *executionContext) marshalNUser2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐUser(ctx context.Context, sel ast.SelectionSet, v primitives.User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
 }
@@ -8554,6 +8568,30 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalODBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, v interface{}) (primitives.DBURL, error) {
+	var res primitives.DBURL
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalODBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, sel ast.SelectionSet, v primitives.DBURL) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalODBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, v interface{}) (*primitives.DBURL, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalODBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalODBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, sel ast.SelectionSet, v *primitives.DBURL) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOEmail2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmailᚄ(ctx context.Context, v interface{}) ([]*primitives.Email, error) {

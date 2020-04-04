@@ -49,8 +49,8 @@ type Source {
   id: ID!
   label: Label!
   type: SourceType!
-  endpoint: URL!
-  credentials: URL
+  endpoint: DBURL!
+  credentials: DBURL
   service_id: ID
 }
 
@@ -94,7 +94,7 @@ input DeleteSessionRequest {
 
 input AddSourceRequest {
   label: Label!
-  credentials: URL!
+  credentials: DBURL!
   service_id: ID
 }
 
@@ -138,6 +138,7 @@ scalar Base64
 scalar CredentialsAlgType
 scalar TokenType
 scalar URL
+scalar DBURL
 scalar Name
 scalar Label
 scalar EmailType

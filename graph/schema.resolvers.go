@@ -105,7 +105,7 @@ func (r *mutationResolver) AddSource(ctx context.Context, input model.AddSourceR
 		}
 	}
 
-	source, err := primitives.NewSource(input.Label, input.Credentials, input.ServiceID)
+	source, err := primitives.NewSource(input.Label, &input.Credentials, input.ServiceID)
 	if err != nil {
 		return nil, err
 	}
