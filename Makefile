@@ -135,7 +135,7 @@ clean: gocheck
 	go clean
 	rm $(PREFIX)bin/cape
 
-gogen: gocheck protoccheck gqlgen.yml graph/schema.graphql
+gogen: gocheck protoccheck gqlgen.yml controller/schema/*.graphql
 	go generate ./...
 
 .PHONY: bootstrap clean gogen

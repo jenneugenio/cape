@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
+
 	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/primitives"

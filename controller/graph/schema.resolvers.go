@@ -8,10 +8,10 @@ import (
 	"fmt"
 
 	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/controller/graph/generated"
+	"github.com/dropoutlabs/cape/controller/graph/model"
 	"github.com/dropoutlabs/cape/database"
 	fw "github.com/dropoutlabs/cape/framework"
-	"github.com/dropoutlabs/cape/graph/generated"
-	"github.com/dropoutlabs/cape/graph/model"
 	errs "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 )

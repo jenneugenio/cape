@@ -9,8 +9,8 @@ import (
 	"github.com/manifoldco/go-base64"
 
 	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/controller/graph/model"
 	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/graph/model"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 )

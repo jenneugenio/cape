@@ -13,10 +13,10 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/dropoutlabs/cape/auth"
+	"github.com/dropoutlabs/cape/controller/graph"
+	"github.com/dropoutlabs/cape/controller/graph/generated"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/framework"
-	"github.com/dropoutlabs/cape/graph"
-	"github.com/dropoutlabs/cape/graph/generated"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
