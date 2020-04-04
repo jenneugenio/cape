@@ -35,6 +35,8 @@ type Query interface {
 	// TODO: Update this type to reflect the target that's returned for the
 	// query
 	Collection() string
+
+	Raw() string
 }
 
 // Source is an interface that any data source provider must
@@ -47,7 +49,7 @@ type Source interface {
 
 	// Query begins responding to the given query and sending results to the
 	// client.
-	Query(context.Context, Query, *proto.Schema, Stream) error
+	Query(context.Context, Query, Stream) error
 
 	// Close closes all underlying connections to the database. This will close
 	// any on-going requests.

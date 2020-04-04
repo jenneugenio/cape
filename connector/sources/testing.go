@@ -4,6 +4,7 @@ package sources
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/metadata"
 
@@ -28,7 +29,7 @@ func (t *testSource) Type() primitives.SourceType {
 func (t *testSource) Schema(_ context.Context, _ Query) (*proto.Schema, error) {
 	return &proto.Schema{}, nil
 }
-func (t *testSource) Query(_ context.Context, _ Query, _ *proto.Schema, _ Stream) error {
+func (t *testSource) Query(_ context.Context, _ Query, _ Stream) error {
 	return nil
 }
 func (t *testSource) Close(_ context.Context) error {
@@ -44,7 +45,7 @@ func newTestSource(ctx context.Context, cfg *Config, source *primitives.Source) 
 
 type testClient struct{}
 
-func (t *testClient) GetSource(ctx context.Context, source primitives.Label) (*primitives.Source, error) {
+func (t *testClient) GetSourceByLabel(ctx context.Context, source primitives.Label) (*primitives.Source, error) {
 	return &primitives.Source{
 		Label: source,
 		Type:  testSourceType,
@@ -53,7 +54,7 @@ func (t *testClient) GetSource(ctx context.Context, source primitives.Label) (*p
 
 type errClient struct{}
 
-func (e *errClient) GetSource(ctx context.Context, source primitives.Label) (*primitives.Source, error) {
+func (e *errClient) GetSourceByLabel(ctx context.Context, source primitives.Label) (*primitives.Source, error) {
 	return nil, errors.New(NotFoundCause, "whoops")
 }
 
@@ -90,7 +91,9 @@ func (t *testStream) RecvMsg(_ interface{}) error {
 }
 
 // nolint: unused
-type testQuery struct{}
+type testQuery struct {
+	Limit int
+}
 
 func (t *testQuery) Source() primitives.Label {
 	return primitives.Label("test")
@@ -98,4 +101,8 @@ func (t *testQuery) Source() primitives.Label {
 
 func (t *testQuery) Collection() string {
 	return "transactions"
+}
+
+func (t *testQuery) Raw() string {
+	return fmt.Sprintf("SELECT * FROM transactions LIMIT %d;", t.Limit)
 }

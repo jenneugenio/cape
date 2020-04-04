@@ -22,6 +22,8 @@ require (
 	github.com/gostaticanalysis/analysisutil v0.0.3 // indirect
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/jackc/pgconn v1.3.2
+	github.com/jackc/pgproto3/v2 v2.0.1
+	github.com/jackc/pgtype v1.2.0
 	github.com/jackc/pgx/v4 v4.4.1
 	github.com/jackc/tern v1.9.1
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect

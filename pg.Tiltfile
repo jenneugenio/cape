@@ -53,4 +53,4 @@ local_resource('delete customer db', cmd=delete_cmd, trigger_mode=TRIGGER_MODE_M
 docker_build('dropoutlabs/customer_seed:latest', '.', dockerfile='tools/seed/Dockerfile.customer')
 k8s_yaml(helm('charts/customer', values=['charts/local_values/customer_values.yaml']))
 
-k8s_resource('seed-db', port_forwards=8080, trigger_mode=TRIGGER_MODE_MANUAL)
+k8s_resource('seed-db', trigger_mode=TRIGGER_MODE_MANUAL)

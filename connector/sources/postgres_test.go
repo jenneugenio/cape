@@ -4,9 +4,11 @@ package sources
 
 import (
 	"context"
+	"net/url"
 	"os"
 	"testing"
 
+	"github.com/jackc/pgx/v4/pgxpool"
 	gm "github.com/onsi/gomega"
 
 	"github.com/dropoutlabs/cape/connector/proto"
@@ -132,28 +134,52 @@ func TestPostgresSource(t *testing.T) {
 
 		defer source.Close(ctx) // nolint: errcheck
 
-		// TODO: Implement tests for checking whether or not records are being
-		// streamed back appropriately _and_ if the records contain the right
-		// data / slash that we can unmarshal the data back into a format that
-		// works for us.
-		//
-		// Things we need to assert:
-		//
-		//  - Schema is returned on the first record thats returned
-		//  - The right number of records are returned
-		//  - The records contain the data as we expected
-		//
-		// To do this we will need to setup a test database with test data. We
-		// may want a static migration that we can rely on for writing these
-		// tests that we store in a `testdata` folder.
-		//
-		// This test will probably need to call .Schema() first.
+		limit := 5
+		q := &testQuery{Limit: limit}
+
 		stream := &testStream{}
-		q := &testQuery{}
-		schema := &proto.Schema{
-			DataSource: q.Source().String(),
-		}
-		err = source.Query(ctx, q, schema, stream)
+
+		err = source.Query(ctx, q, stream)
 		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(stream.Buffer)).To(gm.Equal(limit))
+
+		expectedRows, err := getExpectedRows(ctx, db.URL(), q.Raw())
+		gm.Expect(err).To(gm.BeNil())
+		for i, row := range stream.Buffer {
+			vals, err := Decode(stream.Buffer[0].Schema, row.Value)
+			gm.Expect(err).To(gm.BeNil())
+
+			// could check row to row but this is easier to see
+			// if there are any errors
+			for j, val := range vals {
+				gm.Expect(val).To(gm.Equal(expectedRows[i][j]))
+			}
+		}
 	})
+}
+
+func getExpectedRows(ctx context.Context, dbURL *url.URL, query string) ([][]interface{}, error) {
+	pool, err := pgxpool.Connect(context.Background(), dbURL.String())
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var outVals [][]interface{}
+	for rows.Next() {
+		vals, err := rows.Values()
+		if err != nil {
+			return nil, err
+		}
+		outVals = append(outVals, vals)
+	}
+
+	return outVals, nil
 }

@@ -28,10 +28,6 @@ func NewPostgresSource(ctx context.Context, cfg *Config, source *primitives.Sour
 		return nil, err
 	}
 
-	if err := source.Validate(); err != nil {
-		return nil, err
-	}
-
 	poolCfg, err := pgxpool.ParseConfig(source.Credentials.String())
 	if err != nil {
 		return nil, err
@@ -128,19 +124,54 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 //
 // Results from the query are streamed back to the requester through the
 // provided Stream
-func (p *PostgresSource) Query(ctx context.Context, q Query, schema *proto.Schema, stream Stream) error {
-	// TODO: Using the schema information and the query mutate the data coming
-	// out of postgres into our grpc format and then push it over the wire via
-	// the Stream.
-	source := q.Source().String()
-	if source != schema.DataSource {
-		return ErrWrongSource
+func (p *PostgresSource) Query(ctx context.Context, q Query, stream Stream) error {
+	qStr := q.Raw()
+
+	rows, err := p.pool.Query(ctx, qStr)
+	if err != nil {
+		return err
 	}
 
-	// XXX: How do you tell a stream that you are done?!
-	return stream.Send(&proto.Record{
-		Schema: schema,
-	})
+	defer rows.Close()
+
+	i := 0
+	for rows.Next() {
+		record := &proto.Record{}
+		if i == 0 {
+			fields, err := fieldsFromFieldDescription(rows.FieldDescriptions())
+			if err != nil {
+				return err
+			}
+
+			record.Schema = &proto.Schema{
+				DataSource: p.Label().String(),
+				Target:     q.Collection(),
+				Type:       proto.RecordType_DOCUMENT,
+				Fields:     fields,
+			}
+		}
+
+		pgVals, err := rows.Values()
+		if err != nil {
+			return err
+		}
+
+		values, err := PostgresEncode(pgVals)
+		if err != nil {
+			return err
+		}
+
+		record.Value = values
+
+		err = stream.Send(record)
+		if err != nil {
+			return err
+		}
+
+		i++
+	}
+
+	return nil
 }
 
 // Close issues a close to cancel all on-going requests and closes any

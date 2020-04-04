@@ -15,7 +15,7 @@ import (
 // This interface exists to make it easy to test the sources package in
 // isolation of other packages.
 type ControllerClient interface {
-	GetSource(context.Context, primitives.Label) (*primitives.Source, error)
+	GetSourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error)
 }
 
 // Cache is responsible for managing a cache of active sources. Users request a
@@ -84,7 +84,7 @@ func (c *Cache) add(ctx context.Context, label primitives.Label) (Source, error)
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	primitive, err := c.client.GetSource(ctx, label)
+	primitive, err := c.client.GetSourceByLabel(ctx, label)
 	if err != nil {
 		return nil, err
 	}
