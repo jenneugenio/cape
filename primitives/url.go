@@ -1,13 +1,10 @@
 package primitives
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
 	"strconv"
-
-	"github.com/99designs/gqlgen/graphql"
 
 	errors "github.com/dropoutlabs/cape/partyerrors"
 )
@@ -22,18 +19,6 @@ func NewURL(in string) (*URL, error) {
 
 	c := &URL{URL: u}
 	err = c.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	return c, nil
-}
-
-// NewURLFromStdLib creates a new url from the std lib url
-// type from net/url
-func NewURLFromStdLib(u *url.URL) (*URL, error) {
-	c := &URL{URL: u}
-	err := c.Validate()
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +55,7 @@ func (u *URL) Copy() (*URL, error) {
 
 // MarshalJSON implements the JSON.Marshaller interface
 func (u *URL) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + u.URL.String() + "\""), nil
+	return []byte(strconv.Quote(u.URL.String())), nil
 }
 
 // UnmarshalJSON implements the JSON.Unmarshaller interface
@@ -88,38 +73,23 @@ func (u *URL) UnmarshalJSON(b []byte) error {
 	return u.Validate()
 }
 
-// UnmarshalURL converts a url.URL into a string for usage in graphQL
-func MarshalURL(u url.URL) graphql.Marshaler {
-	return graphql.WriterFunc(func(w io.Writer) {
-		fmt.Fprint(w, strconv.Quote(u.String()))
-	})
+// UnmarshalGQL unmarshalls a string from GraphQL into the URL
+func (u *URL) UnmarshalGQL(v interface{}) error {
+	switch s := v.(type) {
+	case string:
+		t, err := url.Parse(s)
+		if err != nil {
+			return err
+		}
+
+		u.URL = t
+		return u.Validate()
+	default:
+		return errors.New(InvalidURLCause, "Invalid URL value provided, expected a string, got %T", s)
+	}
 }
 
-// UnmarshalURL converts a string into a url.URL for usage in graphQL
-func UnmarshalURL(v interface{}) (url.URL, error) {
-	switch v := v.(type) {
-	case string:
-		u, err := url.Parse(v)
-
-		if err != nil {
-			return url.URL{}, err
-		}
-
-		return *u, nil
-	case map[string]interface{}:
-		x, err := json.Marshal(v)
-		if err != nil {
-			return url.URL{}, err
-		}
-
-		var resp url.URL
-		err = json.Unmarshal(x, &resp)
-		if err != nil {
-			return url.URL{}, err
-		}
-
-		return resp, nil
-	default:
-		return url.URL{}, fmt.Errorf("%T is not a string", v)
-	}
+// MarshalGQL marshals a primitive.URL to a strong for GraphQL
+func (u URL) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(u.String()))
 }

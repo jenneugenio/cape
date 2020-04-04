@@ -108,18 +108,13 @@ func createDataConnector(ctx context.Context, db database.Backend, input model.C
 		Alg:       input.Alg,
 	}
 
-	url, err := primitives.NewURLFromStdLib(input.Endpoint)
-	if err != nil {
-		return nil, err
-	}
-
 	role := &primitives.Role{}
-	err = db.QueryOne(ctx, role, database.NewFilter(database.Where{"label": primitives.DataConnectorRole}, nil, nil))
+	err := db.QueryOne(ctx, role, database.NewFilter(database.Where{"label": primitives.DataConnectorRole}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
 
-	service, err := primitives.NewService(input.Email, input.Type, url, creds)
+	service, err := primitives.NewService(input.Email, input.Type, input.Endpoint, creds)
 	if err != nil {
 		return nil, err
 	}

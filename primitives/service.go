@@ -46,15 +46,34 @@ func NewService(email Email, typ ServiceType, endpoint *URL, creds *Credentials)
 
 // Validate returns an error if the serive is not valid
 func (s *Service) Validate() error {
-	if s.Endpoint != nil && s.Type == UserServiceType {
-		return errors.New(InvalidServiceCause, "Can't specify endpoint on user service type")
+	if err := s.Primitive.Validate(); err != nil {
+		return err
 	}
 
-	if s.Endpoint == nil && s.Type == DataConnectorServiceType {
-		return errors.New(InvalidServiceCause, "Must specify endpoint with data-connector service type")
+	if err := s.Type.Validate(); err != nil {
+		return err
 	}
 
-	return nil
+	switch s.Type {
+	case DataConnectorServiceType:
+		if s.Endpoint == nil {
+			return errors.New(InvalidServiceCause, "Must specify endpoint with data-connector service type")
+		}
+
+		if err := s.Endpoint.Validate(); err != nil {
+			return err
+		}
+
+		return nil
+	case UserServiceType:
+		if s.Endpoint != nil {
+			return errors.New(InvalidServiceCause, "Can't specify endpoint on user service type")
+		}
+
+		return nil
+	default:
+		return errors.New(InvalidServiceCause, "Unrecognized type: %s", s.Type.String())
+	}
 }
 
 // GetCredentials satisfies Identity interface

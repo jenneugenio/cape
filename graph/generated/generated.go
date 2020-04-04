@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -209,8 +208,6 @@ type QueryResolver interface {
 	Services(ctx context.Context) ([]*primitives.Service, error)
 }
 type ServiceResolver interface {
-	Endpoint(ctx context.Context, obj *primitives.Service) (*url.URL, error)
-
 	Roles(ctx context.Context, obj *primitives.Service) ([]*primitives.Role, error)
 }
 
@@ -4673,13 +4670,13 @@ func (ec *executionContext) _Service_endpoint(ctx context.Context, field graphql
 		Object:   "Service",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Service().Endpoint(rctx, obj)
+		return obj.Endpoint, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4688,9 +4685,9 @@ func (ec *executionContext) _Service_endpoint(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*url.URL)
+	res := resTmp.(*primitives.URL)
 	fc.Result = res
-	return ec.marshalOURL2ᚖnetᚋurlᚐURL(ctx, field.Selections, res)
+	return ec.marshalOURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Service_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
@@ -6580,7 +6577,7 @@ func (ec *executionContext) unmarshalInputCreateServiceRequest(ctx context.Conte
 			}
 		case "endpoint":
 			var err error
-			it.Endpoint, err = ec.unmarshalOURL2ᚖnetᚋurlᚐURL(ctx, v)
+			it.Endpoint, err = ec.unmarshalOURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7445,16 +7442,7 @@ func (ec *executionContext) _Service(ctx context.Context, sel ast.SelectionSet, 
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "endpoint":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Service_endpoint(ctx, field, obj)
-				return res
-			})
+			out.Values[i] = ec._Service_endpoint(ctx, field, obj)
 		case "created_at":
 			out.Values[i] = ec._Service_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -8865,27 +8853,28 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return ec.marshalOString2string(ctx, sel, *v)
 }
 
-func (ec *executionContext) unmarshalOURL2netᚋurlᚐURL(ctx context.Context, v interface{}) (url.URL, error) {
-	return primitives.UnmarshalURL(v)
+func (ec *executionContext) unmarshalOURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx context.Context, v interface{}) (primitives.URL, error) {
+	var res primitives.URL
+	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalOURL2netᚋurlᚐURL(ctx context.Context, sel ast.SelectionSet, v url.URL) graphql.Marshaler {
-	return primitives.MarshalURL(v)
+func (ec *executionContext) marshalOURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx context.Context, sel ast.SelectionSet, v primitives.URL) graphql.Marshaler {
+	return v
 }
 
-func (ec *executionContext) unmarshalOURL2ᚖnetᚋurlᚐURL(ctx context.Context, v interface{}) (*url.URL, error) {
+func (ec *executionContext) unmarshalOURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx context.Context, v interface{}) (*primitives.URL, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOURL2netᚋurlᚐURL(ctx, v)
+	res, err := ec.unmarshalOURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalOURL2ᚖnetᚋurlᚐURL(ctx context.Context, sel ast.SelectionSet, v *url.URL) graphql.Marshaler {
+func (ec *executionContext) marshalOURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx context.Context, sel ast.SelectionSet, v *primitives.URL) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	return ec.marshalOURL2netᚋurlᚐURL(ctx, sel, *v)
+	return v
 }
 
 func (ec *executionContext) marshalOUser2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.User) graphql.Marshaler {

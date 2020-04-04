@@ -731,7 +731,11 @@ func (c *Client) CreateService(ctx context.Context, service *primitives.Service)
 	variables["public_key"] = service.Credentials.PublicKey
 	variables["salt"] = service.Credentials.Salt
 	variables["type"] = service.Type
-	variables["endpoint"] = service.Endpoint
+
+	variables["endpoint"] = nil
+	if service.Endpoint != nil {
+		variables["endpoint"] = service.Endpoint.String()
+	}
 
 	err := c.Raw(ctx, `
 		mutation CreateService($email: Email!, $type: ServiceType!, $endpoint: URL, $public_key: Base64!, $salt: Base64!) {
