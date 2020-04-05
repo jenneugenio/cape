@@ -1,5 +1,10 @@
 package database
 
+import (
+	"fmt"
+	"reflect"
+)
+
 // Direction represents the ordering to be applied to a Filter. The default value
 // is descending.
 type Direction uint
@@ -36,6 +41,85 @@ type Filter struct {
 
 // In is an operator that requires a field to match
 type In []interface{}
+
+// PickerFunc represents a function that will pick a value off an entity
+// to be used for performing an In clause as a part of a Filter.
+type PickerFunc func(interface{}) interface{}
+
+// InFromEntities returns an In for the given list of entities. If no
+// PickerFunc is provided then the ID is used.
+func InFromEntities(in interface{}, f PickerFunc) In {
+	// We don't know anything about the underlying type because of how slices
+	// work inside go. To get around this, we need to use reflect to figure out
+	// the underlying type and then adjust accordingly.
+	//
+	// This is necessary due to the inability to assign a value to a position
+	// in a slice of interfaces. Read more here:
+	// https://github.com/golang/go/wiki/InterfaceSlice
+	inValue := reflect.ValueOf(in)
+	if inValue.Kind() != reflect.Slice {
+		panic("Expected a slice")
+	}
+
+	// We need to get a concrete type so we can check that each item in the
+	// slice satisfies the Entity interface.
+	entityType := reflect.TypeOf((*Entity)(nil)).Elem()
+
+	len := inValue.Len()
+	out := make(In, len)
+	for i := 0; i < len; i++ {
+		v := inValue.Index(i)
+		if !v.Type().Implements(entityType) && v.Kind() == reflect.Ptr {
+			v = inValue.Index(i).Elem()
+		}
+
+		value := v.Interface().(Entity)
+		out[i] = f(value)
+	}
+
+	return out
+}
+
+// Uniquify returns a copy of In with all duplicate values removed
+func (in In) Uniqify() In {
+	result := In{}
+	found := map[string]bool{}
+	for _, value := range in {
+		out := ""
+		switch v := value.(type) {
+		case fmt.Stringer:
+			out = v.String()
+		case string:
+			out = v
+		default:
+			panic(fmt.Sprintf("In type must be string or Stringer, got %T", v))
+		}
+
+		if ok := found[out]; !ok {
+			found[out] = true
+			result = append(result, value)
+		}
+	}
+
+	return result
+}
+
+// Values returns a slice of strings for all values contained in the In
+func (in In) Values() []interface{} {
+	result := []interface{}{}
+	for _, value := range in {
+		switch v := value.(type) {
+		case fmt.Stringer:
+			result = append(result, v.String())
+		case string:
+			result = append(result, v)
+		default:
+			panic(fmt.Sprintf("In type must be string or Stringer, got %T", v))
+		}
+	}
+
+	return result
+}
 
 // NewFilter is a convenience function for creating a Filter
 func NewFilter(w Where, o *Order, p *Page) Filter {

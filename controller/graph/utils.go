@@ -58,14 +58,14 @@ func buildAttachment(ctx context.Context, db database.Backend,
 // createSystemRoles is a helper intended to be used by the Setup graphql route.
 // It creates all the roles given by the list of role labels and makes sure
 // they are system roles
-func createSystemRoles(ctx context.Context, tx database.Transaction, roleLabels []primitives.Label) ([]*primitives.Role, error) {
+func createSystemRoles(ctx context.Context, tx database.Transaction) ([]*primitives.Role, error) {
 	// this is silly, need to create two arrays, one to be able to easily
 	// add to the database and another to return so the roles can be used
 	// later!!
-	entities := make([]database.Entity, len(roleLabels))
-	roles := make([]*primitives.Role, len(roleLabels))
+	entities := make([]database.Entity, len(primitives.SystemRoles))
+	roles := make([]*primitives.Role, len(primitives.SystemRoles))
 
-	for i, roleLabel := range roleLabels {
+	for i, roleLabel := range primitives.SystemRoles {
 		role, err := primitives.NewRole(roleLabel, true)
 		if err != nil {
 			return nil, err

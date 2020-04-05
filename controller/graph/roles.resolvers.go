@@ -156,30 +156,25 @@ func (r *queryResolver) RoleByLabel(ctx context.Context, label primitives.Label)
 }
 
 func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
-	var tmpR []primitives.Role
-	err := r.Backend.Query(ctx, &tmpR, database.NewEmptyFilter())
+	roles := []*primitives.Role{}
+	err := r.Backend.Query(ctx, &roles, database.NewEmptyFilter())
 	if err != nil {
 		return nil, err
-	}
-
-	roles := make([]*primitives.Role, len(tmpR))
-	for i := 0; i < len(roles); i++ {
-		roles[i] = &(tmpR[i])
 	}
 
 	return roles, nil
 }
 
 func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]primitives.Identity, error) {
-	var a []primitives.Assignment
-	err := r.Backend.Query(ctx, &a, database.NewFilter(database.Where{"role_id": roleID.String()}, nil, nil))
+	assignments := []*primitives.Assignment{}
+	err := r.Backend.Query(ctx, &assignments, database.NewFilter(database.Where{"role_id": roleID.String()}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
 
 	userIDs := database.In{}
 	serviceIDs := database.In{}
-	for _, assignment := range a {
+	for _, assignment := range assignments {
 		typ, err := assignment.IdentityID.Type()
 		if err != nil {
 			return nil, err
@@ -192,7 +187,7 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 		}
 	}
 
-	var users []primitives.User
+	var users []*primitives.User
 	if len(userIDs) > 0 {
 		err = r.Backend.Query(ctx, &users, database.NewFilter(database.Where{"id": userIDs}, nil, nil))
 		if err != nil {
@@ -200,7 +195,7 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 		}
 	}
 
-	var services []primitives.Service
+	var services []*primitives.Service
 	if len(serviceIDs) > 0 {
 		err = r.Backend.Query(ctx, &services, database.NewFilter(database.Where{"id": serviceIDs}, nil, nil))
 		if err != nil {
@@ -208,16 +203,16 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 		}
 	}
 
-	identities := make([]primitives.Identity, len(a))
+	identities := make([]primitives.Identity, len(assignments))
 	for i, user := range users {
 		u := &primitives.User{}
-		*u = user
+		*u = *user
 		identities[i] = u
 	}
 
 	for i, service := range services {
 		s := &primitives.Service{}
-		*s = service
+		*s = *service
 		identities[i+len(users)] = s
 	}
 

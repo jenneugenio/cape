@@ -67,22 +67,17 @@ func (r *queryResolver) ServiceByEmail(ctx context.Context, email primitives.Ema
 }
 
 func (r *queryResolver) Services(ctx context.Context) ([]*primitives.Service, error) {
-	var s []primitives.Service
-	err := r.Backend.Query(ctx, &s, database.NewEmptyFilter())
+	services := []*primitives.Service{}
+	err := r.Backend.Query(ctx, &services, database.NewEmptyFilter())
 	if err != nil {
 		return nil, err
-	}
-
-	services := make([]*primitives.Service, len(s))
-	for i := 0; i < len(services); i++ {
-		services[i] = &(s[i])
 	}
 
 	return services, nil
 }
 
 func (r *serviceResolver) Roles(ctx context.Context, obj *primitives.Service) ([]*primitives.Role, error) {
-	assignments := []primitives.Assignment{}
+	assignments := []*primitives.Assignment{}
 	err := r.Backend.Query(ctx, &assignments, database.NewFilter(database.Where{"identity_id": obj.ID.String()}, nil, nil))
 	if err != nil {
 		return nil, err
@@ -92,20 +87,14 @@ func (r *serviceResolver) Roles(ctx context.Context, obj *primitives.Service) ([
 		return nil, nil
 	}
 
-	roleIDs := make(database.In, len(assignments))
-	for i, assignment := range assignments {
-		roleIDs[i] = assignment.RoleID
-	}
+	roleIDs := database.InFromEntities(assignments, func(e interface{}) interface{} {
+		return e.(*primitives.Assignment).RoleID
+	})
 
-	tmpR := []primitives.Role{}
-	err = r.Backend.Query(ctx, &tmpR, database.NewFilter(database.Where{"id": roleIDs}, nil, nil))
+	roles := []*primitives.Role{}
+	err = r.Backend.Query(ctx, &roles, database.NewFilter(database.Where{"id": roleIDs}, nil, nil))
 	if err != nil {
 		return nil, err
-	}
-
-	roles := make([]*primitives.Role, len(tmpR))
-	for i := 0; i < len(roles); i++ {
-		roles[i] = &(tmpR[i])
 	}
 
 	return roles, nil

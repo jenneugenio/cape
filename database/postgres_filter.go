@@ -47,22 +47,14 @@ func buildFilter(f Filter) (string, []interface{}) {
 		path := buildDataPath(key, true)
 		switch item := value.(type) {
 		case In:
-			params := []string{}
-			for _, v := range item {
-				params = append(params, fmt.Sprintf("$%d", count))
-				switch t := v.(type) {
-				case fmt.Stringer:
-					values = append(values, t.String())
-				case string:
-					values = append(values, t)
-				default:
-					panic(fmt.Sprintf("in type must be string or Stringer, got %T ", t))
-				}
-				count++
-			}
+			// Compute the results of the IN Clause
+			results := item.Uniqify().Values()
+			values = append(values, results...)
+			params := createParams(count, len(results))
 
 			field := fmt.Sprintf("%s IN (%s)", path, strings.Join(params, ", "))
 			fields = append(fields, field)
+			count += len(results)
 		default:
 			fields = append(fields, fmt.Sprintf("%s = $%d", path, count))
 			values = append(values, item)
@@ -111,4 +103,13 @@ func buildDataPath(path string, asText bool) string {
 
 	path = strings.Replace(path, ".", ",", -1)
 	return fmt.Sprintf("data::jsonb#%s'{%s}'", selector, path)
+}
+
+func createParams(start, n int) []string {
+	out := make([]string, n)
+	for i := 0; i < n; i++ {
+		out[i] = fmt.Sprintf("$%d", start+i)
+	}
+
+	return out
 }

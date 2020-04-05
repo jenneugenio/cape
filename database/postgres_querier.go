@@ -116,8 +116,8 @@ func (q *postgresQuerier) Query(ctx context.Context, arr interface{}, f Filter) 
 	// This can then be used later on to determine the actual table to query.
 	entityType := reflect.TypeOf((*Entity)(nil)).Elem()
 	itemType := reflect.New(arrValue.Type().Elem())
-	if !itemType.Type().Implements(entityType) {
-		panic("Expected arr to be a pointer to a slice of primitive.Entity's")
+	if !itemType.Type().Implements(entityType) && itemType.Kind() == reflect.Ptr {
+		itemType = reflect.New(arrValue.Type().Elem().Elem())
 	}
 	e := itemType.Interface().(Entity)
 
@@ -191,7 +191,7 @@ func (q *postgresQuerier) Update(ctx context.Context, e Entity) error {
 // getItem returns a primitive.Entity from the given slice thats passed as a
 // reflect.Value. We then use this value to determine if/how we should grow the
 // slice.
-func getItem(v reflect.Value, pos int) Entity {
+func getItem(v reflect.Value, pos int) interface{} {
 	if v.Type().Kind() != reflect.Slice {
 		panic("expected a slice")
 	}
@@ -212,5 +212,5 @@ func getItem(v reflect.Value, pos int) Entity {
 		v.SetLen(num)
 	}
 
-	return v.Index(pos).Addr().Interface().(Entity)
+	return v.Index(pos).Addr().Interface()
 }

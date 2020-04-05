@@ -105,69 +105,55 @@ func (r *queryResolver) Policies(ctx context.Context) ([]*primitives.Policy, err
 }
 
 func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error) {
-	var a []primitives.Attachment
-	err := r.Backend.Query(ctx, &a, database.NewFilter(database.Where{"role_id": roleID.String()}, nil, nil))
+	var attachments []*primitives.Attachment
+	err := r.Backend.Query(ctx, &attachments, database.NewFilter(database.Where{"role_id": roleID.String()}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
 
-	policyIDs := make(database.In, len(a))
-	for i, attachment := range a {
-		policyIDs[i] = attachment.PolicyID
+	policies := []*primitives.Policy{}
+	if len(attachments) == 0 {
+		return policies, nil
 	}
 
-	var tmpP []primitives.Policy
-	if len(policyIDs) == 0 {
-		return []*primitives.Policy{}, nil
-	}
-
-	err = r.Backend.Query(ctx, &tmpP, database.NewFilter(database.Where{"id": policyIDs}, nil, nil))
+	policyIDs := database.InFromEntities(attachments, func(e interface{}) interface{} {
+		return e.(*primitives.Attachment).PolicyID
+	})
+	err = r.Backend.Query(ctx, &policies, database.NewFilter(database.Where{"id": policyIDs}, nil, nil))
 	if err != nil {
 		return nil, err
-	}
-
-	policies := make([]*primitives.Policy, len(a))
-	for i := 0; i < len(policies); i++ {
-		policies[i] = &(tmpP[i])
 	}
 
 	return policies, nil
 }
 
 func (r *queryResolver) IdentityPolicies(ctx context.Context, identityID database.ID) ([]*primitives.Policy, error) {
+	assignments := []*primitives.Assignment{}
 	assignmentFilter := database.NewFilter(database.Where{"identity_id": identityID.String()}, nil, nil)
-	var assignments []primitives.Assignment
 	err := r.Backend.Query(ctx, &assignments, assignmentFilter)
 	if err != nil {
 		return nil, err
 	}
 
-	roleIDs := make(database.In, len(assignments))
-	for i, assignment := range assignments {
-		roleIDs[i] = assignment.RoleID
-	}
+	roleIDs := database.InFromEntities(assignments, func(e interface{}) interface{} {
+		return e.(*primitives.Assignment).RoleID
+	})
 
+	attachments := []*primitives.Attachment{}
 	attachmentFilter := database.NewFilter(database.Where{"role_id": roleIDs}, nil, nil)
-	var attachments []primitives.Attachment
 	err = r.Backend.Query(ctx, &attachments, attachmentFilter)
 	if err != nil {
 		return nil, err
 	}
 
-	policyIDs := make(database.In, len(attachments))
-	for i, attachment := range attachments {
-		policyIDs[i] = attachment.PolicyID
-	}
+	policyIDs := database.InFromEntities(attachments, func(e interface{}) interface{} {
+		return e.(*primitives.Attachment).PolicyID
+	})
 
-	var tmpP []primitives.Policy
-	err = r.Backend.Query(ctx, &tmpP, database.NewFilter(database.Where{"id": policyIDs}, nil, nil))
+	policies := []*primitives.Policy{}
+	err = r.Backend.Query(ctx, &policies, database.NewFilter(database.Where{"id": policyIDs}, nil, nil))
 	if err != nil {
 		return nil, err
-	}
-
-	policies := make([]*primitives.Policy, len(tmpP))
-	for i := 0; i < len(policies); i++ {
-		policies[i] = &(tmpP[i])
 	}
 
 	return policies, nil

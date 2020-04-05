@@ -40,8 +40,7 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest
 		return nil, err
 	}
 
-	systemRoles := []primitives.Label{primitives.AdminRole, primitives.GlobalRole, primitives.DataConnectorRole}
-	roles, err := createSystemRoles(ctx, tx, systemRoles)
+	roles, err := createSystemRoles(ctx, tx)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +118,7 @@ func (r *mutationResolver) AddSource(ctx context.Context, input model.AddSourceR
 }
 
 func (r *mutationResolver) RemoveSource(ctx context.Context, input model.RemoveSourceRequest) (*string, error) {
-	var source primitives.Source
+	source := primitives.Source{}
 	filter := database.Filter{Where: database.Where{"label": input.Label}}
 	err := r.Backend.QueryOne(ctx, &source, filter)
 	if err != nil {
@@ -248,28 +247,23 @@ func (r *queryResolver) Me(ctx context.Context) (primitives.Identity, error) {
 }
 
 func (r *queryResolver) Sources(ctx context.Context) ([]*primitives.Source, error) {
-	var s []primitives.Source
-	err := r.Backend.Query(ctx, &s, database.NewEmptyFilter())
+	sources := []*primitives.Source{}
+	err := r.Backend.Query(ctx, &sources, database.NewEmptyFilter())
 	if err != nil {
 		return nil, err
-	}
-
-	sources := make([]*primitives.Source, len(s))
-	for i := 0; i < len(sources); i++ {
-		sources[i] = &(s[i])
 	}
 
 	return sources, nil
 }
 
 func (r *queryResolver) Source(ctx context.Context, id database.ID) (*primitives.Source, error) {
-	var primitive primitives.Source
-	err := r.Backend.Get(ctx, id, &primitive)
+	source := &primitives.Source{}
+	err := r.Backend.Get(ctx, id, source)
 	if err != nil {
 		return nil, err
 	}
 
-	return &primitive, nil
+	return source, nil
 }
 
 func (r *queryResolver) SourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error) {

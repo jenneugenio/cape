@@ -16,6 +16,8 @@ const (
 	DataConnectorRole = Label("data-connector")
 )
 
+var SystemRoles = []Label{AdminRole, GlobalRole, DataConnectorRole}
+
 // Role in a role in the system (e.g. Admin, user, etc)
 type Role struct {
 	*database.Primitive

@@ -289,6 +289,39 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(eB).To(gm.Equal(targetTwo))
 	})
 
+	t.Run("can query using slice of pointers", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		eA, err := NewTestEntity("a1b")
+		gm.Expect(err).To(gm.BeNil())
+
+		eB, err := NewTestEntity("b1c")
+		gm.Expect(err).To(gm.BeNil())
+
+		eC, err := NewTestEntity("c1d")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Create(ctx, eA, eB, eC)
+		gm.Expect(err).To(gm.BeNil())
+
+		filter := NewFilter(Where{"id": In{
+			eA.GetID().String(),
+			eB.GetID().String(),
+			eC.GetID().String(),
+		}}, nil, nil)
+		result := []*TestEntity{}
+
+		err = db.Query(ctx, &result, filter)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(result)).To(gm.Equal(3))
+		gm.Expect(result[0].ID).To(gm.Equal(eA.ID))
+		gm.Expect(result[1].ID).To(gm.Equal(eB.ID))
+		gm.Expect(result[2].ID).To(gm.Equal(eC.ID))
+	})
+
 	t.Run("can query multiple entities of the same type", func(t *testing.T) {
 		db, err := dbConnect(ctx, testDB)
 		gm.Expect(err).To(gm.BeNil())
