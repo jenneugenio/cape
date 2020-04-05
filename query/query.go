@@ -6,6 +6,7 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 	"github.com/marianogappa/sqlparser"
 	qq "github.com/marianogappa/sqlparser/query"
+	"sort"
 )
 
 // Query represents a data query that should run against a source's collection
@@ -39,7 +40,7 @@ func (q *Query) Target() string {
 }
 
 // Raw returns the supplied sql into a policy obeying sql string
-func (q *Query) Raw() string {
+func (q *Query) Raw() (string, []interface{}) {
 	selectClause := ""
 	for i, f := range q.q.Fields {
 		selectClause += f
@@ -49,18 +50,21 @@ func (q *Query) Raw() string {
 	}
 
 	raw := fmt.Sprintf("SELECT %s FROM %s", selectClause, q.q.TableName)
+	parameters := make([]interface{}, len(q.q.Conditions))
+
 	if len(q.q.Conditions) > 0 {
 		raw += " WHERE "
 
 		for i, c := range q.q.Conditions {
-			raw += fmt.Sprintf("%s = '%s'", c.Operand1, c.Operand2)
+			raw += fmt.Sprintf("%s = ?", c.Operand1)
+			parameters[i] = c.Operand2
 			if i < len(q.q.Conditions)-1 {
 				raw += " AND "
 			}
 		}
 	}
 
-	return raw
+	return raw, parameters
 }
 
 func (q *Query) wantStar() bool {
@@ -124,14 +128,23 @@ func (q *Query) Rewrite(p *primitives.Policy) (*Query, error) {
 			}
 		}
 
-		// check conditions on the rule
 		for _, w := range rule.Where {
-			for k, v := range w {
+			// We sort the keys alphabetically on the where clause so that we can ensure their order
+			// in the returned statement (e.g. when raw is called).
+			// This is useful for testing, ie we can be deterministic w/ regard to the output query
+			var keys []string
+			for k := range w {
+				keys = append(keys, k)
+			}
+
+			sort.Strings(keys)
+
+			for _, k := range keys {
 				safe.Conditions = append(safe.Conditions, qq.Condition{
 					Operand1:        k,
 					Operand1IsField: true,
 					Operator:        qq.Eq,
-					Operand2:        v,
+					Operand2:        w[k],
 				})
 			}
 		}

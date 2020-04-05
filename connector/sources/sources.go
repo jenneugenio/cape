@@ -36,7 +36,7 @@ type Query interface {
 	// query
 	Collection() string
 
-	Raw() string
+	Raw() (string, []interface{})
 }
 
 // Source is an interface that any data source provider must

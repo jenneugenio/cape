@@ -142,7 +142,8 @@ func TestPostgresSource(t *testing.T) {
 
 		gm.Expect(len(stream.Buffer)).To(gm.Equal(limit))
 
-		expectedRows, err := GetExpectedRows(ctx, db.URL(), q.Raw())
+		query, params := q.Raw()
+		expectedRows, err := GetExpectedRows(ctx, db.URL(), query, params)
 		gm.Expect(err).To(gm.BeNil())
 		for i, row := range stream.Buffer {
 			vals, err := Decode(stream.Buffer[0].Schema, row.Value)

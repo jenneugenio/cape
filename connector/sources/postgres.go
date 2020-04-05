@@ -2,6 +2,7 @@ package sources
 
 import (
 	"context"
+	"github.com/jackc/pgx/v4"
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -130,9 +131,16 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 // Results from the query are streamed back to the requester through the
 // provided Stream
 func (p *PostgresSource) Query(ctx context.Context, q Query, stream Stream) error {
-	qStr := q.Raw()
+	qStr, params := q.Raw()
 
-	rows, err := p.pool.Query(ctx, qStr)
+	// If there are no params, pgx will error if you pass anything (even nil!)
+	var rows pgx.Rows
+	var err error
+	if len(params) == 0 {
+		rows, err = p.pool.Query(ctx, qStr)
+	} else {
+		rows, err = p.pool.Query(ctx, qStr, params)
+	}
 	if err != nil {
 		return err
 	}

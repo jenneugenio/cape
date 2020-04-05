@@ -66,7 +66,7 @@ func TestQuery(t *testing.T) {
 
 	defer stream.Close()
 
-	expectedRows, err := sources.GetExpectedRows(ctx, connH.SourceCredentials().ToURL(), query)
+	expectedRows, err := sources.GetExpectedRows(ctx, connH.SourceCredentials().ToURL(), query, nil)
 	gm.Expect(err).To(gm.BeNil())
 
 	i := 0

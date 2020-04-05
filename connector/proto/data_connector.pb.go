@@ -417,7 +417,9 @@ func init() {
 	proto.RegisterType((*Field)(nil), "cape.proto.Field")
 }
 
-func init() { proto.RegisterFile("data_connector.proto", fileDescriptor_8084a2705774cfd7) }
+func init() {
+	proto.RegisterFile("data_connector.proto", fileDescriptor_8084a2705774cfd7)
+}
 
 var fileDescriptor_8084a2705774cfd7 = []byte{
 	// 643 bytes of a gzipped FileDescriptorProto

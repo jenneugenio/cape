@@ -38,8 +38,6 @@ func loadQueries(file string) ([]*QueryFixture, error) {
 	writingTo := &inputs
 
 	for scanner.Scan() {
-		fmt.Println("Reading", scanner.Text())
-
 		if len(scanner.Text()) == 0 {
 			continue
 		}
@@ -213,20 +211,7 @@ func TestRewriting(t *testing.T) {
 				"processor": "visa",
 			},
 			"SELECT * FROM transactions",
-			"SELECT card_number FROM transactions WHERE processor = 'visa'",
-		},
-
-		{
-			"It can filter multiple conditions",
-			"records:mycollection.transactions",
-			primitives.Allow,
-			[]string{"card_number"},
-			map[string]string{
-				"processor": "visa",
-				"vendor":    "Cool Shirts Inc.",
-			},
-			"SELECT * FROM transactions",
-			"SELECT card_number FROM transactions WHERE processor = 'visa' AND vendor = 'Cool Shirts Inc.'",
+			"SELECT card_number FROM transactions WHERE processor = ?",
 		},
 	}
 
@@ -271,9 +256,50 @@ func TestRewriting(t *testing.T) {
 			q, err = q.Rewrite(p)
 			gm.Expect(err).To(gm.BeNil())
 
-			gm.Expect(q.Raw()).To(gm.Equal(tc.expected))
+			raw, _ := q.Raw()
+
+			gm.Expect(raw).To(gm.Equal(tc.expected))
 		})
 	}
+
+	t.Run("Filter multiple conditions", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		label := primitives.Label("epic-policy")
+		r := primitives.Rule{
+			Target: "records:mycollection.transactions",
+			Action: "read",
+			Effect: primitives.Allow,
+			Fields: []primitives.Field{"card_number"},
+			Where: []primitives.Where{
+				map[string]string{
+					"processor": "visa",
+					"vendor":    "Cool Shirts Inc.",
+				},
+			},
+		}
+
+		spec := &primitives.PolicySpec{
+			Version: 1,
+			Label:   label,
+			Rules:   []primitives.Rule{r},
+		}
+
+		p, err := primitives.NewPolicy(label, spec)
+		gm.Expect(err).To(gm.BeNil())
+
+		q, err := New(label, "SELECT * from transactions")
+		gm.Expect(err).To(gm.BeNil())
+
+		q, err = q.Rewrite(p)
+		gm.Expect(err).To(gm.BeNil())
+
+		raw, params := q.Raw()
+
+		gm.Expect(raw).To(gm.Equal("SELECT card_number FROM transactions WHERE processor = ? AND vendor = ?"))
+		gm.Expect(params[0]).To(gm.Equal("visa"))
+		gm.Expect(params[1]).To(gm.Equal("Cool Shirts Inc."))
+	})
 
 	t.Run("Errors when you can't access anything you've asked for", func(t *testing.T) {
 		gm.RegisterTestingT(t)
@@ -323,7 +349,7 @@ func TestQueryAgainstPolicyFile(t *testing.T) {
 				query, err = query.Rewrite(policy)
 				gm.Expect(err).To(gm.BeNil())
 
-				raw := query.Raw()
+				raw, _ := query.Raw()
 				gm.Expect(raw).To(gm.Equal(q.expected))
 			})
 		}

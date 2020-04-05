@@ -5,6 +5,7 @@ package sources
 import (
 	"context"
 	"fmt"
+	"github.com/jackc/pgx/v4"
 	"net/url"
 
 	"google.golang.org/grpc/metadata"
@@ -105,18 +106,25 @@ func (t *testQuery) Collection() string {
 	return "transactions"
 }
 
-func (t *testQuery) Raw() string {
-	return fmt.Sprintf("SELECT * FROM transactions LIMIT %d;", t.Limit)
+func (t *testQuery) Raw() (string, []interface{}) {
+	return fmt.Sprintf("SELECT * FROM transactions LIMIT %d;", t.Limit), make([]interface{}, 0)
 }
 
 // GetExpectedRows is a testing helper to query the expected rows from the database
-func GetExpectedRows(ctx context.Context, dbURL *url.URL, query string) ([][]interface{}, error) {
+func GetExpectedRows(ctx context.Context, dbURL *url.URL, query string, params []interface{}) ([][]interface{}, error) {
 	pool, err := pgxpool.Connect(ctx, dbURL.String())
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := pool.Query(ctx, query)
+	// If there are no params, pgx will error if you pass anything (even nil!)
+	var rows pgx.Rows
+	if len(params) == 0 {
+		rows, err = pool.Query(ctx, query)
+	} else {
+		rows, err = pool.Query(ctx, query, params)
+	}
+
 	if err != nil {
 		return nil, err
 	}
