@@ -32,7 +32,7 @@ type Rule struct {
 type PolicySpec struct {
 	Version PolicyVersion `json:"version"`
 	Label   Label         `json:"label"`
-	Rules   []Rule        `json:"rules"`
+	Rules   []*Rule       `json:"rules"`
 }
 
 // Validate that the policy spec is valid

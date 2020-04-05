@@ -34,9 +34,27 @@ func (q *Query) Validate() error {
 	return nil
 }
 
-// Target returns what this query is targeting (e.g. a postgres table)
-func (q *Query) Target() string {
+// Entity returns what this query is targeting (e.g. a postgres table)
+func (q *Query) Entity() string {
 	return q.q.TableName
+}
+
+func (q *Query) Fields() []primitives.Field {
+	fields := make([]primitives.Field, len(q.q.Fields))
+	for i, f := range q.q.Fields {
+		fields[i] = primitives.Field(f)
+	}
+
+	return fields
+}
+
+func (q *Query) SetFields(fields []primitives.Field) {
+	fStr := make([]string, len(fields))
+	for i, f := range fields {
+		fStr[i] = f.String()
+	}
+
+	q.q.Fields = fStr
 }
 
 // Raw returns the supplied sql into a policy obeying sql string
@@ -67,7 +85,7 @@ func (q *Query) Raw() (string, []interface{}) {
 	return raw, parameters
 }
 
-func (q *Query) wantStar() bool {
+func (q *Query) WantStar() bool {
 	for _, f := range q.q.Fields {
 		if f == "*" {
 			return true
@@ -85,7 +103,7 @@ func (q *Query) Rewrite(p *primitives.Policy) (*Query, error) {
 		TableName: q.q.TableName,
 	}
 
-	wantStar := q.wantStar()
+	wantStar := q.WantStar()
 	spec := p.Spec
 
 	for _, rule := range spec.Rules {

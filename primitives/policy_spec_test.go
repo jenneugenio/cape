@@ -51,7 +51,7 @@ func TestYamlMarshalling(t *testing.T) {
 	spec := &PolicySpec{
 		Version: PolicyVersion(1),
 		Label:   "protect-ssn",
-		Rules: []Rule{
+		Rules: []*Rule{
 			{
 				Target: "records:creditcards.transactions",
 				Action: Read,

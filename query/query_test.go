@@ -230,7 +230,7 @@ func TestRewriting(t *testing.T) {
 				fields[i] = f
 			}
 
-			r := primitives.Rule{
+			r := &primitives.Rule{
 				Target: target,
 				Action: primitives.Read,
 				Effect: tc.effect,
@@ -244,7 +244,7 @@ func TestRewriting(t *testing.T) {
 			spec := &primitives.PolicySpec{
 				Version: 1,
 				Label:   label,
-				Rules:   []primitives.Rule{r},
+				Rules:   []*primitives.Rule{r},
 			}
 
 			p, err := primitives.NewPolicy(label, spec)
@@ -266,7 +266,7 @@ func TestRewriting(t *testing.T) {
 		gm.RegisterTestingT(t)
 
 		label := primitives.Label("epic-policy")
-		r := primitives.Rule{
+		r := &primitives.Rule{
 			Target: "records:mycollection.transactions",
 			Action: "read",
 			Effect: primitives.Allow,
@@ -282,7 +282,7 @@ func TestRewriting(t *testing.T) {
 		spec := &primitives.PolicySpec{
 			Version: 1,
 			Label:   label,
-			Rules:   []primitives.Rule{r},
+			Rules:   []*primitives.Rule{r},
 		}
 
 		p, err := primitives.NewPolicy(label, spec)
@@ -305,7 +305,7 @@ func TestRewriting(t *testing.T) {
 		gm.RegisterTestingT(t)
 
 		label := primitives.Label("bad-policy")
-		r := primitives.Rule{
+		r := &primitives.Rule{
 			Target: "records:mycollection.transactions",
 			Action: "read",
 			Effect: primitives.Allow,
@@ -315,7 +315,7 @@ func TestRewriting(t *testing.T) {
 		spec := &primitives.PolicySpec{
 			Version: 1,
 			Label:   label,
-			Rules:   []primitives.Rule{r},
+			Rules:   []*primitives.Rule{r},
 		}
 
 		p, err := primitives.NewPolicy(label, spec)

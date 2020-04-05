@@ -14,6 +14,7 @@ func TestFieldNames(t *testing.T) {
 		"cool_table",
 		"really_cool2",
 		"wow_",
+		"*",
 	}
 
 	invalidNames := []string{
@@ -33,7 +34,7 @@ func TestFieldNames(t *testing.T) {
 		t.Run(fmt.Sprintf("Valid name: %s", n), func(t *testing.T) {
 			gm.RegisterTestingT(t)
 			_, err := NewField(n)
-			gm.Expect(err.Error()).To(gm.Equal("invalid_field: field must start with a letter, and then only contain letters, numbers, or underscores"))
+			gm.Expect(err.Error()).To(gm.Equal("invalid_field: field must start with a letter, and then only contain letters, numbers, or underscores, or *"))
 		})
 	}
 }

@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-// Target is in the form <target>:<collection>.<entity>
+// Entity is in the form <target>:<collection>.<entity>
 // However, the target can also specify wildcards such as <target>:<collection>.*
 // or <target>:*
 //
@@ -36,7 +36,7 @@ const (
 	Records TargetType = "records"
 )
 
-// Target of a policy
+// Entity of a policy
 type Target string
 
 // Validate that target is valid
@@ -47,6 +47,11 @@ func (t Target) Validate() error {
 	}
 
 	return nil
+}
+
+// Checks if this target and the provided target match. This supports wildcards
+func (t Target) Matches(other Target) bool {
+	return t.Entity() == other.Entity()
 }
 
 // Type returns what type this is targeting
@@ -76,7 +81,7 @@ func (t Target) Entity() Entity {
 	return "*"
 }
 
-// String turns the Target into a string
+// String turns the Entity into a string
 func (t Target) String() string {
 	return string(t)
 }

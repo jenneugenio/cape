@@ -8,12 +8,14 @@ import (
 // Field represents a column in a database
 type Field string
 
-var fieldRegex = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]*$`)
+const Star Field = "*"
+
+var fieldRegex = regexp.MustCompile(`^(\*|[a-zA-Z]+[a-zA-Z0-9_]*)$`)
 
 // Validate the field
 func (f Field) Validate() error {
 	if !fieldRegex.MatchString(string(f)) {
-		msg := "field must start with a letter, and then only contain letters, numbers, or underscores"
+		msg := "field must start with a letter, and then only contain letters, numbers, or underscores, or *"
 		return errors.New(InvalidFieldCause, msg)
 	}
 
