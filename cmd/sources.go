@@ -81,7 +81,7 @@ func sourcesAdd(c *cli.Context) error {
 		return err
 	}
 
-	label := args["label"].(primitives.Label)
+	label := args["source"].(primitives.Label)
 	credentials := args["connection-string"].(*primitives.DBURL)
 	linkEmail := c.String("link")
 
@@ -123,7 +123,7 @@ func sourcesRemove(c *cli.Context) error {
 		return err
 	}
 
-	label := args["label"].(primitives.Label)
+	label := args["source"].(primitives.Label)
 	client, err := cluster.Client()
 	if err != nil {
 		return err

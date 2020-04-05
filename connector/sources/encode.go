@@ -21,7 +21,7 @@ func PostgresEncode(values []interface{}) ([][]byte, error) {
 		case time.Time:
 			outVal = v.Format(time.RFC3339Nano)
 		case float64:
-			outVal = strconv.FormatFloat(v, 'E', -1, 64)
+			outVal = strconv.FormatFloat(v, 'f', -1, 64)
 		case string:
 			outVal = v
 		default:

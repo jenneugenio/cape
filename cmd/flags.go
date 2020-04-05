@@ -159,3 +159,11 @@ func fileFlag() cli.Flag {
 		EnvVars: []string{"CAPE_FILEPATH"},
 	}
 }
+
+func outFlag() cli.Flag {
+	return &cli.StringFlag{
+		Name:    "out",
+		Usage:   "File to write results to",
+		EnvVars: []string{"CAPE_OUTPUT"},
+	}
+}

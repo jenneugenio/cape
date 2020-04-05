@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"crypto/x509"
+	"encoding/csv"
 	"io/ioutil"
+	"os"
 
 	"github.com/urfave/cli/v2"
 
@@ -31,6 +34,9 @@ func init() {
 		Command: &cli.Command{
 			Name:   "pull",
 			Action: handleSessionOverrides(pullDataCmd),
+			Flags: []cli.Flag{
+				outFlag(),
+			},
 		},
 	}
 
@@ -40,6 +46,8 @@ func init() {
 func pullDataCmd(c *cli.Context) error {
 	cfgSession := Session(c.Context)
 	args := Arguments(c.Context)
+
+	outFile := c.String("out")
 
 	cluster, err := cfgSession.Cluster()
 	if err != nil {
@@ -89,9 +97,37 @@ func pullDataCmd(c *cli.Context) error {
 		return err
 	}
 
-	_, err = connClient.Query(c.Context, sourceLabel, query)
+	stream, err := connClient.Query(c.Context, sourceLabel, query)
 	if err != nil {
 		return err
+	}
+
+	file := os.Stdout
+	if outFile != "" {
+		f, err := os.Create(outFile)
+		if err != nil {
+			return err
+		}
+		file = f
+	}
+
+	w := bufio.NewWriter(file)
+	writer := csv.NewWriter(w)
+
+	for stream.NextRecord() {
+		record := stream.Record()
+		strs := record.ToStrings()
+
+		err = writer.Write(strs)
+		if err != nil {
+			return err
+		}
+
+		writer.Flush()
+		err = writer.Error()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

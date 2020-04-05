@@ -117,7 +117,7 @@ func rolesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	label := args["label"].(primitives.Label)
+	label := args["role"].(primitives.Label)
 
 	client, err := cluster.Client()
 	if err != nil {
@@ -164,7 +164,7 @@ func rolesRemoveCmd(c *cli.Context) error {
 		return err
 	}
 
-	label := args["label"].(primitives.Label)
+	label := args["role"].(primitives.Label)
 	if !skipConfirm {
 		err := ui.Confirm(fmt.Sprintf("Do you really want to delete the role %s and all of its assignments?", label))
 		if err != nil {
@@ -230,7 +230,7 @@ func rolesMembersCmd(c *cli.Context) error {
 		return err
 	}
 
-	label := args["label"].(primitives.Label)
+	label := args["role"].(primitives.Label)
 
 	client, err := cluster.Client()
 	if err != nil {
