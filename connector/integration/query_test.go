@@ -69,14 +69,11 @@ func TestQuery(t *testing.T) {
 
 	defer stream.Close()
 
-	expectedRows, err := sources.GetExpectedRows(ctx, connH.SourceCredentials().ToURL(), query, nil)
+	expectedRows, err := sources.GetExpectedRows(ctx, connH.SourceCredentials().ToURL(), query+" LIMIT 50", nil)
 	gm.Expect(err).To(gm.BeNil())
 
 	i := 0
 	for stream.NextRecord() {
-		if i > 5 {
-			break
-		}
 		err := stream.Error()
 		gm.Expect(err).To(gm.BeNil())
 

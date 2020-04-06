@@ -133,6 +133,8 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 func (p *PostgresSource) Query(ctx context.Context, q Query, stream Stream) error {
 	qStr, params := q.Raw()
 
+	qStr = qStr + " LIMIT 50"
+
 	// If there are no params, pgx will error if you pass anything (even nil!)
 	var rows pgx.Rows
 	var err error

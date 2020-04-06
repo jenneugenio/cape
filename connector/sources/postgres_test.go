@@ -132,15 +132,14 @@ func TestPostgresSource(t *testing.T) {
 
 		defer source.Close(ctx) // nolint: errcheck
 
-		limit := 5
-		q := &testQuery{Limit: limit}
+		q := &testQuery{}
 
 		stream := &testStream{}
 
 		err = source.Query(ctx, q, stream)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(len(stream.Buffer)).To(gm.Equal(limit))
+		gm.Expect(len(stream.Buffer)).To(gm.Equal(50))
 
 		query, params := q.Raw()
 		expectedRows, err := GetExpectedRows(ctx, db.URL(), query, params)

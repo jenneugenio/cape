@@ -4,9 +4,9 @@ package sources
 
 import (
 	"context"
-	"fmt"
-	"github.com/jackc/pgx/v4"
 	"net/url"
+
+	"github.com/jackc/pgx/v4"
 
 	"google.golang.org/grpc/metadata"
 
@@ -95,7 +95,6 @@ func (t *testStream) RecvMsg(_ interface{}) error {
 
 // nolint: unused
 type testQuery struct {
-	Limit int
 }
 
 func (t *testQuery) Source() primitives.Label {
@@ -107,7 +106,7 @@ func (t *testQuery) Collection() string {
 }
 
 func (t *testQuery) Raw() (string, []interface{}) {
-	return fmt.Sprintf("SELECT * FROM transactions LIMIT %d;", t.Limit), make([]interface{}, 0)
+	return "SELECT * FROM transactions", make([]interface{}, 0)
 }
 
 // GetExpectedRows is a testing helper to query the expected rows from the database
