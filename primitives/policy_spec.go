@@ -23,7 +23,7 @@ type Rule struct {
 	Target Target  `json:"target"`
 	Action Action  `json:"action"`
 	Effect Effect  `json:"effect"`
-	Fields []Field `json:"fields"`
+	Fields []Field `json:"fields,omitmepty"`
 	Where  []Where `json:"where,omitempty"`
 	Sudo   bool    `json:"sudo"`
 }
@@ -41,6 +41,10 @@ func (ps *PolicySpec) Validate() error {
 		err := r.Target.Validate()
 		if err != nil {
 			return errors.New(InvalidPolicySpecCause, "Invalid rule: %e", err)
+		}
+
+		if len(r.Fields) > 0 && len(r.Where) > 0 {
+			return errors.New(InvalidPolicySpecCause, "Fields & Where cannot be specified on the same rule")
 		}
 	}
 

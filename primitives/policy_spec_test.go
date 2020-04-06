@@ -57,10 +57,7 @@ func TestYamlMarshalling(t *testing.T) {
 				Action: Read,
 				Effect: Deny,
 				Fields: []Field{"card_number"},
-				Where: []Where{
-					{"partner": "visa"},
-				},
-				Sudo: false,
+				Sudo:   false,
 			},
 		},
 	}
@@ -93,6 +90,33 @@ func TestPolicySpecRuleSudo(t *testing.T) {
 		spec, err := ParsePolicySpec(data)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(spec.Rules[0].Sudo).To(gm.BeTrue())
+	})
+}
+
+func TestPolicySpecValidation(t *testing.T) {
+	gm.RegisterTestingT(t)
+	t.Run("cannot specify a where & fields clause in the same rule", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+		spec := &PolicySpec{
+			Version: PolicyVersion(1),
+			Label:   "protect-ssn",
+			Rules: []*Rule{
+				{
+					Target: "records:creditcards.transactions",
+					Action: Read,
+					Effect: Deny,
+					Fields: []Field{"card_number"},
+					Where: []Where{
+						{"partner": "visa"},
+					},
+					Sudo: false,
+				},
+			},
+		}
+
+		err := spec.Validate()
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(err.Error()).To(gm.Equal("invalid_policy_spec: Fields & Where cannot be specified on the same rule"))
 	})
 }
 

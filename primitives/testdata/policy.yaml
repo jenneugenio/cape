@@ -6,6 +6,4 @@ rules:
   - card_number
   sudo: false
   target: records:creditcards.transactions
-  where:
-  - partner: visa
 version: 1
