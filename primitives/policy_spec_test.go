@@ -37,10 +37,6 @@ func TestYamlUnmarshalling(t *testing.T) {
 	gm.Expect(rule.Effect).To(gm.Equal(Deny))
 	gm.Expect(len(rule.Fields)).To(gm.Equal(1))
 
-	where := rule.Where
-	gm.Expect(len(where[0])).To(gm.Equal(1))
-	gm.Expect(where[0]["partner"]).To(gm.Equal("visa"))
-
 	field := rule.Fields[0]
 	gm.Expect(field).To(gm.Equal(Field("card_number")))
 }

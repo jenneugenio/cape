@@ -5,7 +5,5 @@ rules:
   fields:
     - card_number
   target: records:creditcards.transactions
-  where:
-  - partner: visa
   sudo: true
 version: 1

@@ -6,7 +6,6 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 	"github.com/marianogappa/sqlparser"
 	qq "github.com/marianogappa/sqlparser/query"
-	"sort"
 )
 
 // Query represents a data query that should run against a source's collection
@@ -93,89 +92,6 @@ func (q *Query) WantStar() bool {
 	}
 
 	return false
-}
-
-// Rewrite the query to something that respects the policy
-func (q *Query) Rewrite(p *primitives.Policy) (*Query, error) {
-	unsafe := q.q
-	safe := &qq.Query{
-		Type:      qq.Select,
-		TableName: q.q.TableName,
-	}
-
-	wantStar := q.WantStar()
-	spec := p.Spec
-
-	for _, rule := range spec.Rules {
-		// skip if this rule doesn't apply
-		if rule.Target.Entity().String() != unsafe.TableName {
-			continue
-		}
-
-		switch rule.Effect {
-		case primitives.Deny:
-			// TODO -- This is assuming the rule is to disallow, need to do the opposite if we are allowing
-			for _, field := range unsafe.Fields {
-				in := false
-				for _, denied := range rule.Fields {
-					if field == denied.String() {
-						in = true
-					}
-				}
-
-				if !in {
-					safe.Fields = append(safe.Fields, field)
-				}
-			}
-		case primitives.Allow:
-			for _, allowed := range rule.Fields {
-				// If the user has requested *, we will give them everything they can see.  We are short
-				// circuiting doing the loop to check if they asked for it, here
-				wanted := wantStar
-				if !wanted {
-					for _, requested := range unsafe.Fields {
-						if allowed.String() == requested {
-							wanted = true
-						}
-					}
-				}
-
-				if wanted {
-					safe.Fields = append(safe.Fields, allowed.String())
-				}
-			}
-		}
-
-		for _, w := range rule.Where {
-			// We sort the keys alphabetically on the where clause so that we can ensure their order
-			// in the returned statement (e.g. when raw is called).
-			// This is useful for testing, ie we can be deterministic w/ regard to the output query
-			var keys []string
-			for k := range w {
-				keys = append(keys, k)
-			}
-
-			sort.Strings(keys)
-
-			for _, k := range keys {
-				safe.Conditions = append(safe.Conditions, qq.Condition{
-					Operand1:        k,
-					Operand1IsField: true,
-					Operator:        qq.Eq,
-					Operand2:        w[k],
-				})
-			}
-		}
-	}
-
-	if len(safe.Fields) == 0 {
-		return nil, errors.New(NoPossibleFieldsCause, "Cannot access any requested fields")
-	}
-
-	return &Query{
-		q:      safe,
-		source: q.source,
-	}, nil
 }
 
 // New creates a new query object

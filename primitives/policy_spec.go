@@ -23,7 +23,7 @@ type Rule struct {
 	Target Target  `json:"target"`
 	Action Action  `json:"action"`
 	Effect Effect  `json:"effect"`
-	Fields []Field `json:"fields,omitmepty"`
+	Fields []Field `json:"fields,omitempty"`
 	Where  []Where `json:"where,omitempty"`
 	Sudo   bool    `json:"sudo"`
 }
