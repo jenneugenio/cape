@@ -10,10 +10,12 @@ import (
 // Evaluator takes a query, schema, and multiple policies and then evaluates a query
 // Either modifying the query if it makes sense to do so, or returning an error
 type Evaluator struct {
-	q      *query.Query
-	s      *proto.Schema
-	allows []*primitives.Rule
-	denies []*primitives.Rule
+	q               *query.Query
+	s               *proto.Schema
+	allowFieldRules []*primitives.Rule
+	denyFieldRules  []*primitives.Rule
+	allowWhereRules []*primitives.Rule
+	denyWhereRules  []*primitives.Rule
 }
 
 // difference returns the elements in `a` that aren't in `b`.
@@ -53,7 +55,7 @@ func getFields(rules []*primitives.Rule) []primitives.Field {
 
 // Does any policy all everything?
 func (e *Evaluator) ruleAllowsAll() bool {
-	for _, r := range e.allows {
+	for _, r := range e.allowFieldRules {
 		for _, f := range r.Fields {
 			if f == primitives.Star {
 				return true
@@ -65,11 +67,33 @@ func (e *Evaluator) ruleAllowsAll() bool {
 }
 
 func (e *Evaluator) deniedFields() []primitives.Field {
-	return getFields(e.denies)
+	return getFields(e.denyFieldRules)
 }
 
 func (e *Evaluator) allowedFields() []primitives.Field {
-	return getFields(e.allows)
+	return getFields(e.allowFieldRules)
+}
+
+func (e *Evaluator) attachConditions() error {
+	if len(e.allowWhereRules) > 0 {
+		var where []primitives.Where
+		for _, r := range e.allowWhereRules {
+			where = append(where, r.Where...)
+		}
+
+		e.q.SetConditions(where, primitives.Eq)
+	}
+
+	if len(e.denyWhereRules) > 0 {
+		var where []primitives.Where
+		for _, r := range e.denyWhereRules {
+			where = append(where, r.Where...)
+		}
+
+		e.q.SetConditions(where, primitives.Neq)
+	}
+
+	return nil
 }
 
 func (e *Evaluator) evaluateStar() (*query.Query, error) {
@@ -89,9 +113,14 @@ func (e *Evaluator) evaluateStar() (*query.Query, error) {
 		return nil, errors.New(AccessDeniedCause, "No policies match the provided query")
 	}
 
-	// now, remove the fields that our policy denies
+	// now, remove the fields that our policy denyFieldRules
 	fields = difference(fields, e.deniedFields())
 	e.q.SetFields(fields)
+	err := e.attachConditions()
+	if err != nil {
+		return nil, err
+	}
+
 	return e.q, nil
 }
 
@@ -103,11 +132,11 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 		return e.evaluateStar()
 	}
 
-	if len(e.allows) == 0 {
+	if len(e.allowFieldRules) == 0 {
 		return nil, errors.New(AccessDeniedCause, "No policies match the provided query")
 	}
 
-	// Now, we must find a rule that allows the provided query to run
+	// Now, we must find a rule that allowFieldRules the provided query to run
 	// There are basically two cases here
 	// The rule could specify a wildcard (*) yes, in which case the query is allowed to run
 	allowed := false
@@ -119,7 +148,12 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 		requestedFields[f] = false
 	}
 
-	for _, r := range e.allows {
+	// also check which fields they are using in a conditional
+	for _, f := range e.q.Conditions() {
+		requestedFields[f] = false
+	}
+
+	for _, r := range e.allowFieldRules {
 		fields := r.Fields
 		for _, f := range fields {
 			// special case -- the rule says they can access anything
@@ -149,7 +183,7 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 	}
 
 	denied := false
-	for _, r := range e.denies {
+	for _, r := range e.denyFieldRules {
 		fields := r.Fields
 		for _, f := range fields {
 			for _, qf := range e.q.Fields() {
@@ -161,7 +195,12 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 	}
 
 	if denied {
-		return nil, errors.New(AccessDeniedCause, "Policy denies the query from running")
+		return nil, errors.New(AccessDeniedCause, "Policy denyFieldRules the query from running")
+	}
+
+	err := e.attachConditions()
+	if err != nil {
+		return nil, err
 	}
 
 	return e.q, nil
@@ -170,24 +209,37 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 // NewEvaluator returns a new Evaluator
 func NewEvaluator(q *query.Query, s *proto.Schema, policies ...*primitives.Policy) *Evaluator {
 	// find the policies that target the given query
-	var allows []*primitives.Rule
-	var denies []*primitives.Rule
+	var allowFieldRules []*primitives.Rule
+	var denyFieldRules []*primitives.Rule
+	var allowWhereRules []*primitives.Rule
+	var denyWhereRules []*primitives.Rule
+
 	for _, p := range policies {
 		for _, r := range p.Spec.Rules {
-			if r.Target.Entity().String() == q.Entity() && r.Effect == primitives.Allow {
-				allows = append(allows, r)
+			if r.Type() == primitives.FieldRule && r.Target.Entity().String() == q.Entity() && r.Effect == primitives.Allow {
+				allowFieldRules = append(allowFieldRules, r)
 			}
 
-			if r.Target.Entity().String() == q.Entity() && r.Effect == primitives.Deny {
-				denies = append(denies, r)
+			if r.Type() == primitives.FieldRule && r.Target.Entity().String() == q.Entity() && r.Effect == primitives.Deny {
+				denyFieldRules = append(denyFieldRules, r)
+			}
+
+			if r.Type() == primitives.WhereRule && r.Target.Entity().String() == q.Entity() && r.Effect == primitives.Allow {
+				allowWhereRules = append(allowWhereRules, r)
+			}
+
+			if r.Type() == primitives.WhereRule && r.Target.Entity().String() == q.Entity() && r.Effect == primitives.Deny {
+				denyWhereRules = append(denyWhereRules, r)
 			}
 		}
 	}
 
 	return &Evaluator{
-		allows: allows,
-		denies: denies,
-		s:      s,
-		q:      q,
+		allowFieldRules: allowFieldRules,
+		denyFieldRules:  denyFieldRules,
+		allowWhereRules: allowWhereRules,
+		denyWhereRules:  denyWhereRules,
+		s:               s,
+		q:               q,
 	}
 }

@@ -38,10 +38,21 @@ func (q *Query) Entity() string {
 	return q.q.TableName
 }
 
+// Fields returns the fields that the user is requesting
 func (q *Query) Fields() []primitives.Field {
 	fields := make([]primitives.Field, len(q.q.Fields))
 	for i, f := range q.q.Fields {
 		fields[i] = primitives.Field(f)
+	}
+
+	return fields
+}
+
+// Conditions returns the fields being used in the conditional part of the query (e.g. the where block)
+func (q *Query) Conditions() []primitives.Field {
+	fields := make([]primitives.Field, len(q.q.Conditions))
+	for i, f := range q.q.Conditions {
+		fields[i] = primitives.Field(f.Operand1)
 	}
 
 	return fields
@@ -54,6 +65,28 @@ func (q *Query) SetFields(fields []primitives.Field) {
 	}
 
 	q.q.Fields = fStr
+}
+
+func (q *Query) SetConditions(where []primitives.Where, operand primitives.Operation) {
+	var op qq.Operator
+	switch operand {
+	case primitives.Eq:
+		op = qq.Eq
+	case primitives.Neq:
+		op = qq.Ne
+	}
+
+	for _, w := range where {
+		for k, v := range w {
+			q.q.Conditions = append(q.q.Conditions, qq.Condition{
+				Operand1:        k,
+				Operand1IsField: true,
+				Operand2:        v,
+				Operand2IsField: true,
+				Operator:        op,
+			})
+		}
+	}
 }
 
 // Raw returns the supplied sql into a policy obeying sql string
@@ -73,7 +106,25 @@ func (q *Query) Raw() (string, []interface{}) {
 		raw += " WHERE "
 
 		for i, c := range q.q.Conditions {
-			raw += fmt.Sprintf("%s = ?", c.Operand1)
+			var operator string
+			switch c.Operator {
+			case qq.Eq:
+				operator = "="
+			case qq.Ne:
+				operator = "!="
+			case qq.Gt:
+				operator = ">"
+			case qq.Lt:
+				operator = "<"
+			case qq.Gte:
+				operator = ">="
+			case qq.Lte:
+				operator = "<="
+			default:
+				operator = "="
+			}
+
+			raw += fmt.Sprintf("%s %s ?", c.Operand1, operator)
 			parameters[i] = c.Operand2
 			if i < len(q.q.Conditions)-1 {
 				raw += " AND "

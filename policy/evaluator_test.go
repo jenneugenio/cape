@@ -215,4 +215,109 @@ func TestEvaluator(t *testing.T) {
 		raw, _ := q.Raw()
 		gm.Expect(raw).To(gm.Equal("SELECT card_number, processor FROM transactions"))
 	})
+
+	t.Run("cannot run a where if it is not allowed", func(t *testing.T) {
+		spec := &primitives.PolicySpec{
+			Version: 1,
+			Label:   "my-policy",
+			Rules: []*primitives.Rule{
+				{
+					Target: "records:mycollection.transactions",
+					Action: primitives.Read,
+					Effect: primitives.Deny,
+					Fields: []primitives.Field{primitives.Star},
+				},
+
+				{
+					Target: "records:mycollection.transactions",
+					Action: primitives.Read,
+					Effect: primitives.Allow,
+					Fields: []primitives.Field{"card_number"},
+				},
+			},
+		}
+
+		p, err := primitives.NewPolicy("my-policy", spec)
+		gm.Expect(err).To(gm.BeNil())
+
+		q, err := query.New("my-query", "SELECT card_number FROM transactions where processor = 'visa'")
+		gm.Expect(err).To(gm.BeNil())
+
+		e := NewEvaluator(q, schema, p)
+
+		_, err = e.Evaluate()
+		gm.Expect(err).ToNot(gm.BeNil())
+	})
+
+	t.Run("can run a where if it is allowed", func(t *testing.T) {
+		spec := &primitives.PolicySpec{
+			Version: 1,
+			Label:   "my-policy",
+			Rules: []*primitives.Rule{
+				{
+					Target: "records:mycollection.transactions",
+					Action: primitives.Read,
+					Effect: primitives.Deny,
+					Fields: []primitives.Field{primitives.Star},
+				},
+
+				{
+					Target: "records:mycollection.transactions",
+					Action: primitives.Read,
+					Effect: primitives.Allow,
+					Fields: []primitives.Field{"card_number", "processor"},
+				},
+			},
+		}
+
+		p, err := primitives.NewPolicy("my-policy", spec)
+		gm.Expect(err).To(gm.BeNil())
+
+		q, err := query.New("my-query", "SELECT card_number FROM transactions where processor = 'visa'")
+		gm.Expect(err).To(gm.BeNil())
+
+		e := NewEvaluator(q, schema, p)
+
+		_, err = e.Evaluate()
+		gm.Expect(err).To(gm.BeNil())
+	})
+
+	t.Run("can filter rows with where rules", func(t *testing.T) {
+		spec := &primitives.PolicySpec{
+			Version: 1,
+			Label:   "my-policy",
+			Rules: []*primitives.Rule{
+				{
+					Target: "records:mycollection.transactions",
+					Action: primitives.Read,
+					Effect: primitives.Allow,
+					Fields: []primitives.Field{primitives.Star},
+				},
+
+				{
+					Target: "records:mycollection.transactions",
+					Action: primitives.Read,
+					Effect: primitives.Deny,
+					Where: []primitives.Where{
+						{"processor": "visa"},
+					},
+				},
+			},
+		}
+
+		p, err := primitives.NewPolicy("my-policy", spec)
+		gm.Expect(err).To(gm.BeNil())
+
+		q, err := query.New("my-query", "SELECT card_number FROM transactions")
+		gm.Expect(err).To(gm.BeNil())
+
+		e := NewEvaluator(q, schema, p)
+
+		q, err = e.Evaluate()
+		gm.Expect(err).To(gm.BeNil())
+
+		raw, params := q.Raw()
+		gm.Expect(raw).To(gm.Equal("SELECT card_number FROM transactions WHERE processor != ?"))
+		gm.Expect(params[0]).To(gm.Equal("visa"))
+	})
 }

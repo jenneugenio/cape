@@ -18,6 +18,29 @@ type PolicyVersion uint8
 // Where expresses a condition that says if a rule should apply to certain data
 type Where map[string]string
 
+// Operation represents an operation in a query (e.g. equality check)
+type Operation string
+
+const (
+	Eq  Operation = "="
+	Neq Operation = "!="
+)
+
+type RuleType int
+
+const (
+	FieldRule RuleType = iota
+	WhereRule
+)
+
+func (r *Rule) Type() RuleType {
+	if len(r.Fields) > 0 {
+		return FieldRule
+	}
+
+	return WhereRule
+}
+
 // Rule represents the rules that make up a policy
 type Rule struct {
 	Target Target  `json:"target"`
