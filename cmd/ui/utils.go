@@ -1,23 +1,31 @@
 package ui
 
 import (
-	"bytes"
+	"strings"
 
 	"github.com/juju/ansiterm"
 )
+
+func colorize(color ansiterm.Color, text string) string {
+	ctx := ansiterm.Context{
+		Foreground: color,
+	}
+
+	return stylize(ctx, text)
+}
 
 func faded(text string) string {
 	ctx := ansiterm.Context{
 		Foreground: ansiterm.DarkGray,
 	}
 
-	return colorize(ctx, text)
+	return stylize(ctx, text)
 }
 
-func colorize(ctx ansiterm.Context, text string) string {
-	buf := bytes.Buffer{}
-	w := ansiterm.NewWriter(&buf)
+func stylize(ctx ansiterm.Context, text string) string {
+	builder := &strings.Builder{}
+	w := ansiterm.NewWriter(builder)
 	w.SetColorCapable(true)
 	ctx.Fprintf(w, text)
-	return buf.String()
+	return builder.String()
 }

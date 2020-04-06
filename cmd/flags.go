@@ -22,8 +22,17 @@ func portFlag(name string, value int) cli.Flag {
 
 func versionFlag() cli.Flag {
 	return &cli.BoolFlag{
-		Name:  "version, v",
-		Usage: "Display the current version of Cape",
+		Name:    "version",
+		Aliases: []string{"v"},
+		Usage:   "Display the current version of Cape",
+	}
+}
+
+func helpFlag() cli.Flag {
+	return &cli.BoolFlag{
+		Name:    "help",
+		Aliases: []string{"h"},
+		Usage:   "Display documentation and examples for this command",
 	}
 }
 

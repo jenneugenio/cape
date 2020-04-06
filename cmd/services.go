@@ -180,10 +180,7 @@ func servicesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Println("Remember: Please keep the token safe and share it securely as\n" +
-		"it enables anyone with access to the cluster the ability to authenticate as this service.")
-
-	return nil
+	return u.Notify(ui.Remember, "Please keep the token safe and share it only over secure channels.")
 }
 
 func servicesRemoveCmd(c *cli.Context) error {

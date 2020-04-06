@@ -81,23 +81,21 @@ func Session(ctx context.Context) *config.Session {
 	return s.(*config.Session)
 }
 
-func retrieveConfig(next cli.ActionFunc) cli.ActionFunc {
-	return cli.ActionFunc(func(c *cli.Context) error {
-		cfg, err := config.Parse()
-		if err != nil {
-			return err
-		}
+func retrieveConfig(c *cli.Context) error {
+	cfg, err := config.Parse()
+	if err != nil {
+		return err
+	}
 
-		u, err := ui.NewUI(cfg)
-		if err != nil {
-			return err
-		}
+	u, err := ui.NewUI(cfg)
+	if err != nil {
+		return err
+	}
 
-		c.Context = context.WithValue(c.Context, UIContextKey, u)
-		c.Context = context.WithValue(c.Context, ConfigContextKey, cfg)
+	c.Context = context.WithValue(c.Context, UIContextKey, u)
+	c.Context = context.WithValue(c.Context, ConfigContextKey, cfg)
 
-		return next(c)
-	})
+	return nil
 }
 
 func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {

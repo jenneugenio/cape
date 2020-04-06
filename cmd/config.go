@@ -117,7 +117,7 @@ func addCluster(c *cli.Context) error {
 	args := Arguments(c.Context)
 	cfg := Config(c.Context)
 
-	label := args["label"].(primitives.Label)
+	label := args["cluster"].(primitives.Label)
 	clusterURL := args["url"].(*primitives.URL)
 
 	cluster, err := cfg.AddCluster(label, clusterURL, "")
@@ -161,7 +161,7 @@ func removeCluster(c *cli.Context) error {
 		return err
 	}
 
-	label := args["label"].(primitives.Label)
+	label := args["cluster"].(primitives.Label)
 	if !skipConfirm {
 		err := ui.Confirm(fmt.Sprintf("Do you want to delete the '%s' cluster from configuration?", label))
 		if err != nil {
@@ -198,7 +198,7 @@ func useCluster(c *cli.Context) error {
 	args := Arguments(c.Context)
 	cfg := Config(c.Context)
 
-	label := args["label"].(primitives.Label)
+	label := args["cluster"].(primitives.Label)
 	err := cfg.Use(label)
 	if err != nil {
 		return err

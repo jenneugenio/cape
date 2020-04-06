@@ -69,6 +69,15 @@ func main() {
 	cli.CommandHelpTemplate = commandHelpTemplate
 	cli.AppHelpTemplate = appHelpTemplate
 
+	cli.HelpFlag = helpFlag()
+	cli.VersionFlag = versionFlag()
+	cli.VersionPrinter = func(c *cli.Context) {
+		err := versionCmd(c)
+		if err != nil {
+			exitHandler(c, err)
+		}
+	}
+
 	app := cli.NewApp()
 	app.Name = cliName
 	app.HelpName = cliName
@@ -78,8 +87,15 @@ func main() {
 	app.EnableBashCompletion = true
 	app.Copyright = "(c) 2020 Cape, Inc."
 
+	// Before runs our global middleware for all commands including the command
+	// not found middleware
+	app.Before = cli.BeforeFunc(retrieveConfig)
+	app.CommandNotFound = commandNotFound
+	app.ExitErrHandler = exitHandler
+
 	err := app.Run(os.Args)
 	if err != nil {
-		errorPrinter(err)
+		// Errors are handled by the ExitErrHandler
+		os.Exit(1)
 	}
 }

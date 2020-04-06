@@ -65,6 +65,19 @@ func (u *UI) prompt(p *promptui.Prompt) (string, error) {
 	return result, nil
 }
 
+// Notify is used to notify the user about some piece of information including
+// error messages or warning.
+func (u *UI) Notify(t NotificationType, msg string, args ...interface{}) error {
+	shorthand := fmt.Sprintf("%s %s", t.Symbol, t.Text)
+	if u.CanColorize() {
+		shorthand = colorize(t.Color, shorthand)
+	}
+
+	out := fmt.Sprintf(shorthand+": "+msg, args...)
+	fmt.Fprintf(os.Stdout, out+"\n")
+	return nil
+}
+
 // Secret prompts the user to answer a terminal question that will be masked
 func (u *UI) Secret(question string, validator promptui.ValidateFunc) (string, error) {
 	p := &promptui.Prompt{

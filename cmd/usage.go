@@ -191,8 +191,7 @@ func (c *Command) Package() *cli.Command {
 
 	// Apply our middleware!
 	if cmd.Action != nil {
-		next := processVariables(c, cmd.Action)
-		cmd.Action = retrieveConfig(next)
+		cmd.Action = processVariables(c, cmd.Action)
 	}
 
 	return cmd

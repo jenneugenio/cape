@@ -101,7 +101,5 @@ func usersCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("\nRemember: Please keep the password safe and share with the user securely.\n")
-
-	return nil
+	return u.Notify(ui.Remember, "Please keep the password safe and share it only over secure channels.\n")
 }

@@ -9,11 +9,20 @@ import (
 	"github.com/manifoldco/go-base32"
 	"github.com/urfave/cli/v2"
 
+	"github.com/dropoutlabs/cape/cmd/ui"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
-func errorPrinter(err error) {
+func exitHandler(c *cli.Context, err error) {
+	// This is required because this function is called for every command
+	// invocation independent of whether or not it errored.
+	if err == nil {
+		return
+	}
+
+	u := UI(c.Context)
+
 	msg := ""
 	switch e := err.(type) {
 	case *errors.Error:
@@ -24,7 +33,16 @@ func errorPrinter(err error) {
 		msg = err.Error()
 	}
 
-	fmt.Fprintf(os.Stderr, "\nError: %s\n", msg)
+	// We don't check the error here because its done in `cmd/main.go`
+	u.Notify(ui.Error, msg) //nolint: errcheck
+}
+
+func commandNotFound(c *cli.Context, command string) {
+	u := UI(c.Context)
+	msg := "Oops! Unfortunately, the '%s %s' command doesn't exist. You can list all commands using '%s help'."
+
+	// We don't check the error here because we immediately exit
+	u.Notify(ui.Error, msg, cliName, command, cliName) // nolint: errcheck
 	os.Exit(1)
 }
 
