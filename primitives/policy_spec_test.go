@@ -1,11 +1,14 @@
 package primitives
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	gm "github.com/onsi/gomega"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
+
+	gm "github.com/onsi/gomega"
 )
 
 func loadPolicy(file string) ([]byte, error) {
@@ -90,5 +93,46 @@ func TestPolicySpecRuleSudo(t *testing.T) {
 		spec, err := ParsePolicySpec(data)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(spec.Rules[0].Sudo).To(gm.BeTrue())
+	})
+}
+
+func TestPolicySpecGQL(t *testing.T) {
+	gm.RegisterTestingT(t)
+
+	t.Run("Test GQL Marshal", func(t *testing.T) {
+		data, err := loadPolicy("policy_with_sudo.yaml")
+		gm.Expect(err).To(gm.BeNil())
+
+		spec, err := ParsePolicySpec(data)
+		gm.Expect(err).To(gm.BeNil())
+
+		by, err := json.Marshal(spec)
+		gm.Expect(err).To(gm.BeNil())
+
+		buf := &bytes.Buffer{}
+		spec.MarshalGQL(buf)
+
+		gm.Expect(buf.Bytes()).To(gm.Equal(by))
+	})
+
+	t.Run("Test GQL Unmarshal", func(t *testing.T) {
+		data, err := loadPolicy("policy_with_sudo.yaml")
+		gm.Expect(err).To(gm.BeNil())
+
+		spec, err := ParsePolicySpec(data)
+		gm.Expect(err).To(gm.BeNil())
+
+		by, err := json.Marshal(spec)
+		gm.Expect(err).To(gm.BeNil())
+
+		var v map[string]interface{}
+		err = json.Unmarshal(by, &v)
+		gm.Expect(err).To(gm.BeNil())
+
+		newSpec := PolicySpec{}
+		err = newSpec.UnmarshalGQL(v)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(newSpec).To(gm.Equal(*spec))
 	})
 }

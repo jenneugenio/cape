@@ -63,6 +63,7 @@ func ParsePolicy(data []byte) (*Policy, error) {
 
 	policy := &Policy{
 		Primitive: p,
+		Label:     ps.Label,
 		Spec:      ps,
 	}
 

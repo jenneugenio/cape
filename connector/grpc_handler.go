@@ -6,6 +6,7 @@ import (
 	"github.com/dropoutlabs/cape/auth"
 	pb "github.com/dropoutlabs/cape/connector/proto"
 	"github.com/dropoutlabs/cape/connector/sources"
+	"github.com/dropoutlabs/cape/framework"
 	"github.com/dropoutlabs/cape/primitives"
 	"github.com/dropoutlabs/cape/query"
 	"google.golang.org/grpc/metadata"
@@ -31,9 +32,18 @@ func (g *grpcHandler) handleAuth(ctx context.Context) (primitives.Identity, erro
 }
 
 func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryServer) error {
-	_, err := g.handleAuth(server.Context())
+	identity, err := g.handleAuth(server.Context())
 	if err != nil {
 		return err
+	}
+
+	policies, err := g.controller.GetIdentityPolicies(server.Context(), identity.GetID())
+	if err != nil {
+		return err
+	}
+
+	if len(policies) == 0 {
+		return framework.ErrAuthorization
 	}
 
 	dataSource, err := primitives.NewLabel(req.GetDataSource())
@@ -47,6 +57,11 @@ func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryS
 	}
 
 	query, err := query.New(dataSource, req.GetQuery())
+	if err != nil {
+		return err
+	}
+
+	query, err = query.Rewrite(policies[0])
 	if err != nil {
 		return err
 	}

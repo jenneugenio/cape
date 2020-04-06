@@ -96,6 +96,7 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Label     func(childComplexity int) int
+		Spec      func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
 	}
 
@@ -539,6 +540,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Policy.Label(childComplexity), true
+
+	case "Policy.spec":
+		if e.complexity.Policy.Spec == nil {
+			break
+		}
+
+		return e.complexity.Policy.Spec(childComplexity), true
 
 	case "Policy.updated_at":
 		if e.complexity.Policy.UpdatedAt == nil {
@@ -1039,10 +1047,7 @@ type Policy {
   updated_at: Time!
 
   label: Label!
-  # Policy will have more fields and they will encapsulate
-  # all the data that the controller needs to use to make
-  # a policy decision. We haven't decided on these yet but
-  # they would go here!
+  spec: PolicySpec!
 }
 
 type Attachment {
@@ -3311,6 +3316,40 @@ func (ec *executionContext) _Policy_label(ctx context.Context, field graphql.Col
 	res := resTmp.(primitives.Label)
 	fc.Result = res
 	return ec.marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Policy_spec(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Policy",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Spec, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*primitives.PolicySpec)
+	fc.Result = res
+	return ec.marshalNPolicySpec2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7115,6 +7154,11 @@ func (ec *executionContext) _Policy(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "spec":
+			out.Values[i] = ec._Policy_spec(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8174,17 +8218,30 @@ func (ec *executionContext) marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcape�
 }
 
 func (ec *executionContext) unmarshalNPolicySpec2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, v interface{}) (primitives.PolicySpec, error) {
-	return primitives.UnmarshalPolicySpec(v)
+	var res primitives.PolicySpec
+	return res, res.UnmarshalGQL(v)
 }
 
 func (ec *executionContext) marshalNPolicySpec2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v primitives.PolicySpec) graphql.Marshaler {
-	res := primitives.MarshalPolicySpec(v)
-	if res == graphql.Null {
+	return v
+}
+
+func (ec *executionContext) unmarshalNPolicySpec2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, v interface{}) (*primitives.PolicySpec, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNPolicySpec2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalNPolicySpec2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v *primitives.PolicySpec) graphql.Marshaler {
+	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
+		return graphql.Null
 	}
-	return res
+	return v
 }
 
 func (ec *executionContext) unmarshalNRemoveSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐRemoveSourceRequest(ctx context.Context, v interface{}) (model.RemoveSourceRequest, error) {

@@ -1,15 +1,18 @@
 package primitives
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/99designs/gqlgen/graphql"
-	errors "github.com/dropoutlabs/cape/partyerrors"
 	"io"
-	"sigs.k8s.io/yaml"
 	"strconv"
+
+	"sigs.k8s.io/yaml"
+
+	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/mitchellh/mapstructure"
 )
 
-// Version represents which version of policy we are using
+// PolicyVersion represents which version of policy we are using
 type PolicyVersion uint8
 
 // Where expresses a condition that says if a rule should apply to certain data
@@ -37,43 +40,34 @@ func (ps *PolicySpec) Validate() error {
 	for _, r := range ps.Rules {
 		err := r.Target.Validate()
 		if err != nil {
-			return errors.New(InvalidPolicySpecCause, fmt.Sprintf("Invalid rule: %e", err))
+			return errors.New(InvalidPolicySpecCause, "Invalid rule: %e", err)
 		}
 	}
 
 	return nil
 }
 
-// MarshalPolicySpec gql implementation
-func MarshalPolicySpec(ps PolicySpec) graphql.Marshaler {
-	return graphql.WriterFunc(func(w io.Writer) {
-		yaml, err := yaml.Marshal(ps)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Fprint(w, strconv.Quote(string(yaml)))
-	})
+// UnmarshalGQL implements the graphql.Unmarshaler interface
+func (ps *PolicySpec) UnmarshalGQL(v interface{}) error {
+	switch t := v.(type) {
+	case map[string]interface{}:
+		return mapstructure.Decode(t, ps)
+	default:
+		return errors.New(InvalidPolicySpecCause, "Unable to unmarshal gql policy spec")
+	}
 }
 
-// UnmarshalPolicySpec gql implementation
-func UnmarshalPolicySpec(v interface{}) (PolicySpec, error) {
-	var ps PolicySpec
-	bytes, err := yaml.Marshal(v)
+// MarshalGQL implements the graphql.Marshaler interface
+func (ps PolicySpec) MarshalGQL(w io.Writer) {
+	json, err := json.Marshal(ps)
 	if err != nil {
-		return ps, err
+		fmt.Fprint(w, strconv.Quote(err.Error()))
 	}
 
-	err = yaml.Unmarshal(bytes, &ps)
-	if err != nil {
-		return ps, err
-	}
-
-	return PolicySpec{}, nil
+	fmt.Fprint(w, string(json))
 }
 
 // ToBytes writes the policy spec to bytes representing the policy file
-
 func (ps *PolicySpec) ToBytes() ([]byte, error) {
 	return yaml.Marshal(ps)
 }

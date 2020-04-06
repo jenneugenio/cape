@@ -55,6 +55,9 @@ func TestQuery(t *testing.T) {
 	err = m.CreateSource(ctx, connH.SourceCredentials(), m.Connector.ID)
 	gm.Expect(err).To(gm.BeNil())
 
+	err = m.CreatePolicy(ctx, "./testdata/policy.yaml")
+	gm.Expect(err).To(gm.BeNil())
+
 	connClient, err := connH.Client(m.Admin.Token)
 	gm.Expect(err).To(gm.BeNil())
 

@@ -1,0 +1,15 @@
+label: allow-all
+rules:
+- action: read
+  effect: allow
+  fields:
+  - id
+  - processor
+  - timestamp
+  - card_id
+  - card_number
+  - value
+  - ssn
+  - vendor
+  target: records:creditcards.transactions
+version: 1

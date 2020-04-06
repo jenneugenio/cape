@@ -1073,6 +1073,7 @@ func (c *Client) GetIdentityPolicies(ctx context.Context, identityID database.ID
 			identityPolicies(identity_id: $identity_id) {
 				id
 				label
+				spec
 			}
 		}
 	`, variables, &resp)

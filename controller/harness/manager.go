@@ -2,6 +2,7 @@ package harness
 
 import (
 	"context"
+	"io/ioutil"
 
 	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/controller"
@@ -127,6 +128,36 @@ func (m *Manager) CreateService(ctx context.Context, apiToken *auth.APIToken, se
 	m.Connector = &Service{
 		ID:    service.ID,
 		Token: apiToken,
+	}
+
+	return nil
+}
+
+// CreatePolicy creates a policy on the controller!
+func (m *Manager) CreatePolicy(ctx context.Context, policyPath string) error {
+	data, err := ioutil.ReadFile(policyPath)
+	if err != nil {
+		return err
+	}
+
+	policy, err := primitives.ParsePolicy(data)
+	if err != nil {
+		return err
+	}
+
+	policy, err = m.Admin.Client.CreatePolicy(ctx, policy)
+	if err != nil {
+		return err
+	}
+
+	role, err := m.Admin.Client.GetRoleByLabel(ctx, primitives.AdminRole)
+	if err != nil {
+		return err
+	}
+
+	_, err = m.Admin.Client.AttachPolicy(ctx, policy.ID, role.ID)
+	if err != nil {
+		return err
 	}
 
 	return nil

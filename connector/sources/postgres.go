@@ -2,9 +2,9 @@ package sources
 
 import (
 	"context"
-	"github.com/jackc/pgx/v4"
 	"time"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 
 	"github.com/dropoutlabs/cape/connector/proto"

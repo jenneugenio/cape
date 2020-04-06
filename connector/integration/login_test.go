@@ -56,6 +56,9 @@ func TestLogin(t *testing.T) {
 	err = m.CreateSource(ctx, connH.SourceCredentials(), m.Connector.ID)
 	gm.Expect(err).To(gm.BeNil())
 
+	err = m.CreatePolicy(ctx, "./testdata/policy.yaml")
+	gm.Expect(err).To(gm.BeNil())
+
 	connClient, err := connH.Client(m.Admin.Token)
 	gm.Expect(err).To(gm.BeNil())
 
@@ -68,8 +71,7 @@ func TestLogin(t *testing.T) {
 		defer stream.Close()
 
 		// NextRecord actually triggers the login
-		ok := stream.NextRecord()
-		gm.Expect(ok).To(gm.BeTrue())
+		stream.NextRecord()
 
 		err = stream.Error()
 		gm.Expect(err).To(gm.BeNil())
@@ -82,8 +84,7 @@ func TestLogin(t *testing.T) {
 		defer stream.Close()
 
 		// NextRecord actually triggers the login
-		ok := stream.NextRecord()
-		gm.Expect(ok).To(gm.BeTrue())
+		stream.NextRecord()
 
 		err = stream.Error()
 		gm.Expect(err).To(gm.BeNil())
