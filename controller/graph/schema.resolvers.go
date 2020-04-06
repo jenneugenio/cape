@@ -40,15 +40,20 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest
 		return nil, err
 	}
 
-	roles, err := createSystemRoles(ctx, tx)
+	err = createSystemRoles(ctx, tx)
 	if err != nil {
 		return nil, err
 	}
 
-	// assign admin and global roles to setup user
-	roles = roles[:2]
+	roles, err := getRolesByLabel(ctx, tx, []primitives.Label{
+		primitives.GlobalRole,
+		primitives.AdminRole,
+	})
+	if err != nil {
+		return nil, err
+	}
 
-	err = createAssignmentsForUser(ctx, tx, user, roles)
+	err = createAssignments(ctx, tx, user, roles)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +88,33 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRe
 		return nil, err
 	}
 
-	err = r.Backend.Create(ctx, user)
+	tx, err := r.Backend.Transaction(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	defer tx.Rollback(ctx) // nolint: errcheck
+
+	// We need to get the system roles back from the database so we can
+	// assignment them to this user appropriately.
+	systemRoles, err := getRolesByLabel(ctx, tx, []primitives.Label{
+		primitives.GlobalRole,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Create(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	err = createAssignments(ctx, tx, user, systemRoles)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +265,13 @@ func (r *mutationResolver) DeleteSession(ctx context.Context, input model.Delete
 }
 
 func (r *queryResolver) User(ctx context.Context, id database.ID) (*primitives.User, error) {
-	return nil, errs.New(RouteNotImplemented, "User query not implemented")
+	user := &primitives.User{}
+	err := r.Backend.Get(ctx, id, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*primitives.User, error) {
@@ -320,11 +357,19 @@ func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Ema
 	return identities, nil
 }
 
+func (r *userResolver) Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error) {
+	return getRoles(ctx, r.Backend, obj.ID)
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// User returns generated.UserResolver implementation.
+func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type userResolver struct{ *Resolver }

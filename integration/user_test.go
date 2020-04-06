@@ -42,11 +42,17 @@ func TestUsers(t *testing.T) {
 		user, err := primitives.NewUser("Jerry Berry", email, creds.Package())
 		gm.Expect(err).To(gm.BeNil())
 
-		otherUser, err := client.CreateUser(ctx, user)
+		result, err := client.CreateUser(ctx, user)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(user.Name).To(gm.Equal(otherUser.Name))
-		gm.Expect(user.Email).To(gm.Equal(otherUser.Email))
+		gm.Expect(user.Name).To(gm.Equal(result.Name))
+		gm.Expect(user.Email).To(gm.Equal(result.Email))
+
+		resp, err := client.GetUser(ctx, result.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(resp.Roles)).To(gm.Equal(1))
+		gm.Expect(resp.Roles[0].Label).To(gm.Equal(primitives.GlobalRole))
 	})
 
 	t.Run("cannot create multiple users with same email", func(t *testing.T) {

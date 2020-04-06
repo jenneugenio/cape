@@ -6,6 +6,12 @@ import (
 	gm "github.com/onsi/gomega"
 )
 
+type testStringer struct{}
+
+func (t *testStringer) String() string {
+	return "a"
+}
+
 func TestPostgresFilter(t *testing.T) {
 	gm.RegisterTestingT(t)
 
@@ -18,6 +24,11 @@ func TestPostgresFilter(t *testing.T) {
 			Filter{Where: Where{"a": "b"}},
 			"WHERE data::jsonb#>>'{a}' = $1",
 			[]interface{}{"b"},
+		},
+		"using a Stringer as a value": {
+			Filter{Where: Where{"a": &testStringer{}}},
+			"WHERE data::jsonb#>>'{a}' = $1",
+			[]interface{}{"a"},
 		},
 		"two value comparison": {
 			Filter{Where: Where{"a": "b", "c": "d"}},

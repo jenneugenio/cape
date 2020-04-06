@@ -58,24 +58,62 @@ func buildAttachment(ctx context.Context, db database.Backend,
 // createSystemRoles is a helper intended to be used by the Setup graphql route.
 // It creates all the roles given by the list of role labels and makes sure
 // they are system roles
-func createSystemRoles(ctx context.Context, tx database.Transaction) ([]*primitives.Role, error) {
-	// this is silly, need to create two arrays, one to be able to easily
-	// add to the database and another to return so the roles can be used
-	// later!!
+func createSystemRoles(ctx context.Context, tx database.Transaction) error {
 	entities := make([]database.Entity, len(primitives.SystemRoles))
-	roles := make([]*primitives.Role, len(primitives.SystemRoles))
-
 	for i, roleLabel := range primitives.SystemRoles {
 		role, err := primitives.NewRole(roleLabel, true)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		entities[i] = role
-		roles[i] = role
 	}
 
-	err := tx.Create(ctx, entities...)
+	return tx.Create(ctx, entities...)
+}
+
+// getRolesByLabel is a helper to retrieve a specific role from the database. This is
+// useful for getting a system role from the database.
+func getRolesByLabel(ctx context.Context, tx database.Transaction, labels []primitives.Label) ([]*primitives.Role, error) {
+	in := make(database.In, len(labels))
+	for i, label := range labels {
+		in[i] = label
+	}
+
+	f := database.NewFilter(database.Where{"label": in}, nil, nil)
+	roles := []*primitives.Role{}
+
+	err := tx.Query(ctx, &roles, f)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(labels) != len(roles) {
+		return nil, errors.New(NotFoundCause, "Could not find a role")
+	}
+
+	return roles, nil
+}
+
+// getRoles is a helper that returns all of the roles assigned to a given identity.
+func getRoles(ctx context.Context, db database.Backend, identityID database.ID) ([]*primitives.Role, error) {
+	assignments := []*primitives.Assignment{}
+	filter := database.NewFilter(database.Where{
+		"identity_id": identityID,
+	}, nil, nil)
+	err := db.Query(ctx, &assignments, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	roleIDs := database.InFromEntities(assignments, func(e interface{}) interface{} {
+		return e.(*primitives.Assignment).RoleID
+	})
+
+	roles := []*primitives.Role{}
+	err = db.Query(ctx, &roles, database.NewFilter(database.Where{
+		"id": roleIDs,
+	}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
@@ -83,14 +121,13 @@ func createSystemRoles(ctx context.Context, tx database.Transaction) ([]*primiti
 	return roles, nil
 }
 
-// createAssignmentsForUser is a helper function intended to be used by the Setup
-// graphql route. Its used in tandem with the above function create a
-func createAssignmentsForUser(ctx context.Context, tx database.Transaction,
-	user *primitives.User, roles []*primitives.Role) error {
+// createAssignments is a helper function that makes it easy to assign roles to
+// a given identity.
+func createAssignments(ctx context.Context, tx database.Transaction,
+	identity primitives.Identity, roles []*primitives.Role) error {
 	assignments := make([]database.Entity, len(roles))
-
 	for i, role := range roles {
-		assignment, err := primitives.NewAssignment(user.ID, role.ID)
+		assignment, err := primitives.NewAssignment(identity.GetID(), role.ID)
 		if err != nil {
 			return err
 		}
@@ -99,52 +136,4 @@ func createAssignmentsForUser(ctx context.Context, tx database.Transaction,
 	}
 
 	return tx.Create(ctx, assignments...)
-}
-
-func createDataConnector(ctx context.Context, db database.Backend, input model.CreateServiceRequest) (*primitives.Service, error) {
-	creds := &primitives.Credentials{
-		PublicKey: &input.PublicKey,
-		Salt:      &input.Salt,
-		Alg:       input.Alg,
-	}
-
-	role := &primitives.Role{}
-	err := db.QueryOne(ctx, role, database.NewFilter(database.Where{"label": primitives.DataConnectorRole}, nil, nil))
-	if err != nil {
-		return nil, err
-	}
-
-	service, err := primitives.NewService(input.Email, input.Type, input.Endpoint, creds)
-	if err != nil {
-		return nil, err
-	}
-
-	assignment, err := primitives.NewAssignment(service.ID, role.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	tx, err := db.Transaction(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	defer tx.Rollback(ctx) // nolint: errcheck
-
-	err = tx.Create(ctx, service)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.Create(ctx, assignment)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return service, nil
 }

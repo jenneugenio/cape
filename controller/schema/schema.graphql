@@ -34,6 +34,7 @@ type User implements Identity {
   email: Email!
   created_at: Time!
   updated_at: Time!
+  roles: [Role!]
 }
 
 type Session {

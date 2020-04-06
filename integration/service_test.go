@@ -154,6 +154,9 @@ func TestListServices(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
+	globalRole, err := client.GetRoleByLabel(ctx, primitives.GlobalRole)
+	gm.Expect(err).To(gm.BeNil())
+
 	cRole, err := client.CreateRole(ctx, "connector", nil)
 	gm.Expect(err).To(gm.BeNil())
 
@@ -180,7 +183,7 @@ func TestListServices(t *testing.T) {
 
 		services[i] = &controller.ServiceResponse{
 			Service: service,
-			Roles:   []*primitives.Role{cRole, dsRole},
+			Roles:   []*primitives.Role{globalRole, cRole, dsRole},
 		}
 	}
 

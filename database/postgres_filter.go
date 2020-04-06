@@ -55,6 +55,10 @@ func buildFilter(f Filter) (string, []interface{}) {
 			field := fmt.Sprintf("%s IN (%s)", path, strings.Join(params, ", "))
 			fields = append(fields, field)
 			count += len(results)
+		case fmt.Stringer:
+			fields = append(fields, fmt.Sprintf("%s = $%d", path, count))
+			values = append(values, item.String())
+			count++
 		default:
 			fields = append(fields, fmt.Sprintf("%s = $%d", path, count))
 			values = append(values, item)

@@ -22,4 +22,7 @@ var (
 	// PolicyNotSupplied occurs when a policy has not been supplied for attachPolicy route.
 	// Must either supply policy ID or a policy input object
 	PolicyNotSupplied = errors.NewCause(errors.BadRequestCategory, "policy_not_supplied")
+
+	// NotFoundCause occurs when an entity we were looking for could not be found
+	NotFoundCause = errors.NewCause(errors.BadRequestCategory, "not_found")
 )

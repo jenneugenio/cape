@@ -90,6 +90,42 @@ func (c *Client) Me(ctx context.Context) (primitives.Identity, error) {
 	return identityImplToIdentity(resp.Identity)
 }
 
+// UserResponse is a primitive User with an extra Roles field that maps to the
+// GraphQL type.
+type UserResponse struct {
+	*primitives.User
+	Roles []*primitives.Role `json:"roles"`
+}
+
+// GetUser returns a user and it's roles!
+func (c *Client) GetUser(ctx context.Context, id database.ID) (*UserResponse, error) {
+	var resp struct {
+		User UserResponse `json:"user"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["id"] = id.String()
+
+	err := c.Raw(ctx, `
+		query User($id: ID!) {
+			user(id: $id) {
+				id
+				name
+				email
+				roles {
+					id
+					label
+				}
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.User, nil
+}
+
 // createLoginSession runs a CreateLoginSession mutation that creates a
 // login session and returns it and also sets it on the
 func (c *Client) createLoginSession(ctx context.Context, email primitives.Email) (*primitives.Session, error) {
@@ -687,7 +723,7 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (
 // Setup calls the setup command to bootstrap cape
 func (c *Client) Setup(ctx context.Context, user *primitives.User) (*primitives.User, error) {
 	var resp struct {
-		User primitives.User `json:"setup"`
+		User *primitives.User `json:"setup"`
 	}
 
 	variables := make(map[string]interface{})
@@ -710,11 +746,10 @@ func (c *Client) Setup(ctx context.Context, user *primitives.User) (*primitives.
 		return nil, err
 	}
 
-	return &resp.User, nil
+	return resp.User, nil
 }
 
-// ServiceResponse is a primitive Service with an extra
-// Roles field
+// ServiceResponse is a primitive Service with an extra Roles field
 type ServiceResponse struct {
 	*primitives.Service
 	Roles []*primitives.Role `json:"roles"`
