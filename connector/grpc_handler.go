@@ -2,6 +2,7 @@ package connector
 
 import (
 	"context"
+	"github.com/dropoutlabs/cape/policy"
 
 	"github.com/dropoutlabs/cape/auth"
 	pb "github.com/dropoutlabs/cape/connector/proto"
@@ -61,20 +62,21 @@ func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryS
 		return err
 	}
 
-	query, err = query.Rewrite(policies[0])
-	if err != nil {
-		return err
-	}
-
 	// This is using a new context because if its using the grpc context and
 	// if the grpc connection is closed grpc cancels that context. This
 	// causes pgx to ungracefully close the connection to postgres which
 	// was causing a problems with k8s port forwarding causing our tests
 	// to break.
-	err = source.Query(context.Background(), query, server)
+	schema, err := source.Schema(context.Background(), query)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	evaluator := policy.NewEvaluator(query, schema, policies...)
+	query, err = evaluator.Evaluate()
+	if err != nil {
+		return err
+	}
+
+	return source.Query(context.Background(), query, server)
 }

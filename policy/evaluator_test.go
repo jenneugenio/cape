@@ -33,7 +33,7 @@ func TestEvaluator(t *testing.T) {
 		q, err := query.New("my-query", "select * from transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		evaluator := New(q, schema, make([]*primitives.Policy, 0)...)
+		evaluator := NewEvaluator(q, schema, make([]*primitives.Policy, 0)...)
 		_, err = evaluator.Evaluate()
 		gm.Expect(err.Error()).To(gm.Equal("access_denied: No policies match the provided query"))
 	})
@@ -60,7 +60,7 @@ func TestEvaluator(t *testing.T) {
 		q, err := query.New("my-query", "select * from transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		e := New(q, schema, p)
+		e := NewEvaluator(q, schema, p)
 
 		_, err = e.Evaluate()
 		gm.Expect(err).ToNot(gm.BeNil())
@@ -88,7 +88,7 @@ func TestEvaluator(t *testing.T) {
 		q, err := query.New("my-query", "select * from transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		e := New(q, schema, p)
+		e := NewEvaluator(q, schema, p)
 
 		_, err = e.Evaluate()
 		gm.Expect(err).To(gm.BeNil())
@@ -116,7 +116,7 @@ func TestEvaluator(t *testing.T) {
 		q, err := query.New("my-query", "select card_number, vendor from transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		e := New(q, schema, p)
+		e := NewEvaluator(q, schema, p)
 
 		_, err = e.Evaluate()
 		gm.Expect(err).To(gm.BeNil())
@@ -144,7 +144,7 @@ func TestEvaluator(t *testing.T) {
 		q, err := query.New("my-query", "select card_number, vendor, ssn from transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		e := New(q, schema, p)
+		e := NewEvaluator(q, schema, p)
 
 		_, err = e.Evaluate()
 		gm.Expect(err).ToNot(gm.BeNil())
@@ -179,7 +179,7 @@ func TestEvaluator(t *testing.T) {
 		q, err := query.New("my-query", "select card_number from transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		e := New(q, schema, p)
+		e := NewEvaluator(q, schema, p)
 
 		_, err = e.Evaluate()
 		gm.Expect(err).ToNot(gm.BeNil())
@@ -207,7 +207,7 @@ func TestEvaluator(t *testing.T) {
 		q, err := query.New("my-query", "SELECT * FROM transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		e := New(q, schema, p)
+		e := NewEvaluator(q, schema, p)
 
 		q, err = e.Evaluate()
 		gm.Expect(err).To(gm.BeNil())

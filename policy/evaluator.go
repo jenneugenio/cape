@@ -167,8 +167,8 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 	return e.q, nil
 }
 
-// New returns a new Evaluator
-func New(q *query.Query, s *proto.Schema, policies ...*primitives.Policy) *Evaluator {
+// NewEvaluator returns a new Evaluator
+func NewEvaluator(q *query.Query, s *proto.Schema, policies ...*primitives.Policy) *Evaluator {
 	// find the policies that target the given query
 	var allows []*primitives.Rule
 	var denies []*primitives.Rule
