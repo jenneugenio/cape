@@ -130,5 +130,5 @@ func pullDataCmd(c *cli.Context) error {
 		}
 	}
 
-	return nil
+	return stream.Error()
 }

@@ -139,6 +139,10 @@ func (r *queryResolver) IdentityPolicies(ctx context.Context, identityID databas
 		return e.(*primitives.Assignment).RoleID
 	})
 
+	if len(roleIDs) == 0 {
+		return []*primitives.Policy{}, nil
+	}
+
 	attachments := []*primitives.Attachment{}
 	attachmentFilter := database.NewFilter(database.Where{"role_id": roleIDs}, nil, nil)
 	err = r.Backend.Query(ctx, &attachments, attachmentFilter)
@@ -149,6 +153,10 @@ func (r *queryResolver) IdentityPolicies(ctx context.Context, identityID databas
 	policyIDs := database.InFromEntities(attachments, func(e interface{}) interface{} {
 		return e.(*primitives.Attachment).PolicyID
 	})
+
+	if len(policyIDs) == 0 {
+		return []*primitives.Policy{}, nil
+	}
 
 	policies := []*primitives.Policy{}
 	err = r.Backend.Query(ctx, &policies, database.NewFilter(database.Where{"id": policyIDs}, nil, nil))
