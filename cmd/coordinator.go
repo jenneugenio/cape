@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"time"
@@ -18,23 +17,6 @@ import (
 )
 
 func init() {
-	setupCmd := &Command{
-		Usage: "Setup an instance of the Cape coordinator",
-		Description: "Bootstraps the given Cape instance. This will create an admin account for you and give you a token " +
-			"that you can use with subsequent commands. You can only run this command ONCE per Cape instance.",
-		Examples: []*Example{
-			{
-				Example:     "cape coordinator setup local http://localhost:8081",
-				Description: "Initialize an admin account on a local cape instance",
-			},
-		},
-		Arguments: []*Argument{CoordinatorLabelArg, ClusterURLArg},
-		Command: &cli.Command{
-			Name:   "setup",
-			Action: setupCoordinatorCmd,
-		},
-	}
-
 	startCmd := &Command{
 		Usage:     "Start an instance of the Cape coordinator",
 		Variables: []*EnvVar{capeDBPassword},
@@ -55,7 +37,7 @@ func init() {
 		Usage: "Commands for starting and managing Cape coordinators.",
 		Command: &cli.Command{
 			Name:        "coordinator",
-			Subcommands: []*cli.Command{setupCmd.Package(), startCmd.Package()},
+			Subcommands: []*cli.Command{startCmd.Package()},
 		},
 	}
 
@@ -109,69 +91,6 @@ func getDBURL(c *cli.Context) (*primitives.DBURL, error) {
 	}
 
 	return u, nil
-}
-
-func setupCoordinatorCmd(c *cli.Context) error {
-	cfg := Config(c.Context)
-
-	label := Arguments(c.Context, CoordinatorLabelArg).(primitives.Label)
-	clusterURL := Arguments(c.Context, ClusterURLArg).(*primitives.URL)
-	name, err := getName(c, "")
-	if err != nil {
-		return err
-	}
-
-	email, err := getEmail(c, "")
-	if err != nil {
-		return err
-	}
-
-	password, err := getConfirmedPassword(c)
-	if err != nil {
-		return err
-	}
-
-	creds, err := auth.NewCredentials(password.Bytes(), nil)
-	if err != nil {
-		return err
-	}
-
-	user, err := primitives.NewUser(name, email, creds.Package())
-	if err != nil {
-		return err
-	}
-
-	client := coordinator.NewClient(clusterURL, nil)
-	_, err = client.Setup(c.Context, user)
-	if err != nil {
-		return err
-	}
-
-	// Now, log in our admin!
-	session, err := client.Login(c.Context, email, []byte(password))
-	if err != nil {
-		return err
-	}
-
-	_, err = cfg.AddCluster(label, clusterURL, session.Token.String())
-	if err != nil {
-		return err
-	}
-
-	err = cfg.Use(label)
-	if err != nil {
-		return err
-	}
-
-	err = cfg.Write()
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("\nSetup Complete! Welcome to Cape!\n\n")
-	fmt.Printf("Your current cluster has been set to '%s'.\n", label)
-
-	return nil
 }
 
 func startCoordinatorCmd(c *cli.Context) error {
