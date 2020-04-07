@@ -100,5 +100,5 @@ func usersCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	return u.Notify(ui.Remember, "Please keep the password safe and share it only over secure channels.\n")
+	return u.Notify(ui.Remember, "Please keep the password safe and share it only over secure channels.")
 }

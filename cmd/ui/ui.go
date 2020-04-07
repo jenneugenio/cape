@@ -172,6 +172,8 @@ func (u *UI) Details(details Details) error {
 		fmt.Fprintf(w, "%s:\t%s\n", label, out)
 	}
 
+	// Always make whitespace after a table
+	fmt.Fprintln(w)
 	return w.Flush()
 }
 
