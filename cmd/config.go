@@ -23,7 +23,7 @@ func init() {
 	addClusterCmd := &Command{
 		Usage:       "Add configuration for a cape cluster",
 		Description: "Use this command to add configuration enabling a user to execute commands against a cluster of Cape",
-		Arguments:   []*Argument{LabelArg("cluster"), ClusterURLArg},
+		Arguments:   []*Argument{ClusterLabelArg, ClusterURLArg},
 		Examples: []*Example{
 			{
 				Example:     "cape config clusters add production https://my.production.com",
@@ -44,7 +44,7 @@ func init() {
 	removeClusterCmd := &Command{
 		Usage:       "Remove configuration for a cape cluster",
 		Description: "Use this command to remove local connection information for a cape cluster",
-		Arguments:   []*Argument{LabelArg("cluster")},
+		Arguments:   []*Argument{ClusterLabelArg},
 		Examples: []*Example{
 			{
 				Example:     "cape config clusters remove production",
@@ -67,7 +67,7 @@ func init() {
 	useClusterCmd := &Command{
 		Usage:       "Set a cape cluster as your current cluster",
 		Description: useDescription,
-		Arguments:   []*Argument{LabelArg("cluster")},
+		Arguments:   []*Argument{ClusterLabelArg},
 		Examples: []*Example{
 			{
 				Example:     "cape config clusters use production",
@@ -114,12 +114,10 @@ func viewConfig(c *cli.Context) error {
 
 func addCluster(c *cli.Context) error {
 	use := c.Bool("use")
-	args := Arguments(c.Context)
 	cfg := Config(c.Context)
 
-	label := args["cluster"].(primitives.Label)
-	clusterURL := args["url"].(*primitives.URL)
-
+	label := Arguments(c.Context, ClusterLabelArg).(primitives.Label)
+	clusterURL := Arguments(c.Context, ClusterURLArg).(*primitives.URL)
 	cluster, err := cfg.AddCluster(label, clusterURL, "")
 	if err != nil {
 		return err
@@ -147,7 +145,6 @@ func addCluster(c *cli.Context) error {
 
 func removeCluster(c *cli.Context) error {
 	skipConfirm := c.Bool("yes")
-	args := Arguments(c.Context)
 	cfg := Config(c.Context)
 	ui := UI(c.Context)
 
@@ -161,7 +158,7 @@ func removeCluster(c *cli.Context) error {
 		return err
 	}
 
-	label := args["cluster"].(primitives.Label)
+	label := Arguments(c.Context, ClusterLabelArg).(primitives.Label)
 	if !skipConfirm {
 		err := ui.Confirm(fmt.Sprintf("Do you want to delete the '%s' cluster from configuration?", label))
 		if err != nil {
@@ -195,10 +192,9 @@ func removeCluster(c *cli.Context) error {
 }
 
 func useCluster(c *cli.Context) error {
-	args := Arguments(c.Context)
 	cfg := Config(c.Context)
 
-	label := args["cluster"].(primitives.Label)
+	label := Arguments(c.Context, ClusterLabelArg).(primitives.Label)
 	err := cfg.Use(label)
 	if err != nil {
 		return err

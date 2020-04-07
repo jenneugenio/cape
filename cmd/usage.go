@@ -37,9 +37,12 @@ func (e *EnvVar) Usage() string {
 	return fmt.Sprintf("%s%s", e.Description, required)
 }
 
-// VariablesValues represents a map of input values (e.g. arguments and environment
-// variables) to their values
-type VariableValues map[string]interface{}
+// ArgumentValues contains values from arguments specified for the command
+type ArgumentValues map[*Argument]interface{}
+
+// EnvVarValues contains values from environment variables specified for a
+// command
+type EnvVarValues map[*EnvVar]interface{}
 
 // VariableProcessorFunc represents a function that given a value, validates
 // the value, parses the string, and then returns the value to store in the

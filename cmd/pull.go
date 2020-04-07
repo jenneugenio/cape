@@ -30,7 +30,7 @@ func init() {
 					"policy attached will be redacted/obfuscated or hidden in some other privacy preserving manner.",
 			},
 		},
-		Arguments: []*Argument{LabelArg("source"), PullQueryArgument},
+		Arguments: []*Argument{SourceLabelArg, PullQueryArgument},
 		Command: &cli.Command{
 			Name:   "pull",
 			Action: handleSessionOverrides(pullDataCmd),
@@ -45,8 +45,6 @@ func init() {
 
 func pullDataCmd(c *cli.Context) error {
 	cfgSession := Session(c.Context)
-	args := Arguments(c.Context)
-
 	outFile := c.String("out")
 
 	cluster, err := cfgSession.Cluster()
@@ -54,8 +52,8 @@ func pullDataCmd(c *cli.Context) error {
 		return err
 	}
 
-	sourceLabel := args["source"].(primitives.Label)
-	query := args["query"].(string)
+	sourceLabel := Arguments(c.Context, SourceLabelArg).(primitives.Label)
+	query := Arguments(c.Context, PullQueryArgument).(string)
 
 	ctrlClient, err := cluster.Client()
 	if err != nil {

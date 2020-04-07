@@ -13,7 +13,7 @@ func init() {
 	sourcesAddCmd := &Command{
 		Usage:       "Adds a data source to Cape",
 		Description: "Adds a data source to Cape",
-		Arguments:   []*Argument{LabelArg("source"), SourcesCredentialsArg},
+		Arguments:   []*Argument{SourceLabelArg, SourcesCredentialsArg},
 		Examples: []*Example{
 			{
 				Example: "cape sources add transactions postgres://username:password@location.of.database:5432/mydb",
@@ -34,7 +34,7 @@ func init() {
 	sourcesRemoveCmd := &Command{
 		Usage:       "Removes a data source to Cape",
 		Description: "Removes a data source to Cape",
-		Arguments:   []*Argument{LabelArg("source")},
+		Arguments:   []*Argument{SourceLabelArg},
 		Examples: []*Example{
 			{
 				Example:     "cape sources remove transactions",
@@ -74,15 +74,14 @@ func init() {
 
 func sourcesAdd(c *cli.Context) error {
 	cfgSession := Session(c.Context)
-	args := Arguments(c.Context)
 
 	cluster, err := cfgSession.Cluster()
 	if err != nil {
 		return err
 	}
 
-	label := args["source"].(primitives.Label)
-	credentials := args["connection-string"].(*primitives.DBURL)
+	label := Arguments(c.Context, SourceLabelArg).(primitives.Label)
+	credentials := Arguments(c.Context, SourcesCredentialsArg).(*primitives.DBURL)
 	linkEmail := c.String("link")
 
 	client, err := cluster.Client()
@@ -116,14 +115,12 @@ func sourcesAdd(c *cli.Context) error {
 
 func sourcesRemove(c *cli.Context) error {
 	cfgSession := Session(c.Context)
-	args := Arguments(c.Context)
-
 	cluster, err := cfgSession.Cluster()
 	if err != nil {
 		return err
 	}
 
-	label := args["source"].(primitives.Label)
+	label := Arguments(c.Context, SourceLabelArg).(primitives.Label)
 	client, err := cluster.Client()
 	if err != nil {
 		return err

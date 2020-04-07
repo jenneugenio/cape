@@ -28,7 +28,7 @@ func init() {
 				Description: "Initialize an admin account on a local cape instance",
 			},
 		},
-		Arguments: []*Argument{LabelArg("controller"), ClusterURLArg},
+		Arguments: []*Argument{ControllerLabelArg, ClusterURLArg},
 		Command: &cli.Command{
 			Name:   "setup",
 			Action: setupControllerCmd,
@@ -93,18 +93,18 @@ func getDBURL(c *cli.Context) (*primitives.DBURL, error) {
 	// We support passing the password in separately or as a part of the DB
 	// URL. If the password is contained in the CAPE_DB_URL then it should be
 	// passed entirely as a secret inside a kubernetes orchestration system.
-	dbURL := c.String("db-url")
-	envVars := EnvVariables(c.Context)
-	password, _ := envVars["CAPE_DB_PASSWORD"].(string)
-
-	u, err := primitives.NewDBURL(dbURL)
+	u, err := primitives.NewDBURL(c.String("db-url"))
 	if err != nil {
 		return nil, err
 	}
 
 	// If the password is passed in via environment variables
-	// instead of part of the connection string
-	if password != "" {
+	// instead of part of the connection string.
+	//
+	// As this env variable is optional we have to check to see if the casting
+	// was successful
+	password, ok := EnvVariables(c.Context, capeDBPassword).(string)
+	if ok && password != "" {
 		u.SetPassword(password)
 	}
 
@@ -112,12 +112,10 @@ func getDBURL(c *cli.Context) (*primitives.DBURL, error) {
 }
 
 func setupControllerCmd(c *cli.Context) error {
-	args := Arguments(c.Context)
 	cfg := Config(c.Context)
 
-	label := args["controller"].(primitives.Label)
-	clusterURL := args["url"].(*primitives.URL)
-
+	label := Arguments(c.Context, ControllerLabelArg).(primitives.Label)
+	clusterURL := Arguments(c.Context, ClusterURLArg).(*primitives.URL)
 	name, err := getName(c, "")
 	if err != nil {
 		return err

@@ -7,26 +7,11 @@ import (
 )
 
 var (
-	LabelArg = func(f string) *Argument {
-		return &Argument{
-			Name:        f,
-			Description: fmt.Sprintf("A label for the %s", f),
-			Required:    true,
-			Processor: func(in string) (interface{}, error) {
-				// NewLabel validates that the label meets label criteria
-				return primitives.NewLabel(in)
-			},
-		}
-	}
-
-	PolicyLabelArg = &Argument{
-		Name:        "policy",
-		Description: "A label for the policy. Ignored if --from-file is set.",
-		Required:    true,
-		Processor: func(in string) (interface{}, error) {
-			return primitives.NewLabel(in)
-		},
-	}
+	ClusterLabelArg    = LabelArg("cluster")
+	ControllerLabelArg = LabelArg("controller")
+	RoleLabelArg       = LabelArg("role")
+	PolicyLabelArg     = LabelArg("policy")
+	SourceLabelArg     = LabelArg("source")
 
 	ClusterURLArg = &Argument{
 		Name:        "url",
@@ -75,3 +60,15 @@ var (
 		},
 	}
 )
+
+func LabelArg(f string) *Argument {
+	return &Argument{
+		Name:        f,
+		Description: fmt.Sprintf("A label for the %s", f),
+		Required:    true,
+		Processor: func(in string) (interface{}, error) {
+			// NewLabel validates that the label meets label criteria
+			return primitives.NewLabel(in)
+		},
+	}
+}

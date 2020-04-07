@@ -39,9 +39,8 @@ func init() {
 }
 
 func startConnectorCmd(c *cli.Context) error {
-	envVars := EnvVariables(c.Context)
 	port := c.Int("port")
-	token := envVars["CAPE_TOKEN"].(*auth.APIToken)
+	token := EnvVariables(c.Context, capeTokenVar).(*auth.APIToken)
 
 	instanceID, err := getInstanceID(c, "connector")
 	if err != nil {

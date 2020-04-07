@@ -12,7 +12,7 @@ import (
 func init() {
 	createCmd := &Command{
 		Usage:     "Create a new role",
-		Arguments: []*Argument{LabelArg("role")},
+		Arguments: []*Argument{RoleLabelArg},
 		Examples: []*Example{
 			{
 				Example:     "cape roles create data-scientist",
@@ -35,7 +35,7 @@ func init() {
 
 	removeCmd := &Command{
 		Usage:     "Remove command removes a role",
-		Arguments: []*Argument{LabelArg("role")},
+		Arguments: []*Argument{RoleLabelArg},
 		Examples: []*Example{
 			{
 				Example:     "cape roles remove data-scientist",
@@ -75,7 +75,7 @@ func init() {
 
 	membersCmd := &Command{
 		Usage:     "Lists all the identities assigned a role",
-		Arguments: []*Argument{LabelArg("role")},
+		Arguments: []*Argument{RoleLabelArg},
 		Examples: []*Example{
 			{
 				Example:     "cape roles members admin",
@@ -108,16 +108,14 @@ func init() {
 }
 
 func rolesCreateCmd(c *cli.Context) error {
-	args := Arguments(c.Context)
 	members := c.StringSlice("member")
-
 	cfgSession := Session(c.Context)
 	cluster, err := cfgSession.Cluster()
 	if err != nil {
 		return err
 	}
 
-	label := args["role"].(primitives.Label)
+	label := Arguments(c.Context, RoleLabelArg).(primitives.Label)
 
 	client, err := cluster.Client()
 	if err != nil {
@@ -156,15 +154,13 @@ func rolesRemoveCmd(c *cli.Context) error {
 	skipConfirm := c.Bool("yes")
 	ui := UI(c.Context)
 
-	args := Arguments(c.Context)
-
 	cfgSession := Session(c.Context)
 	cluster, err := cfgSession.Cluster()
 	if err != nil {
 		return err
 	}
 
-	label := args["role"].(primitives.Label)
+	label := Arguments(c.Context, RoleLabelArg).(primitives.Label)
 	if !skipConfirm {
 		err := ui.Confirm(fmt.Sprintf("Do you really want to delete the role %s and all of its assignments?", label))
 		if err != nil {
@@ -222,16 +218,13 @@ func rolesListCmd(c *cli.Context) error {
 
 func rolesMembersCmd(c *cli.Context) error {
 	ui := UI(c.Context)
-	args := Arguments(c.Context)
-
 	cfgSession := Session(c.Context)
 	cluster, err := cfgSession.Cluster()
 	if err != nil {
 		return err
 	}
 
-	label := args["role"].(primitives.Label)
-
+	label := Arguments(c.Context, RoleLabelArg).(primitives.Label)
 	client, err := cluster.Client()
 	if err != nil {
 		return err

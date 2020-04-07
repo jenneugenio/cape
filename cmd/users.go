@@ -48,7 +48,6 @@ func init() {
 }
 
 func usersCreateCmd(c *cli.Context) error {
-	args := Arguments(c.Context)
 	u := UI(c.Context)
 	cfgSession := Session(c.Context)
 
@@ -57,7 +56,7 @@ func usersCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	email := args["email"].(primitives.Email)
+	email := Arguments(c.Context, UserEmailArg).(primitives.Email)
 	name, err := getName(c, "Please enter the persons name")
 	if err != nil {
 		return err

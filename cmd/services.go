@@ -108,7 +108,6 @@ func init() {
 }
 
 func servicesCreateCmd(c *cli.Context) error {
-	args := Arguments(c.Context)
 	cfgSession := Session(c.Context)
 	u := UI(c.Context)
 	typeStr := c.String("type")
@@ -133,8 +132,7 @@ func servicesCreateCmd(c *cli.Context) error {
 		endpoint = url
 	}
 
-	email := args["identifier"].(primitives.Email)
-
+	email := Arguments(c.Context, ServiceIdentifierArg).(primitives.Email)
 	clusterURL, err := cluster.GetURL()
 	if err != nil {
 		return err
@@ -187,15 +185,13 @@ func servicesRemoveCmd(c *cli.Context) error {
 	skipConfirm := c.Bool("yes")
 	u := UI(c.Context)
 
-	args := Arguments(c.Context)
-
 	cfgSession := Session(c.Context)
 	cluster, err := cfgSession.Cluster()
 	if err != nil {
 		return err
 	}
 
-	email := args["identifier"].(primitives.Email)
+	email := Arguments(c.Context, ServiceIdentifierArg).(primitives.Email)
 	email.SetType(primitives.ServiceEmail)
 
 	if !skipConfirm {

@@ -25,7 +25,7 @@ var (
 		Description: "The password used by a human to log into their Cape account",
 		Processor: func(in string) (interface{}, error) {
 			if in == "" {
-				return nil, nil
+				return in, nil
 			}
 
 			return primitives.NewPassword(in)

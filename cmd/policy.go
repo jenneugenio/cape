@@ -21,7 +21,7 @@ func init() {
 				Description: "This reads the policy from a file, creates it and then attaches it to the role 'admin'.",
 			},
 		},
-		Arguments: []*Argument{PolicyLabelArg, LabelArg("role")},
+		Arguments: []*Argument{PolicyLabelArg, RoleLabelArg},
 		Command: &cli.Command{
 			Name:   "attach",
 			Action: handleSessionOverrides(policyAttachCmd),
@@ -44,7 +44,7 @@ func init() {
 				Description: "This detaches the policy 'admin-policy' from the role 'admin' skipping the confirm prompt.",
 			},
 		},
-		Arguments: []*Argument{LabelArg("policy"), LabelArg("role")},
+		Arguments: []*Argument{PolicyLabelArg, RoleLabelArg},
 		Command: &cli.Command{
 			Name:   "detach",
 			Action: handleSessionOverrides(policyDetachCmd),
@@ -88,9 +88,7 @@ func init() {
 }
 
 func policyAttachCmd(c *cli.Context) error {
-	args := Arguments(c.Context)
 	cfgSession := Session(c.Context)
-
 	cluster, err := cfgSession.Cluster()
 	if err != nil {
 		return err
@@ -101,8 +99,8 @@ func policyAttachCmd(c *cli.Context) error {
 		return err
 	}
 
-	roleLabel := args["role"].(primitives.Label)
-	policyLabel := args["policy"].(primitives.Label)
+	roleLabel := Arguments(c.Context, RoleLabelArg).(primitives.Label)
+	policyLabel := Arguments(c.Context, PolicyLabelArg).(primitives.Label)
 
 	file := c.String("from-file")
 
@@ -152,7 +150,6 @@ func policyDetachCmd(c *cli.Context) error {
 	skipConfirm := c.Bool("yes")
 	u := UI(c.Context)
 
-	args := Arguments(c.Context)
 	cfgSession := Session(c.Context)
 
 	cluster, err := cfgSession.Cluster()
@@ -160,8 +157,8 @@ func policyDetachCmd(c *cli.Context) error {
 		return err
 	}
 
-	roleLabel := args["role"].(primitives.Label)
-	policyLabel := args["policy"].(primitives.Label)
+	roleLabel := Arguments(c.Context, RoleLabelArg).(primitives.Label)
+	policyLabel := Arguments(c.Context, PolicyLabelArg).(primitives.Label)
 
 	if !skipConfirm {
 		err := u.Confirm(fmt.Sprintf("Do you really want to detach policy %s from role %s?", policyLabel, roleLabel))

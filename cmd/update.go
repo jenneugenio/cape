@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"net/url"
 
 	"github.com/urfave/cli/v2"
@@ -12,8 +11,6 @@ import (
 func updateCmd(c *cli.Context) error {
 	dbAddr := c.String("db-url")
 
-	ctx := context.Background()
-
 	dbURL, err := url.Parse(dbAddr)
 	if err != nil {
 		return err
@@ -23,7 +20,7 @@ func updateCmd(c *cli.Context) error {
 		return err
 	}
 
-	return migrator.Up(ctx)
+	return migrator.Up(c.Context)
 }
 
 func init() {

@@ -42,23 +42,23 @@ func Config(ctx context.Context) *config.Config {
 }
 
 // Arguments returns the argument values object stored on the context
-func Arguments(ctx context.Context) VariableValues {
+func Arguments(ctx context.Context, a *Argument) interface{} {
 	args := ctx.Value(ArgumentContextKey)
 	if args == nil {
 		panic("argument values not available on context")
 	}
 
-	return args.(VariableValues)
+	return args.(ArgumentValues)[a]
 }
 
 // EnvVariables returns the environment values object stored on the context
-func EnvVariables(ctx context.Context) VariableValues {
+func EnvVariables(ctx context.Context, e *EnvVar) interface{} {
 	vars := ctx.Value(EnvVarContextKey)
 	if vars == nil {
 		panic("environment values not available on context")
 	}
 
-	return vars.(VariableValues)
+	return vars.(EnvVarValues)[e]
 }
 
 // UI returns the UI object stored on the context
@@ -100,7 +100,7 @@ func retrieveConfig(c *cli.Context) error {
 
 func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 	return cli.ActionFunc(func(c *cli.Context) error {
-		envValues := VariableValues{}
+		envValues := EnvVarValues{}
 		for _, e := range cmd.Variables {
 			input := os.Getenv(e.Name)
 			if input == "" && e.Required {
@@ -116,10 +116,10 @@ func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 				return err
 			}
 
-			envValues[e.Name] = value
+			envValues[e] = value
 		}
 
-		argValues := VariableValues{}
+		argValues := ArgumentValues{}
 		for i, arg := range cmd.Arguments {
 			input := c.Args().Get(i)
 			if input == "" && arg.Required {
@@ -135,7 +135,7 @@ func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 				return err
 			}
 
-			argValues[arg.Name] = value
+			argValues[arg] = value
 		}
 
 		c.Context = context.WithValue(c.Context, ArgumentContextKey, argValues)

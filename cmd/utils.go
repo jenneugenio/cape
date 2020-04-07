@@ -107,11 +107,13 @@ func getEmail(c *cli.Context, in string) (primitives.Email, error) {
 }
 
 func getPassword(c *cli.Context) (primitives.Password, error) {
-	envVars := EnvVariables(c.Context)
 	ui := UI(c.Context)
 
-	pw, ok := envVars["CAPE_PASSWORD"].(primitives.Password)
-	if ok {
+	// Password can be nil as it's an _optional_ environment variable. Nil
+	// cannot be cast to a primitives.Password so we need to check here to see
+	// if the casting worked.
+	pw, ok := EnvVariables(c.Context, capePasswordVar).(primitives.Password)
+	if ok && pw != "" {
 		return pw, nil
 	}
 
