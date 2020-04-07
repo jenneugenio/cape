@@ -1,0 +1,10 @@
+version: 1
+label: allow-specific-fields
+rules:
+    - target: "records:creditcards.transactions"
+      action: read
+      effect: allow
+      fields:
+          - vendor
+          - value
+          - timestamp

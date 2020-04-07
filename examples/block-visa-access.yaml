@@ -1,0 +1,8 @@
+version: 1
+label: name-to-visa
+rules:
+    - target: "records:creditcards.transactions"
+      action: read
+      effect: deny
+      where:
+          - processor: Visa
