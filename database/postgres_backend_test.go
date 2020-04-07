@@ -299,6 +299,15 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(errors.FromCause(err, NotFoundCause)).To(gm.BeTrue())
 	})
 
+	t.Run("QueryOne returns a not-found error if the entity can't be found", func(t *testing.T) {
+		eA, err := NewTestEntity("idontexistok")
+		gm.Expect(err).To(gm.BeNil())
+
+		target := &TestEntity{}
+		err = db.QueryOne(ctx, target, NewFilter(Where{"id": eA.ID}, nil, nil))
+		gm.Expect(errors.FromCause(err, NotFoundCause)).To(gm.BeTrue())
+	})
+
 	t.Run("Query does no-op if in is empty", func(t *testing.T) {
 		db, err := dbConnect(ctx, testDB)
 		gm.Expect(err).To(gm.BeNil())
