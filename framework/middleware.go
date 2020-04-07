@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/felixge/httpsnoop"
 	"github.com/gofrs/uuid"
 	"github.com/manifoldco/go-base64"
@@ -134,7 +136,7 @@ func AuthTokenMiddleware(next http.Handler) http.Handler {
 
 		token, err := auth.GetBearerToken(authHeader)
 		if err != nil {
-			respondWithError(rw, err)
+			respondWithGQLError(rw, err)
 			return
 		}
 
@@ -199,6 +201,14 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 func respondWithError(rw http.ResponseWriter, err error) {
 	e := errors.ToError(err)
 	respondWithJSON(rw, e.StatusCode(), e)
+}
+
+func respondWithGQLError(rw http.ResponseWriter, err error) {
+	e := errors.ToError(err)
+
+	// The context below is not being used the called function
+	res := graphql.ErrorResponse(context.Background(), strings.Join(e.Messages, ","))
+	respondWithJSON(rw, e.StatusCode(), res)
 }
 
 // respondWithJSON is a middleware helper for responding to an http request

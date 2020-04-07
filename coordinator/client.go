@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net"
+	"strings"
 
 	"github.com/machinebox/graphql"
 	"github.com/manifoldco/go-base64"
@@ -62,10 +63,14 @@ func (c *Client) Raw(ctx context.Context, query string,
 		if nerr, ok := err.(net.Error); ok {
 			return errors.New(NetworkCause, "Could not contact coordinator: %s", nerr.Error())
 		}
-		return err
+		return convertError(err)
 	}
 
 	return nil
+}
+
+func convertError(err error) error {
+	return errors.New(errors.UnknownCause, strings.TrimPrefix(err.Error(), "graphql: "))
 }
 
 // Authenticated returns whether the client is authenticated or not.

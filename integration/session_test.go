@@ -58,7 +58,7 @@ func TestSessions(t *testing.T) {
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(session).To(gm.BeNil())
 
-		gm.Expect(err.Error()).To(gm.Equal("graphql: authentication_failure: Failed to authenticate"))
+		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Failed to authenticate"))
 	})
 
 	t.Run("test incorrect credentials", func(t *testing.T) {
@@ -72,7 +72,7 @@ func TestSessions(t *testing.T) {
 		gm.Expect(session).To(gm.BeNil())
 
 		gm.Expect(err).ToNot(gm.BeNil())
-		gm.Expect(err.Error()).To(gm.Equal("graphql: authentication_failure: Failed to authenticate"))
+		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Failed to authenticate"))
 	})
 
 	t.Run("test delete session", func(t *testing.T) {
@@ -91,7 +91,7 @@ func TestSessions(t *testing.T) {
 		// Can't do authenticated command after deleting session
 		err = client.Logout(ctx, nil)
 		gm.Expect(err).ToNot(gm.BeNil())
-		gm.Expect(err.Error()).To(gm.Equal("graphql: authentication_failure: Failed to authenticate"))
+		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Failed to authenticate"))
 	})
 
 	t.Run("login user can retrieve their identity", func(t *testing.T) {
@@ -121,6 +121,6 @@ func TestSessions(t *testing.T) {
 
 		_, err = client.Me(ctx)
 		gm.Expect(err).ToNot(gm.BeNil())
-		gm.Expect(err.Error()).To(gm.Equal("graphql: authentication_failure: Failed to authenticate"))
+		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Failed to authenticate"))
 	})
 }

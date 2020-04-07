@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/justinas/alice"
-
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/gofrs/uuid"
+	"github.com/justinas/alice"
 	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 	"github.com/rs/zerolog"
@@ -134,5 +134,38 @@ func TestAuthTokenMiddleware(t *testing.T) {
 		runMiddleware(mw, header)
 
 		gm.Expect(wasCalled).To(gm.BeTrue(), "next was not called")
+	})
+
+	t.Run("bad auth token", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		expID := base64.New([]byte("cool-auth-token"))
+		wasCalled := false
+		next := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			wasCalled = true
+		})
+
+		header := http.Header{}
+		header.Add("Authorization", expID.String())
+
+		mw := AuthTokenMiddleware(next)
+		req := httptest.NewRequest("GET", "http://my.capeprivacy.com", nil)
+		req.Header = header
+
+		w := httptest.NewRecorder()
+
+		mw.ServeHTTP(w, req)
+
+		gm.Expect(wasCalled).To(gm.BeFalse())
+
+		resp := w.Result()
+		body, _ := ioutil.ReadAll(resp.Body)
+
+		gResp := &graphql.Response{}
+		err := json.Unmarshal(body, gResp)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(len(gResp.Errors)).To(gm.Equal(1))
+
+		gm.Expect(gResp.Errors[0].Message).To(gm.Equal("Unable to parse auth header"))
 	})
 }
