@@ -40,6 +40,9 @@ type Filter struct {
 }
 
 // In is an operator that requires a field to match
+//
+// XXX: If we add `OR` support in future then we need to revisit the logic
+// we've added around handling an empty `in` operator.
 type In []interface{}
 
 // PickerFunc represents a function that will pick a value off an entity
@@ -119,6 +122,11 @@ func (in In) Values() []interface{} {
 	}
 
 	return result
+}
+
+// Empty returns whether or not the given In contains any actual values
+func (in In) Empty() bool {
+	return len(in) == 0
 }
 
 // NewFilter is a convenience function for creating a Filter

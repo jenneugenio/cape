@@ -25,7 +25,7 @@ func buildInsert(entities []Entity, t types.Type) (string, []interface{}) {
 }
 
 // buildFilter returns the clause and parameters for a postgres query
-func buildFilter(f Filter) (string, []interface{}) {
+func buildFilter(f Filter) (string, []interface{}, error) {
 	fields := []string{}
 	values := []interface{}{}
 	count := 1 // We need to number the parameters
@@ -43,10 +43,13 @@ func buildFilter(f Filter) (string, []interface{}) {
 	// Build up the list of values & statemen
 	for _, key := range keys {
 		value := f.Where[key]
-
 		path := buildDataPath(key, true)
 		switch item := value.(type) {
 		case In:
+			if item.Empty() {
+				return "", nil, ErrEmptyIn
+			}
+
 			// Compute the results of the IN Clause
 			results := item.Uniqify().Values()
 			values = append(values, results...)
@@ -95,7 +98,7 @@ func buildFilter(f Filter) (string, []interface{}) {
 		out = fmt.Sprintf("%s%s%s", out, lim, off)
 	}
 
-	return out, values
+	return out, values, nil
 }
 
 // buildDataPath returns the path to the given field in postgres

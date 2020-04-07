@@ -289,6 +289,27 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(eB).To(gm.Equal(targetTwo))
 	})
 
+	t.Run("QueryOne returns not found if in is empty", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		target := &TestEntity{}
+		err = db.QueryOne(ctx, target, NewFilter(Where{"id": In{}}, nil, nil))
+		gm.Expect(errors.FromCause(err, NotFoundCause)).To(gm.BeTrue())
+	})
+
+	t.Run("Query does no-op if in is empty", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		target := []*TestEntity{}
+		err = db.Query(ctx, &target, NewFilter(Where{"id": In{}}, nil, nil))
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(len(target)).To(gm.Equal(0))
+	})
+
 	t.Run("can query using slice of pointers", func(t *testing.T) {
 		db, err := dbConnect(ctx, testDB)
 		gm.Expect(err).To(gm.BeNil())

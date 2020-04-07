@@ -80,9 +80,16 @@ func (q *postgresQuerier) QueryOne(ctx context.Context, e Entity, f Filter) erro
 
 	f.Page = &Page{Limit: 1}
 
-	where, params := buildFilter(f)
-
 	t := e.GetType()
+	where, params, err := buildFilter(f)
+	if err != nil {
+		if err == ErrEmptyIn {
+			return errors.New(NotFoundCause, "could not find %s", t.String())
+		}
+
+		return err
+	}
+
 	sql := fmt.Sprintf(`SELECT data from %s %s`, t.String(), where)
 	r := q.conn.QueryRow(ctx, sql, params...)
 
@@ -121,7 +128,17 @@ func (q *postgresQuerier) Query(ctx context.Context, arr interface{}, f Filter) 
 	}
 	e := itemType.Interface().(Entity)
 
-	where, params := buildFilter(f)
+	where, params, err := buildFilter(f)
+	if err != nil {
+		// If we got back an empty in then we will treat this as a no-operation
+		// as the query is not asking for any data back to be returned.
+		if err == ErrEmptyIn {
+			return nil
+		}
+
+		return err
+	}
+
 	sql := fmt.Sprintf(`SELECT data FROM %s %s`, e.GetType().String(), where)
 	rows, err := q.conn.Query(ctx, sql, params...)
 	if err != nil {
