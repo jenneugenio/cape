@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/x509"
 	"encoding/csv"
+	"github.com/dropoutlabs/cape/cmd/ui"
 	"io/ioutil"
 	"os"
 
@@ -100,33 +101,50 @@ func pullDataCmd(c *cli.Context) error {
 		return err
 	}
 
-	file := os.Stdout
 	if outFile != "" {
 		f, err := os.Create(outFile)
 		if err != nil {
 			return err
 		}
-		file = f
+		file := f
+
+		w := bufio.NewWriter(file)
+		writer := csv.NewWriter(w)
+
+		for stream.NextRecord() {
+			record := stream.Record()
+			strs := record.ToStrings()
+
+			err = writer.Write(strs)
+			if err != nil {
+				return err
+			}
+
+			writer.Flush()
+			err = writer.Error()
+			if err != nil {
+				return err
+			}
+		}
+
+		return stream.Error()
 	}
 
-	w := bufio.NewWriter(file)
-	writer := csv.NewWriter(w)
-
+	// otherwise, print it in a nice table
+	var body ui.TableBody
 	for stream.NextRecord() {
 		record := stream.Record()
 		strs := record.ToStrings()
-
-		err = writer.Write(strs)
-		if err != nil {
-			return err
-		}
-
-		writer.Flush()
-		err = writer.Error()
-		if err != nil {
-			return err
-		}
+		body = append(body, strs)
 	}
 
-	return stream.Error()
+	// We make the header second as the schema will not be on the stream until after we have received our first record
+	schema := stream.Schema()
+	var header ui.TableHeader
+	for _, f := range schema.Fields {
+		header = append(header, f.Name)
+	}
+
+	ui := UI(c.Context)
+	return ui.Table(header, body)
 }
