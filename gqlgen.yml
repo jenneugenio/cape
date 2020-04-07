@@ -1,17 +1,17 @@
 schema:
-  - controller/schema/*.graphql
+  - coordinator/schema/*.graphql
 
 exec:
-  filename: controller/graph/generated/generated.go
+  filename: coordinator/graph/generated/generated.go
   package: generated
 
 model:
-  filename: controller/graph/model/models_gen.go
+  filename: coordinator/graph/model/models_gen.go
   package: model
 
 resolver:
   layout: follow-schema
-  dir: controller/graph
+  dir: coordinator/graph
   package: graph
 
 models:

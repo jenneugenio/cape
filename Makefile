@@ -135,7 +135,7 @@ clean: gocheck
 	go clean
 	rm $(PREFIX)bin/cape
 
-gogen: gocheck protoccheck gqlgen.yml controller/schema/*.graphql
+gogen: gocheck protoccheck gqlgen.yml coordinator/schema/*.graphql
 	go generate ./...
 
 .PHONY: bootstrap clean gogen
@@ -212,9 +212,9 @@ ci: tidy lint build test docker
 # test.
 # ###############################################
 DOCKER_BUILD=docker build -t dropoutlabs/$(1):$(2) -f $(3) .
-docker: dockerfiles/Dockerfile.base dockerfiles/Dockerfile.controller dockerfiles/Dockerfile.connector dockercheck
+docker: dockerfiles/Dockerfile.base dockerfiles/Dockerfile.coordinator dockerfiles/Dockerfile.connector dockercheck
 	$(call DOCKER_BUILD,cape,latest,dockerfiles/Dockerfile.base)
-	$(call DOCKER_BUILD,controller,latest,dockerfiles/Dockerfile.controller)
+	$(call DOCKER_BUILD,coordinator,latest,dockerfiles/Dockerfile.coordinator)
 	$(call DOCKER_BUILD,connector,latest,dockerfiles/Dockerfile.connector)
 	$(call DOCKER_BUILD,update,latest,dockerfiles/Dockerfile.update)
 	$(call DOCKER_BUILD,customer_seed,latest,tools/seed/Dockerfile.customer)
@@ -233,21 +233,21 @@ DOCKER_PUSH=docker push docker.pkg.github.com/dropoutlabs/cape/$(1):$(2)
 
 docker-tag: dockercheck
 	$(call DOCKER_TAG,cape,latest,$(VERSION))
-	$(call DOCKER_TAG,controller,latest,$(VERSION))
+	$(call DOCKER_TAG,coordinator,latest,$(VERSION))
 	$(call DOCKER_TAG,connector,latest,$(VERSION))
 	$(call DOCKER_TAG,update,latest,$(VERSION))
 	$(call DOCKER_TAG,customer_seed,latest,$(VERSION))
 
 docker-push-tag: dockercheck
 	$(call DOCKER_PUSH,cape,$(VERSION))
-	$(call DOCKER_PUSH,controller,$(VERSION))
+	$(call DOCKER_PUSH,coordinator,$(VERSION))
 	$(call DOCKER_PUSH,connector,$(VERSION))
 	$(call DOCKER_PUSH,update,$(VERSION))
 	$(call DOCKER_PUSH,customer_seed,$(VERSION))
 
 docker-push-latest: dockercheck
 	$(call DOCKER_PUSH,cape,latest)
-	$(call DOCKER_PUSH,controller,latest)
+	$(call DOCKER_PUSH,coordinator,latest)
 	$(call DOCKER_PUSH,connector,latest)
 	$(call DOCKER_PUSH,update,latest)
 	$(call DOCKER_PUSH,customer_seed,latest)
@@ -285,15 +285,15 @@ helm-version-check:
 ifeq (,$(shell grep -e $(VERSION) charts/connector/Chart.yaml 2> /dev/null))
 	$(error "Version specified in charts/connector/Chart.yaml does not match $(VERSION)")
 endif
-ifeq (,$(shell grep -e $(VERSION) charts/controller/Chart.yaml 2> /dev/null))
-	$(error "Version specified in charts/controller/Chart.yaml does not match $(VERSION)")
+ifeq (,$(shell grep -e $(VERSION) charts/coordinator/Chart.yaml 2> /dev/null))
+	$(error "Version specified in charts/coordinator/Chart.yaml does not match $(VERSION)")
 endif
 
 publish: releasecheck helmcheck gsutilcheck helm-version-check
 	mkdir -p local-dir
 	gsutil rsync -d gs://dropout-helm-repo local-dir/
 	helm package charts/connector
-	helm package charts/controller
+	helm package charts/coordinator
 	cp *.tgz local-dir
 	helm repo index local-dir/ --url https://dropout-helm-repo.storage.googleapis.com
 	gsutil rsync -d local-dir/ gs://dropout-helm-repo

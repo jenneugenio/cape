@@ -1,4 +1,4 @@
-package controller
+package coordinator
 
 import (
 	"context"
@@ -13,24 +13,24 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/controller/graph"
-	"github.com/dropoutlabs/cape/controller/graph/generated"
+	"github.com/dropoutlabs/cape/coordinator/graph"
+	"github.com/dropoutlabs/cape/coordinator/graph/generated"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/framework"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
-// Controller is the central brain of Cape.  It keeps track of system
+// Coordinator is the central brain of Cape.  It keeps track of system
 // users, policy, etc
-type Controller struct {
+type Coordinator struct {
 	cfg     *Config
 	backend database.Backend
 	handler http.Handler
 	logger  *zerolog.Logger
 }
 
-// Setup the controller so it's ready to be served!
-func (c *Controller) Setup(ctx context.Context) (http.Handler, error) {
+// Setup the coordinator so it's ready to be served!
+func (c *Coordinator) Setup(ctx context.Context) (http.Handler, error) {
 	err := c.backend.Open(ctx)
 	if err != nil {
 		return nil, err
@@ -39,19 +39,19 @@ func (c *Controller) Setup(ctx context.Context) (http.Handler, error) {
 	return c.handler, nil
 }
 
-// Teardown the controller taking it back to it's start state!
-func (c *Controller) Teardown(ctx context.Context) error {
+// Teardown the coordinator taking it back to it's start state!
+func (c *Coordinator) Teardown(ctx context.Context) error {
 	return c.backend.Close()
 }
 
-// CertFiles implements the Component interface. Controller doesn't support
+// CertFiles implements the Component interface. Coordinator doesn't support
 // TLS right now so not needed!
-func (c *Controller) CertFiles() (certFile string, keyFile string) {
+func (c *Coordinator) CertFiles() (certFile string, keyFile string) {
 	return
 }
 
-// New validates the input and returns a constructed Controller
-func New(cfg *Config, logger *zerolog.Logger) (*Controller, error) {
+// New validates the input and returns a constructed Coordinator
+func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 	if cfg == nil {
 		return nil, errors.New(InvalidConfigCause, "Config must be provided")
 	}
@@ -99,7 +99,7 @@ func New(cfg *Config, logger *zerolog.Logger) (*Controller, error) {
 		cors.Default().Handler,
 	).Then(health)
 
-	return &Controller{
+	return &Coordinator{
 		cfg:     cfg,
 		handler: chain,
 		backend: backend,

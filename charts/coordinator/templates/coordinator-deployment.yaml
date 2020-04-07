@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: controller
+  name: coordinator
   labels:
-    service: controller
+    service: coordinator
 spec:
   replicas: 1
   strategy:
@@ -11,19 +11,19 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      service: controller
+      service: coordinator
   template:
     metadata:
       creationTimestamp: null
       labels:
-        service: controller
+        service: coordinator
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       containers:
-      - image: "{{ .Values.image.controller_repository }}:{{ .Values.image.tag }}"
+      - image: "{{ .Values.image.coordinator_repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: Always
-        name: controller
+        name: coordinator
         env:
           {{ if (.Values.db.passwordSecret )}}
           - name: "CAPE_DB_PASSWORD"

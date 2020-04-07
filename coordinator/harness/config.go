@@ -10,7 +10,7 @@ var (
 	MissingConfig = errors.NewCause(errors.BadRequestCategory, "missing_config")
 )
 
-// Config represents the configuration required to create a Controller Harness
+// Config represents the configuration required to create a Coordinator Harness
 type Config struct {
 	dbURL             string
 	migrationsDir     string
@@ -39,7 +39,7 @@ func (c *Config) Migrations() []string {
 	return []string{c.migrationsDir, c.migrationsTestDir}
 }
 
-// NewConfig returns an instantiated version of the Controller Harness configuration
+// NewConfig returns an instantiated version of the Coordinator Harness configuration
 func NewConfig() (*Config, error) {
 	c := &Config{
 		dbURL:             os.Getenv("CAPE_DB_URL"),

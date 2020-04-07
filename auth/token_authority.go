@@ -65,7 +65,7 @@ func (t *TokenAuthority) PublicKey() ed25519.PublicKey {
 //              and 24 hours for general authenticated sessions
 // - IssuedAt: time the JWT was issued
 // - NotBefore: the JWT will not be accepted before this time has passed
-// - Issuer: the service email of the issuing controller
+// - Issuer: the service email of the issuing coordinator
 func (t *TokenAuthority) Generate(tokenType primitives.TokenType) (*base64.Value, time.Time, error) {
 	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.EdDSA, Key: t.keypair.privateKey},
 		(&jose.SignerOptions{}).WithType("JWT"))

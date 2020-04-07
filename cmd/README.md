@@ -1,6 +1,6 @@
 # CLI
 
-This module contains the code for adding commands to our CLI for the controller, connector and client CLI.
+This module contains the code for adding commands to our CLI for the coordinator, connector and client CLI.
 
 ## Adding a new command
 
@@ -16,15 +16,15 @@ func init() {
         ...
 	}
 
-	controllerCmd := &cli.Command{
+	coordinatorCmd := &cli.Command{
         ...
 		Subcommands: []*cli.Command{startCmd},
 	}
 
-	commands = append(commands, controllerCmd)
+	commands = append(commands, coordinatorCmd)
 }
 ```
 
-See `cmd/controller.go` to see a full example of our the above would look.
+See `cmd/coordinator.go` to see a full example of our the above would look.
 
 All flags should go in the `cmd/flags.go` file and all errors should go in the `cmd/errors.go` file.

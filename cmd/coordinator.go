@@ -11,7 +11,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/controller"
+	"github.com/dropoutlabs/cape/coordinator"
 	"github.com/dropoutlabs/cape/framework"
 	"github.com/dropoutlabs/cape/logging"
 	"github.com/dropoutlabs/cape/primitives"
@@ -19,50 +19,50 @@ import (
 
 func init() {
 	setupCmd := &Command{
-		Usage: "Setup an instance of the Cape controller",
+		Usage: "Setup an instance of the Cape coordinator",
 		Description: "Bootstraps the given Cape instance. This will create an admin account for you and give you a token " +
 			"that you can use with subsequent commands. You can only run this command ONCE per Cape instance.",
 		Examples: []*Example{
 			{
-				Example:     "cape controller setup local http://localhost:8081",
+				Example:     "cape coordinator setup local http://localhost:8081",
 				Description: "Initialize an admin account on a local cape instance",
 			},
 		},
-		Arguments: []*Argument{ControllerLabelArg, ClusterURLArg},
+		Arguments: []*Argument{CoordinatorLabelArg, ClusterURLArg},
 		Command: &cli.Command{
 			Name:   "setup",
-			Action: setupControllerCmd,
+			Action: setupCoordinatorCmd,
 		},
 	}
 
 	startCmd := &Command{
-		Usage:     "Start an instance of the Cape controller",
+		Usage:     "Start an instance of the Cape coordinator",
 		Variables: []*EnvVar{capeDBPassword},
 		Command: &cli.Command{
 			Name:   "start",
-			Action: startControllerCmd,
+			Action: startCoordinatorCmd,
 			Flags: []cli.Flag{
 				dbURLFlag(),
 				instanceIDFlag(),
 				loggingTypeFlag(),
 				loggingLevelFlag(),
-				portFlag("controller", 8080),
+				portFlag("coordinator", 8080),
 			},
 		},
 	}
 
-	controllerCmd := &Command{
-		Usage: "Commands for starting and managing Cape controllers.",
+	coordinatorCmd := &Command{
+		Usage: "Commands for starting and managing Cape coordinators.",
 		Command: &cli.Command{
-			Name:        "controller",
+			Name:        "coordinator",
 			Subcommands: []*cli.Command{setupCmd.Package(), startCmd.Package()},
 		},
 	}
 
-	commands = append(commands, controllerCmd.Package())
+	commands = append(commands, coordinatorCmd.Package())
 }
 
-func catchShutdown(ctx context.Context, quit chan os.Signal, c *controller.Controller, logger *zerolog.Logger) error {
+func catchShutdown(ctx context.Context, quit chan os.Signal, c *coordinator.Coordinator, logger *zerolog.Logger) error {
 	s := <-quit
 
 	// Once we've received a signal we will stop listening for additional
@@ -111,10 +111,10 @@ func getDBURL(c *cli.Context) (*primitives.DBURL, error) {
 	return u, nil
 }
 
-func setupControllerCmd(c *cli.Context) error {
+func setupCoordinatorCmd(c *cli.Context) error {
 	cfg := Config(c.Context)
 
-	label := Arguments(c.Context, ControllerLabelArg).(primitives.Label)
+	label := Arguments(c.Context, CoordinatorLabelArg).(primitives.Label)
 	clusterURL := Arguments(c.Context, ClusterURLArg).(*primitives.URL)
 	name, err := getName(c, "")
 	if err != nil {
@@ -141,7 +141,7 @@ func setupControllerCmd(c *cli.Context) error {
 		return err
 	}
 
-	client := controller.NewClient(clusterURL, nil)
+	client := coordinator.NewClient(clusterURL, nil)
 	_, err = client.Setup(c.Context, user)
 	if err != nil {
 		return err
@@ -174,9 +174,9 @@ func setupControllerCmd(c *cli.Context) error {
 	return nil
 }
 
-func startControllerCmd(c *cli.Context) error {
+func startCoordinatorCmd(c *cli.Context) error {
 	port := c.Int("port")
-	instanceID, err := getInstanceID(c, "controller")
+	instanceID, err := getInstanceID(c, "coordinator")
 	if err != nil {
 		return err
 	}
@@ -200,18 +200,18 @@ func startControllerCmd(c *cli.Context) error {
 		return nil
 	}
 
-	cfg := &controller.Config{
-		DB: &controller.DBConfig{
+	cfg := &coordinator.Config{
+		DB: &coordinator.DBConfig{
 			Addr: dbURL,
 		},
-		Auth: &controller.AuthConfig{
+		Auth: &coordinator.AuthConfig{
 			KeypairPackage: keypair.Package(),
 		},
 		InstanceID: instanceID,
 		Port:       port,
 	}
 
-	ctrl, err := controller.New(cfg, logger)
+	ctrl, err := coordinator.New(cfg, logger)
 	if err != nil {
 		return err
 	}

@@ -20,11 +20,11 @@ const connectorKeyFile = "connector/certs/localhost.key"
 // Connector is the central brain of Cape.  It keeps track of system
 // users, policy, etc
 type Connector struct {
-	cfg        *Config
-	handler    http.Handler
-	controller *Controller
-	cache      *sources.Cache
-	logger     *zerolog.Logger
+	cfg         *Config
+	handler     http.Handler
+	coordinator *Coordinator
+	cache       *sources.Cache
+	logger      *zerolog.Logger
 }
 
 // Setup starts the connector
@@ -61,20 +61,20 @@ func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 		return nil, err
 	}
 
-	controller := NewController(cfg.Token, logger)
+	coordinator := NewCoordinator(cfg.Token, logger)
 
 	sCfg := &sources.Config{
 		InstanceID: cfg.InstanceID,
 		Logger:     logger,
 	}
-	cache, err := sources.NewCache(sCfg, controller, nil)
+	cache, err := sources.NewCache(sCfg, coordinator, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	hndler := &grpcHandler{
-		controller: controller,
-		cache:      cache,
+		coordinator: coordinator,
+		cache:       cache,
 	}
 
 	grpcServer := grpc.NewServer()
@@ -86,10 +86,10 @@ func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 	chain := alice.New().Then(health)
 
 	return &Connector{
-		cfg:        cfg,
-		handler:    grpcHandlerFunc(grpcServer, chain),
-		controller: controller,
-		logger:     logger,
-		cache:      cache,
+		cfg:         cfg,
+		handler:     grpcHandlerFunc(grpcServer, chain),
+		coordinator: coordinator,
+		logger:      logger,
+		cache:       cache,
 	}, nil
 }

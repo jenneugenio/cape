@@ -53,7 +53,7 @@ func TestDBURL(t *testing.T) {
 				cause: InvalidDBURLCause,
 			},
 			"wrong scheme": {
-				in:    "ftp://my.controller.com",
+				in:    "ftp://my.coordinator.com",
 				cause: InvalidDBURLCause,
 			},
 			"missing host": {

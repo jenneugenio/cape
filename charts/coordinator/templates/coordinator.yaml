@@ -1,15 +1,15 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: controller
+  name: coordinator
   labels:
-    service: controller
+    service: coordinator
 spec:
   ports:
-  - name: "controller-api"
+  - name: "coordinator-api"
     port: 8081
   selector:
-    service: controller
+    service: coordinator
   type: NodePort
 status:
   loadBalancer: {}

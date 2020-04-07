@@ -29,7 +29,7 @@ func (s Secret) Validate() error {
 }
 
 // APIToken represents a token that is used by a service or user
-// to authenticate with a controller. Currently we're using the email
+// to authenticate with a coordinator. Currently we're using the email
 // so that we can use the normal user login flow but in the future
 // the APIToken will be tied to a token (token_id will replace email)
 // that is tied to an identity (user or service)

@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/controller"
+	"github.com/dropoutlabs/cape/coordinator"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/database/dbtest"
 	"github.com/dropoutlabs/cape/framework"
@@ -19,14 +19,14 @@ import (
 
 var (
 	TimeoutCause    = errors.NewCause(errors.RequestTimeoutCategory, "start_timeout")
-	NotStartedCause = errors.NewCause(errors.BadRequestCategory, "controller_not_started")
+	NotStartedCause = errors.NewCause(errors.BadRequestCategory, "coordinator_not_started")
 )
 
 // Harness represents a http server used for testing. Its responsibility is to
 // provide the transport layer for the application contained within the
-// component. In this case, the component represents a Controller.
+// component. In this case, the component represents a Coordinator.
 //
-// This is a convenience layer for testing the Controller by spinning up a
+// This is a convenience layer for testing the Coordinator by spinning up a
 // database, migrating it, running the tests, tearing them down, and then
 // cleaning any remaining artifacts up.
 //
@@ -34,7 +34,7 @@ var (
 // randomized port that has not yet been assigned.
 //
 // This harness _does not_ manage any client state or actually "setup" the
-// controller admin functionality. Please see the harness.Manager which
+// coordinator admin functionality. Please see the harness.Manager which
 // provides convenience functions for managing application state.
 //
 // You can use it as follows:
@@ -67,7 +67,7 @@ func NewHarness(cfg *Config) (*Harness, error) {
 	}, nil
 }
 
-// Start sets up the testing harness to test the Controller component
+// Start sets up the testing harness to test the Coordinator component
 func (h *Harness) Setup(ctx context.Context) error {
 	logger := framework.TestLogger()
 
@@ -95,7 +95,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 
 		if h.component != nil {
 			err := h.component.Teardown(ctx)
-			logger.Error().Msgf("Could not stop controller component: %s", err)
+			logger.Error().Msgf("Could not stop coordinator component: %s", err)
 		}
 
 		h.db = nil
@@ -131,13 +131,13 @@ func (h *Harness) Setup(ctx context.Context) error {
 		return cleanup(err)
 	}
 
-	controller, err := controller.New(&controller.Config{
-		DB: &controller.DBConfig{
+	coordinator, err := coordinator.New(&coordinator.Config{
+		DB: &coordinator.DBConfig{
 			Addr: dbURL,
 		},
 		InstanceID: "cape",
 		Port:       1, // This port is ignored!
-		Auth: &controller.AuthConfig{
+		Auth: &coordinator.AuthConfig{
 			KeypairPackage: kp.Package(),
 		},
 	}, logger)
@@ -145,13 +145,13 @@ func (h *Harness) Setup(ctx context.Context) error {
 		return err
 	}
 
-	handler, err := controller.Setup(ctx)
+	handler, err := coordinator.Setup(ctx)
 	if err != nil {
 		return cleanup(err)
 	}
 
 	h.logger = logger
-	h.component = controller
+	h.component = coordinator
 	h.db = db
 
 	// httptest.NewServer starts listening immediately, it also picks a
@@ -159,7 +159,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 	h.server = httptest.NewServer(handler)
 	h.manager = &Manager{h: h}
 
-	// We try to wait for the controller to start for _up to_ 5 seconds! At
+	// We try to wait for the coordinator to start for _up to_ 5 seconds! At
 	// which point we bail out and return an error.
 	timeout := time.NewTimer(5 * time.Second)
 	for {
@@ -184,14 +184,14 @@ func (h *Harness) Setup(ctx context.Context) error {
 
 		select {
 		case <-timeout.C:
-			return cleanup(errors.New(TimeoutCause, "Timed out waiting for controller to start"))
+			return cleanup(errors.New(TimeoutCause, "Timed out waiting for coordinator to start"))
 		case <-time.After(50 * time.Millisecond):
 			continue
 		}
 	}
 }
 
-// Teardown destroys all of the underlying resources needed by the Controller
+// Teardown destroys all of the underlying resources needed by the Coordinator
 // and stops the test server from serving it at all!
 func (h *Harness) Teardown(ctx context.Context) error {
 	if h.component == nil || h.db == nil || h.server == nil {
@@ -202,7 +202,7 @@ func (h *Harness) Teardown(ctx context.Context) error {
 
 	err := h.component.Teardown(ctx)
 	if err != nil {
-		h.logger.Error().Msgf("Could not cleanly stop controller component: %s", err)
+		h.logger.Error().Msgf("Could not cleanly stop coordinator component: %s", err)
 	}
 
 	db := h.db
@@ -220,14 +220,14 @@ func (h *Harness) Teardown(ctx context.Context) error {
 }
 
 // Client returns an unauthenticated Client for the underlying instance of the
-// controller.
-func (h *Harness) Client() (*controller.Client, error) {
+// coordinator.
+func (h *Harness) Client() (*coordinator.Client, error) {
 	u, err := h.URL()
 	if err != nil {
 		return nil, err
 	}
 
-	return controller.NewClient(u, nil), nil
+	return coordinator.NewClient(u, nil), nil
 }
 
 // Manager returns a test state manager for this Harness
@@ -235,7 +235,7 @@ func (h *Harness) Manager() *Manager {
 	return h.manager
 }
 
-// URL returns the url to the running controller once the harness has been started.
+// URL returns the url to the running coordinator once the harness has been started.
 func (h *Harness) URL() (*primitives.URL, error) {
 	if h.server == nil {
 		return nil, errors.New(NotStartedCause, "Harness must be started to retrieve url")

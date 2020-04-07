@@ -9,8 +9,8 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/controller"
-	"github.com/dropoutlabs/cape/controller/harness"
+	"github.com/dropoutlabs/cape/coordinator"
+	"github.com/dropoutlabs/cape/coordinator/harness"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -164,7 +164,7 @@ func TestListServices(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	emails := []string{"connector1@email.com", "connector2@email.com", "connector3@email.com"}
-	services := make([]*controller.ServiceResponse, 3)
+	services := make([]*coordinator.ServiceResponse, 3)
 	for i, email := range emails {
 		e, err := primitives.NewEmail(email)
 		gm.Expect(err).To(gm.BeNil())
@@ -181,7 +181,7 @@ func TestListServices(t *testing.T) {
 		_, err = client.AssignRole(ctx, service.ID, dsRole.ID)
 		gm.Expect(err).To(gm.BeNil())
 
-		services[i] = &controller.ServiceResponse{
+		services[i] = &coordinator.ServiceResponse{
 			Service: service,
 			Roles:   []*primitives.Role{globalRole, cRole, dsRole},
 		}

@@ -9,18 +9,18 @@ import (
 	"github.com/dropoutlabs/cape/primitives"
 )
 
-// ControllerClient is an interface that represents a client for the
-// Controller.
+// CoordinatorClient is an interface that represents a client for the
+// Coordinator.
 //
 // This interface exists to make it easy to test the sources package in
 // isolation of other packages.
-type ControllerClient interface {
+type CoordinatorClient interface {
 	GetSourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error)
 }
 
 // Cache is responsible for managing a cache of active sources. Users request a
 // data source from the Cache. If one does not exist it will reach out to the
-// Controller to attempt to create a source (if the connector has access).
+// Coordinator to attempt to create a source (if the connector has access).
 //
 // Once a source is created the Cache will keep it hot and ready to serve
 // requests. In future, if a source is not actively being used it will be aged
@@ -28,14 +28,14 @@ type ControllerClient interface {
 type Cache struct {
 	closed   bool
 	lock     *sync.RWMutex
-	client   ControllerClient
+	client   CoordinatorClient
 	sources  map[primitives.Label]Source
 	registry *Registry
 	cfg      *Config
 }
 
 // NewCache returns a Manager if valid configuration is provided.
-func NewCache(cfg *Config, c ControllerClient, r *Registry) (*Cache, error) {
+func NewCache(cfg *Config, c CoordinatorClient, r *Registry) (*Cache, error) {
 	if r == nil {
 		r = registry
 	}

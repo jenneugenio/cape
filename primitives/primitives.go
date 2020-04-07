@@ -1,4 +1,4 @@
-// Package primitives contains all the primitive data types used by the controller
+// Package primitives contains all the primitive data types used by the coordinator
 // and the connector.
 package primitives
 

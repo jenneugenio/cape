@@ -4,4 +4,4 @@ WORKDIR /root/
 
 COPY --from=dropoutlabs/cape:latest /go/src/github.com/dropoutlabs/cape/bin/cape .
 
-CMD ["./cape", "controller", "start"]
+CMD ["./cape", "coordinator", "start"]

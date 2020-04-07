@@ -12,7 +12,7 @@ import (
 func TestNewURL(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	u := "https://my.controller.com"
+	u := "https://my.coordinator.com"
 	t.Run("parses a valid url", func(t *testing.T) {
 		out, err := NewURL(u)
 		gm.Expect(err).To(gm.BeNil())
@@ -55,7 +55,7 @@ func TestNewURL(t *testing.T) {
 				cause: InvalidURLCause,
 			},
 			"wrong scheme": {
-				in:    "ftp://my.controller.com",
+				in:    "ftp://my.coordinator.com",
 				cause: InvalidURLCause,
 			},
 			"missing host": {

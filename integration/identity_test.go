@@ -10,8 +10,8 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/controller"
-	"github.com/dropoutlabs/cape/controller/harness"
+	"github.com/dropoutlabs/cape/coordinator"
+	"github.com/dropoutlabs/cape/coordinator/harness"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -60,7 +60,7 @@ func TestIdentities(t *testing.T) {
 	gm.Expect(otherEmails).To(gm.ContainElements(emails))
 }
 
-func createServices(ctx context.Context, client *controller.Client, numServices int) ([]*primitives.Service, error) {
+func createServices(ctx context.Context, client *coordinator.Client, numServices int) ([]*primitives.Service, error) {
 	services := make([]*primitives.Service, numServices)
 	for i := 0; i < numServices; i++ {
 		email, err := primitives.NewEmail(fmt.Sprintf("service:email%d@email.com", i))
@@ -84,7 +84,7 @@ func createServices(ctx context.Context, client *controller.Client, numServices 
 	return services, nil
 }
 
-func createUsers(ctx context.Context, client *controller.Client, numUsers int) ([]*primitives.User, error) {
+func createUsers(ctx context.Context, client *coordinator.Client, numUsers int) ([]*primitives.User, error) {
 	users := make([]*primitives.User, numUsers)
 	for i := 0; i < numUsers; i++ {
 		email, err := primitives.NewEmail(fmt.Sprintf("email%d@email.com", i))

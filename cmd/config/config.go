@@ -12,7 +12,7 @@ import (
 	"github.com/manifoldco/go-base64"
 	"sigs.k8s.io/yaml"
 
-	"github.com/dropoutlabs/cape/controller"
+	"github.com/dropoutlabs/cape/coordinator"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 )
@@ -277,7 +277,7 @@ func (c *Cluster) String() string {
 }
 
 // Client returns a configured client for this cluster.
-func (c *Cluster) Client() (*controller.Client, error) {
+func (c *Cluster) Client() (*coordinator.Client, error) {
 	clusterURL, err := c.GetURL()
 	if err != nil {
 		return nil, err
@@ -288,7 +288,7 @@ func (c *Cluster) Client() (*controller.Client, error) {
 		return nil, err
 	}
 
-	return controller.NewClient(clusterURL, token), nil
+	return coordinator.NewClient(clusterURL, token), nil
 }
 
 // Path returns the path to local configuration yaml file.

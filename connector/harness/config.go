@@ -14,7 +14,7 @@ var (
 
 // Config is the connector harness config
 type Config struct {
-	ControllerURL       *primitives.URL
+	CoordinatorURL      *primitives.URL
 	dbURL               *primitives.DBURL
 	sourceMigrationsDir string
 }
@@ -28,15 +28,15 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// NewConfig returns an instantiated version of the Controller Harness configuration
-func NewConfig(controllerURL *primitives.URL) (*Config, error) {
+// NewConfig returns an instantiated version of the Coordinator Harness configuration
+func NewConfig(coordinatorURL *primitives.URL) (*Config, error) {
 	dbURL, err := primitives.NewDBURL(os.Getenv("CAPE_DB_URL"))
 	if err != nil {
 		return nil, err
 	}
 
 	c := &Config{
-		ControllerURL:       controllerURL,
+		CoordinatorURL:      coordinatorURL,
 		sourceMigrationsDir: os.Getenv("CAPE_DB_SEED_MIGRATIONS"),
 		dbURL:               dbURL,
 	}

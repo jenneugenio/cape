@@ -12,7 +12,7 @@ A database is represented by a `Backend`.  This is probably the most important c
 ### `Entity`
 
 All objects we store in the data layer must satisfy the `Entity` interface. `Entity` represents any primitive data 
-structure stored inside the Controller.
+structure stored inside the Coordinator.
 
 ### `Primitive`
 

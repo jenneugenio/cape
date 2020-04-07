@@ -1,4 +1,4 @@
-package controller
+package coordinator
 
 import (
 	errors "github.com/dropoutlabs/cape/partyerrors"

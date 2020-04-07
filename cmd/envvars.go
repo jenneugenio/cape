@@ -10,7 +10,7 @@ var (
 	capeTokenVar = &EnvVar{
 		Name:        "CAPE_TOKEN",
 		Required:    true,
-		Description: "A token the data connector can use to authenticate with a controller",
+		Description: "A token the data connector can use to authenticate with a coordinator",
 		Processor: func(in string) (interface{}, error) {
 			if in == "" {
 				return nil, errors.New(InvalidAPITokenCause, "A token must be provided.")

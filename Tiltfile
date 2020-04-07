@@ -24,16 +24,16 @@ delete_cmd = ' && '.join([delete_db_chart, delete_pvc])
 local_resource('delete db', cmd=delete_cmd, trigger_mode=TRIGGER_MODE_MANUAL, auto_init=False)
 
 k8s_yaml(helm('charts/connector', values=['charts/local_values/connector_values.yaml']))
-k8s_yaml(helm('charts/controller', values=['charts/local_values/controller_values.yaml']))
+k8s_yaml(helm('charts/coordinator', values=['charts/local_values/coordinator_values.yaml']))
 
 k8s_yaml('manifests/test_job.yaml')
 k8s_resource("test", trigger_mode=TRIGGER_MODE_MANUAL)
 
 docker_build('dropoutlabs/cape:latest', '.', dockerfile='dockerfiles/Dockerfile.base')
 docker_build('dropoutlabs/cape-test:latest', '.', dockerfile='dockerfiles/Dockerfile.test')
-docker_build('dropoutlabs/controller:latest', '.', dockerfile='dockerfiles/Dockerfile.controller')
+docker_build('dropoutlabs/coordinator:latest', '.', dockerfile='dockerfiles/Dockerfile.coordinator')
 docker_build('dropoutlabs/connector:latest', '.', dockerfile='dockerfiles/Dockerfile.connector')
 docker_build('dropoutlabs/update:latest', '.', dockerfile='dockerfiles/Dockerfile.update')
 
 k8s_resource('connector', port_forwards=8081, trigger_mode=TRIGGER_MODE_MANUAL)
-k8s_resource('controller', port_forwards=8080, trigger_mode=TRIGGER_MODE_MANUAL)
+k8s_resource('coordinator', port_forwards=8080, trigger_mode=TRIGGER_MODE_MANUAL)

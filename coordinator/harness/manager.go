@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 
 	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/controller"
+	"github.com/dropoutlabs/cape/coordinator"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/primitives"
 	"github.com/manifoldco/go-base64"
@@ -15,28 +15,28 @@ const AdminEmail = "admin@cape.com"
 const AdminName = "admin"
 const AdminPassword = "iamtheadmin"
 
-// User represents a user in the cape controller
+// User represents a user in the cape coordinator
 type User struct {
-	Client   *controller.Client
+	Client   *coordinator.Client
 	User     *primitives.User
 	Password []byte
 	Token    *base64.Value
 }
 
-// Service represents a service in the cape controller
+// Service represents a service in the cape coordinator
 type Service struct {
 	ID    database.ID
 	Token *auth.APIToken
 }
 
-// Source represents a source on the cape controller
+// Source represents a source on the cape coordinator
 type Source struct {
 	Label primitives.Label
 }
 
-// Manager represents an application state manager on-top of the Controller's
+// Manager represents an application state manager on-top of the Coordinator's
 // harness. It's job is to provide convenience functions for setting up a
-// controller's application state, managing users, and other utilities that
+// coordinator's application state, managing users, and other utilities that
 // make it write end-to-end integration tests.
 type Manager struct {
 	h          *Harness
@@ -46,10 +46,10 @@ type Manager struct {
 }
 
 // Setup sets up the application state for the cluster (e.g. the `setup`
-// mutation for the controller). This results in the creation of an Admin user.
+// mutation for the coordinator). This results in the creation of an Admin user.
 //
 // An authenticated client for the admin is returned.
-func (m *Manager) Setup(ctx context.Context) (*controller.Client, error) {
+func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 	client, err := m.h.Client()
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (m *Manager) Setup(ctx context.Context) (*controller.Client, error) {
 	return client, nil
 }
 
-// CreateSource creates a source on the controller
+// CreateSource creates a source on the coordinator
 func (m *Manager) CreateSource(ctx context.Context, dbURL *primitives.DBURL, serviceID database.ID) error {
 	sourceLabel := primitives.Label("test-source")
 	_, err := m.Admin.Client.AddSource(ctx, sourceLabel, dbURL, &serviceID)
@@ -108,7 +108,7 @@ func (m *Manager) CreateSource(ctx context.Context, dbURL *primitives.DBURL, ser
 	return nil
 }
 
-// CreateService creates a service on the controller with the given APIToken and URL
+// CreateService creates a service on the coordinator with the given APIToken and URL
 func (m *Manager) CreateService(ctx context.Context, apiToken *auth.APIToken, serviceURL *primitives.URL) error {
 	creds, err := apiToken.Credentials()
 	if err != nil {
@@ -133,7 +133,7 @@ func (m *Manager) CreateService(ctx context.Context, apiToken *auth.APIToken, se
 	return nil
 }
 
-// CreatePolicy creates a policy on the controller!
+// CreatePolicy creates a policy on the coordinator!
 func (m *Manager) CreatePolicy(ctx context.Context, policyPath string) error {
 	data, err := ioutil.ReadFile(policyPath)
 	if err != nil {
@@ -163,7 +163,7 @@ func (m *Manager) CreatePolicy(ctx context.Context, policyPath string) error {
 	return nil
 }
 
-// URL returns the url of the controller
+// URL returns the url of the coordinator
 func (m *Manager) URL() (*primitives.URL, error) {
 	return m.h.URL()
 }

@@ -1,4 +1,4 @@
-package controller
+package coordinator
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"github.com/manifoldco/go-base64"
 
 	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/controller/graph/model"
+	"github.com/dropoutlabs/cape/coordinator/graph/model"
 	"github.com/dropoutlabs/cape/database"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
@@ -23,7 +23,7 @@ var NetworkCause = errors.NewCause(errors.RequestTimeoutCategory, "network_error
 var UnrecognizedIdentityType = errors.NewCause(errors.BadRequestCategory, "unrecognized_identity")
 
 // Client is a wrapper around the graphql client that
-// connects to the controller and sends queries
+// connects to the coordinator and sends queries
 type Client struct {
 	client    *graphql.Client
 	authToken *base64.Value
@@ -31,9 +31,9 @@ type Client struct {
 
 // NewClient returns a new client that connects to the given
 // url and sets the required struct members
-func NewClient(controllerURL *primitives.URL, authToken *base64.Value) *Client {
+func NewClient(coordinatorURL *primitives.URL, authToken *base64.Value) *Client {
 	return &Client{
-		client:    graphql.NewClient(controllerURL.String() + "/v1/query"),
+		client:    graphql.NewClient(coordinatorURL.String() + "/v1/query"),
 		authToken: authToken,
 	}
 }
@@ -55,7 +55,7 @@ func (c *Client) Raw(ctx context.Context, query string,
 	err := c.client.Run(ctx, req, resp)
 	if err != nil {
 		if nerr, ok := err.(net.Error); ok {
-			return errors.New(NetworkCause, "Could not contact controller: %s", nerr.Error())
+			return errors.New(NetworkCause, "Could not contact coordinator: %s", nerr.Error())
 		}
 		return err
 	}
@@ -882,7 +882,7 @@ func (c *Client) ListServices(ctx context.Context) ([]*ServiceResponse, error) {
 	return resp.Services, nil
 }
 
-// CreatePolicy creates a policy on the controller
+// CreatePolicy creates a policy on the coordinator
 func (c *Client) CreatePolicy(ctx context.Context, policy *primitives.Policy) (*primitives.Policy, error) {
 	var resp struct {
 		Policy primitives.Policy `json:"createPolicy"`
@@ -908,7 +908,7 @@ func (c *Client) CreatePolicy(ctx context.Context, policy *primitives.Policy) (*
 	return &resp.Policy, nil
 }
 
-// DeletePolicy deletes a policy on the controller
+// DeletePolicy deletes a policy on the coordinator
 func (c *Client) DeletePolicy(ctx context.Context, id database.ID) error {
 	variables := make(map[string]interface{})
 	variables["id"] = id

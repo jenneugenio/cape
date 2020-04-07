@@ -10,7 +10,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	connHarness "github.com/dropoutlabs/cape/connector/harness"
-	"github.com/dropoutlabs/cape/controller/harness"
+	"github.com/dropoutlabs/cape/coordinator/harness"
 	"github.com/dropoutlabs/cape/primitives"
 )
 
@@ -33,10 +33,10 @@ func TestLogin(t *testing.T) {
 	_, err = m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	controllerURL, err := m.URL()
+	coordinatorURL, err := m.URL()
 	gm.Expect(err).To(gm.BeNil())
 
-	connCfg, err := connHarness.NewConfig(controllerURL)
+	connCfg, err := connHarness.NewConfig(coordinatorURL)
 	gm.Expect(err).To(gm.BeNil())
 
 	connH, err := connHarness.NewHarness(connCfg)

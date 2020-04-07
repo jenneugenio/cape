@@ -67,7 +67,7 @@ func NewHarness(cfg *Config) (*Harness, error) {
 		return nil, err
 	}
 
-	apiToken, err := auth.NewAPIToken(email, cfg.ControllerURL)
+	apiToken, err := auth.NewAPIToken(email, cfg.CoordinatorURL)
 	if err != nil {
 		return nil, err
 	}

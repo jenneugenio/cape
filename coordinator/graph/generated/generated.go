@@ -14,7 +14,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/dropoutlabs/cape/controller/graph/model"
+	"github.com/dropoutlabs/cape/coordinator/graph/model"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/primitives"
 	"github.com/manifoldco/go-base64"
@@ -1039,7 +1039,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	&ast.Source{Name: "controller/schema/policy.graphql", Input: `scalar PolicySpec
+	&ast.Source{Name: "coordinator/schema/policy.graphql", Input: `scalar PolicySpec
 
 type Policy {
   id: ID!
@@ -1100,7 +1100,7 @@ extend type Mutation {
   attachPolicy(input: AttachPolicyRequest!): Attachment!
   detachPolicy(input: DetachPolicyRequest!): String
 }`, BuiltIn: false},
-	&ast.Source{Name: "controller/schema/roles.graphql", Input: `type Role {
+	&ast.Source{Name: "coordinator/schema/roles.graphql", Input: `type Role {
   id: ID!
   label: Label!
   system: Boolean!
@@ -1137,7 +1137,7 @@ extend type Mutation {
   unassignRole(input: AssignRoleRequest!): String @isAuthenticated()
 }
 `, BuiltIn: false},
-	&ast.Source{Name: "controller/schema/schema.graphql", Input: `# isAuthenticated depends on having access to an auth token and checks that the
+	&ast.Source{Name: "coordinator/schema/schema.graphql", Input: `# isAuthenticated depends on having access to an auth token and checks that the
 # auth token is valid and appends the related user and session to the request context.
 # Most graphql queries and mutation should be annotated with this except for createLoginSession
 # and other exceptions as needed
@@ -1285,7 +1285,7 @@ scalar EmailType
 scalar Email
 scalar SourceType
 `, BuiltIn: false},
-	&ast.Source{Name: "controller/schema/services.graphql", Input: `type Service implements Identity {
+	&ast.Source{Name: "coordinator/schema/services.graphql", Input: `type Service implements Identity {
     id: ID!
     email: Email!
     type: ServiceType!
@@ -1347,7 +1347,7 @@ func (ec *executionContext) field_Mutation_addSource_args(ctx context.Context, r
 	args := map[string]interface{}{}
 	var arg0 model.AddSourceRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNAddSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAddSourceRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNAddSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAddSourceRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1361,7 +1361,7 @@ func (ec *executionContext) field_Mutation_assignRole_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 model.AssignRoleRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAssignRoleRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignRoleRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1375,7 +1375,7 @@ func (ec *executionContext) field_Mutation_attachPolicy_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 model.AttachPolicyRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNAttachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAttachPolicyRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNAttachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachPolicyRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1389,7 +1389,7 @@ func (ec *executionContext) field_Mutation_createAuthSession_args(ctx context.Co
 	args := map[string]interface{}{}
 	var arg0 model.AuthSessionRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNAuthSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAuthSessionRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNAuthSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAuthSessionRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1403,7 +1403,7 @@ func (ec *executionContext) field_Mutation_createLoginSession_args(ctx context.C
 	args := map[string]interface{}{}
 	var arg0 model.LoginSessionRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNLoginSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐLoginSessionRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNLoginSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐLoginSessionRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1417,7 +1417,7 @@ func (ec *executionContext) field_Mutation_createPolicy_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 model.CreatePolicyRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNCreatePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐCreatePolicyRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNCreatePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreatePolicyRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1431,7 +1431,7 @@ func (ec *executionContext) field_Mutation_createRole_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 model.CreateRoleRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNCreateRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐCreateRoleRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNCreateRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateRoleRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1445,7 +1445,7 @@ func (ec *executionContext) field_Mutation_createService_args(ctx context.Contex
 	args := map[string]interface{}{}
 	var arg0 model.CreateServiceRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNCreateServiceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐCreateServiceRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNCreateServiceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateServiceRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1459,7 +1459,7 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 model.NewUserRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐNewUserRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐNewUserRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1473,7 +1473,7 @@ func (ec *executionContext) field_Mutation_deletePolicy_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 model.DeletePolicyRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNDeletePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐDeletePolicyRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNDeletePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeletePolicyRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1487,7 +1487,7 @@ func (ec *executionContext) field_Mutation_deleteRole_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 model.DeleteRoleRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNDeleteRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐDeleteRoleRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNDeleteRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteRoleRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1501,7 +1501,7 @@ func (ec *executionContext) field_Mutation_deleteService_args(ctx context.Contex
 	args := map[string]interface{}{}
 	var arg0 model.DeleteServiceRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNDeleteServiceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐDeleteServiceRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNDeleteServiceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteServiceRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1515,7 +1515,7 @@ func (ec *executionContext) field_Mutation_deleteSession_args(ctx context.Contex
 	args := map[string]interface{}{}
 	var arg0 model.DeleteSessionRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNDeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐDeleteSessionRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNDeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteSessionRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1529,7 +1529,7 @@ func (ec *executionContext) field_Mutation_detachPolicy_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 model.DetachPolicyRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNDetachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐDetachPolicyRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNDetachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDetachPolicyRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1543,7 +1543,7 @@ func (ec *executionContext) field_Mutation_removeSource_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 model.RemoveSourceRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNRemoveSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐRemoveSourceRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNRemoveSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRemoveSourceRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1557,7 +1557,7 @@ func (ec *executionContext) field_Mutation_setup_args(ctx context.Context, rawAr
 	args := map[string]interface{}{}
 	var arg0 model.NewUserRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐNewUserRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐNewUserRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1571,7 +1571,7 @@ func (ec *executionContext) field_Mutation_unassignRole_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 model.AssignRoleRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAssignRoleRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignRoleRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2760,7 +2760,7 @@ func (ec *executionContext) _Mutation_attachPolicy(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.Attachment)
 	fc.Result = res
-	return ec.marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
+	return ec.marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_detachPolicy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2976,7 +2976,7 @@ func (ec *executionContext) _Mutation_assignRole(ctx context.Context, field grap
 		if data, ok := tmp.(*model.Assignment); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/controller/graph/model.Assignment`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/coordinator/graph/model.Assignment`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2990,7 +2990,7 @@ func (ec *executionContext) _Mutation_assignRole(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Assignment)
 	fc.Result = res
-	return ec.marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAssignment(ctx, field.Selections, res)
+	return ec.marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_unassignRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3935,7 +3935,7 @@ func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.Attachment)
 	fc.Result = res
-	return ec.marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
+	return ec.marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_role(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7961,19 +7961,19 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNAddSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAddSourceRequest(ctx context.Context, v interface{}) (model.AddSourceRequest, error) {
+func (ec *executionContext) unmarshalNAddSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAddSourceRequest(ctx context.Context, v interface{}) (model.AddSourceRequest, error) {
 	return ec.unmarshalInputAddSourceRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAssignRoleRequest(ctx context.Context, v interface{}) (model.AssignRoleRequest, error) {
+func (ec *executionContext) unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignRoleRequest(ctx context.Context, v interface{}) (model.AssignRoleRequest, error) {
 	return ec.unmarshalInputAssignRoleRequest(ctx, v)
 }
 
-func (ec *executionContext) marshalNAssignment2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAssignment(ctx context.Context, sel ast.SelectionSet, v model.Assignment) graphql.Marshaler {
+func (ec *executionContext) marshalNAssignment2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignment(ctx context.Context, sel ast.SelectionSet, v model.Assignment) graphql.Marshaler {
 	return ec._Assignment(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAssignment(ctx context.Context, sel ast.SelectionSet, v *model.Assignment) graphql.Marshaler {
+func (ec *executionContext) marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignment(ctx context.Context, sel ast.SelectionSet, v *model.Assignment) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -7983,15 +7983,15 @@ func (ec *executionContext) marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋc
 	return ec._Assignment(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNAttachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAttachPolicyRequest(ctx context.Context, v interface{}) (model.AttachPolicyRequest, error) {
+func (ec *executionContext) unmarshalNAttachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachPolicyRequest(ctx context.Context, v interface{}) (model.AttachPolicyRequest, error) {
 	return ec.unmarshalInputAttachPolicyRequest(ctx, v)
 }
 
-func (ec *executionContext) marshalNAttachment2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v model.Attachment) graphql.Marshaler {
+func (ec *executionContext) marshalNAttachment2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v model.Attachment) graphql.Marshaler {
 	return ec._Attachment(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
+func (ec *executionContext) marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8001,7 +8001,7 @@ func (ec *executionContext) marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋc
 	return ec._Attachment(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNAuthSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐAuthSessionRequest(ctx context.Context, v interface{}) (model.AuthSessionRequest, error) {
+func (ec *executionContext) unmarshalNAuthSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAuthSessionRequest(ctx context.Context, v interface{}) (model.AuthSessionRequest, error) {
 	return ec.unmarshalInputAuthSessionRequest(ctx, v)
 }
 
@@ -8051,15 +8051,15 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNCreatePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐCreatePolicyRequest(ctx context.Context, v interface{}) (model.CreatePolicyRequest, error) {
+func (ec *executionContext) unmarshalNCreatePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreatePolicyRequest(ctx context.Context, v interface{}) (model.CreatePolicyRequest, error) {
 	return ec.unmarshalInputCreatePolicyRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNCreateRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐCreateRoleRequest(ctx context.Context, v interface{}) (model.CreateRoleRequest, error) {
+func (ec *executionContext) unmarshalNCreateRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateRoleRequest(ctx context.Context, v interface{}) (model.CreateRoleRequest, error) {
 	return ec.unmarshalInputCreateRoleRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNCreateServiceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐCreateServiceRequest(ctx context.Context, v interface{}) (model.CreateServiceRequest, error) {
+func (ec *executionContext) unmarshalNCreateServiceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateServiceRequest(ctx context.Context, v interface{}) (model.CreateServiceRequest, error) {
 	return ec.unmarshalInputCreateServiceRequest(ctx, v)
 }
 
@@ -8099,23 +8099,23 @@ func (ec *executionContext) marshalNDBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcape�
 	return v
 }
 
-func (ec *executionContext) unmarshalNDeletePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐDeletePolicyRequest(ctx context.Context, v interface{}) (model.DeletePolicyRequest, error) {
+func (ec *executionContext) unmarshalNDeletePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeletePolicyRequest(ctx context.Context, v interface{}) (model.DeletePolicyRequest, error) {
 	return ec.unmarshalInputDeletePolicyRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNDeleteRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐDeleteRoleRequest(ctx context.Context, v interface{}) (model.DeleteRoleRequest, error) {
+func (ec *executionContext) unmarshalNDeleteRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteRoleRequest(ctx context.Context, v interface{}) (model.DeleteRoleRequest, error) {
 	return ec.unmarshalInputDeleteRoleRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNDeleteServiceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐDeleteServiceRequest(ctx context.Context, v interface{}) (model.DeleteServiceRequest, error) {
+func (ec *executionContext) unmarshalNDeleteServiceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteServiceRequest(ctx context.Context, v interface{}) (model.DeleteServiceRequest, error) {
 	return ec.unmarshalInputDeleteServiceRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNDeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐDeleteSessionRequest(ctx context.Context, v interface{}) (model.DeleteSessionRequest, error) {
+func (ec *executionContext) unmarshalNDeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteSessionRequest(ctx context.Context, v interface{}) (model.DeleteSessionRequest, error) {
 	return ec.unmarshalInputDeleteSessionRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNDetachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐDetachPolicyRequest(ctx context.Context, v interface{}) (model.DetachPolicyRequest, error) {
+func (ec *executionContext) unmarshalNDetachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDetachPolicyRequest(ctx context.Context, v interface{}) (model.DetachPolicyRequest, error) {
 	return ec.unmarshalInputDetachPolicyRequest(ctx, v)
 }
 
@@ -8180,7 +8180,7 @@ func (ec *executionContext) marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋpr
 	return res
 }
 
-func (ec *executionContext) unmarshalNLoginSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐLoginSessionRequest(ctx context.Context, v interface{}) (model.LoginSessionRequest, error) {
+func (ec *executionContext) unmarshalNLoginSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐLoginSessionRequest(ctx context.Context, v interface{}) (model.LoginSessionRequest, error) {
 	return ec.unmarshalInputLoginSessionRequest(ctx, v)
 }
 
@@ -8199,7 +8199,7 @@ func (ec *executionContext) marshalNName2githubᚗcomᚋdropoutlabsᚋcapeᚋpri
 	return res
 }
 
-func (ec *executionContext) unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐNewUserRequest(ctx context.Context, v interface{}) (model.NewUserRequest, error) {
+func (ec *executionContext) unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐNewUserRequest(ctx context.Context, v interface{}) (model.NewUserRequest, error) {
 	return ec.unmarshalInputNewUserRequest(ctx, v)
 }
 
@@ -8244,7 +8244,7 @@ func (ec *executionContext) marshalNPolicySpec2ᚖgithubᚗcomᚋdropoutlabsᚋc
 	return v
 }
 
-func (ec *executionContext) unmarshalNRemoveSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcontrollerᚋgraphᚋmodelᚐRemoveSourceRequest(ctx context.Context, v interface{}) (model.RemoveSourceRequest, error) {
+func (ec *executionContext) unmarshalNRemoveSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRemoveSourceRequest(ctx context.Context, v interface{}) (model.RemoveSourceRequest, error) {
 	return ec.unmarshalInputRemoveSourceRequest(ctx, v)
 }
 

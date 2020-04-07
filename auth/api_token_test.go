@@ -14,7 +14,7 @@ func TestAPIToken(t *testing.T) {
 	email, err := primitives.NewEmail("email@email.com")
 	gm.Expect(err).To(gm.BeNil())
 
-	host := "https://my.controller.com"
+	host := "https://my.coordinator.com"
 	u, err := primitives.NewURL(host)
 	gm.Expect(err).To(gm.BeNil())
 
@@ -50,7 +50,7 @@ func TestAPIToken(t *testing.T) {
 	})
 
 	t.Run("test unmarshal on raw string", func(t *testing.T) {
-		tokenStr := "email@email.com,AQCiZ3kSIRgctnHV66K-SnxodHRwczovL215LmNvbnRyb2xsZXIuY29t"
+		tokenStr := "email@email.com,AZuOupKXIRoHbJ04wZthGgNodHRwczovL215LmNvb3JkaW5hdG9yLmNvbQ"
 
 		token := &APIToken{}
 		err := token.Unmarshal(tokenStr)

@@ -13,13 +13,13 @@ import (
 func TestHarness(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	controllerURL, err := primitives.NewURL("http://localhost:8080")
+	coordinatorURL, err := primitives.NewURL("http://localhost:8080")
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("Can start the connector", func(t *testing.T) {
 		ctx := context.Background()
 
-		cfg, err := NewConfig(controllerURL)
+		cfg, err := NewConfig(coordinatorURL)
 		gm.Expect(err).To(gm.BeNil())
 
 		h, err := NewHarness(cfg)
@@ -41,7 +41,7 @@ func TestHarness(t *testing.T) {
 	t.Run("Can start and stop the connector", func(t *testing.T) {
 		ctx := context.Background()
 
-		cfg, err := NewConfig(controllerURL)
+		cfg, err := NewConfig(coordinatorURL)
 		gm.Expect(err).To(gm.BeNil())
 
 		h, err := NewHarness(cfg)

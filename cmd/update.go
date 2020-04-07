@@ -25,7 +25,7 @@ func updateCmd(c *cli.Context) error {
 
 func init() {
 	updateCmd := &Command{
-		Usage: "Update a running Cape controller to a new version",
+		Usage: "Update a running Cape coordinator to a new version",
 		Command: &cli.Command{
 			Name:   "update",
 			Action: updateCmd,

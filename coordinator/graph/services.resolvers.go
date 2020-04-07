@@ -6,8 +6,8 @@ package graph
 import (
 	"context"
 
-	"github.com/dropoutlabs/cape/controller/graph/generated"
-	"github.com/dropoutlabs/cape/controller/graph/model"
+	"github.com/dropoutlabs/cape/coordinator/graph/generated"
+	"github.com/dropoutlabs/cape/coordinator/graph/model"
 	"github.com/dropoutlabs/cape/database"
 	"github.com/dropoutlabs/cape/primitives"
 )

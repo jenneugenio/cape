@@ -8,7 +8,7 @@ TODO
 
 TODO
 
-### Controller
+### Coordinator
 
 TODO
 

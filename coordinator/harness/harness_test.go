@@ -15,7 +15,7 @@ func TestHarness(t *testing.T) {
 	cfg, err := NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	t.Run("Can start the controller", func(t *testing.T) {
+	t.Run("Can start the coordinator", func(t *testing.T) {
 		ctx := context.Background()
 		h, err := NewHarness(cfg)
 		gm.Expect(err).To(gm.BeNil())
@@ -27,13 +27,13 @@ func TestHarness(t *testing.T) {
 		url, err := h.URL()
 		gm.Expect(err).To(gm.BeNil())
 
-		// ensure the controller is running
+		// ensure the coordinator is running
 		resp, err := http.Get(url.String() + "/_healthz")
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(resp.StatusCode).To(gm.Equal(200))
 	})
 
-	t.Run("Can start and stop the controller", func(t *testing.T) {
+	t.Run("Can start and stop the coordinator", func(t *testing.T) {
 		ctx := context.Background()
 		h, err := NewHarness(cfg)
 		gm.Expect(err).To(gm.BeNil())
@@ -44,7 +44,7 @@ func TestHarness(t *testing.T) {
 		url, err := h.URL()
 		gm.Expect(err).To(gm.BeNil())
 
-		// ensure the controller is running
+		// ensure the coordinator is running
 		resp, err := http.Get(url.String() + "/_healthz")
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(resp.StatusCode).To(gm.Equal(200))

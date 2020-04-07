@@ -1,5 +1,5 @@
 image:
-  repository: docker.pkg.github.com/dropoutlabs/cape/controller
+  repository: docker.pkg.github.com/dropoutlabs/cape/coordinator
   tag: latest
 
 dockerSecret: docker-cfg

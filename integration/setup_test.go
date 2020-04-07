@@ -10,7 +10,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/controller/harness"
+	"github.com/dropoutlabs/cape/coordinator/harness"
 	"github.com/dropoutlabs/cape/primitives"
 )
 

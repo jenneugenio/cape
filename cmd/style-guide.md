@@ -215,7 +215,7 @@ graceful exit of the program. An error should be returned to the user
 indicating why the program exited. The program should exit with a exit code of
 1.
 
-If a `SIGHUP` is received by a daemon process (e.g. controller or connector)
+If a `SIGHUP` is received by a daemon process (e.g. coordinator or connector)
 then it should re-read any configuration files and restart to the best of it's ability.
 Otherwise, a log line should be produced indicating that the `SIGHUP` was ignored.
 
@@ -244,8 +244,8 @@ written to an errors log for debugging purposes.
 **Example**: Receiving a signal
 
 ```
-$ cape controller start &
-Cape controller is now listening at https://localhost:8080.
+$ cape coordinator start &
+Cape coordinator is now listening at https://localhost:8080.
 $ kill -HUP $!
 Aborted: Received a 'SIGHUP'.
 ```
@@ -253,12 +253,12 @@ Aborted: Received a 'SIGHUP'.
 **Example**: Usage error
 
 ```
-$ cape controller
+$ cape coordinator
 NAME:
-   cape controller - Control access to your data with the Cape Controller
+   cape coordinator - Control access to your data with the Cape Coordinator
 
 USAGE:
-   cape controller command [command options] [arguments...]
+   cape coordinator command [command options] [arguments...]
 
 COMMANDS:
    start
@@ -284,7 +284,7 @@ the user to be created).
 
 Commands that have subcommands should not be callable, instead they are ways to
 group functionality together. This way there are no surprising side effects of
-running `cape controller`.
+running `cape coordinator`.
 
 In some cases we may want to pull commonly used commands to the top level for
 ease of discoverability. For instance, the ability to login or logout of your
@@ -306,7 +306,7 @@ have established a few rules when it comes to writing documentation.
   required and optional arguments. The usage should also describe where flags
   should be provided (e.g. after the command but before arguments). Required
   arguments should be documented using `<name>` while optional should be
-  documented using `[-options]`. For example: `cape controller [-options] <name>`.
+  documented using `[-options]`. For example: `cape coordinator [-options] <name>`.
 - A lengthier description should also be displayed when a user is inquirying
   about a specific command (not a command grouping, but an actual command that
   results in an action) that details what the command does and why a user would

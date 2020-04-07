@@ -14,8 +14,8 @@ import (
 )
 
 type grpcHandler struct {
-	controller *Controller
-	cache      *sources.Cache
+	coordinator *Coordinator
+	cache       *sources.Cache
 }
 
 func (g *grpcHandler) handleAuth(ctx context.Context) (primitives.Identity, error) {
@@ -29,7 +29,7 @@ func (g *grpcHandler) handleAuth(ctx context.Context) (primitives.Identity, erro
 		return nil, auth.ErrorInvalidAuthHeader
 	}
 
-	return g.controller.ValidateToken(ctx, authToken[0])
+	return g.coordinator.ValidateToken(ctx, authToken[0])
 }
 
 func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryServer) error {
@@ -38,7 +38,7 @@ func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryS
 		return err
 	}
 
-	policies, err := g.controller.GetIdentityPolicies(server.Context(), identity.GetID())
+	policies, err := g.coordinator.GetIdentityPolicies(server.Context(), identity.GetID())
 	if err != nil {
 		return err
 	}

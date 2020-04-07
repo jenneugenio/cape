@@ -1,4 +1,4 @@
-package controller
+package coordinator
 
 import (
 	"io/ioutil"
@@ -11,7 +11,7 @@ import (
 )
 
 // Config represents the configuration that needs to be provided to the
-// Controller.
+// Coordinator.
 type Config struct {
 	Version    int              `json:"version"`
 	DB         *DBConfig        `json:"db"`

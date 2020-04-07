@@ -10,7 +10,7 @@ import (
 )
 
 // NewURL parses the given string and returns a URL if the
-// given URL is a valid controller url. If it's not an error is returned.
+// given URL is a valid coordinator url. If it's not an error is returned.
 func NewURL(in string) (*URL, error) {
 	u, err := url.Parse(in)
 	if err != nil {
@@ -26,12 +26,12 @@ func NewURL(in string) (*URL, error) {
 	return c, nil
 }
 
-// URL contains a url to a Cape controller
+// URL contains a url to a Cape coordinator
 type URL struct {
 	*url.URL
 }
 
-// Validate returns an error if the controller url is _not_ valid
+// Validate returns an error if the coordinator url is _not_ valid
 func (u *URL) Validate() error {
 	if u.URL == nil {
 		return errors.New(InvalidURLCause, "Missing url")
