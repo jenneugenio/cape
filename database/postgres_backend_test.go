@@ -300,6 +300,10 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("QueryOne returns a not-found error if the entity can't be found", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
 		eA, err := NewTestEntity("idontexistok")
 		gm.Expect(err).To(gm.BeNil())
 

@@ -32,8 +32,13 @@ type Client struct {
 // NewClient returns a new client that connects to the given
 // url and sets the required struct members
 func NewClient(coordinatorURL *primitives.URL, authToken *base64.Value) *Client {
+	if authToken != nil && len(authToken.String()) == 0 {
+		authToken = nil
+	}
+
+	client := graphql.NewClient(coordinatorURL.String() + "/v1/query")
 	return &Client{
-		client:    graphql.NewClient(coordinatorURL.String() + "/v1/query"),
+		client:    client,
 		authToken: authToken,
 	}
 }

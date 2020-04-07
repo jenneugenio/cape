@@ -258,6 +258,10 @@ func (c *Cluster) GetURL() (*primitives.URL, error) {
 
 // Token parses the auth token and returns the base64 value
 func (c *Cluster) Token() (*base64.Value, error) {
+	if c.AuthToken == "" {
+		return nil, nil
+	}
+
 	return base64.NewFromString(c.AuthToken)
 }
 
