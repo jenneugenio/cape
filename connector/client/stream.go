@@ -1,12 +1,17 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"io"
 
-	"github.com/dropoutlabs/cape/connector/proto"
+	"github.com/golang/protobuf/jsonpb"
+	spb "github.com/golang/protobuf/ptypes/struct"
+	"google.golang.org/grpc/status"
+
 	pb "github.com/dropoutlabs/cape/connector/proto"
 	"github.com/dropoutlabs/cape/connector/sources"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 // Stream allows data to be streamed easily
@@ -14,7 +19,7 @@ import (
 type Stream interface {
 	Record() *sources.Record
 	NextRecord() bool
-	Schema() *proto.Schema
+	Schema() *pb.Schema
 	Error() error
 
 	Context() context.Context
@@ -29,7 +34,7 @@ type stream struct {
 
 	err error
 
-	schema     *proto.Schema
+	schema     *pb.Schema
 	nextRecord *sources.Record
 }
 
@@ -38,7 +43,7 @@ type stream struct {
 func NewStream(ctx context.Context, client pb.DataConnector_QueryClient) Stream {
 	ctx, cancel := context.WithCancel(ctx)
 	return &stream{
-		schema: &proto.Schema{},
+		schema: &pb.Schema{},
 
 		client: client,
 		ctx:    ctx,
@@ -83,10 +88,28 @@ func (s *stream) Close() {
 	s.cancel()
 }
 
-func (s *stream) Schema() *proto.Schema {
+func (s *stream) Schema() *pb.Schema {
 	return s.schema
 }
 
 func (s *stream) Error() error {
-	return s.err
+	st := status.Convert(s.err)
+	details := st.Details()
+
+	if len(details) > 0 {
+		buf := &bytes.Buffer{}
+
+		switch info := details[0].(type) {
+		case *spb.Struct:
+			marshaler := jsonpb.Marshaler{}
+			err := marshaler.Marshal(buf, info)
+			if err != nil {
+				return err
+			}
+
+			return errors.ErrorFromBytes(buf.Bytes())
+		}
+	}
+
+	return st.Err()
 }

@@ -63,7 +63,7 @@ func (ps *PolicySpec) Validate() error {
 	for _, r := range ps.Rules {
 		err := r.Target.Validate()
 		if err != nil {
-			return errors.New(InvalidPolicySpecCause, "Invalid rule: %e", err)
+			return errors.New(InvalidPolicySpecCause, "Invalid rule: %s", err)
 		}
 
 		if len(r.Fields) > 0 && len(r.Where) > 0 {

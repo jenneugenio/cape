@@ -13,7 +13,6 @@ import (
 )
 
 func (r *mutationResolver) CreateService(ctx context.Context, input model.CreateServiceRequest) (*primitives.Service, error) {
-	// create a non-data connector service!!!
 	creds := &primitives.Credentials{
 		PublicKey: &input.PublicKey,
 		Salt:      &input.Salt,

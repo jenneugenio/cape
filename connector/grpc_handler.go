@@ -1,16 +1,25 @@
 package connector
 
 import (
+	"bytes"
 	"context"
-	"github.com/dropoutlabs/cape/policy"
+	"encoding/json"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
+
+	"github.com/golang/protobuf/jsonpb"
+	spb "github.com/golang/protobuf/ptypes/struct"
 
 	"github.com/dropoutlabs/cape/auth"
 	pb "github.com/dropoutlabs/cape/connector/proto"
 	"github.com/dropoutlabs/cape/connector/sources"
 	"github.com/dropoutlabs/cape/framework"
+	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/dropoutlabs/cape/policy"
 	"github.com/dropoutlabs/cape/primitives"
 	"github.com/dropoutlabs/cape/query"
-	"google.golang.org/grpc/metadata"
 )
 
 type grpcHandler struct {
@@ -33,6 +42,15 @@ func (g *grpcHandler) handleAuth(ctx context.Context) (primitives.Identity, erro
 }
 
 func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryServer) error {
+	err := g.handleQuery(req, server)
+	if err != nil {
+		return returnGRPCError(err)
+	}
+
+	return nil
+}
+
+func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_QueryServer) error {
 	identity, err := g.handleAuth(server.Context())
 	if err != nil {
 		return err
@@ -79,4 +97,32 @@ func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryS
 	}
 
 	return source.Query(context.Background(), query, server)
+}
+
+func returnGRPCError(err error) error {
+	pErr, ok := err.(*errors.Error)
+	if !ok {
+		return status.New(codes.Unknown, err.Error()).Err()
+	}
+
+	st := status.New(codes.Unknown, "Cape Error")
+
+	details := &spb.Struct{}
+
+	by, err := json.Marshal(pErr)
+	if err != nil {
+		return status.New(codes.Unknown, err.Error()).Err()
+	}
+
+	err = jsonpb.Unmarshal(bytes.NewBuffer(by), details)
+	if err != nil {
+		return status.New(codes.Unknown, err.Error()).Err()
+	}
+
+	st, err = st.WithDetails(details)
+	if err != nil {
+		return status.New(codes.Unknown, err.Error()).Err()
+	}
+
+	return st.Err()
 }

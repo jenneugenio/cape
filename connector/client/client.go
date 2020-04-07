@@ -22,7 +22,6 @@ type Client struct {
 
 // NewClient dials the connector and creates a client
 func NewClient(connectorURL *primitives.URL, authToken *base64.Value, certPool *x509.CertPool) (*Client, error) {
-	// TODO log in here
 	creds := credentials.NewClientTLSFromCert(certPool, "")
 
 	// strip https from url, dial expects the protocol not be specified
@@ -39,7 +38,7 @@ func NewClient(connectorURL *primitives.URL, authToken *base64.Value, certPool *
 	}, nil
 }
 
-// Query queries the datasource with the specified query
+// Query queries the data source with the specified query
 func (c *Client) Query(ctx context.Context, dataSource primitives.Label, query string) (Stream, error) {
 	req := &pb.QueryRequest{
 		DataSource: dataSource.String(),

@@ -1,6 +1,7 @@
 package partyerrors
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -102,4 +103,14 @@ func FromCause(e error, c Cause) bool {
 	default:
 		return false
 	}
+}
+
+func ErrorFromBytes(data []byte) error {
+	pErr := &Error{}
+	err := json.Unmarshal(data, pErr)
+	if err != nil {
+		return err
+	}
+
+	return pErr
 }
