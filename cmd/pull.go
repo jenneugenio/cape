@@ -111,9 +111,32 @@ func pullDataCmd(c *cli.Context) error {
 		w := bufio.NewWriter(file)
 		writer := csv.NewWriter(w)
 
+		first := true
+
 		for stream.NextRecord() {
 			record := stream.Record()
 			strs := record.ToStrings()
+
+			if first {
+				schema := stream.Schema()
+				var fieldNames []string
+				for _, f := range schema.Fields {
+					fieldNames = append(fieldNames, f.Name)
+				}
+
+				err = writer.Write(fieldNames)
+				if err != nil {
+					return err
+				}
+
+				writer.Flush()
+				err = writer.Error()
+				if err != nil {
+					return err
+				}
+
+				first = false
+			}
 
 			err = writer.Write(strs)
 			if err != nil {
