@@ -160,6 +160,10 @@ func pullDataCmd(c *cli.Context) error {
 		strs := record.ToStrings()
 		body = append(body, strs)
 	}
+	err = stream.Error()
+	if err != nil {
+		return err
+	}
 
 	// We make the header second as the schema will not be on the stream until after we have received our first record
 	schema := stream.Schema()
