@@ -147,6 +147,12 @@ func (c *Config) Cluster() (*Cluster, error) {
 	return nil, errors.New(InvalidConfigCause, "The key 'context.cluster' is set but the cluster does not exist")
 }
 
+// HasCluster returns true if the provided label exists, false otherwise
+func (c *Config) HasCluster(clusterLabel primitives.Label) bool {
+	idx, _ := c.findCluster(clusterLabel)
+	return idx > -1
+}
+
 // GetCluster returns the cluster by its label
 func (c *Config) GetCluster(clusterStr string) (*Cluster, error) {
 	label, err := primitives.NewLabel(clusterStr)

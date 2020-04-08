@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/dropoutlabs/cape/auth"
 	"github.com/dropoutlabs/cape/coordinator"
+	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
 	"github.com/urfave/cli/v2"
 )
@@ -34,6 +35,12 @@ func setupCoordinatorCmd(c *cli.Context) error {
 
 	label := Arguments(c.Context, CoordinatorLabelArg).(primitives.Label)
 	clusterURL := Arguments(c.Context, ClusterURLArg).(*primitives.URL)
+
+	if cfg.HasCluster(label) {
+		removeCmd := fmt.Sprintf("cape config clusters remove %s", label)
+		return errors.New(ClusterExistsCause, "A cluster named '%s' has already been configured! You can use `%s` to remove it.", label, removeCmd)
+	}
+
 	name, err := getName(c, "")
 	if err != nil {
 		return err
