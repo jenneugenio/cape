@@ -124,7 +124,7 @@ func (q *Query) Raw() (string, []interface{}) {
 				operator = "="
 			}
 
-			raw += fmt.Sprintf("%s %s ?", c.Operand1, operator)
+			raw += fmt.Sprintf("%s %s $%d", c.Operand1, operator, i+1)
 			parameters[i] = c.Operand2
 			if i < len(q.q.Conditions)-1 {
 				raw += " AND "

@@ -141,7 +141,7 @@ func (p *PostgresSource) Query(ctx context.Context, q Query, stream Stream) erro
 	if len(params) == 0 {
 		rows, err = p.pool.Query(ctx, qStr)
 	} else {
-		rows, err = p.pool.Query(ctx, qStr, params)
+		rows, err = p.pool.Query(ctx, qStr, params...)
 	}
 	if err != nil {
 		return err

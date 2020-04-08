@@ -317,7 +317,38 @@ func TestEvaluator(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		raw, params := q.Raw()
-		gm.Expect(raw).To(gm.Equal("SELECT card_number FROM transactions WHERE processor != ?"))
+		gm.Expect(raw).To(gm.Equal("SELECT card_number FROM transactions WHERE processor != $1"))
 		gm.Expect(params[0]).To(gm.Equal("visa"))
+	})
+
+	t.Run("can filter rows with multiple where rules", func(t *testing.T) {
+		spec := &primitives.PolicySpec{
+			Version: 1,
+			Label:   "my-policy",
+			Rules: []*primitives.Rule{
+				{
+					Target: "records:mycollection.transactions",
+					Action: primitives.Read,
+					Effect: primitives.Allow,
+					Fields: []primitives.Field{primitives.Star},
+				},
+			},
+		}
+
+		p, err := primitives.NewPolicy("my-policy", spec)
+		gm.Expect(err).To(gm.BeNil())
+
+		q, err := query.New("my-query", "SELECT card_number FROM transactions WHERE processor = 'Visa' AND value = 'Kassulke Group'")
+		gm.Expect(err).To(gm.BeNil())
+
+		e := NewEvaluator(q, schema, p)
+
+		q, err = e.Evaluate()
+		gm.Expect(err).To(gm.BeNil())
+
+		raw, params := q.Raw()
+		gm.Expect(raw).To(gm.Equal("SELECT card_number FROM transactions WHERE processor = $1 AND value = $2"))
+		gm.Expect(params[0]).To(gm.Equal("Visa"))
+		gm.Expect(params[1]).To(gm.Equal("Kassulke Group"))
 	})
 }

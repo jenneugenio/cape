@@ -121,7 +121,7 @@ func GetExpectedRows(ctx context.Context, dbURL *url.URL, query string, params [
 	if len(params) == 0 {
 		rows, err = pool.Query(ctx, query)
 	} else {
-		rows, err = pool.Query(ctx, query, params)
+		rows, err = pool.Query(ctx, query, params...)
 	}
 
 	if err != nil {
