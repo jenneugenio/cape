@@ -17,8 +17,15 @@ var (
 func errorPresenter(ctx context.Context, e error) *gqlerror.Error {
 	pErr, ok := e.(*errors.Error)
 	if !ok {
-		return graphql.DefaultErrorPresenter(ctx, e)
+		pErr = errors.New(errors.UnknownCause, e.Error())
 	}
 
-	return gqlerror.ErrorPathf(graphql.GetFieldContext(ctx).Path(), strings.Join(pErr.Messages, ","))
+	gErr := gqlerror.ErrorPathf(graphql.GetFieldContext(ctx).Path(), strings.Join(pErr.Messages, ","))
+
+	if gErr.Extensions == nil {
+		gErr.Extensions = make(map[string]interface{})
+	}
+	gErr.Extensions["cause"] = pErr.Cause
+
+	return gErr
 }
