@@ -102,7 +102,7 @@ func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_
 func returnGRPCError(err error) error {
 	pErr, ok := err.(*errors.Error)
 	if !ok {
-		return status.New(codes.Unknown, err.Error()).Err()
+		pErr = errors.New(errors.UnknownCause, err.Error())
 	}
 
 	st := status.New(codes.Unknown, "Cape Error")
