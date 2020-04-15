@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/database"
@@ -43,7 +41,7 @@ func init() {
 		},
 		Command: &cli.Command{
 			Name:   "remove",
-			Action: sourcesRemove,
+			Action: handleSessionOverrides(sourcesRemove),
 			Flags:  []cli.Flag{clusterFlag()},
 		},
 	}
@@ -109,8 +107,8 @@ func sourcesAdd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("Added source %s to Cape\n", source.Label)
-	return nil
+	ui := UI(c.Context)
+	return ui.Template("Added source {{ . | bold }} to Cape\n", source.Label.String())
 }
 
 func sourcesRemove(c *cli.Context) error {
@@ -131,8 +129,8 @@ func sourcesRemove(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("Removed source %s from Cape\n", label)
-	return nil
+	ui := UI(c.Context)
+	return ui.Template("Removed source {{ . | bold }} from Cape\n", label.String())
 }
 
 func sourcesList(c *cli.Context) error {
@@ -154,11 +152,18 @@ func sourcesList(c *cli.Context) error {
 
 	ui := UI(c.Context)
 
-	header := []string{"Name", "Type", "Host"}
-	body := make([][]string, len(sources))
-	for i, s := range sources {
-		body[i] = []string{s.Label.String(), s.Endpoint.Scheme, s.Endpoint.String()}
+	if len(sources) > 0 {
+		header := []string{"Name", "Type", "Host"}
+		body := make([][]string, len(sources))
+		for i, s := range sources {
+			body[i] = []string{s.Label.String(), s.Endpoint.Scheme, s.Endpoint.String()}
+		}
+
+		err = ui.Table(header, body)
+		if err != nil {
+			return err
+		}
 	}
 
-	return ui.Table(header, body)
+	return ui.Template("\nFound {{ . | toString | faded }} source{{ . | pluralize \"s\"}}\n", len(sources))
 }

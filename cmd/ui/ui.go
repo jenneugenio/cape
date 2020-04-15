@@ -4,8 +4,11 @@ package ui
 
 import (
 	"fmt"
+	"github.com/Masterminds/sprig"
 	"github.com/juju/ansiterm"
+	"github.com/leekchan/gtf"
 	"os"
+	"text/template"
 
 	"github.com/chzyer/readline"
 	"github.com/manifoldco/promptui"
@@ -175,6 +178,43 @@ func (u *UI) Details(details Details) error {
 	// Always make whitespace after a table
 	fmt.Fprintln(w)
 	return w.Flush()
+}
+
+func (u *UI) funcMap() template.FuncMap {
+	return template.FuncMap{
+		"faded": func(t string) string {
+			if !u.CanColorize() {
+				return t
+			}
+			return faded(t)
+		},
+		"bold": func(t string) string {
+			if !u.CanColorize() {
+				return t
+			}
+			return bold(t)
+		},
+		"color": func(c ansiterm.Color, t string) string {
+			if !u.CanColorize() {
+				return t
+			}
+			return colorize(c, t)
+		},
+	}
+}
+
+// Template takes in a text/template style template and renders it
+func (u *UI) Template(t string, args interface{}) error {
+	tmpl, err := template.New("template").
+		Funcs(gtf.GtfTextFuncMap).
+		Funcs(sprig.TxtFuncMap()).
+		Funcs(u.funcMap()).
+		Parse(t)
+	if err != nil {
+		return err
+	}
+
+	return tmpl.Execute(os.Stdout, args)
 }
 
 // CanColorized returns whether or not colorization can be supported

@@ -146,8 +146,8 @@ func rolesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("Created the role '%s'.\n", label)
-	return nil
+	ui := UI(c.Context)
+	return ui.Template("Created the role {{ . | bold }}.\n", label.String())
 }
 
 func rolesRemoveCmd(c *cli.Context) error {
@@ -183,9 +183,7 @@ func rolesRemoveCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("The role '%s' has been deleted.\n", label)
-
-	return nil
+	return ui.Template("The role {{ . | bold }} has been deleted.\n", label.String())
 }
 
 func rolesListCmd(c *cli.Context) error {
@@ -207,13 +205,20 @@ func rolesListCmd(c *cli.Context) error {
 		return err
 	}
 
-	header := []string{"Label"}
-	body := make([][]string, len(roles))
-	for i, r := range roles {
-		body[i] = []string{r.Label.String()}
+	if len(roles) > 0 {
+		header := []string{"Label"}
+		body := make([][]string, len(roles))
+		for i, r := range roles {
+			body[i] = []string{r.Label.String()}
+		}
+
+		err = ui.Table(header, body)
+		if err != nil {
+			return err
+		}
 	}
 
-	return ui.Table(header, body)
+	return ui.Template("\nFound {{ . | toString | faded }} role{{ . | pluralize \"s\"}}\n", len(roles))
 }
 
 func rolesMembersCmd(c *cli.Context) error {

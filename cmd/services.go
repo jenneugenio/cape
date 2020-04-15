@@ -168,8 +168,19 @@ func servicesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("The service '%s' with type '%s' has been created. The following token "+
-		"can be used to authenticate as that service:\n\n", service.Email, service.Type)
+	args := struct {
+		Email string
+		Type  string
+	}{
+		service.Email.String(),
+		service.Type.String(),
+	}
+
+	err = u.Template("The service {{ .Email | bold }} with type {{ .Type | bold }} has been created. The following token "+
+		"can be used to authenticate as that service:\n\n", args)
+	if err != nil {
+		return err
+	}
 
 	err = u.Details(ui.Details{
 		"Token": tokenStr,
@@ -216,9 +227,7 @@ func servicesRemoveCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("The service '%s' has been deleted.", email)
-
-	return nil
+	return u.Template("The service {{ . | bold }} has been deleted.", email.String())
 }
 
 func servicesListCmd(c *cli.Context) error {
@@ -240,22 +249,29 @@ func servicesListCmd(c *cli.Context) error {
 		return err
 	}
 
-	header := []string{"Label", "Type", "Endpoint", "Roles"}
-	body := make([][]string, len(services))
-	for i, s := range services {
-		roleLabels := make([]string, len(s.Roles))
-		for i, role := range s.Roles {
-			roleLabels[i] = role.Label.String()
-		}
-		roles := strings.Join(roleLabels, ",")
+	if len(services) > 0 {
+		header := []string{"Label", "Type", "Endpoint", "Roles"}
+		body := make([][]string, len(services))
+		for i, s := range services {
+			roleLabels := make([]string, len(s.Roles))
+			for i, role := range s.Roles {
+				roleLabels[i] = role.Label.String()
+			}
+			roles := strings.Join(roleLabels, ",")
 
-		endpoint := ""
-		if s.Endpoint != nil {
-			endpoint = s.Endpoint.String()
+			endpoint := ""
+			if s.Endpoint != nil {
+				endpoint = s.Endpoint.String()
+			}
+
+			body[i] = []string{s.Email.String(), s.Type.String(), endpoint, roles}
 		}
 
-		body[i] = []string{s.Email.String(), s.Type.String(), endpoint, roles}
+		err = ui.Table(header, body)
+		if err != nil {
+			return err
+		}
 	}
 
-	return ui.Table(header, body)
+	return ui.Template("\nFound {{ . | toString | faded }} services{{ . | pluralize \"s\"}}\n", len(services))
 }

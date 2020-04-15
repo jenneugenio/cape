@@ -4,6 +4,9 @@ go 1.14
 
 require (
 	github.com/99designs/gqlgen v0.11.2
+	github.com/Masterminds/goutils v1.1.0 // indirect
+	github.com/Masterminds/semver v1.5.0 // indirect
+	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad
 	github.com/bombsimon/wsl/v2 v2.2.0 // indirect
@@ -16,9 +19,12 @@ require (
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.24.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
+	github.com/google/uuid v1.1.1 // indirect
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/gostaticanalysis/analysisutil v0.0.3 // indirect
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
+	github.com/huandu/xstrings v1.3.1 // indirect
+	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/jackc/pgconn v1.3.2
 	github.com/jackc/pgproto3/v2 v2.0.1
 	github.com/jackc/pgtype v1.2.0
@@ -27,6 +33,7 @@ require (
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 	github.com/justinas/alice v1.2.0
+	github.com/leekchan/gtf v0.0.0-20190214083521-5fba33c5b00b
 	github.com/lib/pq v1.3.0 // indirect
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/machinebox/graphql v0.2.2
@@ -37,7 +44,9 @@ require (
 	github.com/marianogappa/sqlparser v0.0.0-20190512194142-a82c3f44d2fc
 	github.com/matryer/is v1.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
+	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.2.2
+	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/onsi/gomega v1.9.0
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -52,7 +61,7 @@ require (
 	github.com/stretchr/testify v1.5.1 // indirect
 	github.com/urfave/cli/v2 v2.1.1
 	github.com/vektah/gqlparser/v2 v2.0.1
-	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d
+	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	google.golang.org/grpc v1.28.1
