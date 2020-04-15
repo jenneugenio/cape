@@ -95,8 +95,8 @@ func postgresDataTypeToProtoField(dataType string) (*Field, error) {
 	return fieldType, nil
 }
 
-func fieldsFromFieldDescription(fds []pgproto3.FieldDescription) ([]*proto.Field, error) {
-	fields := make([]*proto.Field, len(fds))
+func fieldsFromFieldDescription(fds []pgproto3.FieldDescription) ([]*proto.FieldInfo, error) {
+	fields := make([]*proto.FieldInfo, len(fds))
 
 	for i, fd := range fds {
 		typ, ok := PostgresDataTypeToProtoField[fd.DataTypeOID]
@@ -105,7 +105,7 @@ func fieldsFromFieldDescription(fds []pgproto3.FieldDescription) ([]*proto.Field
 			return nil, err
 		}
 
-		fields[i] = &proto.Field{
+		fields[i] = &proto.FieldInfo{
 			Name:  string(fd.Name),
 			Size:  int64(fd.DataTypeSize),
 			Field: typ.FieldType,

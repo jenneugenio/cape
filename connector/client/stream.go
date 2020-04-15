@@ -1,13 +1,12 @@
 package client
 
 import (
-	"bytes"
 	"context"
 	"io"
 
-	"github.com/golang/protobuf/jsonpb"
 	spb "github.com/golang/protobuf/ptypes/struct"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	pb "github.com/dropoutlabs/cape/connector/proto"
 	"github.com/dropoutlabs/cape/connector/sources"
@@ -43,8 +42,6 @@ type stream struct {
 func NewStream(ctx context.Context, client pb.DataConnector_QueryClient) Stream {
 	ctx, cancel := context.WithCancel(ctx)
 	return &stream{
-		schema: &pb.Schema{},
-
 		client: client,
 		ctx:    ctx,
 		cancel: cancel,
@@ -65,11 +62,11 @@ func (s *stream) NextRecord() bool {
 		return false
 	}
 
-	if record.Schema != nil {
-		*s.schema = *record.Schema
+	if s.schema == nil {
+		s.schema = record.GetSchema()
 	}
 
-	r, err := sources.NewRecord(s.schema, record.Value)
+	r, err := sources.NewRecord(s.schema, record.Fields)
 	if err != nil {
 		s.err = err
 		return false
@@ -97,17 +94,14 @@ func (s *stream) Error() error {
 	details := st.Details()
 
 	if len(details) > 0 {
-		buf := &bytes.Buffer{}
-
 		switch info := details[0].(type) {
 		case *spb.Struct:
-			marshaler := jsonpb.Marshaler{}
-			err := marshaler.Marshal(buf, info)
+			by, err := protojson.Marshal(info)
 			if err != nil {
 				return err
 			}
 
-			return errors.ErrorFromBytes(buf.Bytes())
+			return errors.ErrorFromBytes(by)
 		}
 	}
 

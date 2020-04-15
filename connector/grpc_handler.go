@@ -1,7 +1,6 @@
 package connector
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 
@@ -9,8 +8,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/golang/protobuf/jsonpb"
 	spb "github.com/golang/protobuf/ptypes/struct"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/dropoutlabs/cape/auth"
 	pb "github.com/dropoutlabs/cape/connector/proto"
@@ -114,7 +113,7 @@ func returnGRPCError(err error) error {
 		return status.New(codes.Unknown, err.Error()).Err()
 	}
 
-	err = jsonpb.Unmarshal(bytes.NewBuffer(by), details)
+	err = protojson.Unmarshal(by, details)
 	if err != nil {
 		return status.New(codes.Unknown, err.Error()).Err()
 	}

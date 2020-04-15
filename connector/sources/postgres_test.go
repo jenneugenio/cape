@@ -78,43 +78,43 @@ func TestPostgresSource(t *testing.T) {
 
 		gm.Expect(len(schema.Fields)).To(gm.Equal(8))
 
-		expectedFields := []*proto.Field{
-			&proto.Field{
+		expectedFields := []*proto.FieldInfo{
+			&proto.FieldInfo{
 				Field: proto.FieldType_INT,
 				Name:  "id",
 				Size:  4,
 			},
-			&proto.Field{
+			&proto.FieldInfo{
 				Field: proto.FieldType_TEXT,
 				Name:  "processor",
 				Size:  VariableSize,
 			},
-			&proto.Field{
+			&proto.FieldInfo{
 				Field: proto.FieldType_TIMESTAMP,
 				Name:  "timestamp",
 				Size:  8,
 			},
-			&proto.Field{
+			&proto.FieldInfo{
 				Field: proto.FieldType_INT,
 				Name:  "card_id",
 				Size:  4,
 			},
-			&proto.Field{
+			&proto.FieldInfo{
 				Field: proto.FieldType_BIGINT,
 				Name:  "card_number",
 				Size:  8,
 			},
-			&proto.Field{
+			&proto.FieldInfo{
 				Field: proto.FieldType_DOUBLE,
 				Name:  "value",
 				Size:  8,
 			},
-			&proto.Field{
+			&proto.FieldInfo{
 				Field: proto.FieldType_INT,
 				Name:  "ssn",
 				Size:  4,
 			},
-			&proto.Field{
+			&proto.FieldInfo{
 				Field: proto.FieldType_TEXT,
 				Name:  "vendor",
 				Size:  VariableSize,
@@ -145,7 +145,7 @@ func TestPostgresSource(t *testing.T) {
 		expectedRows, err := GetExpectedRows(ctx, db.URL(), query, params)
 		gm.Expect(err).To(gm.BeNil())
 		for i, row := range stream.Buffer {
-			vals, err := Decode(stream.Buffer[0].Schema, row.Value)
+			vals, err := Decode(stream.Buffer[0].Schema, row.Fields)
 			gm.Expect(err).To(gm.BeNil())
 
 			// could check row to row but this is easier to see

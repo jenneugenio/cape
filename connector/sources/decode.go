@@ -1,56 +1,31 @@
 package sources
 
 import (
-	"encoding/json"
-	"strconv"
-	"time"
+	"github.com/golang/protobuf/ptypes"
 
 	"github.com/dropoutlabs/cape/connector/proto"
 )
 
 // Decode decodes a byte stream from a data connector
-func Decode(schema *proto.Schema, values [][]byte) ([]interface{}, error) {
+func Decode(schema *proto.Schema, values []*proto.Field) ([]interface{}, error) {
 	outVals := make([]interface{}, len(values))
 	for i, val := range values {
-		var tmpVal string
-
-		err := json.Unmarshal(val, &tmpVal)
-		if err != nil {
-			return nil, err
-		}
-
-		var outVal interface{}
 		switch schema.Fields[i].Field {
 		case proto.FieldType_BIGINT:
-			v, err := strconv.ParseInt(tmpVal, 10, 64)
-			if err != nil {
-				return nil, err
-			}
-			outVal = v
+			outVals[i] = val.GetInt64()
 		case proto.FieldType_INT:
-			v, err := strconv.ParseInt(tmpVal, 10, 32)
-			if err != nil {
-				return nil, err
-			}
-			outVal = int32(v)
+			outVals[i] = val.GetInt32()
 		case proto.FieldType_TIMESTAMP:
-			t, err := time.Parse(time.RFC3339Nano, tmpVal)
+			ts, err := ptypes.Timestamp(val.GetTimestamp())
 			if err != nil {
 				return nil, err
 			}
-
-			outVal = t
+			outVals[i] = ts
 		case proto.FieldType_DOUBLE:
-			v, err := strconv.ParseFloat(tmpVal, 64)
-			if err != nil {
-				return nil, err
-			}
-			outVal = v
+			outVals[i] = val.GetDouble()
 		case proto.FieldType_TEXT:
-			outVal = tmpVal
+			outVals[i] = val.GetString_()
 		}
-
-		outVals[i] = outVal
 	}
 
 	return outVals, nil

@@ -1,39 +1,47 @@
 package sources
 
 import (
-	"encoding/json"
-	"strconv"
 	"time"
 
+	"github.com/golang/protobuf/ptypes"
+
+	pb "github.com/dropoutlabs/cape/connector/proto"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 )
 
 // PostgresEncode encodes data out of postgres into Strings
-func PostgresEncode(values []interface{}) ([][]byte, error) {
-	outVals := make([][]byte, len(values))
+func PostgresEncode(values []interface{}) ([]*pb.Field, error) {
+	outVals := make([]*pb.Field, len(values))
 	for i, val := range values {
-		var outVal string
 		switch v := val.(type) {
 		case int64:
-			outVal = strconv.FormatInt(v, 10)
+			outVals[i] = &pb.Field{
+				Value: &pb.Field_Int64{Int64: v},
+			}
 		case int32:
-			outVal = strconv.FormatInt(int64(v), 10)
+			outVals[i] = &pb.Field{
+				Value: &pb.Field_Int32{Int32: v},
+			}
 		case time.Time:
-			outVal = v.Format(time.RFC3339Nano)
+			ts, err := ptypes.TimestampProto(v)
+			if err != nil {
+				return nil, err
+			}
+
+			outVals[i] = &pb.Field{
+				Value: &pb.Field_Timestamp{Timestamp: ts},
+			}
 		case float64:
-			outVal = strconv.FormatFloat(v, 'f', -1, 64)
+			outVals[i] = &pb.Field{
+				Value: &pb.Field_Double{Double: v},
+			}
 		case string:
-			outVal = v
+			outVals[i] = &pb.Field{
+				Value: &pb.Field_String_{String_: v},
+			}
 		default:
 			return nil, errors.New(UnknownFieldType, "Unknown type %T", v)
 		}
-
-		by, err := json.Marshal(outVal)
-		if err != nil {
-			return nil, err
-		}
-
-		outVals[i] = by
 	}
 
 	return outVals, nil

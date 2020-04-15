@@ -15,7 +15,7 @@ func TestEvaluator(t *testing.T) {
 		DataSource: "transactions",
 		Target:     "transactions",
 		Type:       0,
-		Fields: []*proto.Field{
+		Fields: []*proto.FieldInfo{
 			{Name: "id"},
 			{Name: "processor"},
 			{Name: "timestamp"},

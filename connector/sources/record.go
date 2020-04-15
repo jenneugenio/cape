@@ -13,8 +13,8 @@ type Record struct {
 }
 
 // NewRecord decodes the incoming bytes given the schema and returns a Record
-func NewRecord(schema *proto.Schema, data [][]byte) (*Record, error) {
-	values, err := Decode(schema, data)
+func NewRecord(schema *proto.Schema, field []*proto.Field) (*Record, error) {
+	values, err := Decode(schema, field)
 	if err != nil {
 		return nil, err
 	}

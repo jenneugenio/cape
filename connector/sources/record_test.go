@@ -1,7 +1,6 @@
 package sources
 
 import (
-	"encoding/json"
 	"testing"
 	"time"
 
@@ -17,7 +16,7 @@ func TestRecordsToStrings(t *testing.T) {
 		DataSource: "transactions",
 		Target:     "transactions",
 		Type:       proto.RecordType_DOCUMENT,
-		Fields: []*proto.Field{
+		Fields: []*proto.FieldInfo{
 			{
 				Field: proto.FieldType_BIGINT,
 			},
@@ -36,12 +35,15 @@ func TestRecordsToStrings(t *testing.T) {
 		},
 	}
 
+	ts := time.Now().UTC()
 	var input []interface{}
 	input = append(input, int64(12345677777))
 	input = append(input, int32(42))
-	input = append(input, float64(1000.1000))
+	input = append(input, float64(1000.1))
 	input = append(input, "MASTERCARD")
-	input = append(input, time.Now())
+	input = append(input, ts)
+
+	expected := []string{"12345677777", "42", "1000.1", "MASTERCARD", ts.Format(time.RFC3339Nano)}
 
 	data, err := PostgresEncode(input)
 	gm.Expect(err).To(gm.BeNil())
@@ -51,10 +53,6 @@ func TestRecordsToStrings(t *testing.T) {
 
 	strs := record.ToStrings()
 	for i, str := range strs {
-		var expected string
-		err = json.Unmarshal(data[i], &expected)
-		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(str).To(gm.Equal(expected))
+		gm.Expect(str).To(gm.Equal(expected[i]))
 	}
 }

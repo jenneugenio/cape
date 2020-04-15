@@ -1,9 +1,11 @@
 
 syntax = "proto3";
 
-package cape.proto;
+package cape;
 
-option go_package = "proto";
+option go_package = ".;proto";
+
+import "google/protobuf/timestamp.proto";
 
 service DataConnector {
   rpc Query(QueryRequest) returns (stream Record);
@@ -19,11 +21,23 @@ message Record {
   Schema schema = 1;
 
   // Each field value goes over the wire and the number of values maps to the number of fields in the Schema.
-  repeated bytes value = 2;
+  repeated Field fields = 2;
 }
 
 enum RecordType {
   DOCUMENT = 0;
+}
+
+message Field {
+  oneof value {
+    int32 int32 = 1;
+    int64 int64 = 2;
+    google.protobuf.Timestamp timestamp = 3;
+    float float = 4;
+    double double = 5;
+    string string = 6;
+    bytes bytes = 7;
+  }
 }
 
 // Schema contains information
@@ -31,7 +45,14 @@ message Schema {
   string data_source = 1; // label of data source data is being returned from
   string target = 2; // the target used to select the collection that we’re returning records from
   RecordType type = 3;
-  repeated Field fields = 4;
+  repeated FieldInfo fields = 4;
+}
+
+// FieldInfo represents all information about a field including its type, the number of bits or bytes, and the fields name.
+message FieldInfo {
+  FieldType field = 1;
+  int64 size = 2;
+  string name = 3;
 }
 
 // We need to know the exact field type so the client can convert the data into the appropriate field type.
@@ -78,11 +99,4 @@ enum FieldType {
   TXIDSNAPSHOT = 39;
   UUID = 40;
   XML = 41;
-}
-
-// Field represents all information about a field including its type, the number of bits or bytes, and the fields name.
-message Field {
-  FieldType field = 1;
-  int64 size = 2; // Provided for fields of a fixed size that’s specified by the schema (e.g. char(8))
-  string name = 3;
 }

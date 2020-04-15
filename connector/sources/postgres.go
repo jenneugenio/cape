@@ -76,7 +76,7 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 		Target:     q.Collection(),
 		Type:       proto.RecordType_DOCUMENT,
 	}
-	fields := []*proto.Field{}
+	var fields []*proto.FieldInfo
 
 	// See comment in Query below about why this is using its own context
 	rows, err := p.pool.Query(ctx, "SELECT column_name, data_type, character_maximum_length FROM "+
@@ -107,7 +107,7 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 			size = *maxLength
 		}
 
-		field := &proto.Field{
+		field := &proto.FieldInfo{
 			Field: f.FieldType,
 			Size:  size,
 			Name:  columnName,
@@ -171,12 +171,12 @@ func (p *PostgresSource) Query(ctx context.Context, q Query, stream Stream) erro
 			return err
 		}
 
-		values, err := PostgresEncode(pgVals)
+		fields, err := PostgresEncode(pgVals)
 		if err != nil {
 			return err
 		}
 
-		record.Value = values
+		record.Fields = fields
 
 		// When the grpc connection is closed grpc calls
 		// cancel on their context but this Send call also
