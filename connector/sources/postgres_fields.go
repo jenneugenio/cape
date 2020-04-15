@@ -12,52 +12,74 @@ import (
 // data types in postgres
 const VariableSize = -1
 
-// Field represents a proto field and its pg data type size
-type Field struct {
-	FieldType proto.FieldType
-
-	// number of bytes, -1 if variables sized,
-	// see constant VariableSize above
-	Size int64
-}
-
 var ci *pgtype.ConnInfo
 
-// Data coming out of the postgre information schema
+// Data coming out of the postgres information schema
 // is in the long form but pgx uses the short form.
 // Set up any aliases required here.
 var postgresDataTypeAliases = map[string]string{
 	"timestamp without time zone": "timestamp",
-	"bigint":                      "int8",
-	"double precision":            "float8",
+	"smallint":                    "int2",
 	"integer":                     "int4",
+	"bigint":                      "int8",
+	"real":                        "float4",
+	"double precision":            "float8",
+	"character":                   "bpchar",
+	"character varying":           "varchar",
+	"boolean":                     "bool",
 }
 
 // PostgresDataTypeToProtoField is a map to postgres OIDs
-var PostgresDataTypeToProtoField = map[uint32]*Field{
+var PostgresDataTypeToProtoField = map[uint32]*proto.FieldInfo{
+	// Note: serial2, serial4 and serial8 are not exposed outside of postgres
+	// the types are just returned as int2, int4, or int8.
+	pgtype.Int2OID: {
+		Field: proto.FieldType_SMALLINT,
+		Size:  2,
+	},
 	pgtype.Int4OID: {
-		FieldType: proto.FieldType_INT,
-		Size:      4,
-	},
-	pgtype.TextOID: {
-		FieldType: proto.FieldType_TEXT,
-		Size:      VariableSize,
-	},
-	pgtype.TimestampOID: {
-		FieldType: proto.FieldType_TIMESTAMP,
-		Size:      8,
+		Field: proto.FieldType_INT,
+		Size:  4,
 	},
 	pgtype.Int8OID: {
-		FieldType: proto.FieldType_BIGINT,
-		Size:      8,
+		Field: proto.FieldType_BIGINT,
+		Size:  8,
 	},
 	pgtype.Float8OID: {
-		FieldType: proto.FieldType_DOUBLE,
-		Size:      8,
+		Field: proto.FieldType_DOUBLE,
+		Size:  8,
+	},
+	pgtype.Float4OID: {
+		Field: proto.FieldType_REAL,
+		Size:  4,
+	},
+	pgtype.BPCharOID: {
+		Field: proto.FieldType_CHAR,
+		Size:  VariableSize,
+	},
+	pgtype.VarcharOID: {
+		Field: proto.FieldType_VARCHAR,
+		Size:  VariableSize,
+	},
+	pgtype.TextOID: {
+		Field: proto.FieldType_TEXT,
+		Size:  VariableSize,
+	},
+	pgtype.TimestampOID: {
+		Field: proto.FieldType_TIMESTAMP,
+		Size:  8,
+	},
+	pgtype.BoolOID: {
+		Field: proto.FieldType_BOOL,
+		Size:  1,
+	},
+	pgtype.ByteaOID: {
+		Field: proto.FieldType_BYTEA,
+		Size:  VariableSize,
 	},
 }
 
-type dataTypeToProtoFieldFunc func(dataType string) (*Field, error)
+type dataTypeToProtoFieldFunc func(dataType string) (*proto.FieldInfo, error)
 
 var dataTypeToProtoFieldFuncs = map[primitives.SourceType]dataTypeToProtoFieldFunc{
 	primitives.PostgresType: postgresDataTypeToProtoField,
@@ -65,11 +87,11 @@ var dataTypeToProtoFieldFuncs = map[primitives.SourceType]dataTypeToProtoFieldFu
 
 // DataTypeToProtoField returns the field type from the postgres data type.
 // Returns error if the type isn't in the map
-func DataTypeToProtoField(sourceType primitives.SourceType, dataType string) (*Field, error) {
+func DataTypeToProtoField(sourceType primitives.SourceType, dataType string) (*proto.FieldInfo, error) {
 	return dataTypeToProtoFieldFuncs[sourceType](dataType)
 }
 
-func postgresDataTypeToProtoField(dataType string) (*Field, error) {
+func postgresDataTypeToProtoField(dataType string) (*proto.FieldInfo, error) {
 	var dType *pgtype.DataType
 
 	// try an alias
@@ -108,7 +130,7 @@ func fieldsFromFieldDescription(fds []pgproto3.FieldDescription) ([]*proto.Field
 		fields[i] = &proto.FieldInfo{
 			Name:  string(fd.Name),
 			Size:  int64(fd.DataTypeSize),
-			Field: typ.FieldType,
+			Field: typ.Field,
 		}
 	}
 

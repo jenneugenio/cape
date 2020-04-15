@@ -108,7 +108,7 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 		}
 
 		field := &proto.FieldInfo{
-			Field: f.FieldType,
+			Field: f.Field,
 			Size:  size,
 			Name:  columnName,
 		}

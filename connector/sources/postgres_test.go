@@ -26,12 +26,10 @@ func TestPostgresSource(t *testing.T) {
 	db, err := dbtest.New(os.Getenv("CAPE_DB_URL"))
 	gm.Expect(err).To(gm.BeNil())
 
-	seedMigrations := os.Getenv("CAPE_DB_SEED_MIGRATIONS")
-
 	err = db.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	migrator, err := database.NewMigrator(db.URL(), seedMigrations)
+	migrator, err := database.NewMigrator(db.URL(), "testdata")
 	gm.Expect(err).To(gm.BeNil())
 
 	defer func() {
@@ -76,47 +74,62 @@ func TestPostgresSource(t *testing.T) {
 		gm.Expect(schema.Target).To(gm.Equal(query.Collection()))
 		gm.Expect(schema.Type).To(gm.Equal(proto.RecordType_DOCUMENT))
 
-		gm.Expect(len(schema.Fields)).To(gm.Equal(8))
+		gm.Expect(len(schema.Fields)).To(gm.Equal(11))
 
 		expectedFields := []*proto.FieldInfo{
-			&proto.FieldInfo{
+			{
+				Field: proto.FieldType_SMALLINT,
+				Name:  "int2",
+				Size:  2,
+			},
+			{
 				Field: proto.FieldType_INT,
-				Name:  "id",
+				Name:  "int4",
 				Size:  4,
 			},
-			&proto.FieldInfo{
+			{
+				Field: proto.FieldType_BIGINT,
+				Name:  "int8",
+				Size:  8,
+			},
+			{
+				Field: proto.FieldType_DOUBLE,
+				Name:  "float8",
+				Size:  8,
+			},
+			{
+				Field: proto.FieldType_REAL,
+				Name:  "float4",
+				Size:  4,
+			},
+			{
+				Field: proto.FieldType_VARCHAR,
+				Name:  "vchar",
+				Size:  20,
+			},
+			{
+				Field: proto.FieldType_CHAR,
+				Name:  "ch",
+				Size:  20,
+			},
+			{
 				Field: proto.FieldType_TEXT,
-				Name:  "processor",
+				Name:  "txt",
 				Size:  VariableSize,
 			},
-			&proto.FieldInfo{
+			{
 				Field: proto.FieldType_TIMESTAMP,
-				Name:  "timestamp",
+				Name:  "ts",
 				Size:  8,
 			},
-			&proto.FieldInfo{
-				Field: proto.FieldType_INT,
-				Name:  "card_id",
-				Size:  4,
+			{
+				Field: proto.FieldType_BOOL,
+				Name:  "bool",
+				Size:  1,
 			},
-			&proto.FieldInfo{
-				Field: proto.FieldType_BIGINT,
-				Name:  "card_number",
-				Size:  8,
-			},
-			&proto.FieldInfo{
-				Field: proto.FieldType_DOUBLE,
-				Name:  "value",
-				Size:  8,
-			},
-			&proto.FieldInfo{
-				Field: proto.FieldType_INT,
-				Name:  "ssn",
-				Size:  4,
-			},
-			&proto.FieldInfo{
-				Field: proto.FieldType_TEXT,
-				Name:  "vendor",
+			{
+				Field: proto.FieldType_BYTEA,
+				Name:  "bytes",
 				Size:  VariableSize,
 			},
 		}
@@ -139,7 +152,7 @@ func TestPostgresSource(t *testing.T) {
 		err = source.Query(ctx, q, stream)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(len(stream.Buffer)).To(gm.Equal(50))
+		gm.Expect(len(stream.Buffer)).To(gm.Equal(9))
 
 		query, params := q.Raw()
 		expectedRows, err := GetExpectedRows(ctx, db.URL(), query, params)

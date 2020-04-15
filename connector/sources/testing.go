@@ -102,11 +102,11 @@ func (t *testQuery) Source() primitives.Label {
 }
 
 func (t *testQuery) Collection() string {
-	return "transactions"
+	return "test"
 }
 
 func (t *testQuery) Raw() (string, []interface{}) {
-	return "SELECT * FROM transactions", make([]interface{}, 0)
+	return "SELECT * FROM test", make([]interface{}, 0)
 }
 
 // GetExpectedRows is a testing helper to query the expected rows from the database
