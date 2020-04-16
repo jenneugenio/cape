@@ -2,18 +2,19 @@ package coordinator
 
 import (
 	"context"
-	"encoding/json"
-	"net"
-	"strings"
-
-	"github.com/machinebox/graphql"
+	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/manifoldco/go-base64"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	"github.com/capeprivacy/cape/database"
-	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
+
+	"encoding/json"
+	"net"
+	"strings"
+
+	"github.com/machinebox/graphql"
 )
 
 // NetworkCause occurs when the client cannot reach the server
@@ -23,122 +24,26 @@ var NetworkCause = errors.NewCause(errors.RequestTimeoutCategory, "network_error
 // it doesn't recognize.
 var UnrecognizedIdentityType = errors.NewCause(errors.BadRequestCategory, "unrecognized_identity")
 
-// Client is a wrapper around the graphql client that
-// connects to the coordinator and sends queries
-type Client struct {
+type ClientTransport struct {
 	client    *graphql.Client
 	authToken *base64.Value
 }
 
-// NewClient returns a new client that connects to the given
-// url and sets the required struct members
-func NewClient(coordinatorURL *primitives.URL, authToken *base64.Value) *Client {
+func NewTransport(coordinatorURL *primitives.URL, authToken *base64.Value) Transport {
 	if authToken != nil && len(authToken.String()) == 0 {
 		authToken = nil
 	}
 
 	client := graphql.NewClient(coordinatorURL.String() + "/v1/query")
-	return &Client{
+	return &ClientTransport{
 		client:    client,
 		authToken: authToken,
 	}
 }
 
-// Raw wraps the NewRequest and does common req changes like adding authorization
-// headers. It calls Run passing the object to be filled with the request data.
-func (c *Client) Raw(ctx context.Context, query string,
-	variables map[string]interface{}, resp interface{}) error {
-	req := graphql.NewRequest(query)
-
-	for key, val := range variables {
-		req.Var(key, val)
-	}
-
-	if c.authToken != nil {
-		req.Header.Add("Authorization", "Bearer "+c.authToken.String())
-	}
-
-	err := c.client.Run(ctx, req, resp)
-	if err != nil {
-		if nerr, ok := err.(net.Error); ok {
-			return errors.New(NetworkCause, "Could not contact coordinator: %s", nerr.Error())
-		}
-		return convertError(err)
-	}
-
-	return nil
-}
-
-func convertError(err error) error {
-	return errors.New(errors.UnknownCause, strings.TrimPrefix(err.Error(), "graphql: "))
-}
-
-// Authenticated returns whether the client is authenticated or not.
-// If the authToken is not nil then its authenticated!
-func (c *Client) Authenticated() bool {
-	return c.authToken != nil
-}
-
-// Me returns the identity of the current authenticated session
-func (c *Client) Me(ctx context.Context) (primitives.Identity, error) {
-	var resp struct {
-		Identity *primitives.IdentityImpl `json:"me"`
-	}
-
-	err := c.Raw(ctx, `
-		query Me {
-			me {
-				id
-				email
-			}
-		}
-	`, nil, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return identityImplToIdentity(resp.Identity)
-}
-
-// UserResponse is a primitive User with an extra Roles field that maps to the
-// GraphQL type.
-type UserResponse struct {
-	*primitives.User
-	Roles []*primitives.Role `json:"roles"`
-}
-
-// GetUser returns a user and it's roles!
-func (c *Client) GetUser(ctx context.Context, id database.ID) (*UserResponse, error) {
-	var resp struct {
-		User UserResponse `json:"user"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["id"] = id.String()
-
-	err := c.Raw(ctx, `
-		query User($id: ID!) {
-			user(id: $id) {
-				id
-				name
-				email
-				roles {
-					id
-					label
-				}
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.User, nil
-}
-
 // createLoginSession runs a CreateLoginSession mutation that creates a
 // login session and returns it and also sets it on the
-func (c *Client) createLoginSession(ctx context.Context, email primitives.Email) (*primitives.Session, error) {
+func (c *ClientTransport) createLoginSession(ctx context.Context, email primitives.Email) (*primitives.Session, error) {
 	var resp struct {
 		Session primitives.Session `json:"createLoginSession"`
 	}
@@ -172,7 +77,7 @@ func (c *Client) createLoginSession(ctx context.Context, email primitives.Email)
 // createAuthSession creates a authenticated session which can then be used
 // for all other graphql queries. Replaces the old session set on the client
 // and returns it
-func (c *Client) createAuthSession(ctx context.Context, sig *base64.Value) (*primitives.Session, error) {
+func (c *ClientTransport) createAuthSession(ctx context.Context, sig *base64.Value) (*primitives.Session, error) {
 	var resp struct {
 		Session primitives.Session `json:"createAuthSession"`
 	}
@@ -199,39 +104,31 @@ func (c *Client) createAuthSession(ctx context.Context, sig *base64.Value) (*pri
 	return &resp.Session, nil
 }
 
-// CreateUser creates a user and returns it
-func (c *Client) CreateUser(ctx context.Context, user *primitives.User) (*primitives.User, error) {
-	var resp struct {
-		User primitives.User `json:"createUser"`
+// Raw wraps the NewRequest and does common req changes like adding authorization
+// headers. It calls Run passing the object to be filled with the request data.
+func (c *ClientTransport) Raw(ctx context.Context, query string, variables map[string]interface{}, resp interface{}) error {
+	req := graphql.NewRequest(query)
+
+	for key, val := range variables {
+		req.Var(key, val)
 	}
 
-	variables := make(map[string]interface{})
-	variables["name"] = user.Name
-	variables["email"] = user.Email
-	variables["public_key"] = user.Credentials.PublicKey
-	variables["salt"] = user.Credentials.Salt
-	variables["alg"] = "EDDSA"
+	if c.authToken != nil {
+		req.Header.Add("Authorization", "Bearer "+c.authToken.String())
+	}
 
-	err := c.Raw(ctx, `
-		mutation CreateUser ($name: Name!, $email: Email!, $public_key: Base64!, $salt: Base64!, $alg: CredentialsAlgType!) {
-			createUser(input: { name: $name, email: $email, public_key: $public_key, salt: $salt, alg: $alg}) {
-				id
-				name
-				email
-			}
-		}
-	`, variables, &resp)
-
+	err := c.client.Run(ctx, req, resp)
 	if err != nil {
-		return nil, err
+		if nerr, ok := err.(net.Error); ok {
+			return errors.New(NetworkCause, "Could not contact coordinator: %s", nerr.Error())
+		}
+		return convertError(err)
 	}
 
-	return &resp.User, nil
+	return nil
 }
 
-// Login calls the CreateLoginSession and CreateAuthSession
-// mutations
-func (c *Client) Login(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
+func (c *ClientTransport) Login(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
 	session, err := c.createLoginSession(ctx, email)
 	if err != nil {
 		return nil, err
@@ -259,8 +156,7 @@ func (c *Client) Login(ctx context.Context, email primitives.Email, password aut
 	return session, nil
 }
 
-// Logout calls the deleteSession mutation
-func (c *Client) Logout(ctx context.Context, authToken *base64.Value) error {
+func (c *ClientTransport) Logout(ctx context.Context, authToken *base64.Value) error {
 	token := authToken
 	if authToken == nil {
 		token = c.authToken
@@ -276,6 +172,133 @@ func (c *Client) Logout(ctx context.Context, authToken *base64.Value) error {
 	`, variables, nil)
 }
 
+// Authenticated returns whether the client is authenticated or not.
+// If the authToken is not nil then its authenticated!
+func (c *ClientTransport) Authenticated() bool {
+	return c.authToken != nil
+}
+
+// Client is a wrapper around the graphql client that
+// connects to the coordinator and sends queries
+type Client struct {
+	transport Transport
+}
+
+// NewClient returns a new client that connects to the given
+// url and sets the required struct members
+//func NewClient(coordinatorURL *primitives.URL, authToken *base64.Value) *Client {
+func NewClient(transport Transport) *Client {
+	return &Client{
+		transport: transport,
+	}
+}
+
+func convertError(err error) error {
+	return errors.New(errors.UnknownCause, strings.TrimPrefix(err.Error(), "graphql: "))
+}
+
+// Me returns the identity of the current authenticated session
+func (c *Client) Me(ctx context.Context) (primitives.Identity, error) {
+	var resp struct {
+		Identity *primitives.IdentityImpl `json:"me"`
+	}
+
+	err := c.transport.Raw(ctx, `
+		query Me {
+			me {
+				id
+				email
+			}
+		}
+	`, nil, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return identityImplToIdentity(resp.Identity)
+}
+
+// UserResponse is a primitive User with an extra Roles field that maps to the
+// GraphQL type.
+type UserResponse struct {
+	*primitives.User
+	Roles []*primitives.Role `json:"roles"`
+}
+
+// GetUser returns a user and it's roles!
+func (c *Client) GetUser(ctx context.Context, id database.ID) (*UserResponse, error) {
+	var resp struct {
+		User UserResponse `json:"user"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["id"] = id.String()
+
+	err := c.transport.Raw(ctx, `
+		query User($id: ID!) {
+			user(id: $id) {
+				id
+				name
+				email
+				roles {
+					id
+					label
+				}
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.User, nil
+}
+
+// CreateUser creates a user and returns it
+func (c *Client) CreateUser(ctx context.Context, user *primitives.User) (*primitives.User, error) {
+	var resp struct {
+		User primitives.User `json:"createUser"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["name"] = user.Name
+	variables["email"] = user.Email
+	variables["public_key"] = user.Credentials.PublicKey
+	variables["salt"] = user.Credentials.Salt
+	variables["alg"] = "EDDSA"
+
+	err := c.transport.Raw(ctx, `
+		mutation CreateUser ($name: Name!, $email: Email!, $public_key: Base64!, $salt: Base64!, $alg: CredentialsAlgType!) {
+			createUser(input: { name: $name, email: $email, public_key: $public_key, salt: $salt, alg: $alg}) {
+				id
+				name
+				email
+			}
+		}
+	`, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.User, nil
+}
+
+func (c *Client) Authenticated() bool {
+	return c.transport.Authenticated()
+}
+
+// Login calls the CreateLoginSession and CreateAuthSession
+// mutations
+func (c *Client) Login(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
+	return c.transport.Login(ctx, email, password)
+}
+
+// Logout calls the deleteSession mutation
+func (c *Client) Logout(ctx context.Context, authToken *base64.Value) error {
+	return c.transport.Logout(ctx, authToken)
+}
+
 // Role Routes
 
 // CreateRole creates a new role with a label
@@ -288,7 +311,7 @@ func (c *Client) CreateRole(ctx context.Context, label primitives.Label, identit
 	variables["ids"] = identityIDs
 	variables["label"] = label
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		mutation CreateRole($label: Label!, $ids: [ID!]) {
 			createRole(input: { label: $label, identity_ids: $ids }) {
 				id
@@ -309,7 +332,7 @@ func (c *Client) DeleteRole(ctx context.Context, id database.ID) error {
 	variables := make(map[string]interface{})
 	variables["id"] = id
 
-	return c.Raw(ctx, `
+	return c.transport.Raw(ctx, `
 		mutation DeleteRole($id: ID!) {
 			deleteRole(input: { id: $id })
 		}
@@ -325,7 +348,7 @@ func (c *Client) GetRole(ctx context.Context, id database.ID) (*primitives.Role,
 	variables := make(map[string]interface{})
 	variables["id"] = id
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query Role($id: ID!) {
 			role(id: $id) {
 				id
@@ -349,7 +372,7 @@ func (c *Client) GetRoleByLabel(ctx context.Context, label primitives.Label) (*p
 	variables := make(map[string]interface{})
 	variables["label"] = label
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query RoleByLabel($label: Label!) {
 			roleByLabel(label: $label) {
 				id
@@ -373,7 +396,7 @@ func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]prim
 	variables := make(map[string]interface{})
 	variables["role_id"] = roleID
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query GetMembersRole($role_id: ID!) {
 			roleMembers(role_id: $role_id) {
 				id
@@ -476,7 +499,7 @@ func (c *Client) AssignRole(ctx context.Context, identityID database.ID,
 	variables["role_id"] = roleID
 	variables["identity_id"] = identityID
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		mutation AssignRole($role_id: ID!, $identity_id: ID!) {
 			assignRole(input: { role_id: $role_id, identity_id: $identity_id }) {
 				role {
@@ -504,7 +527,7 @@ func (c *Client) UnassignRole(ctx context.Context, identityID database.ID, roleI
 	variables["role_id"] = roleID
 	variables["identity_id"] = identityID
 
-	return c.Raw(ctx, `
+	return c.transport.Raw(ctx, `
 		mutation UnassignRole($role_id: ID!, $identity_id: ID!) {
 			unassignRole(input: { role_id: $role_id, identity_id: $identity_id })
 		}
@@ -517,7 +540,7 @@ func (c *Client) ListRoles(ctx context.Context) ([]*primitives.Role, error) {
 		Roles []*primitives.Role `json:"roles"`
 	}
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query Roles {
 			roles {
 				id
@@ -607,7 +630,7 @@ func (c *Client) AddSource(ctx context.Context, label primitives.Label,
 	variables["credentials"] = credentials.String()
 	variables["service_id"] = serviceID
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		mutation AddSource($label: Label!, $credentials: DBURL!, $service_id: ID) {
 			  addSource(input: { label: $label, credentials: $credentials, service_id: $service_id}) {
 				id
@@ -627,13 +650,14 @@ func (c *Client) AddSource(ctx context.Context, label primitives.Label,
 	return &source, nil
 }
 
+type ListSourcesResponse struct {
+	Sources []SourceResponse `json:"sources"`
+}
+
 // ListSources returns all of the data sources in the database that you
 func (c *Client) ListSources(ctx context.Context) ([]*primitives.Source, error) {
-	var resp struct {
-		Sources []SourceResponse `json:"sources"`
-	}
-
-	err := c.Raw(ctx, `
+	var resp ListSourcesResponse
+	err := c.transport.Raw(ctx, `
 		query Sources {
 				sources {
 					id
@@ -665,7 +689,7 @@ func (c *Client) RemoveSource(ctx context.Context, label primitives.Label) error
 
 	// We only care if this errors
 	var resp interface{}
-	return c.Raw(ctx, `
+	return c.transport.Raw(ctx, `
 		mutation RemoveSource($label: Label!) {
 			  removeSource(input: { label: $label })
 			}
@@ -681,7 +705,7 @@ func (c *Client) GetSource(ctx context.Context, id database.ID) (*primitives.Sou
 	variables := make(map[string]interface{})
 	variables["id"] = id
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query Sources($id: ID!) {
 				source(id: $id) {
 					id
@@ -710,7 +734,7 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (
 	variables := make(map[string]interface{})
 	variables["label"] = label
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query Sources($label: Label!) {
 				sourceByLabel(label: $label) {
 					id
@@ -742,7 +766,7 @@ func (c *Client) Setup(ctx context.Context, user *primitives.User) (*primitives.
 	variables["public_key"] = user.Credentials.PublicKey
 	variables["salt"] = user.Credentials.Salt
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		mutation CreateUser($name: Name!, $email: Email!, $public_key: Base64!, $salt: Base64!) {
 			setup(input: { name: $name, email: $email, public_key: $public_key, salt: $salt, alg: "EDDSA"}) {
 				id
@@ -782,7 +806,7 @@ func (c *Client) CreateService(ctx context.Context, service *primitives.Service)
 		variables["endpoint"] = service.Endpoint.String()
 	}
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		mutation CreateService($email: Email!, $type: ServiceType!, $endpoint: URL, $public_key: Base64!, $salt: Base64!) {
 			createService(input: { email: $email, type: $type, endpoint: $endpoint, public_key: $public_key, salt: $salt, alg: "EDDSA"}) {
 				id
@@ -805,7 +829,7 @@ func (c *Client) DeleteService(ctx context.Context, id database.ID) error {
 	variables := make(map[string]interface{})
 	variables["id"] = id
 
-	return c.Raw(ctx, `
+	return c.transport.Raw(ctx, `
 		mutation DeleteService($id: ID!) {
 			deleteService(input: { id: $id })
 		}
@@ -821,7 +845,7 @@ func (c *Client) GetService(ctx context.Context, id database.ID) (*primitives.Se
 	variables := make(map[string]interface{})
 	variables["id"] = id
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query Service($id: ID!) {
 			service(id: $id) {
 				id
@@ -847,7 +871,7 @@ func (c *Client) GetServiceByEmail(ctx context.Context, email primitives.Email) 
 	variables := make(map[string]interface{})
 	variables["email"] = email
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query Service($email: Email!) {
 			serviceByEmail(email: $email) {
 				id
@@ -870,7 +894,7 @@ func (c *Client) ListServices(ctx context.Context) ([]*ServiceResponse, error) {
 		Services []*ServiceResponse `json:"services"`
 	}
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query Services {
 			services {
 				id
@@ -902,7 +926,7 @@ func (c *Client) CreatePolicy(ctx context.Context, policy *primitives.Policy) (*
 	variables["label"] = policy.Label
 	variables["spec"] = policy.Spec
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		mutation CreatePolicy($label: Label!, $spec: PolicySpec!) {
 			createPolicy(input: { label: $label, spec: $spec }) {
 				id
@@ -923,7 +947,7 @@ func (c *Client) DeletePolicy(ctx context.Context, id database.ID) error {
 	variables := make(map[string]interface{})
 	variables["id"] = id
 
-	return c.Raw(ctx, `
+	return c.transport.Raw(ctx, `
 		mutation DeletePolicy($id: ID!) {
 			deletePolicy(input: { id: $id })
 		}
@@ -939,7 +963,7 @@ func (c *Client) GetPolicy(ctx context.Context, id database.ID) (*primitives.Pol
 	variables := make(map[string]interface{})
 	variables["id"] = id
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query Policy($id: ID!) {
 			policy(id: $id) {
 				id
@@ -963,7 +987,7 @@ func (c *Client) GetPolicyByLabel(ctx context.Context, label primitives.Label) (
 	variables := make(map[string]interface{})
 	variables["label"] = label
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query PolicyByLabel($label: Label!) {
 			policyByLabel(label: $label) {
 				id
@@ -984,7 +1008,7 @@ func (c *Client) ListPolicies(ctx context.Context) ([]*primitives.Policy, error)
 		Policies []*primitives.Policy `json:"policies"`
 	}
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query Policies {
 			policies {
 				id
@@ -1011,7 +1035,7 @@ func (c *Client) AttachPolicy(ctx context.Context, policyID database.ID,
 	variables["role_id"] = roleID
 	variables["policy_id"] = policyID
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		mutation AttachPolicy($role_id: ID!, $policy_id: ID!) {
 			attachPolicy(input: { role_id: $role_id, policy_id: $policy_id }) {
 				role {
@@ -1038,7 +1062,7 @@ func (c *Client) DetachPolicy(ctx context.Context, policyID database.ID, roleID 
 	variables["role_id"] = roleID
 	variables["policy_id"] = policyID
 
-	return c.Raw(ctx, `
+	return c.transport.Raw(ctx, `
 		mutation detachPolicy($role_id: ID!, $policy_id: ID!) {
 			detachPolicy(input: { role_id: $role_id, policy_id: $policy_id })
 		}
@@ -1054,7 +1078,7 @@ func (c *Client) GetRolePolicies(ctx context.Context, roleID database.ID) ([]*pr
 	variables := make(map[string]interface{})
 	variables["role_id"] = roleID
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query RolePolicies($role_id: ID!) {
 			rolePolicies(role_id: $role_id) {
 				id
@@ -1078,7 +1102,7 @@ func (c *Client) GetIdentityPolicies(ctx context.Context, identityID database.ID
 	variables := make(map[string]interface{})
 	variables["identity_id"] = identityID
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query IdentityPolicies($identity_id: ID!) {
 			identityPolicies(identity_id: $identity_id) {
 				id
@@ -1103,7 +1127,7 @@ func (c *Client) GetIdentities(ctx context.Context, emails []primitives.Email) (
 	variables := make(map[string]interface{})
 	variables["emails"] = emails
 
-	err := c.Raw(ctx, `
+	err := c.transport.Raw(ctx, `
 		query IdentityPolicies($emails: [Email!]) {
 			identities(emails: $emails) {
 				id

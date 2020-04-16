@@ -7,7 +7,6 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/cmd/config"
-	"github.com/capeprivacy/cape/cmd/ui"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
@@ -24,11 +23,11 @@ const (
 	// EnvVarContextKey is the name of the key storing environment variable values for a command
 	EnvVarContextKey ContextKey = "environment_variables"
 
-	// UIContextKey is the name of the key storing the ui.UI struct for a command
-	UIContextKey ContextKey = "ui"
-
 	// SessionContextKey is the name of key storing the config.Session struct for a command
 	SessionContextKey ContextKey = "session"
+
+	// ProviderContextKey is the name of the key storing the cmd.Provider interface
+	ProviderContextKey ContextKey = "provider"
 )
 
 // Config returns the config object stored on the context
@@ -61,16 +60,6 @@ func EnvVariables(ctx context.Context, e *EnvVar) interface{} {
 	return vars.(EnvVarValues)[e]
 }
 
-// UI returns the UI object stored on the context
-func UI(ctx context.Context) *ui.UI {
-	u := ctx.Value(UIContextKey)
-	if u == nil {
-		panic("ui not available on context")
-	}
-
-	return u.(*ui.UI)
-}
-
 // Session returns the session object stored on the context
 func Session(ctx context.Context) *config.Session {
 	s := ctx.Value(SessionContextKey)
@@ -81,19 +70,26 @@ func Session(ctx context.Context) *config.Session {
 	return s.(*config.Session)
 }
 
-func retrieveConfig(c *cli.Context) error {
+// GetProvider returns the provider saved on the context
+func GetProvider(ctx context.Context) Provider {
+	s := ctx.Value(ProviderContextKey)
+	if s == nil {
+		panic("provider not available on context")
+	}
+
+	return s.(Provider)
+}
+
+func beforeMiddleware(c *cli.Context) error {
 	cfg, err := config.Parse()
 	if err != nil {
 		return err
 	}
 
-	u, err := ui.NewUI(cfg)
-	if err != nil {
-		return err
-	}
+	provider := NewAppProvider()
 
-	c.Context = context.WithValue(c.Context, UIContextKey, u)
 	c.Context = context.WithValue(c.Context, ConfigContextKey, cfg)
+	c.Context = context.WithValue(c.Context, ProviderContextKey, provider)
 
 	return nil
 }

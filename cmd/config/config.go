@@ -286,8 +286,9 @@ func (c *Cluster) String() string {
 	return fmt.Sprintf("%s (%s)", c.Label, c.URL.String())
 }
 
-// Client returns a configured client for this cluster.
-func (c *Cluster) Client() (*coordinator.Client, error) {
+// Transport returns a configured coordinator transport for this cluster.
+// This can be used with a client
+func (c *Cluster) Transport() (coordinator.Transport, error) {
 	clusterURL, err := c.GetURL()
 	if err != nil {
 		return nil, err
@@ -298,7 +299,7 @@ func (c *Cluster) Client() (*coordinator.Client, error) {
 		return nil, err
 	}
 
-	return coordinator.NewClient(clusterURL, token), nil
+	return coordinator.NewTransport(clusterURL, token), nil
 }
 
 // Path returns the path to local configuration yaml file.

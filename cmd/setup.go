@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/capeprivacy/cape/auth"
-	"github.com/capeprivacy/cape/coordinator"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/urfave/cli/v2"
@@ -66,7 +65,12 @@ func setupCoordinatorCmd(c *cli.Context) error {
 		return err
 	}
 
-	client := coordinator.NewClient(clusterURL, nil)
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
 	_, err = client.Setup(c.Context, user)
 	if err != nil {
 		return err

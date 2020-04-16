@@ -65,7 +65,7 @@ COPYRIGHT:
    {{.Copyright}}{{end}}
 `, cliName)
 
-func main() {
+func init() {
 	cli.CommandHelpTemplate = commandHelpTemplate
 	cli.AppHelpTemplate = appHelpTemplate
 
@@ -77,7 +77,9 @@ func main() {
 			exitHandler(c, err)
 		}
 	}
+}
 
+func NewApp() *cli.App {
 	app := cli.NewApp()
 	app.Name = cliName
 	app.HelpName = cliName
@@ -89,10 +91,15 @@ func main() {
 
 	// Before runs our global middleware for all commands including the command
 	// not found middleware
-	app.Before = cli.BeforeFunc(retrieveConfig)
+	app.Before = cli.BeforeFunc(beforeMiddleware)
 	app.CommandNotFound = commandNotFound
 	app.ExitErrHandler = exitHandler
 
+	return app
+}
+
+func main() {
+	app := NewApp()
 	err := app.Run(os.Args)
 	if err != nil {
 		// Errors are handled by the ExitErrHandler

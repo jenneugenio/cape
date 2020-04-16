@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/database"
@@ -109,15 +108,11 @@ func init() {
 
 func rolesCreateCmd(c *cli.Context) error {
 	members := c.StringSlice("member")
-	cfgSession := Session(c.Context)
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
 
 	label := Arguments(c.Context, RoleLabelArg).(primitives.Label)
 
-	client, err := cluster.Client()
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -146,29 +141,24 @@ func rolesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	ui := UI(c.Context)
-	return ui.Template("Created the role {{ . | bold }}.\n", label.String())
+	u := provider.UI(c.Context)
+	return u.Template("Created the role {{ . | bold }}.\n", label.String())
 }
 
 func rolesRemoveCmd(c *cli.Context) error {
 	skipConfirm := c.Bool("yes")
-	ui := UI(c.Context)
-
-	cfgSession := Session(c.Context)
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
 
 	label := Arguments(c.Context, RoleLabelArg).(primitives.Label)
 	if !skipConfirm {
-		err := ui.Confirm(fmt.Sprintf("Do you really want to delete the role %s and all of its assignments?", label))
+		err := u.Confirm(fmt.Sprintf("Do you really want to delete the role %s and all of its assignments?", label))
 		if err != nil {
 			return err
 		}
 	}
 
-	client, err := cluster.Client()
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -183,19 +173,14 @@ func rolesRemoveCmd(c *cli.Context) error {
 		return err
 	}
 
-	return ui.Template("The role {{ . | bold }} has been deleted.\n", label.String())
+	return u.Template("The role {{ . | bold }} has been deleted.\n", label.String())
 }
 
 func rolesListCmd(c *cli.Context) error {
-	ui := UI(c.Context)
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
 
-	cfgSession := Session(c.Context)
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
-
-	client, err := cluster.Client()
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -212,25 +197,21 @@ func rolesListCmd(c *cli.Context) error {
 			body[i] = []string{r.Label.String()}
 		}
 
-		err = ui.Table(header, body)
+		err = u.Table(header, body)
 		if err != nil {
 			return err
 		}
 	}
 
-	return ui.Template("\nFound {{ . | toString | faded }} role{{ . | pluralize \"s\"}}\n", len(roles))
+	return u.Template("\nFound {{ . | toString | faded }} role{{ . | pluralize \"s\"}}\n", len(roles))
 }
 
 func rolesMembersCmd(c *cli.Context) error {
-	ui := UI(c.Context)
-	cfgSession := Session(c.Context)
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
 
 	label := Arguments(c.Context, RoleLabelArg).(primitives.Label)
-	client, err := cluster.Client()
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -263,5 +244,5 @@ func rolesMembersCmd(c *cli.Context) error {
 		body[i] = []string{typeStr, identity.GetEmail().String()}
 	}
 
-	return ui.Table(header, body)
+	return u.Table(header, body)
 }

@@ -88,13 +88,8 @@ func init() {
 }
 
 func policyAttachCmd(c *cli.Context) error {
-	cfgSession := Session(c.Context)
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
-
-	client, err := cluster.Client()
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -148,14 +143,9 @@ func policyAttachCmd(c *cli.Context) error {
 
 func policyDetachCmd(c *cli.Context) error {
 	skipConfirm := c.Bool("yes")
-	u := UI(c.Context)
 
-	cfgSession := Session(c.Context)
-
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
 
 	roleLabel := Arguments(c.Context, RoleLabelArg).(primitives.Label)
 	policyLabel := Arguments(c.Context, PolicyLabelArg).(primitives.Label)
@@ -167,7 +157,7 @@ func policyDetachCmd(c *cli.Context) error {
 		}
 	}
 
-	client, err := cluster.Client()
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -193,15 +183,10 @@ func policyDetachCmd(c *cli.Context) error {
 }
 
 func policiesListCmd(c *cli.Context) error {
-	ui := UI(c.Context)
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
 
-	cfgSession := Session(c.Context)
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
-
-	client, err := cluster.Client()
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -217,5 +202,5 @@ func policiesListCmd(c *cli.Context) error {
 		body[i] = []string{p.Label.String()}
 	}
 
-	return ui.Table(header, body)
+	return u.Table(header, body)
 }

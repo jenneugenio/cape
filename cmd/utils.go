@@ -39,7 +39,7 @@ func exitHandler(c *cli.Context, err error) {
 		return
 	}
 
-	u := UI(c.Context)
+	provider := GetProvider(c.Context)
 
 	msg := ""
 	switch e := err.(type) {
@@ -51,12 +51,15 @@ func exitHandler(c *cli.Context, err error) {
 		msg = err.Error()
 	}
 
+	u := provider.UI(c.Context)
 	// We don't check the error here because its done in `cmd/main.go`
 	u.Notify(ui.Error, msg) //nolint: errcheck
 }
 
 func commandNotFound(c *cli.Context, command string) {
-	u := UI(c.Context)
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
+
 	msg := "Oops! Unfortunately, the '%s %s' command doesn't exist. You can list all commands using '%s help'."
 
 	// We don't check the error here because we immediately exit
@@ -98,10 +101,12 @@ func getName(c *cli.Context, question string) (primitives.Name, error) {
 		msg = "Please enter your name"
 	}
 
-	ui := UI(c.Context)
-	nameStr, err := ui.Question(msg, validateName)
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
+
+	nameStr, err := u.Question(msg, validateName)
 	if err != nil {
-		return primitives.Name(""), err
+		return "", err
 	}
 
 	return primitives.NewName(nameStr)
@@ -112,8 +117,10 @@ func getEmail(c *cli.Context, in string) (primitives.Email, error) {
 		return primitives.NewEmail(in)
 	}
 
-	ui := UI(c.Context)
-	out, err := ui.Question("Please enter your email address", func(input string) error {
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
+
+	out, err := u.Question("Please enter your email address", func(input string) error {
 		_, err := primitives.NewEmail(input)
 		return err
 	})
@@ -125,8 +132,6 @@ func getEmail(c *cli.Context, in string) (primitives.Email, error) {
 }
 
 func getPassword(c *cli.Context) (primitives.Password, error) {
-	ui := UI(c.Context)
-
 	// Password can be nil as it's an _optional_ environment variable. Nil
 	// cannot be cast to a primitives.Password so we need to check here to see
 	// if the casting worked.
@@ -135,10 +140,13 @@ func getPassword(c *cli.Context) (primitives.Password, error) {
 		return pw, nil
 	}
 
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
+
 	// XXX: It'd be nice if we didn't need to do this weird type creation
 	// manipulation. If we could just reuse the `.Validate()` function that'd
 	// be awesome butthat's not how the promptui ValidatorFunc works!
-	out, err := ui.Secret("Please enter a password", func(input string) error {
+	out, err := u.Secret("Please enter a password", func(input string) error {
 		_, err := primitives.NewPassword(input)
 		return err
 	})
@@ -150,10 +158,11 @@ func getPassword(c *cli.Context) (primitives.Password, error) {
 }
 
 func getConfirmedPassword(c *cli.Context) (primitives.Password, error) {
-	ui := UI(c.Context)
-
 	empty := primitives.Password("")
-	password, err := ui.Secret("Please enter a password", func(input string) error {
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
+
+	password, err := u.Secret("Please enter a password", func(input string) error {
 		_, err := primitives.NewPassword(input)
 		return err
 	})
@@ -161,7 +170,7 @@ func getConfirmedPassword(c *cli.Context) (primitives.Password, error) {
 		return empty, err
 	}
 
-	_, err = ui.Secret("Please confirm the password you entered", func(input string) error {
+	_, err = u.Secret("Please confirm the password you entered", func(input string) error {
 		out, err := primitives.NewPassword(input)
 		if err != nil {
 			return err

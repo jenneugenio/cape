@@ -30,7 +30,8 @@ func logoutCmd(c *cli.Context) error {
 		return err
 	}
 
-	client, err := cluster.Client()
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}

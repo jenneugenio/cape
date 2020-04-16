@@ -227,7 +227,8 @@ func (h *Harness) Client() (*coordinator.Client, error) {
 		return nil, err
 	}
 
-	return coordinator.NewClient(u, nil), nil
+	transport := coordinator.NewTransport(u, nil)
+	return coordinator.NewClient(transport), nil
 }
 
 // Manager returns a test state manager for this Harness

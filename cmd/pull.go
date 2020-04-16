@@ -60,7 +60,8 @@ func pullDataCmd(c *cli.Context) error {
 	sourceLabel := Arguments(c.Context, SourceLabelArg).(primitives.Label)
 	query := Arguments(c.Context, PullQueryArgument).(string)
 
-	ctrlClient, err := cluster.Client()
+	provider := GetProvider(c.Context)
+	coordClient, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -70,7 +71,7 @@ func pullDataCmd(c *cli.Context) error {
 		return err
 	}
 
-	source, err := ctrlClient.GetSourceByLabel(c.Context, sourceLabel)
+	source, err := coordClient.GetSourceByLabel(c.Context, sourceLabel)
 	if err != nil {
 		return err
 	}
@@ -79,7 +80,7 @@ func pullDataCmd(c *cli.Context) error {
 		return errors.New(NoLinkedService, "Source has not been linked to a data-connector")
 	}
 
-	service, err := ctrlClient.GetService(c.Context, *source.ServiceID)
+	service, err := coordClient.GetService(c.Context, *source.ServiceID)
 	if err != nil {
 		return err
 	}
@@ -183,6 +184,7 @@ func pullDataCmd(c *cli.Context) error {
 		header = append(header, f.Name)
 	}
 
-	ui := UI(c.Context)
-	return ui.Table(header, body)
+	u := provider.UI(c.Context)
+
+	return u.Table(header, body)
 }

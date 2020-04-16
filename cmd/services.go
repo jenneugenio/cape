@@ -109,7 +109,10 @@ func init() {
 
 func servicesCreateCmd(c *cli.Context) error {
 	cfgSession := Session(c.Context)
-	u := UI(c.Context)
+
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
+
 	typeStr := c.String("type")
 	endpointStr := c.String("endpoint")
 
@@ -153,7 +156,7 @@ func servicesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	client, err := cluster.Client()
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -194,13 +197,8 @@ func servicesCreateCmd(c *cli.Context) error {
 
 func servicesRemoveCmd(c *cli.Context) error {
 	skipConfirm := c.Bool("yes")
-	u := UI(c.Context)
-
-	cfgSession := Session(c.Context)
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
 
 	email := Arguments(c.Context, ServiceIdentifierArg).(primitives.Email)
 	email.SetType(primitives.ServiceEmail)
@@ -212,7 +210,7 @@ func servicesRemoveCmd(c *cli.Context) error {
 		}
 	}
 
-	client, err := cluster.Client()
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -231,15 +229,10 @@ func servicesRemoveCmd(c *cli.Context) error {
 }
 
 func servicesListCmd(c *cli.Context) error {
-	ui := UI(c.Context)
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
 
-	cfgSession := Session(c.Context)
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
-
-	client, err := cluster.Client()
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -267,11 +260,11 @@ func servicesListCmd(c *cli.Context) error {
 			body[i] = []string{s.Email.String(), s.Type.String(), endpoint, roles}
 		}
 
-		err = ui.Table(header, body)
+		err = u.Table(header, body)
 		if err != nil {
 			return err
 		}
 	}
 
-	return ui.Template("\nFound {{ . | toString | faded }} services{{ . | pluralize \"s\"}}\n", len(services))
+	return u.Template("\nFound {{ . | toString | faded }} services{{ . | pluralize \"s\"}}\n", len(services))
 }

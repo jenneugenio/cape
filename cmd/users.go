@@ -48,13 +48,8 @@ func init() {
 }
 
 func usersCreateCmd(c *cli.Context) error {
-	u := UI(c.Context)
-	cfgSession := Session(c.Context)
-
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
 
 	email := Arguments(c.Context, UserEmailArg).(primitives.Email)
 	name, err := getName(c, "Please enter the persons name")
@@ -79,7 +74,7 @@ func usersCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	client, err := cluster.Client()
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}

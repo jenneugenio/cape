@@ -146,7 +146,8 @@ func addCluster(c *cli.Context) error {
 func removeCluster(c *cli.Context) error {
 	skipConfirm := c.Bool("yes")
 	cfg := Config(c.Context)
-	ui := UI(c.Context)
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
 
 	// XXX: cluster can be nil here and that's ok - it's possible no cluster
 	// was set yet the cluster were trying to delete may exist!
@@ -160,7 +161,7 @@ func removeCluster(c *cli.Context) error {
 
 	label := Arguments(c.Context, ClusterLabelArg).(primitives.Label)
 	if !skipConfirm {
-		err := ui.Confirm(fmt.Sprintf("Do you want to delete the '%s' cluster from configuration?", label))
+		err := u.Confirm(fmt.Sprintf("Do you want to delete the '%s' cluster from configuration?", label))
 		if err != nil {
 			return err
 		}

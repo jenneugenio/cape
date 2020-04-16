@@ -71,9 +71,8 @@ func init() {
 }
 
 func sourcesAdd(c *cli.Context) error {
-	cfgSession := Session(c.Context)
-
-	cluster, err := cfgSession.Cluster()
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -81,11 +80,6 @@ func sourcesAdd(c *cli.Context) error {
 	label := Arguments(c.Context, SourceLabelArg).(primitives.Label)
 	credentials := Arguments(c.Context, SourcesCredentialsArg).(*primitives.DBURL)
 	linkEmail := c.String("link")
-
-	client, err := cluster.Client()
-	if err != nil {
-		return err
-	}
 
 	var serviceID *database.ID
 	if linkEmail != "" {
@@ -107,40 +101,31 @@ func sourcesAdd(c *cli.Context) error {
 		return err
 	}
 
-	ui := UI(c.Context)
-	return ui.Template("Added source {{ . | bold }} to Cape\n", source.Label.String())
+	u := provider.UI(c.Context)
+	return u.Template("Added source {{ . | bold }} to Cape\n", source.Label.String())
 }
 
 func sourcesRemove(c *cli.Context) error {
-	cfgSession := Session(c.Context)
-	cluster, err := cfgSession.Cluster()
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
 
 	label := Arguments(c.Context, SourceLabelArg).(primitives.Label)
-	client, err := cluster.Client()
-	if err != nil {
-		return err
-	}
 
 	err = client.RemoveSource(c.Context, label)
 	if err != nil {
 		return err
 	}
 
-	ui := UI(c.Context)
-	return ui.Template("Removed source {{ . | bold }} from Cape\n", label.String())
+	u := provider.UI(c.Context)
+	return u.Template("Removed source {{ . | bold }} from Cape\n", label.String())
 }
 
 func sourcesList(c *cli.Context) error {
-	cfgSession := Session(c.Context)
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
-
-	client, err := cluster.Client()
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
@@ -150,7 +135,7 @@ func sourcesList(c *cli.Context) error {
 		return err
 	}
 
-	ui := UI(c.Context)
+	u := provider.UI(c.Context)
 
 	if len(sources) > 0 {
 		header := []string{"Name", "Type", "Host"}
@@ -159,11 +144,11 @@ func sourcesList(c *cli.Context) error {
 			body[i] = []string{s.Label.String(), s.Endpoint.Scheme, s.Endpoint.String()}
 		}
 
-		err = ui.Table(header, body)
+		err = u.Table(header, body)
 		if err != nil {
 			return err
 		}
 	}
 
-	return ui.Template("\nFound {{ . | toString | faded }} source{{ . | pluralize \"s\"}}\n", len(sources))
+	return u.Template("\nFound {{ . | toString | faded }} source{{ . | pluralize \"s\"}}\n", len(sources))
 }

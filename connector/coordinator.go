@@ -42,7 +42,8 @@ func (c *Coordinator) ValidateToken(ctx context.Context, tokenStr string) (primi
 		return nil, err
 	}
 
-	userClient := coordinator.NewClient(c.token.URL, token)
+	transport := coordinator.NewTransport(c.token.URL, token)
+	userClient := coordinator.NewClient(transport)
 
 	return userClient.Me(ctx)
 }
@@ -50,7 +51,8 @@ func (c *Coordinator) ValidateToken(ctx context.Context, tokenStr string) (primi
 // authenticateClient lazily authenticates with a coordinator if required
 func (c *Coordinator) authenticateClient(ctx context.Context) error {
 	if c.Client == nil {
-		c.Client = coordinator.NewClient(c.token.URL, nil)
+		transport := coordinator.NewTransport(c.token.URL, nil)
+		c.Client = coordinator.NewClient(transport)
 	}
 
 	if c.Authenticated() {
