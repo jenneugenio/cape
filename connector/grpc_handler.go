@@ -95,7 +95,7 @@ func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_
 		return err
 	}
 
-	return source.Query(context.Background(), query, server)
+	return source.Query(context.Background(), server, query, req.GetLimit(), req.GetOffset())
 }
 
 func returnGRPCError(err error) error {

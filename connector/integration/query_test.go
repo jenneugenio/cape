@@ -65,12 +65,12 @@ func TestQuery(t *testing.T) {
 	defer connClient.Close()
 
 	query := "SELECT * FROM transactions"
-	stream, err := connClient.Query(context.Background(), m.TestSource.Label, query)
+	stream, err := connClient.Query(context.Background(), m.TestSource.Label, query, 50, 50)
 	gm.Expect(err).To(gm.BeNil())
 
 	defer stream.Close()
 
-	expectedRows, err := sources.GetExpectedRows(ctx, connH.SourceCredentials().ToURL(), query+" LIMIT 50", nil)
+	expectedRows, err := sources.GetExpectedRows(ctx, connH.SourceCredentials().ToURL(), query+" LIMIT 50 OFFSET 50", nil)
 	gm.Expect(err).To(gm.BeNil())
 
 	i := 0
@@ -134,7 +134,7 @@ func TestQueryDenied(t *testing.T) {
 	defer connClient.Close()
 
 	query := "SELECT * FROM transactions"
-	stream, err := connClient.Query(context.Background(), m.TestSource.Label, query)
+	stream, err := connClient.Query(context.Background(), m.TestSource.Label, query, 50, 0)
 	gm.Expect(err).To(gm.BeNil())
 
 	defer stream.Close()

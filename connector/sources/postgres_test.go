@@ -4,6 +4,7 @@ package sources
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -140,35 +141,49 @@ func TestPostgresSource(t *testing.T) {
 		}
 	})
 
-	t.Run("can stream rows back for query", func(t *testing.T) {
-		source, err := NewPostgresSource(ctx, cfg, src)
-		gm.Expect(err).To(gm.BeNil())
+	tests := []struct {
+		name             string
+		limit            int64
+		offset           int64
+		expectedRowCount int
+	}{
+		{name: "can stream rows with default limit", limit: 50, expectedRowCount: 9, offset: 0},
+		{name: "can stream rows with custom limit", limit: 4, expectedRowCount: 4, offset: 0},
+		{name: "can stream rows with custom limit and offset", limit: 3, expectedRowCount: 3, offset: 4},
+	}
 
-		defer source.Close(ctx) // nolint: errcheck
-
-		q := &testQuery{}
-
-		stream := &testStream{}
-
-		err = source.Query(ctx, q, stream)
-		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(len(stream.Buffer)).To(gm.Equal(9))
-
-		query, params := q.Raw()
-		expectedRows, err := GetExpectedRows(ctx, db.URL(), query, params)
-		gm.Expect(err).To(gm.BeNil())
-		for i, row := range stream.Buffer {
-			vals, err := Decode(stream.Buffer[0].Schema, row.Fields)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			source, err := NewPostgresSource(ctx, cfg, src)
 			gm.Expect(err).To(gm.BeNil())
 
-			// could check row to row but this is easier to see
-			// if there are any errors
-			for j, val := range vals {
-				gm.Expect(val).To(gm.Equal(expectedRows[i][j]))
+			defer source.Close(ctx) // nolint: errcheck
+
+			q := &testQuery{}
+
+			stream := &testStream{}
+
+			err = source.Query(ctx, stream, q, tc.limit, tc.offset)
+			gm.Expect(err).To(gm.BeNil())
+
+			gm.Expect(len(stream.Buffer)).To(gm.Equal(tc.expectedRowCount))
+
+			query, params := q.Raw()
+			query = fmt.Sprintf("%s LIMIT %d OFFSET %d", query, tc.limit, tc.offset)
+			expectedRows, err := GetExpectedRows(ctx, db.URL(), query, params)
+			gm.Expect(err).To(gm.BeNil())
+			for i, row := range stream.Buffer {
+				vals, err := Decode(stream.Buffer[0].Schema, row.Fields)
+				gm.Expect(err).To(gm.BeNil())
+
+				// could check row to row but this is easier to see
+				// if there are any errors
+				for j, val := range vals {
+					gm.Expect(val).To(gm.Equal(expectedRows[i][j]))
+				}
 			}
-		}
-	})
+		})
+	}
 
 	t.Run("test record to strings", func(t *testing.T) {
 		source, err := NewPostgresSource(ctx, cfg, src)
@@ -180,7 +195,7 @@ func TestPostgresSource(t *testing.T) {
 
 		stream := &testStream{}
 
-		err = source.Query(ctx, q, stream)
+		err = source.Query(ctx, stream, q, 1, 0)
 		gm.Expect(err).To(gm.BeNil())
 		record, err := NewRecord(stream.Buffer[0].Schema, stream.Buffer[0].Fields)
 		gm.Expect(err).To(gm.BeNil())

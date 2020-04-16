@@ -65,7 +65,7 @@ func TestLogin(t *testing.T) {
 	defer connClient.Close()
 
 	t.Run("can submit query that logs in", func(t *testing.T) {
-		stream, err := connClient.Query(ctx, m.TestSource.Label, "SELECT * FROM transactions")
+		stream, err := connClient.Query(ctx, m.TestSource.Label, "SELECT * FROM transactions", 50, 0)
 		gm.Expect(err).To(gm.BeNil())
 
 		defer stream.Close()
@@ -78,7 +78,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("can still submit query that logs in", func(t *testing.T) {
-		stream, err := connClient.Query(ctx, m.TestSource.Label, "SELECT * FROM transactions")
+		stream, err := connClient.Query(ctx, m.TestSource.Label, "SELECT * FROM transactions", 50, 0)
 		gm.Expect(err).To(gm.BeNil())
 
 		defer stream.Close()
@@ -115,7 +115,7 @@ func TestLoginFail(t *testing.T) {
 
 	defer connClient.Close()
 
-	stream, err := connClient.Query(ctx, "test-datasource", "SELECT * FROM ALLDATA;")
+	stream, err := connClient.Query(ctx, "test-datasource", "SELECT * FROM ALLDATA;", 50, 0)
 	gm.Expect(err).To(gm.BeNil())
 
 	// NextRecord actually triggers the login

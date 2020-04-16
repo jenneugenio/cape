@@ -32,7 +32,7 @@ func (t *testSource) Type() primitives.SourceType {
 func (t *testSource) Schema(_ context.Context, _ Query) (*proto.Schema, error) {
 	return &proto.Schema{}, nil
 }
-func (t *testSource) Query(_ context.Context, _ Query, _ Stream) error {
+func (t *testSource) Query(_ context.Context, _ Stream, _ Query, _ int64, _ int64) error {
 	return nil
 }
 func (t *testSource) Close(_ context.Context) error {

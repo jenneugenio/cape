@@ -176,3 +176,21 @@ func outFlag() cli.Flag {
 		EnvVars: []string{"CAPE_OUTPUT"},
 	}
 }
+
+func limitFlag() cli.Flag {
+	return &cli.Int64Flag{
+		Name:    "limit",
+		Usage:   "Limit the number of row returned",
+		Value:   50,
+		EnvVars: []string{"CAPE_LIMIT"},
+	}
+}
+
+func offsetFlag() cli.Flag {
+	return &cli.Int64Flag{
+		Name:    "offset",
+		Usage:   "The offset to start returning rows from. Can be used for pagination",
+		Value:   0,
+		EnvVars: []string{"CAPE_OFFSET"},
+	}
+}

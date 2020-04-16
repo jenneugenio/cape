@@ -49,7 +49,7 @@ type Source interface {
 
 	// Query begins responding to the given query and sending results to the
 	// client.
-	Query(context.Context, Query, Stream) error
+	Query(context.Context, Stream, Query, int64, int64) error
 
 	// Close closes all underlying connections to the database. This will close
 	// any on-going requests.

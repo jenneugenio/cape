@@ -39,10 +39,13 @@ func NewClient(connectorURL *primitives.URL, authToken *base64.Value, certPool *
 }
 
 // Query queries the data source with the specified query
-func (c *Client) Query(ctx context.Context, dataSource primitives.Label, query string) (Stream, error) {
+func (c *Client) Query(ctx context.Context, dataSource primitives.Label, query string,
+	limit int64, offset int64) (Stream, error) {
 	req := &pb.QueryRequest{
 		DataSource: dataSource.String(),
 		Query:      query,
+		Limit:      limit,
+		Offset:     offset,
 	}
 
 	client, err := c.client.Query(ctx, req)

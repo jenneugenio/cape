@@ -14,6 +14,8 @@ service DataConnector {
 message QueryRequest {
   string data_source = 1; // Label of the data source we’re targeting
   string query = 2;
+  int64 limit = 3;
+  int64 offset = 4;
 }
 
 message Record {

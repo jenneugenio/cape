@@ -2,6 +2,7 @@ package sources
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v4"
@@ -130,10 +131,10 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 //
 // Results from the query are streamed back to the requester through the
 // provided Stream
-func (p *PostgresSource) Query(ctx context.Context, q Query, stream Stream) error {
+func (p *PostgresSource) Query(ctx context.Context, stream Stream, q Query, limit int64, offset int64) error {
 	qStr, params := q.Raw()
 
-	qStr = qStr + " LIMIT 50"
+	qStr = fmt.Sprintf("%s LIMIT %d OFFSET %d", qStr, limit, offset)
 
 	// If there are no params, pgx will error if you pass anything (even nil!)
 	var rows pgx.Rows

@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"crypto/x509"
 	"encoding/csv"
-	"github.com/dropoutlabs/cape/cmd/ui"
 	"io/ioutil"
 	"os"
 
 	"github.com/urfave/cli/v2"
 
+	"github.com/dropoutlabs/cape/cmd/ui"
 	"github.com/dropoutlabs/cape/connector/client"
 	errors "github.com/dropoutlabs/cape/partyerrors"
 	"github.com/dropoutlabs/cape/primitives"
@@ -37,6 +37,8 @@ func init() {
 			Action: handleSessionOverrides(pullDataCmd),
 			Flags: []cli.Flag{
 				outFlag(),
+				limitFlag(),
+				offsetFlag(),
 			},
 		},
 	}
@@ -47,6 +49,8 @@ func init() {
 func pullDataCmd(c *cli.Context) error {
 	cfgSession := Session(c.Context)
 	outFile := c.String("out")
+	limit := c.Int64("limit")
+	offset := c.Int64("offset")
 
 	cluster, err := cfgSession.Cluster()
 	if err != nil {
@@ -96,7 +100,7 @@ func pullDataCmd(c *cli.Context) error {
 		return err
 	}
 
-	stream, err := connClient.Query(c.Context, sourceLabel, query)
+	stream, err := connClient.Query(c.Context, sourceLabel, query, limit, offset)
 	if err != nil {
 		return err
 	}
