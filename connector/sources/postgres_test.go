@@ -6,6 +6,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	gm "github.com/onsi/gomega"
 
@@ -167,5 +168,34 @@ func TestPostgresSource(t *testing.T) {
 				gm.Expect(val).To(gm.Equal(expectedRows[i][j]))
 			}
 		}
+	})
+
+	t.Run("test record to strings", func(t *testing.T) {
+		source, err := NewPostgresSource(ctx, cfg, src)
+		gm.Expect(err).To(gm.BeNil())
+
+		defer source.Close(ctx) // nolint: errcheck
+
+		q := &testQuery{}
+
+		stream := &testStream{}
+
+		err = source.Query(ctx, q, stream)
+		gm.Expect(err).To(gm.BeNil())
+		record, err := NewRecord(stream.Buffer[0].Schema, stream.Buffer[0].Fields)
+		gm.Expect(err).To(gm.BeNil())
+
+		strs, err := record.ToStrings()
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(strs)).To(gm.Equal(len(stream.Buffer[0].Fields)))
+
+		expectedTime := record.Values()[8].(time.Time).Format(time.RFC3339Nano)
+		expectedStrs := []string{
+			"2", "4", "8", "8.8", "4.4", "hello", "thisisatest         ", "andthis",
+			expectedTime, "false", "deadbeef",
+		}
+
+		gm.Expect(strs).To(gm.Equal(expectedStrs))
 	})
 }

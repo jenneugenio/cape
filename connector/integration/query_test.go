@@ -83,8 +83,7 @@ func TestQuery(t *testing.T) {
 		}
 		i++
 	}
-	err = stream.Error()
-	gm.Expect(err).To(gm.BeNil())
+	gm.Expect(stream.Error()).To(gm.BeNil())
 }
 
 func TestQueryDenied(t *testing.T) {

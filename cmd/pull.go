@@ -115,7 +115,10 @@ func pullDataCmd(c *cli.Context) error {
 
 		for stream.NextRecord() {
 			record := stream.Record()
-			strs := record.ToStrings()
+			strs, err := record.ToStrings()
+			if err != nil {
+				return err
+			}
 
 			if first {
 				schema := stream.Schema()
@@ -157,7 +160,11 @@ func pullDataCmd(c *cli.Context) error {
 	var body ui.TableBody
 	for stream.NextRecord() {
 		record := stream.Record()
-		strs := record.ToStrings()
+		strs, err := record.ToStrings()
+		if err != nil {
+			return err
+		}
+
 		body = append(body, strs)
 	}
 	err = stream.Error()
