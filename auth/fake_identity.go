@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"math/rand"
 
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/primitives"
 	"github.com/manifoldco/go-base64"
 )
 

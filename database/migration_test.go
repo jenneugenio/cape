@@ -9,7 +9,7 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/cape/database/dbtest"
+	"github.com/capeprivacy/cape/database/dbtest"
 
 	"github.com/jackc/pgx/v4"
 )

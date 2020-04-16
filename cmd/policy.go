@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/primitives"
 	"github.com/urfave/cli/v2"
 )
 

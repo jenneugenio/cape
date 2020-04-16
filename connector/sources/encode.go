@@ -5,8 +5,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 
-	pb "github.com/dropoutlabs/cape/connector/proto"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	pb "github.com/capeprivacy/cape/connector/proto"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // PostgresEncode encodes data out of postgres into Strings

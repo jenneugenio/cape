@@ -7,13 +7,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/coordinator/graph/generated"
-	"github.com/dropoutlabs/cape/coordinator/graph/model"
-	"github.com/dropoutlabs/cape/database"
-	fw "github.com/dropoutlabs/cape/framework"
-	errs "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator/graph/generated"
+	"github.com/capeprivacy/cape/coordinator/graph/model"
+	"github.com/capeprivacy/cape/database"
+	fw "github.com/capeprivacy/cape/framework"
+	errs "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest) (*primitives.User, error) {

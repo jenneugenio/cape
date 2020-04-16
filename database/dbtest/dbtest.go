@@ -5,7 +5,7 @@ import (
 	"context"
 	"net/url"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // TestDatabase represents a test storage backend (e.g. Postgres, MySQL,

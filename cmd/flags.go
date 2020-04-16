@@ -6,8 +6,8 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/dropoutlabs/cape/logging"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/logging"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func portFlag(name string, value int) cli.Flag {

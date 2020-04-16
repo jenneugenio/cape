@@ -3,7 +3,7 @@ package sources
 import (
 	"github.com/golang/protobuf/ptypes"
 
-	"github.com/dropoutlabs/cape/connector/proto"
+	"github.com/capeprivacy/cape/connector/proto"
 )
 
 // Decode decodes a byte stream from a data connector

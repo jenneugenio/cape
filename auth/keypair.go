@@ -8,8 +8,8 @@ import (
 	"github.com/manifoldco/go-base64"
 	"golang.org/x/crypto/scrypt"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 const (

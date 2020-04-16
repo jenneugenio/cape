@@ -6,8 +6,8 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/dropoutlabs/cape/cmd/config"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/cmd/config"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func init() {

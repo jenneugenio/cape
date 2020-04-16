@@ -8,7 +8,7 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/mitchellh/mapstructure"
 )
 

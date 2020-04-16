@@ -10,9 +10,9 @@ import (
 
 	"google.golang.org/grpc/metadata"
 
-	"github.com/dropoutlabs/cape/connector/proto"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/connector/proto"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 

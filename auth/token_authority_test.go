@@ -7,7 +7,7 @@ import (
 	gm "github.com/onsi/gomega"
 	"gopkg.in/square/go-jose.v2"
 
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestTokenAuthority(t *testing.T) {

@@ -7,8 +7,8 @@ import (
 	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestNewCredential(t *testing.T) {

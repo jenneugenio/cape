@@ -10,8 +10,8 @@ import (
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 
-	pb "github.com/dropoutlabs/cape/connector/proto"
-	"github.com/dropoutlabs/cape/connector/sources"
+	pb "github.com/capeprivacy/cape/connector/proto"
+	"github.com/capeprivacy/cape/connector/sources"
 )
 
 const connectorCertFile = "connector/certs/localhost.crt"

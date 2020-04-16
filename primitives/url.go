@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // NewURL parses the given string and returns a URL if the

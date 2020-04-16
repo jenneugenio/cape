@@ -29,11 +29,11 @@ k8s_yaml(helm('charts/coordinator', values=['charts/local_values/coordinator_val
 k8s_yaml('manifests/test_job.yaml')
 k8s_resource("test", trigger_mode=TRIGGER_MODE_MANUAL)
 
-docker_build('dropoutlabs/cape:latest', '.', dockerfile='dockerfiles/Dockerfile.base')
-docker_build('dropoutlabs/cape-test:latest', '.', dockerfile='dockerfiles/Dockerfile.test')
-docker_build('dropoutlabs/coordinator:latest', '.', dockerfile='dockerfiles/Dockerfile.coordinator')
-docker_build('dropoutlabs/connector:latest', '.', dockerfile='dockerfiles/Dockerfile.connector')
-docker_build('dropoutlabs/update:latest', '.', dockerfile='dockerfiles/Dockerfile.update')
+docker_build('capeprivacy/cape:latest', '.', dockerfile='dockerfiles/Dockerfile.base')
+docker_build('capeprivacy/cape-test:latest', '.', dockerfile='dockerfiles/Dockerfile.test')
+docker_build('capeprivacy/coordinator:latest', '.', dockerfile='dockerfiles/Dockerfile.coordinator')
+docker_build('capeprivacy/connector:latest', '.', dockerfile='dockerfiles/Dockerfile.connector')
+docker_build('capeprivacy/update:latest', '.', dockerfile='dockerfiles/Dockerfile.update')
 
 k8s_resource('connector', port_forwards=8081, trigger_mode=TRIGGER_MODE_MANUAL)
 k8s_resource('coordinator', port_forwards=8080, trigger_mode=TRIGGER_MODE_MANUAL)

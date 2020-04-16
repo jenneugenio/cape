@@ -1,9 +1,9 @@
 package sources
 
 import (
-	"github.com/dropoutlabs/cape/connector/proto"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/connector/proto"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 	"github.com/jackc/pgproto3/v2"
 	"github.com/jackc/pgtype"
 )

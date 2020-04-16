@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // NewDBURL parses the given string and returns a database url.

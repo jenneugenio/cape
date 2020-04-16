@@ -14,7 +14,7 @@ import (
 	gm "github.com/onsi/gomega"
 	"github.com/rs/zerolog"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 var logger *zerolog.Logger

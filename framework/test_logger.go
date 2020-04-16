@@ -6,7 +6,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/dropoutlabs/cape/logging"
+	"github.com/capeprivacy/cape/logging"
 )
 
 // TestLogger returns a logger for use in writing tests

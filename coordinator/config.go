@@ -5,9 +5,9 @@ import (
 
 	"sigs.k8s.io/yaml"
 
-	"github.com/dropoutlabs/cape/auth"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // Config represents the configuration that needs to be provided to the

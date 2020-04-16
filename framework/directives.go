@@ -5,9 +5,9 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // IsAuthenticatedFn is a type alias for the function signaute of the directive

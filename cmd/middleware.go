@@ -6,9 +6,9 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/dropoutlabs/cape/cmd/config"
-	"github.com/dropoutlabs/cape/cmd/ui"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/capeprivacy/cape/cmd/config"
+	"github.com/capeprivacy/cape/cmd/ui"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // ContextKey is a type alias used for storing data in a context

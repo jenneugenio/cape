@@ -7,9 +7,9 @@ import (
 	"github.com/manifoldco/go-base64"
 	"github.com/urfave/cli/v2"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/cmd/ui"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/cmd/ui"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func init() {

@@ -8,10 +8,10 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	connHarness "github.com/dropoutlabs/cape/connector/harness"
-	"github.com/dropoutlabs/cape/connector/sources"
-	"github.com/dropoutlabs/cape/coordinator/harness"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	connHarness "github.com/capeprivacy/cape/connector/harness"
+	"github.com/capeprivacy/cape/connector/sources"
+	"github.com/capeprivacy/cape/coordinator/harness"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func TestQuery(t *testing.T) {

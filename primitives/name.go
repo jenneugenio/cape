@@ -3,7 +3,7 @@ package primitives
 import (
 	"regexp"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 var nameRegex = regexp.MustCompile("^.{2,64}$")

@@ -1,10 +1,10 @@
 package policy
 
 import (
-	"github.com/dropoutlabs/cape/connector/proto"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
-	"github.com/dropoutlabs/cape/query"
+	"github.com/capeprivacy/cape/connector/proto"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
+	"github.com/capeprivacy/cape/query"
 )
 
 // Evaluator takes a query, schema, and multiple policies and then evaluates a query

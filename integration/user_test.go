@@ -8,9 +8,9 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/coordinator/harness"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator/harness"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestUsers(t *testing.T) {

@@ -5,8 +5,8 @@ import (
 
 	"github.com/manifoldco/go-base64"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // Credentials holds the public key and salt for a user

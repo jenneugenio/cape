@@ -1,8 +1,8 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/database/types"
+	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/database/types"
 )
 
 // User represents a user of the system

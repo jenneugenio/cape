@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 
-	"github.com/dropoutlabs/cape/connector/proto"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/connector/proto"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // PostgresSource represents a Postgres data source which can be queried

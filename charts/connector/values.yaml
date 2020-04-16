@@ -1,5 +1,5 @@
 image:
-  repository: docker.pkg.github.com/dropoutlabs/cape/connector
+  repository: docker.pkg.github.com/capeprivacy/cape/connector
   tag: latest
 
 dockerSecret: docker-cfg

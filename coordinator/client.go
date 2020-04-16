@@ -9,11 +9,11 @@ import (
 	"github.com/machinebox/graphql"
 	"github.com/manifoldco/go-base64"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/coordinator/graph/model"
-	"github.com/dropoutlabs/cape/database"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator/graph/model"
+	"github.com/capeprivacy/cape/database"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // NetworkCause occurs when the client cannot reach the server

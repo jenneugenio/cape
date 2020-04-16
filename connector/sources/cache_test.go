@@ -6,8 +6,8 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestCache(t *testing.T) {

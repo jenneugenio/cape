@@ -6,10 +6,10 @@ package graph
 import (
 	"context"
 
-	"github.com/dropoutlabs/cape/coordinator/graph/model"
-	"github.com/dropoutlabs/cape/database"
-	errs "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/coordinator/graph/model"
+	"github.com/capeprivacy/cape/database"
+	errs "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error) {

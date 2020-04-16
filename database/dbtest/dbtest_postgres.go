@@ -9,7 +9,7 @@ import (
 	pgx "github.com/jackc/pgx/v4"
 	pgxpool "github.com/jackc/pgx/v4/pgxpool"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // ConnectionError occurs when something can't be done because the database is

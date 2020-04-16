@@ -16,46 +16,46 @@ resolver:
 
 models:
   Identity:
-    model: github.com/dropoutlabs/cape/primitives.Identity
+    model: github.com/capeprivacy/cape/primitives.Identity
   User:
-    model: github.com/dropoutlabs/cape/primitives.User
+    model: github.com/capeprivacy/cape/primitives.User
   Service:
-    model: github.com/dropoutlabs/cape/primitives.Service
+    model: github.com/capeprivacy/cape/primitives.Service
   Source:
-    model: github.com/dropoutlabs/cape/primitives.Source
+    model: github.com/capeprivacy/cape/primitives.Source
   Role:
-    model: github.com/dropoutlabs/cape/primitives.Role
+    model: github.com/capeprivacy/cape/primitives.Role
   Session:
-    model: github.com/dropoutlabs/cape/primitives.Session
+    model: github.com/capeprivacy/cape/primitives.Session
   ID:
-    model: github.com/dropoutlabs/cape/database.ID
+    model: github.com/capeprivacy/cape/database.ID
   Base64:
-    model: github.com/dropoutlabs/cape/primitives.Base64Value
+    model: github.com/capeprivacy/cape/primitives.Base64Value
   URL:
-    model: github.com/dropoutlabs/cape/primitives.URL
+    model: github.com/capeprivacy/cape/primitives.URL
   DBURL:
-    model: github.com/dropoutlabs/cape/primitives.DBURL
+    model: github.com/capeprivacy/cape/primitives.DBURL
   CredentialsAlgType:
-    model: github.com/dropoutlabs/cape/primitives.CredentialsAlgType
+    model: github.com/capeprivacy/cape/primitives.CredentialsAlgType
   SourceType:
-    model: github.com/dropoutlabs/cape/primitives.SourceType
+    model: github.com/capeprivacy/cape/primitives.SourceType
   TokenType:
-    model: github.com/dropoutlabs/cape/primitives.TokenType
+    model: github.com/capeprivacy/cape/primitives.TokenType
   ServiceType:
-    model: github.com/dropoutlabs/cape/primitives.ServiceType
+    model: github.com/capeprivacy/cape/primitives.ServiceType
   AuthCredentials:
-    model: github.com/dropoutlabs/cape/primitives.AuthCredentials
+    model: github.com/capeprivacy/cape/primitives.AuthCredentials
   IdentityImpl:
-    model: github.com/dropoutlabs/cape/primitives.IdentityImpl
+    model: github.com/capeprivacy/cape/primitives.IdentityImpl
   Policy:
-    model: github.com/dropoutlabs/cape/primitives.Policy
+    model: github.com/capeprivacy/cape/primitives.Policy
   Label:
-    model: github.com/dropoutlabs/cape/primitives.Label
+    model: github.com/capeprivacy/cape/primitives.Label
   Name:
-    model: github.com/dropoutlabs/cape/primitives.Name
+    model: github.com/capeprivacy/cape/primitives.Name
   Email:
-    model: github.com/dropoutlabs/cape/primitives.Email
+    model: github.com/capeprivacy/cape/primitives.Email
   EmailType:
-    model: github.com/dropoutlabs/cape/primitives.EmailType
+    model: github.com/capeprivacy/cape/primitives.EmailType
   PolicySpec:
-    model: github.com/dropoutlabs/cape/primitives.PolicySpec
+    model: github.com/capeprivacy/cape/primitives.PolicySpec

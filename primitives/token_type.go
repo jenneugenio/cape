@@ -5,7 +5,7 @@ import (
 	"io"
 	"strconv"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // TokenType is an enum holding the category of sessions

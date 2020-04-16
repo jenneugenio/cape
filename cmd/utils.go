@@ -9,9 +9,9 @@ import (
 	"github.com/manifoldco/go-base32"
 	"github.com/urfave/cli/v2"
 
-	"github.com/dropoutlabs/cape/cmd/ui"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/cmd/ui"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func exitHandler(c *cli.Context, err error) {

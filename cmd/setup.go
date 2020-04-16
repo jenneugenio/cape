@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/coordinator"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 	"github.com/urfave/cli/v2"
 )
 

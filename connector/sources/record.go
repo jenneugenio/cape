@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dropoutlabs/cape/connector/proto"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/capeprivacy/cape/connector/proto"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // Record contains the values decoded by our decoder

@@ -6,7 +6,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/dropoutlabs/cape/version"
+	"github.com/capeprivacy/cape/version"
 )
 
 var commands []*cli.Command

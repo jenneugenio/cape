@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/primitives"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/manifoldco/go-base64"
 )
 

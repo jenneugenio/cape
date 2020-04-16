@@ -1,4 +1,4 @@
-module github.com/dropoutlabs/cape
+module github.com/capeprivacy/cape
 
 go 1.14
 

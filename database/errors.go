@@ -1,6 +1,6 @@
 package database
 
-import errors "github.com/dropoutlabs/cape/partyerrors"
+import errors "github.com/capeprivacy/cape/partyerrors"
 
 var (
 	// NotImplementedCause happens when you try to do something we do not support

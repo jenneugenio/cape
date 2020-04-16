@@ -3,7 +3,7 @@ package framework
 import (
 	"net/http"
 
-	"github.com/dropoutlabs/cape/version"
+	"github.com/capeprivacy/cape/version"
 )
 
 // VersionResponse represents the data returned when querying the version

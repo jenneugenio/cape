@@ -8,9 +8,9 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	pb "github.com/dropoutlabs/cape/connector/proto"
-	"github.com/dropoutlabs/cape/connector/sources"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	pb "github.com/capeprivacy/cape/connector/proto"
+	"github.com/capeprivacy/cape/connector/sources"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // Stream allows data to be streamed easily

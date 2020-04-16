@@ -9,11 +9,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/coordinator"
-	"github.com/dropoutlabs/cape/framework"
-	"github.com/dropoutlabs/cape/logging"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator"
+	"github.com/capeprivacy/cape/framework"
+	"github.com/capeprivacy/cape/logging"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func init() {

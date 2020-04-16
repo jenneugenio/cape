@@ -8,13 +8,13 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/coordinator"
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/database/dbtest"
-	"github.com/dropoutlabs/cape/framework"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator"
+	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/database/dbtest"
+	"github.com/capeprivacy/cape/framework"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 var (

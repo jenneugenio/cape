@@ -3,7 +3,7 @@ package database
 import (
 	"time"
 
-	"github.com/dropoutlabs/cape/database/types"
+	"github.com/capeprivacy/cape/database/types"
 )
 
 // Entity represents any primitive data structure stored inside the Coordinator.

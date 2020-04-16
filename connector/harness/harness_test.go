@@ -6,7 +6,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/primitives"
 	gm "github.com/onsi/gomega"
 )
 

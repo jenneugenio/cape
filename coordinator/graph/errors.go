@@ -1,7 +1,7 @@
 package graph
 
 import (
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 var (

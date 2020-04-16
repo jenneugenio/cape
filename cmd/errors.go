@@ -1,6 +1,6 @@
 package main
 
-import errors "github.com/dropoutlabs/cape/partyerrors"
+import errors "github.com/capeprivacy/cape/partyerrors"
 
 var (
 	// InvalidAPITokenCause is when a provided APIToken is not valid

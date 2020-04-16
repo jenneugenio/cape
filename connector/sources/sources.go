@@ -6,9 +6,9 @@ import (
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 
-	"github.com/dropoutlabs/cape/connector/proto"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/connector/proto"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // Stream is an interface that represents the response to a query which streams

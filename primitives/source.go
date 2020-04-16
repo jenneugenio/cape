@@ -1,9 +1,9 @@
 package primitives
 
 import (
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/database/types"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/database/types"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // Source represents the connection information for an external data source

@@ -6,9 +6,9 @@ package graph
 import (
 	"context"
 
-	"github.com/dropoutlabs/cape/coordinator/graph/model"
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/coordinator/graph/model"
+	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*primitives.Policy, error) {

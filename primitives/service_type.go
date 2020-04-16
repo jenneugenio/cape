@@ -5,7 +5,7 @@ import (
 	"io"
 	"strconv"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // ServiceType enum holding the supported service types

@@ -3,7 +3,7 @@ package auth
 import (
 	"regexp"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/manifoldco/go-base64"
 )
 

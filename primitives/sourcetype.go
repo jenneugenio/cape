@@ -5,7 +5,7 @@ import (
 	"io"
 	"strconv"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // SourceType enum holding the different types of supported data sources

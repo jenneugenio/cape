@@ -5,9 +5,9 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/coordinator"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // Coordinator wraps a coordinator client giving some extra features

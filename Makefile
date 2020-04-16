@@ -170,7 +170,7 @@ lint: gocheck
 	golangci-lint run
 
 BUILD_DATE=$(date)
-PKG=github.com/dropoutlabs/cape
+PKG=github.com/capeprivacy/cape
 DATE=$(shell date)
 GO_BUILD=go build -i -v -ldflags "-w -X '$(PKG)/version.Version=$(VERSION)' -X '$(PKG)/version.BuildDate=$(DATE)' -s"
 $(PREFIX)bin/cape: gocheck $(SRC) gogen
@@ -211,7 +211,7 @@ ci: tidy lint build test docker
 # Builds a docker image for TF Encrypted that can be used to deploy and
 # test.
 # ###############################################
-DOCKER_BUILD=docker build -t dropoutlabs/$(1):$(2) -f $(3) .
+DOCKER_BUILD=docker build -t capeprivacy/$(1):$(2) -f $(3) .
 docker: dockerfiles/Dockerfile.base dockerfiles/Dockerfile.coordinator dockerfiles/Dockerfile.connector dockercheck
 	$(call DOCKER_BUILD,cape,latest,dockerfiles/Dockerfile.base)
 	$(call DOCKER_BUILD,coordinator,latest,dockerfiles/Dockerfile.coordinator)
@@ -228,8 +228,8 @@ docker: dockerfiles/Dockerfile.base dockerfiles/Dockerfile.coordinator dockerfil
 # authenticating to docker hub and pushing built docker containers up with the
 # appropriate tags.
 # ###############################################
-DOCKER_TAG=docker tag dropoutlabs/$(1):$(2) docker.pkg.github.com/dropoutlabs/cape/$(1):$(3)
-DOCKER_PUSH=docker push docker.pkg.github.com/dropoutlabs/cape/$(1):$(2)
+DOCKER_TAG=docker tag capeprivacy/$(1):$(2) docker.pkg.github.com/capeprivacy/cape/$(1):$(3)
+DOCKER_PUSH=docker push docker.pkg.github.com/capeprivacy/cape/$(1):$(2)
 
 docker-tag: dockercheck
 	$(call DOCKER_TAG,cape,latest,$(VERSION))

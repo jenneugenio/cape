@@ -1,9 +1,9 @@
 package connector
 
 import (
-	"github.com/dropoutlabs/cape/auth"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // Config is a configuration object for the Connector

@@ -1,7 +1,7 @@
 package query
 
 import (
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/primitives"
 	gm "github.com/onsi/gomega"
 	"testing"
 )

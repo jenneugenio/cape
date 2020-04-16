@@ -6,8 +6,8 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/cape/database"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/capeprivacy/cape/database"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func TestNewSource(t *testing.T) {

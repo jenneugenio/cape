@@ -14,9 +14,9 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/dropoutlabs/cape/coordinator/graph/model"
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/coordinator/graph/model"
+	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/primitives"
 	"github.com/manifoldco/go-base64"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -1099,7 +1099,8 @@ extend type Mutation {
 
   attachPolicy(input: AttachPolicyRequest!): Attachment!
   detachPolicy(input: DetachPolicyRequest!): String
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 	&ast.Source{Name: "coordinator/schema/roles.graphql", Input: `type Role {
   id: ID!
   label: Label!
@@ -1333,7 +1334,7 @@ func (ec *executionContext) dir_isAuthenticated_args(ctx context.Context, rawArg
 	args := map[string]interface{}{}
 	var arg0 primitives.TokenType
 	if tmp, ok := rawArgs["type"]; ok {
-		arg0, err = ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, tmp)
+		arg0, err = ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1347,7 +1348,7 @@ func (ec *executionContext) field_Mutation_addSource_args(ctx context.Context, r
 	args := map[string]interface{}{}
 	var arg0 model.AddSourceRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNAddSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAddSourceRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNAddSourceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAddSourceRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1361,7 +1362,7 @@ func (ec *executionContext) field_Mutation_assignRole_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 model.AssignRoleRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignRoleRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNAssignRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignRoleRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1375,7 +1376,7 @@ func (ec *executionContext) field_Mutation_attachPolicy_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 model.AttachPolicyRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNAttachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachPolicyRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNAttachPolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachPolicyRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1389,7 +1390,7 @@ func (ec *executionContext) field_Mutation_createAuthSession_args(ctx context.Co
 	args := map[string]interface{}{}
 	var arg0 model.AuthSessionRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNAuthSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAuthSessionRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNAuthSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAuthSessionRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1403,7 +1404,7 @@ func (ec *executionContext) field_Mutation_createLoginSession_args(ctx context.C
 	args := map[string]interface{}{}
 	var arg0 model.LoginSessionRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNLoginSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐLoginSessionRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNLoginSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐLoginSessionRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1417,7 +1418,7 @@ func (ec *executionContext) field_Mutation_createPolicy_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 model.CreatePolicyRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNCreatePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreatePolicyRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNCreatePolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreatePolicyRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1431,7 +1432,7 @@ func (ec *executionContext) field_Mutation_createRole_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 model.CreateRoleRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNCreateRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateRoleRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNCreateRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateRoleRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1445,7 +1446,7 @@ func (ec *executionContext) field_Mutation_createService_args(ctx context.Contex
 	args := map[string]interface{}{}
 	var arg0 model.CreateServiceRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNCreateServiceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateServiceRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNCreateServiceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateServiceRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1459,7 +1460,7 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 model.NewUserRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐNewUserRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNNewUserRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐNewUserRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1473,7 +1474,7 @@ func (ec *executionContext) field_Mutation_deletePolicy_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 model.DeletePolicyRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNDeletePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeletePolicyRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNDeletePolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeletePolicyRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1487,7 +1488,7 @@ func (ec *executionContext) field_Mutation_deleteRole_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 model.DeleteRoleRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNDeleteRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteRoleRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNDeleteRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteRoleRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1501,7 +1502,7 @@ func (ec *executionContext) field_Mutation_deleteService_args(ctx context.Contex
 	args := map[string]interface{}{}
 	var arg0 model.DeleteServiceRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNDeleteServiceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteServiceRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNDeleteServiceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteServiceRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1515,7 +1516,7 @@ func (ec *executionContext) field_Mutation_deleteSession_args(ctx context.Contex
 	args := map[string]interface{}{}
 	var arg0 model.DeleteSessionRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNDeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteSessionRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNDeleteSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteSessionRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1529,7 +1530,7 @@ func (ec *executionContext) field_Mutation_detachPolicy_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 model.DetachPolicyRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNDetachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDetachPolicyRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNDetachPolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDetachPolicyRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1543,7 +1544,7 @@ func (ec *executionContext) field_Mutation_removeSource_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 model.RemoveSourceRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNRemoveSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRemoveSourceRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNRemoveSourceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRemoveSourceRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1557,7 +1558,7 @@ func (ec *executionContext) field_Mutation_setup_args(ctx context.Context, rawAr
 	args := map[string]interface{}{}
 	var arg0 model.NewUserRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐNewUserRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNNewUserRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐNewUserRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1571,7 +1572,7 @@ func (ec *executionContext) field_Mutation_unassignRole_args(ctx context.Context
 	args := map[string]interface{}{}
 	var arg0 model.AssignRoleRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignRoleRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNAssignRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignRoleRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1599,7 +1600,7 @@ func (ec *executionContext) field_Query_attachment_args(ctx context.Context, raw
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["role_id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1607,7 +1608,7 @@ func (ec *executionContext) field_Query_attachment_args(ctx context.Context, raw
 	args["role_id"] = arg0
 	var arg1 database.ID
 	if tmp, ok := rawArgs["policy_id"]; ok {
-		arg1, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg1, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1621,7 +1622,7 @@ func (ec *executionContext) field_Query_identities_args(ctx context.Context, raw
 	args := map[string]interface{}{}
 	var arg0 []*primitives.Email
 	if tmp, ok := rawArgs["emails"]; ok {
-		arg0, err = ec.unmarshalOEmail2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmailᚄ(ctx, tmp)
+		arg0, err = ec.unmarshalOEmail2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmailᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1635,7 +1636,7 @@ func (ec *executionContext) field_Query_identityPolicies_args(ctx context.Contex
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["identity_id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1649,7 +1650,7 @@ func (ec *executionContext) field_Query_policyByLabel_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 primitives.Label
 	if tmp, ok := rawArgs["label"]; ok {
-		arg0, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, tmp)
+		arg0, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1663,7 +1664,7 @@ func (ec *executionContext) field_Query_policy_args(ctx context.Context, rawArgs
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1677,7 +1678,7 @@ func (ec *executionContext) field_Query_roleByLabel_args(ctx context.Context, ra
 	args := map[string]interface{}{}
 	var arg0 primitives.Label
 	if tmp, ok := rawArgs["label"]; ok {
-		arg0, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, tmp)
+		arg0, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1691,7 +1692,7 @@ func (ec *executionContext) field_Query_roleMembers_args(ctx context.Context, ra
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["role_id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1705,7 +1706,7 @@ func (ec *executionContext) field_Query_rolePolicies_args(ctx context.Context, r
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["role_id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1719,7 +1720,7 @@ func (ec *executionContext) field_Query_role_args(ctx context.Context, rawArgs m
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1733,7 +1734,7 @@ func (ec *executionContext) field_Query_serviceByEmail_args(ctx context.Context,
 	args := map[string]interface{}{}
 	var arg0 primitives.Email
 	if tmp, ok := rawArgs["email"]; ok {
-		arg0, err = ec.unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, tmp)
+		arg0, err = ec.unmarshalNEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1747,7 +1748,7 @@ func (ec *executionContext) field_Query_service_args(ctx context.Context, rawArg
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1761,7 +1762,7 @@ func (ec *executionContext) field_Query_sourceByLabel_args(ctx context.Context, 
 	args := map[string]interface{}{}
 	var arg0 primitives.Label
 	if tmp, ok := rawArgs["label"]; ok {
-		arg0, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, tmp)
+		arg0, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1775,7 +1776,7 @@ func (ec *executionContext) field_Query_source_args(ctx context.Context, rawArgs
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1789,7 +1790,7 @@ func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs m
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1865,7 +1866,7 @@ func (ec *executionContext) _Assignment_id(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Assignment_role(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
@@ -1899,7 +1900,7 @@ func (ec *executionContext) _Assignment_role(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*primitives.Role)
 	fc.Result = res
-	return ec.marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Assignment_identity(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
@@ -1933,7 +1934,7 @@ func (ec *executionContext) _Assignment_identity(ctx context.Context, field grap
 	}
 	res := resTmp.(primitives.Identity)
 	fc.Result = res
-	return ec.marshalNIdentity2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentity(ctx, field.Selections, res)
+	return ec.marshalNIdentity2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐIdentity(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Assignment_created_at(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
@@ -2035,7 +2036,7 @@ func (ec *executionContext) _Attachment_id(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Attachment_created_at(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
@@ -2137,7 +2138,7 @@ func (ec *executionContext) _Attachment_role(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*primitives.Role)
 	fc.Result = res
-	return ec.marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Attachment_policy(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
@@ -2171,7 +2172,7 @@ func (ec *executionContext) _Attachment_policy(ctx context.Context, field graphq
 	}
 	res := resTmp.(*primitives.Policy)
 	fc.Result = res
-	return ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
+	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthCredentials_salt(ctx context.Context, field graphql.CollectedField, obj *primitives.AuthCredentials) (ret graphql.Marshaler) {
@@ -2239,7 +2240,7 @@ func (ec *executionContext) _AuthCredentials_alg(ctx context.Context, field grap
 	}
 	res := resTmp.(primitives.CredentialsAlgType)
 	fc.Result = res
-	return ec.marshalNCredentialsAlgType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx, field.Selections, res)
+	return ec.marshalNCredentialsAlgType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_setup(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2280,7 +2281,7 @@ func (ec *executionContext) _Mutation_setup(ctx context.Context, field graphql.C
 	}
 	res := resTmp.(*primitives.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2311,7 +2312,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 			return ec.resolvers.Mutation().CreateUser(rctx, args["input"].(model.NewUserRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -2331,7 +2332,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 		if data, ok := tmp.(*primitives.User); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.User`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.User`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2345,7 +2346,7 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	}
 	res := resTmp.(*primitives.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_addSource(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2376,7 +2377,7 @@ func (ec *executionContext) _Mutation_addSource(ctx context.Context, field graph
 			return ec.resolvers.Mutation().AddSource(rctx, args["input"].(model.AddSourceRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -2396,7 +2397,7 @@ func (ec *executionContext) _Mutation_addSource(ctx context.Context, field graph
 		if data, ok := tmp.(*primitives.Source); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Source`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Source`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2410,7 +2411,7 @@ func (ec *executionContext) _Mutation_addSource(ctx context.Context, field graph
 	}
 	res := resTmp.(*primitives.Source)
 	fc.Result = res
-	return ec.marshalNSource2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSource(ctx, field.Selections, res)
+	return ec.marshalNSource2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_removeSource(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2441,7 +2442,7 @@ func (ec *executionContext) _Mutation_removeSource(ctx context.Context, field gr
 			return ec.resolvers.Mutation().RemoveSource(rctx, args["input"].(model.RemoveSourceRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -2513,7 +2514,7 @@ func (ec *executionContext) _Mutation_createLoginSession(ctx context.Context, fi
 	}
 	res := resTmp.(*primitives.Session)
 	fc.Result = res
-	return ec.marshalNSession2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSession(ctx, field.Selections, res)
+	return ec.marshalNSession2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSession(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createAuthSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2544,7 +2545,7 @@ func (ec *executionContext) _Mutation_createAuthSession(ctx context.Context, fie
 			return ec.resolvers.Mutation().CreateAuthSession(rctx, args["input"].(model.AuthSessionRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "LOGIN")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "LOGIN")
 			if err != nil {
 				return nil, err
 			}
@@ -2564,7 +2565,7 @@ func (ec *executionContext) _Mutation_createAuthSession(ctx context.Context, fie
 		if data, ok := tmp.(*primitives.Session); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Session`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Session`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2578,7 +2579,7 @@ func (ec *executionContext) _Mutation_createAuthSession(ctx context.Context, fie
 	}
 	res := resTmp.(*primitives.Session)
 	fc.Result = res
-	return ec.marshalNSession2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSession(ctx, field.Selections, res)
+	return ec.marshalNSession2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSession(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2609,7 +2610,7 @@ func (ec *executionContext) _Mutation_deleteSession(ctx context.Context, field g
 			return ec.resolvers.Mutation().DeleteSession(rctx, args["input"].(model.DeleteSessionRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -2681,7 +2682,7 @@ func (ec *executionContext) _Mutation_createPolicy(ctx context.Context, field gr
 	}
 	res := resTmp.(*primitives.Policy)
 	fc.Result = res
-	return ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
+	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deletePolicy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2760,7 +2761,7 @@ func (ec *executionContext) _Mutation_attachPolicy(ctx context.Context, field gr
 	}
 	res := resTmp.(*model.Attachment)
 	fc.Result = res
-	return ec.marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
+	return ec.marshalNAttachment2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_detachPolicy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2829,7 +2830,7 @@ func (ec *executionContext) _Mutation_createRole(ctx context.Context, field grap
 			return ec.resolvers.Mutation().CreateRole(rctx, args["input"].(model.CreateRoleRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -2849,7 +2850,7 @@ func (ec *executionContext) _Mutation_createRole(ctx context.Context, field grap
 		if data, ok := tmp.(*primitives.Role); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Role`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Role`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2863,7 +2864,7 @@ func (ec *executionContext) _Mutation_createRole(ctx context.Context, field grap
 	}
 	res := resTmp.(*primitives.Role)
 	fc.Result = res
-	return ec.marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2894,7 +2895,7 @@ func (ec *executionContext) _Mutation_deleteRole(ctx context.Context, field grap
 			return ec.resolvers.Mutation().DeleteRole(rctx, args["input"].(model.DeleteRoleRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -2956,7 +2957,7 @@ func (ec *executionContext) _Mutation_assignRole(ctx context.Context, field grap
 			return ec.resolvers.Mutation().AssignRole(rctx, args["input"].(model.AssignRoleRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -2976,7 +2977,7 @@ func (ec *executionContext) _Mutation_assignRole(ctx context.Context, field grap
 		if data, ok := tmp.(*model.Assignment); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/coordinator/graph/model.Assignment`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/coordinator/graph/model.Assignment`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2990,7 +2991,7 @@ func (ec *executionContext) _Mutation_assignRole(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.Assignment)
 	fc.Result = res
-	return ec.marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignment(ctx, field.Selections, res)
+	return ec.marshalNAssignment2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_unassignRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3021,7 +3022,7 @@ func (ec *executionContext) _Mutation_unassignRole(ctx context.Context, field gr
 			return ec.resolvers.Mutation().UnassignRole(rctx, args["input"].(model.AssignRoleRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -3083,7 +3084,7 @@ func (ec *executionContext) _Mutation_createService(ctx context.Context, field g
 			return ec.resolvers.Mutation().CreateService(rctx, args["input"].(model.CreateServiceRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -3103,7 +3104,7 @@ func (ec *executionContext) _Mutation_createService(ctx context.Context, field g
 		if data, ok := tmp.(*primitives.Service); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Service`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Service`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3117,7 +3118,7 @@ func (ec *executionContext) _Mutation_createService(ctx context.Context, field g
 	}
 	res := resTmp.(*primitives.Service)
 	fc.Result = res
-	return ec.marshalNService2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐService(ctx, field.Selections, res)
+	return ec.marshalNService2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteService(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3148,7 +3149,7 @@ func (ec *executionContext) _Mutation_deleteService(ctx context.Context, field g
 			return ec.resolvers.Mutation().DeleteService(rctx, args["input"].(model.DeleteServiceRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -3213,7 +3214,7 @@ func (ec *executionContext) _Policy_id(ctx context.Context, field graphql.Collec
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Policy_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
@@ -3315,7 +3316,7 @@ func (ec *executionContext) _Policy_label(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(primitives.Label)
 	fc.Result = res
-	return ec.marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
+	return ec.marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Policy_spec(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
@@ -3349,7 +3350,7 @@ func (ec *executionContext) _Policy_spec(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(*primitives.PolicySpec)
 	fc.Result = res
-	return ec.marshalNPolicySpec2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx, field.Selections, res)
+	return ec.marshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3390,7 +3391,7 @@ func (ec *executionContext) _Query_user(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(*primitives.User)
 	fc.Result = res
-	return ec.marshalNUser2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐUser(ctx, field.Selections, res)
+	return ec.marshalNUser2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_users(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3421,7 +3422,7 @@ func (ec *executionContext) _Query_users(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.([]*primitives.User)
 	fc.Result = res
-	return ec.marshalOUser2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐUserᚄ(ctx, field.Selections, res)
+	return ec.marshalOUser2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐUserᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3445,7 +3446,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 			return ec.resolvers.Query().Me(rctx)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -3465,7 +3466,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 		if data, ok := tmp.(primitives.Identity); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/dropoutlabs/cape/primitives.Identity`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/capeprivacy/cape/primitives.Identity`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3479,7 +3480,7 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 	}
 	res := resTmp.(primitives.Identity)
 	fc.Result = res
-	return ec.marshalNIdentity2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentity(ctx, field.Selections, res)
+	return ec.marshalNIdentity2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐIdentity(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3503,7 +3504,7 @@ func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.Co
 			return ec.resolvers.Query().Sources(rctx)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -3523,7 +3524,7 @@ func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.Co
 		if data, ok := tmp.([]*primitives.Source); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/dropoutlabs/cape/primitives.Source`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Source`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3537,7 +3538,7 @@ func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.([]*primitives.Source)
 	fc.Result = res
-	return ec.marshalNSource2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSourceᚄ(ctx, field.Selections, res)
+	return ec.marshalNSource2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSourceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_source(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3568,7 +3569,7 @@ func (ec *executionContext) _Query_source(ctx context.Context, field graphql.Col
 			return ec.resolvers.Query().Source(rctx, args["id"].(database.ID))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -3588,7 +3589,7 @@ func (ec *executionContext) _Query_source(ctx context.Context, field graphql.Col
 		if data, ok := tmp.(*primitives.Source); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Source`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Source`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3602,7 +3603,7 @@ func (ec *executionContext) _Query_source(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(*primitives.Source)
 	fc.Result = res
-	return ec.marshalNSource2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSource(ctx, field.Selections, res)
+	return ec.marshalNSource2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_sourceByLabel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3633,7 +3634,7 @@ func (ec *executionContext) _Query_sourceByLabel(ctx context.Context, field grap
 			return ec.resolvers.Query().SourceByLabel(rctx, args["label"].(primitives.Label))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -3653,7 +3654,7 @@ func (ec *executionContext) _Query_sourceByLabel(ctx context.Context, field grap
 		if data, ok := tmp.(*primitives.Source); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Source`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Source`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3667,7 +3668,7 @@ func (ec *executionContext) _Query_sourceByLabel(ctx context.Context, field grap
 	}
 	res := resTmp.(*primitives.Source)
 	fc.Result = res
-	return ec.marshalNSource2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSource(ctx, field.Selections, res)
+	return ec.marshalNSource2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSource(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_identities(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3705,7 +3706,7 @@ func (ec *executionContext) _Query_identities(ctx context.Context, field graphql
 	}
 	res := resTmp.([]primitives.Identity)
 	fc.Result = res
-	return ec.marshalOIdentity2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentityᚄ(ctx, field.Selections, res)
+	return ec.marshalOIdentity2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐIdentityᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_policy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3746,7 +3747,7 @@ func (ec *executionContext) _Query_policy(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(*primitives.Policy)
 	fc.Result = res
-	return ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
+	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_policyByLabel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3787,7 +3788,7 @@ func (ec *executionContext) _Query_policyByLabel(ctx context.Context, field grap
 	}
 	res := resTmp.(*primitives.Policy)
 	fc.Result = res
-	return ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
+	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_policies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3818,7 +3819,7 @@ func (ec *executionContext) _Query_policies(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*primitives.Policy)
 	fc.Result = res
-	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
+	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_rolePolicies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3856,7 +3857,7 @@ func (ec *executionContext) _Query_rolePolicies(ctx context.Context, field graph
 	}
 	res := resTmp.([]*primitives.Policy)
 	fc.Result = res
-	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
+	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_identityPolicies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3894,7 +3895,7 @@ func (ec *executionContext) _Query_identityPolicies(ctx context.Context, field g
 	}
 	res := resTmp.([]*primitives.Policy)
 	fc.Result = res
-	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
+	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3935,7 +3936,7 @@ func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql
 	}
 	res := resTmp.(*model.Attachment)
 	fc.Result = res
-	return ec.marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
+	return ec.marshalNAttachment2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_role(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3966,7 +3967,7 @@ func (ec *executionContext) _Query_role(ctx context.Context, field graphql.Colle
 			return ec.resolvers.Query().Role(rctx, args["id"].(database.ID))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -3986,7 +3987,7 @@ func (ec *executionContext) _Query_role(ctx context.Context, field graphql.Colle
 		if data, ok := tmp.(*primitives.Role); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Role`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Role`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4000,7 +4001,7 @@ func (ec *executionContext) _Query_role(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(*primitives.Role)
 	fc.Result = res
-	return ec.marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_roleByLabel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4031,7 +4032,7 @@ func (ec *executionContext) _Query_roleByLabel(ctx context.Context, field graphq
 			return ec.resolvers.Query().RoleByLabel(rctx, args["label"].(primitives.Label))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -4051,7 +4052,7 @@ func (ec *executionContext) _Query_roleByLabel(ctx context.Context, field graphq
 		if data, ok := tmp.(*primitives.Role); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Role`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Role`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4065,7 +4066,7 @@ func (ec *executionContext) _Query_roleByLabel(ctx context.Context, field graphq
 	}
 	res := resTmp.(*primitives.Role)
 	fc.Result = res
-	return ec.marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_roles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4089,7 +4090,7 @@ func (ec *executionContext) _Query_roles(ctx context.Context, field graphql.Coll
 			return ec.resolvers.Query().Roles(rctx)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -4109,7 +4110,7 @@ func (ec *executionContext) _Query_roles(ctx context.Context, field graphql.Coll
 		if data, ok := tmp.([]*primitives.Role); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/dropoutlabs/cape/primitives.Role`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Role`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4120,7 +4121,7 @@ func (ec *executionContext) _Query_roles(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.([]*primitives.Role)
 	fc.Result = res
-	return ec.marshalORole2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRoleᚄ(ctx, field.Selections, res)
+	return ec.marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRoleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_roleMembers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4151,7 +4152,7 @@ func (ec *executionContext) _Query_roleMembers(ctx context.Context, field graphq
 			return ec.resolvers.Query().RoleMembers(rctx, args["role_id"].(database.ID))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -4171,7 +4172,7 @@ func (ec *executionContext) _Query_roleMembers(ctx context.Context, field graphq
 		if data, ok := tmp.([]primitives.Identity); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []github.com/dropoutlabs/cape/primitives.Identity`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []github.com/capeprivacy/cape/primitives.Identity`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4182,7 +4183,7 @@ func (ec *executionContext) _Query_roleMembers(ctx context.Context, field graphq
 	}
 	res := resTmp.([]primitives.Identity)
 	fc.Result = res
-	return ec.marshalOIdentity2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentityᚄ(ctx, field.Selections, res)
+	return ec.marshalOIdentity2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐIdentityᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_service(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4213,7 +4214,7 @@ func (ec *executionContext) _Query_service(ctx context.Context, field graphql.Co
 			return ec.resolvers.Query().Service(rctx, args["id"].(database.ID))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -4233,7 +4234,7 @@ func (ec *executionContext) _Query_service(ctx context.Context, field graphql.Co
 		if data, ok := tmp.(*primitives.Service); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Service`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Service`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4247,7 +4248,7 @@ func (ec *executionContext) _Query_service(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*primitives.Service)
 	fc.Result = res
-	return ec.marshalNService2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐService(ctx, field.Selections, res)
+	return ec.marshalNService2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_serviceByEmail(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4278,7 +4279,7 @@ func (ec *executionContext) _Query_serviceByEmail(ctx context.Context, field gra
 			return ec.resolvers.Query().ServiceByEmail(rctx, args["email"].(primitives.Email))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -4298,7 +4299,7 @@ func (ec *executionContext) _Query_serviceByEmail(ctx context.Context, field gra
 		if data, ok := tmp.(*primitives.Service); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/dropoutlabs/cape/primitives.Service`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Service`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4312,7 +4313,7 @@ func (ec *executionContext) _Query_serviceByEmail(ctx context.Context, field gra
 	}
 	res := resTmp.(*primitives.Service)
 	fc.Result = res
-	return ec.marshalNService2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐService(ctx, field.Selections, res)
+	return ec.marshalNService2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_services(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4336,7 +4337,7 @@ func (ec *executionContext) _Query_services(ctx context.Context, field graphql.C
 			return ec.resolvers.Query().Services(rctx)
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
 			if err != nil {
 				return nil, err
 			}
@@ -4356,7 +4357,7 @@ func (ec *executionContext) _Query_services(ctx context.Context, field graphql.C
 		if data, ok := tmp.([]*primitives.Service); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/dropoutlabs/cape/primitives.Service`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Service`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4367,7 +4368,7 @@ func (ec *executionContext) _Query_services(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*primitives.Service)
 	fc.Result = res
-	return ec.marshalOService2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐServiceᚄ(ctx, field.Selections, res)
+	return ec.marshalOService2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐServiceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4470,7 +4471,7 @@ func (ec *executionContext) _Role_id(ctx context.Context, field graphql.Collecte
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Role_label(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
@@ -4504,7 +4505,7 @@ func (ec *executionContext) _Role_label(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(primitives.Label)
 	fc.Result = res
-	return ec.marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
+	return ec.marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Role_system(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
@@ -4640,7 +4641,7 @@ func (ec *executionContext) _Service_id(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Service_email(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
@@ -4674,7 +4675,7 @@ func (ec *executionContext) _Service_email(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(primitives.Email)
 	fc.Result = res
-	return ec.marshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, field.Selections, res)
+	return ec.marshalNEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Service_type(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
@@ -4708,7 +4709,7 @@ func (ec *executionContext) _Service_type(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(primitives.ServiceType)
 	fc.Result = res
-	return ec.marshalNServiceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐServiceType(ctx, field.Selections, res)
+	return ec.marshalNServiceType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐServiceType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Service_endpoint(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
@@ -4739,7 +4740,7 @@ func (ec *executionContext) _Service_endpoint(ctx context.Context, field graphql
 	}
 	res := resTmp.(*primitives.URL)
 	fc.Result = res
-	return ec.marshalOURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx, field.Selections, res)
+	return ec.marshalOURL2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Service_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
@@ -4838,7 +4839,7 @@ func (ec *executionContext) _Service_roles(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.([]*primitives.Role)
 	fc.Result = res
-	return ec.marshalORole2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRoleᚄ(ctx, field.Selections, res)
+	return ec.marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRoleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Session_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Session) (ret graphql.Marshaler) {
@@ -4872,7 +4873,7 @@ func (ec *executionContext) _Session_id(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Session_identity_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Session) (ret graphql.Marshaler) {
@@ -4906,7 +4907,7 @@ func (ec *executionContext) _Session_identity_id(ctx context.Context, field grap
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Session_expires_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Session) (ret graphql.Marshaler) {
@@ -4974,7 +4975,7 @@ func (ec *executionContext) _Session_type(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(primitives.TokenType)
 	fc.Result = res
-	return ec.marshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx, field.Selections, res)
+	return ec.marshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Session_token(ctx context.Context, field graphql.CollectedField, obj *primitives.Session) (ret graphql.Marshaler) {
@@ -5039,7 +5040,7 @@ func (ec *executionContext) _Session_credentials(ctx context.Context, field grap
 	}
 	res := resTmp.(*primitives.AuthCredentials)
 	fc.Result = res
-	return ec.marshalOAuthCredentials2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐAuthCredentials(ctx, field.Selections, res)
+	return ec.marshalOAuthCredentials2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐAuthCredentials(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
@@ -5073,7 +5074,7 @@ func (ec *executionContext) _Source_id(ctx context.Context, field graphql.Collec
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_label(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
@@ -5107,7 +5108,7 @@ func (ec *executionContext) _Source_label(ctx context.Context, field graphql.Col
 	}
 	res := resTmp.(primitives.Label)
 	fc.Result = res
-	return ec.marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
+	return ec.marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_type(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
@@ -5141,7 +5142,7 @@ func (ec *executionContext) _Source_type(ctx context.Context, field graphql.Coll
 	}
 	res := resTmp.(primitives.SourceType)
 	fc.Result = res
-	return ec.marshalNSourceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSourceType(ctx, field.Selections, res)
+	return ec.marshalNSourceType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSourceType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_endpoint(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
@@ -5175,7 +5176,7 @@ func (ec *executionContext) _Source_endpoint(ctx context.Context, field graphql.
 	}
 	res := resTmp.(*primitives.DBURL)
 	fc.Result = res
-	return ec.marshalNDBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx, field.Selections, res)
+	return ec.marshalNDBURL2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_credentials(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
@@ -5206,7 +5207,7 @@ func (ec *executionContext) _Source_credentials(ctx context.Context, field graph
 	}
 	res := resTmp.(*primitives.DBURL)
 	fc.Result = res
-	return ec.marshalODBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx, field.Selections, res)
+	return ec.marshalODBURL2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_service_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
@@ -5237,7 +5238,7 @@ func (ec *executionContext) _Source_service_id(ctx context.Context, field graphq
 	}
 	res := resTmp.(*database.ID)
 	fc.Result = res
-	return ec.marshalOID2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *primitives.User) (ret graphql.Marshaler) {
@@ -5271,7 +5272,7 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_name(ctx context.Context, field graphql.CollectedField, obj *primitives.User) (ret graphql.Marshaler) {
@@ -5305,7 +5306,7 @@ func (ec *executionContext) _User_name(ctx context.Context, field graphql.Collec
 	}
 	res := resTmp.(primitives.Name)
 	fc.Result = res
-	return ec.marshalNName2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐName(ctx, field.Selections, res)
+	return ec.marshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐName(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_email(ctx context.Context, field graphql.CollectedField, obj *primitives.User) (ret graphql.Marshaler) {
@@ -5339,7 +5340,7 @@ func (ec *executionContext) _User_email(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(primitives.Email)
 	fc.Result = res
-	return ec.marshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, field.Selections, res)
+	return ec.marshalNEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.User) (ret graphql.Marshaler) {
@@ -5438,7 +5439,7 @@ func (ec *executionContext) _User_roles(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.([]*primitives.Role)
 	fc.Result = res
-	return ec.marshalORole2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRoleᚄ(ctx, field.Selections, res)
+	return ec.marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRoleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -6504,19 +6505,19 @@ func (ec *executionContext) unmarshalInputAddSourceRequest(ctx context.Context, 
 		switch k {
 		case "label":
 			var err error
-			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "credentials":
 			var err error
-			it.Credentials, err = ec.unmarshalNDBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx, v)
+			it.Credentials, err = ec.unmarshalNDBURL2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "service_id":
 			var err error
-			it.ServiceID, err = ec.unmarshalOID2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.ServiceID, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6534,13 +6535,13 @@ func (ec *executionContext) unmarshalInputAssignRoleRequest(ctx context.Context,
 		switch k {
 		case "role_id":
 			var err error
-			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "identity_id":
 			var err error
-			it.IdentityID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.IdentityID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6558,13 +6559,13 @@ func (ec *executionContext) unmarshalInputAttachPolicyRequest(ctx context.Contex
 		switch k {
 		case "policy_id":
 			var err error
-			it.PolicyID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.PolicyID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "role_id":
 			var err error
-			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6600,13 +6601,13 @@ func (ec *executionContext) unmarshalInputCreatePolicyRequest(ctx context.Contex
 		switch k {
 		case "label":
 			var err error
-			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "spec":
 			var err error
-			it.Spec, err = ec.unmarshalNPolicySpec2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx, v)
+			it.Spec, err = ec.unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6624,13 +6625,13 @@ func (ec *executionContext) unmarshalInputCreateRoleRequest(ctx context.Context,
 		switch k {
 		case "label":
 			var err error
-			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "identity_ids":
 			var err error
-			it.IdentityIds, err = ec.unmarshalOID2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐIDᚄ(ctx, v)
+			it.IdentityIds, err = ec.unmarshalOID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐIDᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6648,19 +6649,19 @@ func (ec *executionContext) unmarshalInputCreateServiceRequest(ctx context.Conte
 		switch k {
 		case "email":
 			var err error
-			it.Email, err = ec.unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, v)
+			it.Email, err = ec.unmarshalNEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "type":
 			var err error
-			it.Type, err = ec.unmarshalNServiceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐServiceType(ctx, v)
+			it.Type, err = ec.unmarshalNServiceType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐServiceType(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "endpoint":
 			var err error
-			it.Endpoint, err = ec.unmarshalOURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx, v)
+			it.Endpoint, err = ec.unmarshalOURL2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐURL(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6678,7 +6679,7 @@ func (ec *executionContext) unmarshalInputCreateServiceRequest(ctx context.Conte
 			}
 		case "alg":
 			var err error
-			it.Alg, err = ec.unmarshalNCredentialsAlgType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx, v)
+			it.Alg, err = ec.unmarshalNCredentialsAlgType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6696,7 +6697,7 @@ func (ec *executionContext) unmarshalInputDeletePolicyRequest(ctx context.Contex
 		switch k {
 		case "id":
 			var err error
-			it.ID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6714,7 +6715,7 @@ func (ec *executionContext) unmarshalInputDeleteRoleRequest(ctx context.Context,
 		switch k {
 		case "id":
 			var err error
-			it.ID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6732,7 +6733,7 @@ func (ec *executionContext) unmarshalInputDeleteServiceRequest(ctx context.Conte
 		switch k {
 		case "id":
 			var err error
-			it.ID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6768,13 +6769,13 @@ func (ec *executionContext) unmarshalInputDetachPolicyRequest(ctx context.Contex
 		switch k {
 		case "policy_id":
 			var err error
-			it.PolicyID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.PolicyID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "role_id":
 			var err error
-			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6792,7 +6793,7 @@ func (ec *executionContext) unmarshalInputLoginSessionRequest(ctx context.Contex
 		switch k {
 		case "email":
 			var err error
-			it.Email, err = ec.unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, v)
+			it.Email, err = ec.unmarshalNEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6810,13 +6811,13 @@ func (ec *executionContext) unmarshalInputNewUserRequest(ctx context.Context, ob
 		switch k {
 		case "name":
 			var err error
-			it.Name, err = ec.unmarshalNName2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐName(ctx, v)
+			it.Name, err = ec.unmarshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐName(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "email":
 			var err error
-			it.Email, err = ec.unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, v)
+			it.Email, err = ec.unmarshalNEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6834,7 +6835,7 @@ func (ec *executionContext) unmarshalInputNewUserRequest(ctx context.Context, ob
 			}
 		case "alg":
 			var err error
-			it.Alg, err = ec.unmarshalNCredentialsAlgType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx, v)
+			it.Alg, err = ec.unmarshalNCredentialsAlgType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6852,7 +6853,7 @@ func (ec *executionContext) unmarshalInputPolicyInput(ctx context.Context, obj i
 		switch k {
 		case "label":
 			var err error
-			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6870,7 +6871,7 @@ func (ec *executionContext) unmarshalInputRemoveSourceRequest(ctx context.Contex
 		switch k {
 		case "label":
 			var err error
-			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7961,19 +7962,19 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) unmarshalNAddSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAddSourceRequest(ctx context.Context, v interface{}) (model.AddSourceRequest, error) {
+func (ec *executionContext) unmarshalNAddSourceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAddSourceRequest(ctx context.Context, v interface{}) (model.AddSourceRequest, error) {
 	return ec.unmarshalInputAddSourceRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNAssignRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignRoleRequest(ctx context.Context, v interface{}) (model.AssignRoleRequest, error) {
+func (ec *executionContext) unmarshalNAssignRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignRoleRequest(ctx context.Context, v interface{}) (model.AssignRoleRequest, error) {
 	return ec.unmarshalInputAssignRoleRequest(ctx, v)
 }
 
-func (ec *executionContext) marshalNAssignment2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignment(ctx context.Context, sel ast.SelectionSet, v model.Assignment) graphql.Marshaler {
+func (ec *executionContext) marshalNAssignment2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignment(ctx context.Context, sel ast.SelectionSet, v model.Assignment) graphql.Marshaler {
 	return ec._Assignment(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignment(ctx context.Context, sel ast.SelectionSet, v *model.Assignment) graphql.Marshaler {
+func (ec *executionContext) marshalNAssignment2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignment(ctx context.Context, sel ast.SelectionSet, v *model.Assignment) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -7983,15 +7984,15 @@ func (ec *executionContext) marshalNAssignment2ᚖgithubᚗcomᚋdropoutlabsᚋc
 	return ec._Assignment(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNAttachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachPolicyRequest(ctx context.Context, v interface{}) (model.AttachPolicyRequest, error) {
+func (ec *executionContext) unmarshalNAttachPolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachPolicyRequest(ctx context.Context, v interface{}) (model.AttachPolicyRequest, error) {
 	return ec.unmarshalInputAttachPolicyRequest(ctx, v)
 }
 
-func (ec *executionContext) marshalNAttachment2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v model.Attachment) graphql.Marshaler {
+func (ec *executionContext) marshalNAttachment2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v model.Attachment) graphql.Marshaler {
 	return ec._Attachment(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
+func (ec *executionContext) marshalNAttachment2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttachment(ctx context.Context, sel ast.SelectionSet, v *model.Attachment) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8001,7 +8002,7 @@ func (ec *executionContext) marshalNAttachment2ᚖgithubᚗcomᚋdropoutlabsᚋc
 	return ec._Attachment(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNAuthSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAuthSessionRequest(ctx context.Context, v interface{}) (model.AuthSessionRequest, error) {
+func (ec *executionContext) unmarshalNAuthSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAuthSessionRequest(ctx context.Context, v interface{}) (model.AuthSessionRequest, error) {
 	return ec.unmarshalInputAuthSessionRequest(ctx, v)
 }
 
@@ -8051,45 +8052,45 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) unmarshalNCreatePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreatePolicyRequest(ctx context.Context, v interface{}) (model.CreatePolicyRequest, error) {
+func (ec *executionContext) unmarshalNCreatePolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreatePolicyRequest(ctx context.Context, v interface{}) (model.CreatePolicyRequest, error) {
 	return ec.unmarshalInputCreatePolicyRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNCreateRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateRoleRequest(ctx context.Context, v interface{}) (model.CreateRoleRequest, error) {
+func (ec *executionContext) unmarshalNCreateRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateRoleRequest(ctx context.Context, v interface{}) (model.CreateRoleRequest, error) {
 	return ec.unmarshalInputCreateRoleRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNCreateServiceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateServiceRequest(ctx context.Context, v interface{}) (model.CreateServiceRequest, error) {
+func (ec *executionContext) unmarshalNCreateServiceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateServiceRequest(ctx context.Context, v interface{}) (model.CreateServiceRequest, error) {
 	return ec.unmarshalInputCreateServiceRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNCredentialsAlgType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx context.Context, v interface{}) (primitives.CredentialsAlgType, error) {
+func (ec *executionContext) unmarshalNCredentialsAlgType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx context.Context, v interface{}) (primitives.CredentialsAlgType, error) {
 	var res primitives.CredentialsAlgType
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNCredentialsAlgType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx context.Context, sel ast.SelectionSet, v primitives.CredentialsAlgType) graphql.Marshaler {
+func (ec *executionContext) marshalNCredentialsAlgType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx context.Context, sel ast.SelectionSet, v primitives.CredentialsAlgType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNDBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, v interface{}) (primitives.DBURL, error) {
+func (ec *executionContext) unmarshalNDBURL2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, v interface{}) (primitives.DBURL, error) {
 	var res primitives.DBURL
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNDBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, sel ast.SelectionSet, v primitives.DBURL) graphql.Marshaler {
+func (ec *executionContext) marshalNDBURL2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, sel ast.SelectionSet, v primitives.DBURL) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNDBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, v interface{}) (*primitives.DBURL, error) {
+func (ec *executionContext) unmarshalNDBURL2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, v interface{}) (*primitives.DBURL, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalNDBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx, v)
+	res, err := ec.unmarshalNDBURL2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalNDBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, sel ast.SelectionSet, v *primitives.DBURL) graphql.Marshaler {
+func (ec *executionContext) marshalNDBURL2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, sel ast.SelectionSet, v *primitives.DBURL) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8099,44 +8100,44 @@ func (ec *executionContext) marshalNDBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcape�
 	return v
 }
 
-func (ec *executionContext) unmarshalNDeletePolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeletePolicyRequest(ctx context.Context, v interface{}) (model.DeletePolicyRequest, error) {
+func (ec *executionContext) unmarshalNDeletePolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeletePolicyRequest(ctx context.Context, v interface{}) (model.DeletePolicyRequest, error) {
 	return ec.unmarshalInputDeletePolicyRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNDeleteRoleRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteRoleRequest(ctx context.Context, v interface{}) (model.DeleteRoleRequest, error) {
+func (ec *executionContext) unmarshalNDeleteRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteRoleRequest(ctx context.Context, v interface{}) (model.DeleteRoleRequest, error) {
 	return ec.unmarshalInputDeleteRoleRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNDeleteServiceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteServiceRequest(ctx context.Context, v interface{}) (model.DeleteServiceRequest, error) {
+func (ec *executionContext) unmarshalNDeleteServiceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteServiceRequest(ctx context.Context, v interface{}) (model.DeleteServiceRequest, error) {
 	return ec.unmarshalInputDeleteServiceRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNDeleteSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteSessionRequest(ctx context.Context, v interface{}) (model.DeleteSessionRequest, error) {
+func (ec *executionContext) unmarshalNDeleteSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteSessionRequest(ctx context.Context, v interface{}) (model.DeleteSessionRequest, error) {
 	return ec.unmarshalInputDeleteSessionRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNDetachPolicyRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDetachPolicyRequest(ctx context.Context, v interface{}) (model.DetachPolicyRequest, error) {
+func (ec *executionContext) unmarshalNDetachPolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDetachPolicyRequest(ctx context.Context, v interface{}) (model.DetachPolicyRequest, error) {
 	return ec.unmarshalInputDetachPolicyRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx context.Context, v interface{}) (primitives.Email, error) {
+func (ec *executionContext) unmarshalNEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx context.Context, v interface{}) (primitives.Email, error) {
 	var res primitives.Email
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx context.Context, sel ast.SelectionSet, v primitives.Email) graphql.Marshaler {
+func (ec *executionContext) marshalNEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx context.Context, sel ast.SelectionSet, v primitives.Email) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNEmail2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx context.Context, v interface{}) (*primitives.Email, error) {
+func (ec *executionContext) unmarshalNEmail2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx context.Context, v interface{}) (*primitives.Email, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalNEmail2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, v)
+	res, err := ec.unmarshalNEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalNEmail2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx context.Context, sel ast.SelectionSet, v *primitives.Email) graphql.Marshaler {
+func (ec *executionContext) marshalNEmail2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx context.Context, sel ast.SelectionSet, v *primitives.Email) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8146,16 +8147,16 @@ func (ec *executionContext) marshalNEmail2ᚖgithubᚗcomᚋdropoutlabsᚋcape�
 	return v
 }
 
-func (ec *executionContext) unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
+func (ec *executionContext) unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
 	var res database.ID
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v database.ID) graphql.Marshaler {
+func (ec *executionContext) marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v database.ID) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNIdentity2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentity(ctx context.Context, sel ast.SelectionSet, v primitives.Identity) graphql.Marshaler {
+func (ec *executionContext) marshalNIdentity2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐIdentity(ctx context.Context, sel ast.SelectionSet, v primitives.Identity) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8165,12 +8166,12 @@ func (ec *executionContext) marshalNIdentity2githubᚗcomᚋdropoutlabsᚋcape�
 	return ec._Identity(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx context.Context, v interface{}) (primitives.Label, error) {
+func (ec *executionContext) unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx context.Context, v interface{}) (primitives.Label, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return primitives.Label(tmp), err
 }
 
-func (ec *executionContext) marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐLabel(ctx context.Context, sel ast.SelectionSet, v primitives.Label) graphql.Marshaler {
+func (ec *executionContext) marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx context.Context, sel ast.SelectionSet, v primitives.Label) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -8180,16 +8181,16 @@ func (ec *executionContext) marshalNLabel2githubᚗcomᚋdropoutlabsᚋcapeᚋpr
 	return res
 }
 
-func (ec *executionContext) unmarshalNLoginSessionRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐLoginSessionRequest(ctx context.Context, v interface{}) (model.LoginSessionRequest, error) {
+func (ec *executionContext) unmarshalNLoginSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐLoginSessionRequest(ctx context.Context, v interface{}) (model.LoginSessionRequest, error) {
 	return ec.unmarshalInputLoginSessionRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNName2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐName(ctx context.Context, v interface{}) (primitives.Name, error) {
+func (ec *executionContext) unmarshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐName(ctx context.Context, v interface{}) (primitives.Name, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return primitives.Name(tmp), err
 }
 
-func (ec *executionContext) marshalNName2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐName(ctx context.Context, sel ast.SelectionSet, v primitives.Name) graphql.Marshaler {
+func (ec *executionContext) marshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐName(ctx context.Context, sel ast.SelectionSet, v primitives.Name) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -8199,15 +8200,15 @@ func (ec *executionContext) marshalNName2githubᚗcomᚋdropoutlabsᚋcapeᚋpri
 	return res
 }
 
-func (ec *executionContext) unmarshalNNewUserRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐNewUserRequest(ctx context.Context, v interface{}) (model.NewUserRequest, error) {
+func (ec *executionContext) unmarshalNNewUserRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐNewUserRequest(ctx context.Context, v interface{}) (model.NewUserRequest, error) {
 	return ec.unmarshalInputNewUserRequest(ctx, v)
 }
 
-func (ec *executionContext) marshalNPolicy2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx context.Context, sel ast.SelectionSet, v primitives.Policy) graphql.Marshaler {
+func (ec *executionContext) marshalNPolicy2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx context.Context, sel ast.SelectionSet, v primitives.Policy) graphql.Marshaler {
 	return ec._Policy(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx context.Context, sel ast.SelectionSet, v *primitives.Policy) graphql.Marshaler {
+func (ec *executionContext) marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx context.Context, sel ast.SelectionSet, v *primitives.Policy) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8217,24 +8218,24 @@ func (ec *executionContext) marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcape�
 	return ec._Policy(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNPolicySpec2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, v interface{}) (primitives.PolicySpec, error) {
+func (ec *executionContext) unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, v interface{}) (primitives.PolicySpec, error) {
 	var res primitives.PolicySpec
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNPolicySpec2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v primitives.PolicySpec) graphql.Marshaler {
+func (ec *executionContext) marshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v primitives.PolicySpec) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNPolicySpec2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, v interface{}) (*primitives.PolicySpec, error) {
+func (ec *executionContext) unmarshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, v interface{}) (*primitives.PolicySpec, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalNPolicySpec2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx, v)
+	res, err := ec.unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalNPolicySpec2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v *primitives.PolicySpec) graphql.Marshaler {
+func (ec *executionContext) marshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v *primitives.PolicySpec) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8244,15 +8245,15 @@ func (ec *executionContext) marshalNPolicySpec2ᚖgithubᚗcomᚋdropoutlabsᚋc
 	return v
 }
 
-func (ec *executionContext) unmarshalNRemoveSourceRequest2githubᚗcomᚋdropoutlabsᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRemoveSourceRequest(ctx context.Context, v interface{}) (model.RemoveSourceRequest, error) {
+func (ec *executionContext) unmarshalNRemoveSourceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRemoveSourceRequest(ctx context.Context, v interface{}) (model.RemoveSourceRequest, error) {
 	return ec.unmarshalInputRemoveSourceRequest(ctx, v)
 }
 
-func (ec *executionContext) marshalNRole2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx context.Context, sel ast.SelectionSet, v primitives.Role) graphql.Marshaler {
+func (ec *executionContext) marshalNRole2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx context.Context, sel ast.SelectionSet, v primitives.Role) graphql.Marshaler {
 	return ec._Role(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx context.Context, sel ast.SelectionSet, v *primitives.Role) graphql.Marshaler {
+func (ec *executionContext) marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx context.Context, sel ast.SelectionSet, v *primitives.Role) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8262,11 +8263,11 @@ func (ec *executionContext) marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋ
 	return ec._Role(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNService2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐService(ctx context.Context, sel ast.SelectionSet, v primitives.Service) graphql.Marshaler {
+func (ec *executionContext) marshalNService2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx context.Context, sel ast.SelectionSet, v primitives.Service) graphql.Marshaler {
 	return ec._Service(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNService2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐService(ctx context.Context, sel ast.SelectionSet, v *primitives.Service) graphql.Marshaler {
+func (ec *executionContext) marshalNService2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx context.Context, sel ast.SelectionSet, v *primitives.Service) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8276,20 +8277,20 @@ func (ec *executionContext) marshalNService2ᚖgithubᚗcomᚋdropoutlabsᚋcape
 	return ec._Service(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNServiceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐServiceType(ctx context.Context, v interface{}) (primitives.ServiceType, error) {
+func (ec *executionContext) unmarshalNServiceType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐServiceType(ctx context.Context, v interface{}) (primitives.ServiceType, error) {
 	var res primitives.ServiceType
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNServiceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐServiceType(ctx context.Context, sel ast.SelectionSet, v primitives.ServiceType) graphql.Marshaler {
+func (ec *executionContext) marshalNServiceType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐServiceType(ctx context.Context, sel ast.SelectionSet, v primitives.ServiceType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNSession2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSession(ctx context.Context, sel ast.SelectionSet, v primitives.Session) graphql.Marshaler {
+func (ec *executionContext) marshalNSession2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSession(ctx context.Context, sel ast.SelectionSet, v primitives.Session) graphql.Marshaler {
 	return ec._Session(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSession2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSession(ctx context.Context, sel ast.SelectionSet, v *primitives.Session) graphql.Marshaler {
+func (ec *executionContext) marshalNSession2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSession(ctx context.Context, sel ast.SelectionSet, v *primitives.Session) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8299,11 +8300,11 @@ func (ec *executionContext) marshalNSession2ᚖgithubᚗcomᚋdropoutlabsᚋcape
 	return ec._Session(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSource2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSource(ctx context.Context, sel ast.SelectionSet, v primitives.Source) graphql.Marshaler {
+func (ec *executionContext) marshalNSource2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSource(ctx context.Context, sel ast.SelectionSet, v primitives.Source) graphql.Marshaler {
 	return ec._Source(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Source) graphql.Marshaler {
+func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSourceᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Source) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8327,7 +8328,7 @@ func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋdropoutlabsᚋca
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSource2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSource(ctx, sel, v[i])
+			ret[i] = ec.marshalNSource2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSource(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8340,7 +8341,7 @@ func (ec *executionContext) marshalNSource2ᚕᚖgithubᚗcomᚋdropoutlabsᚋca
 	return ret
 }
 
-func (ec *executionContext) marshalNSource2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSource(ctx context.Context, sel ast.SelectionSet, v *primitives.Source) graphql.Marshaler {
+func (ec *executionContext) marshalNSource2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSource(ctx context.Context, sel ast.SelectionSet, v *primitives.Source) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8350,12 +8351,12 @@ func (ec *executionContext) marshalNSource2ᚖgithubᚗcomᚋdropoutlabsᚋcape�
 	return ec._Source(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSourceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSourceType(ctx context.Context, v interface{}) (primitives.SourceType, error) {
+func (ec *executionContext) unmarshalNSourceType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSourceType(ctx context.Context, v interface{}) (primitives.SourceType, error) {
 	var res primitives.SourceType
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNSourceType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐSourceType(ctx context.Context, sel ast.SelectionSet, v primitives.SourceType) graphql.Marshaler {
+func (ec *executionContext) marshalNSourceType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSourceType(ctx context.Context, sel ast.SelectionSet, v primitives.SourceType) graphql.Marshaler {
 	return v
 }
 
@@ -8387,20 +8388,20 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) unmarshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx context.Context, v interface{}) (primitives.TokenType, error) {
+func (ec *executionContext) unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx context.Context, v interface{}) (primitives.TokenType, error) {
 	var res primitives.TokenType
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNTokenType2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐTokenType(ctx context.Context, sel ast.SelectionSet, v primitives.TokenType) graphql.Marshaler {
+func (ec *executionContext) marshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx context.Context, sel ast.SelectionSet, v primitives.TokenType) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) marshalNUser2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐUser(ctx context.Context, sel ast.SelectionSet, v primitives.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐUser(ctx context.Context, sel ast.SelectionSet, v primitives.User) graphql.Marshaler {
 	return ec._User(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐUser(ctx context.Context, sel ast.SelectionSet, v *primitives.User) graphql.Marshaler {
+func (ec *executionContext) marshalNUser2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐUser(ctx context.Context, sel ast.SelectionSet, v *primitives.User) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8636,11 +8637,11 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
-func (ec *executionContext) marshalOAuthCredentials2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐAuthCredentials(ctx context.Context, sel ast.SelectionSet, v primitives.AuthCredentials) graphql.Marshaler {
+func (ec *executionContext) marshalOAuthCredentials2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐAuthCredentials(ctx context.Context, sel ast.SelectionSet, v primitives.AuthCredentials) graphql.Marshaler {
 	return ec._AuthCredentials(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOAuthCredentials2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐAuthCredentials(ctx context.Context, sel ast.SelectionSet, v *primitives.AuthCredentials) graphql.Marshaler {
+func (ec *executionContext) marshalOAuthCredentials2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐAuthCredentials(ctx context.Context, sel ast.SelectionSet, v *primitives.AuthCredentials) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -8670,31 +8671,31 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
-func (ec *executionContext) unmarshalODBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, v interface{}) (primitives.DBURL, error) {
+func (ec *executionContext) unmarshalODBURL2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, v interface{}) (primitives.DBURL, error) {
 	var res primitives.DBURL
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalODBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, sel ast.SelectionSet, v primitives.DBURL) graphql.Marshaler {
+func (ec *executionContext) marshalODBURL2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, sel ast.SelectionSet, v primitives.DBURL) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalODBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, v interface{}) (*primitives.DBURL, error) {
+func (ec *executionContext) unmarshalODBURL2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, v interface{}) (*primitives.DBURL, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalODBURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx, v)
+	res, err := ec.unmarshalODBURL2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalODBURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, sel ast.SelectionSet, v *primitives.DBURL) graphql.Marshaler {
+func (ec *executionContext) marshalODBURL2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx context.Context, sel ast.SelectionSet, v *primitives.DBURL) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) unmarshalOEmail2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmailᚄ(ctx context.Context, v interface{}) ([]*primitives.Email, error) {
+func (ec *executionContext) unmarshalOEmail2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmailᚄ(ctx context.Context, v interface{}) ([]*primitives.Email, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -8706,7 +8707,7 @@ func (ec *executionContext) unmarshalOEmail2ᚕᚖgithubᚗcomᚋdropoutlabsᚋc
 	var err error
 	res := make([]*primitives.Email, len(vSlice))
 	for i := range vSlice {
-		res[i], err = ec.unmarshalNEmail2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNEmail2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -8714,28 +8715,28 @@ func (ec *executionContext) unmarshalOEmail2ᚕᚖgithubᚗcomᚋdropoutlabsᚋc
 	return res, nil
 }
 
-func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmailᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Email) graphql.Marshaler {
+func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmailᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Email) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	ret := make(graphql.Array, len(v))
 	for i := range v {
-		ret[i] = ec.marshalNEmail2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐEmail(ctx, sel, v[i])
+		ret[i] = ec.marshalNEmail2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, sel, v[i])
 	}
 
 	return ret
 }
 
-func (ec *executionContext) unmarshalOID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
+func (ec *executionContext) unmarshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
 	var res database.ID
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalOID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v database.ID) graphql.Marshaler {
+func (ec *executionContext) marshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v database.ID) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐIDᚄ(ctx context.Context, v interface{}) ([]database.ID, error) {
+func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐIDᚄ(ctx context.Context, v interface{}) ([]database.ID, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -8747,7 +8748,7 @@ func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋ
 	var err error
 	res := make([]database.ID, len(vSlice))
 	for i := range vSlice {
-		res[i], err = ec.unmarshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -8755,34 +8756,34 @@ func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋ
 	return res, nil
 }
 
-func (ec *executionContext) marshalOID2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐIDᚄ(ctx context.Context, sel ast.SelectionSet, v []database.ID) graphql.Marshaler {
+func (ec *executionContext) marshalOID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐIDᚄ(ctx context.Context, sel ast.SelectionSet, v []database.ID) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	ret := make(graphql.Array, len(v))
 	for i := range v {
-		ret[i] = ec.marshalNID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, sel, v[i])
+		ret[i] = ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, sel, v[i])
 	}
 
 	return ret
 }
 
-func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (*database.ID, error) {
+func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (*database.ID, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOID2githubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx, v)
+	res, err := ec.unmarshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v *database.ID) graphql.Marshaler {
+func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v *database.ID) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOIdentity2ᚕgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentityᚄ(ctx context.Context, sel ast.SelectionSet, v []primitives.Identity) graphql.Marshaler {
+func (ec *executionContext) marshalOIdentity2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐIdentityᚄ(ctx context.Context, sel ast.SelectionSet, v []primitives.Identity) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -8809,7 +8810,7 @@ func (ec *executionContext) marshalOIdentity2ᚕgithubᚗcomᚋdropoutlabsᚋcap
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNIdentity2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐIdentity(ctx, sel, v[i])
+			ret[i] = ec.marshalNIdentity2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐIdentity(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8822,7 +8823,7 @@ func (ec *executionContext) marshalOIdentity2ᚕgithubᚗcomᚋdropoutlabsᚋcap
 	return ret
 }
 
-func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicyᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Policy) graphql.Marshaler {
+func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicyᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Policy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -8849,7 +8850,7 @@ func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋca
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPolicy2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐPolicy(ctx, sel, v[i])
+			ret[i] = ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8862,7 +8863,7 @@ func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋdropoutlabsᚋca
 	return ret
 }
 
-func (ec *executionContext) marshalORole2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Role) graphql.Marshaler {
+func (ec *executionContext) marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Role) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -8889,7 +8890,7 @@ func (ec *executionContext) marshalORole2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcape
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNRole2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐRole(ctx, sel, v[i])
+			ret[i] = ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8902,7 +8903,7 @@ func (ec *executionContext) marshalORole2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcape
 	return ret
 }
 
-func (ec *executionContext) marshalOService2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐServiceᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Service) graphql.Marshaler {
+func (ec *executionContext) marshalOService2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐServiceᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Service) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -8929,7 +8930,7 @@ func (ec *executionContext) marshalOService2ᚕᚖgithubᚗcomᚋdropoutlabsᚋc
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNService2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐService(ctx, sel, v[i])
+			ret[i] = ec.marshalNService2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8965,31 +8966,31 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return ec.marshalOString2string(ctx, sel, *v)
 }
 
-func (ec *executionContext) unmarshalOURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx context.Context, v interface{}) (primitives.URL, error) {
+func (ec *executionContext) unmarshalOURL2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐURL(ctx context.Context, v interface{}) (primitives.URL, error) {
 	var res primitives.URL
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalOURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx context.Context, sel ast.SelectionSet, v primitives.URL) graphql.Marshaler {
+func (ec *executionContext) marshalOURL2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐURL(ctx context.Context, sel ast.SelectionSet, v primitives.URL) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalOURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx context.Context, v interface{}) (*primitives.URL, error) {
+func (ec *executionContext) unmarshalOURL2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐURL(ctx context.Context, v interface{}) (*primitives.URL, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOURL2githubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx, v)
+	res, err := ec.unmarshalOURL2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐURL(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalOURL2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐURL(ctx context.Context, sel ast.SelectionSet, v *primitives.URL) graphql.Marshaler {
+func (ec *executionContext) marshalOURL2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐURL(ctx context.Context, sel ast.SelectionSet, v *primitives.URL) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return v
 }
 
-func (ec *executionContext) marshalOUser2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.User) graphql.Marshaler {
+func (ec *executionContext) marshalOUser2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐUserᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.User) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9016,7 +9017,7 @@ func (ec *executionContext) marshalOUser2ᚕᚖgithubᚗcomᚋdropoutlabsᚋcape
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNUser2ᚖgithubᚗcomᚋdropoutlabsᚋcapeᚋprimitivesᚐUser(ctx, sel, v[i])
+			ret[i] = ec.marshalNUser2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐUser(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

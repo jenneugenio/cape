@@ -12,12 +12,12 @@ import (
 	"github.com/rs/cors"
 	"github.com/rs/zerolog"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/coordinator/graph"
-	"github.com/dropoutlabs/cape/coordinator/graph/generated"
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/framework"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator/graph"
+	"github.com/capeprivacy/cape/coordinator/graph/generated"
+	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/framework"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // Coordinator is the central brain of Cape.  It keeps track of system

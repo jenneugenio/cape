@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 var (

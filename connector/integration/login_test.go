@@ -9,9 +9,9 @@ import (
 	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 
-	connHarness "github.com/dropoutlabs/cape/connector/harness"
-	"github.com/dropoutlabs/cape/coordinator/harness"
-	"github.com/dropoutlabs/cape/primitives"
+	connHarness "github.com/capeprivacy/cape/connector/harness"
+	"github.com/capeprivacy/cape/coordinator/harness"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestLogin(t *testing.T) {

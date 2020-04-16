@@ -1,9 +1,9 @@
 package policy
 
 import (
-	"github.com/dropoutlabs/cape/connector/proto"
-	"github.com/dropoutlabs/cape/primitives"
-	"github.com/dropoutlabs/cape/query"
+	"github.com/capeprivacy/cape/connector/proto"
+	"github.com/capeprivacy/cape/primitives"
+	"github.com/capeprivacy/cape/query"
 	gm "github.com/onsi/gomega"
 	"testing"
 )

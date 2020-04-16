@@ -1,5 +1,5 @@
 db:
   url: postgres://postgres:dev@fake-customer-db-postgresql.default.svc.cluster.local/customer_data?sslmode=disable
 image:
-  seed: dropoutlabs/customer_seed
+  seed: capeprivacy/customer_seed
   tag: latest

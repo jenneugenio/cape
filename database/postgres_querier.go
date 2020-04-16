@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgconn"
 	pgx "github.com/jackc/pgx/v4"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 type pgConn interface {

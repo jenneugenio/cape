@@ -4,10 +4,10 @@ import (
 	"context"
 	"io/ioutil"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/coordinator"
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator"
+	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/primitives"
 	"github.com/manifoldco/go-base64"
 )
 

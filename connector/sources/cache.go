@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // CoordinatorClient is an interface that represents a client for the

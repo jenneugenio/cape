@@ -3,10 +3,10 @@ package main
 import (
 	"github.com/urfave/cli/v2"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/connector"
-	"github.com/dropoutlabs/cape/framework"
-	"github.com/dropoutlabs/cape/logging"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/connector"
+	"github.com/capeprivacy/cape/framework"
+	"github.com/capeprivacy/cape/logging"
 )
 
 func init() {

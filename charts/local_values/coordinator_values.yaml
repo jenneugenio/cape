@@ -1,6 +1,6 @@
 db:
   url: postgres://postgres:dev@cape-db-postgresql.default.svc.cluster.local/postgres?sslmode=disable
 image:
-  coordinator_repository: dropoutlabs/coordinator
-  update_repository: dropoutlabs/update
+  coordinator_repository: capeprivacy/coordinator
+  update_repository: capeprivacy/update
   tag: latest

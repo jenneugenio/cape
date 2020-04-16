@@ -9,10 +9,10 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/dropoutlabs/cape/cmd/ui"
-	"github.com/dropoutlabs/cape/connector/client"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/cmd/ui"
+	"github.com/capeprivacy/cape/connector/client"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func init() {

@@ -9,14 +9,14 @@ import (
 	"github.com/manifoldco/go-base64"
 	"github.com/rs/zerolog"
 
-	"github.com/dropoutlabs/cape/auth"
-	"github.com/dropoutlabs/cape/connector"
-	"github.com/dropoutlabs/cape/connector/client"
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/database/dbtest"
-	"github.com/dropoutlabs/cape/framework"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/connector"
+	"github.com/capeprivacy/cape/connector/client"
+	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/database/dbtest"
+	"github.com/capeprivacy/cape/framework"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // ConnectorEmail is the email of the connector

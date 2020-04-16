@@ -13,9 +13,9 @@ import (
 	"github.com/manifoldco/go-base64"
 	"github.com/rs/zerolog"
 
-	"github.com/dropoutlabs/cape/auth"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/auth"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // ContextKey is a type alias used for storing data in a context

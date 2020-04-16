@@ -1,6 +1,6 @@
 FROM golang:1.14.0-alpine
 
-WORKDIR /go/src/github.com/dropoutlabs/cape
+WORKDIR /go/src/github.com/capeprivacy/cape
 
 COPY go.mod go.sum Makefile tools.go tools migrations ./
 RUN apk --no-cache add make gcc musl-dev curl protoc protobuf-dev \

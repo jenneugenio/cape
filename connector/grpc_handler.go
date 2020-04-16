@@ -11,14 +11,14 @@ import (
 	spb "github.com/golang/protobuf/ptypes/struct"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/dropoutlabs/cape/auth"
-	pb "github.com/dropoutlabs/cape/connector/proto"
-	"github.com/dropoutlabs/cape/connector/sources"
-	"github.com/dropoutlabs/cape/framework"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/policy"
-	"github.com/dropoutlabs/cape/primitives"
-	"github.com/dropoutlabs/cape/query"
+	"github.com/capeprivacy/cape/auth"
+	pb "github.com/capeprivacy/cape/connector/proto"
+	"github.com/capeprivacy/cape/connector/sources"
+	"github.com/capeprivacy/cape/framework"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/policy"
+	"github.com/capeprivacy/cape/primitives"
+	"github.com/capeprivacy/cape/query"
 )
 
 type grpcHandler struct {

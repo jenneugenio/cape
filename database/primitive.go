@@ -3,8 +3,8 @@ package database
 import (
 	"time"
 
-	"github.com/dropoutlabs/cape/database/types"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/capeprivacy/cape/database/types"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // Primitive a low level object that can be inherited from for getting access

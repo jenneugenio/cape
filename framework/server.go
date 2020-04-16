@@ -7,7 +7,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // Component represents the business logic and functionality that is served by

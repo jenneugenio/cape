@@ -3,7 +3,7 @@ package primitives
 import (
 	"regexp"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 var labelRegex = regexp.MustCompile("^[a-z0-9][a-z0-9/-]{3,64}$")

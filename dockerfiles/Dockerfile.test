@@ -1,5 +1,5 @@
-FROM dropoutlabs/cape:latest
+FROM capeprivacy/cape:latest
 
-WORKDIR /go/src/github.com/dropoutlabs/cape
+WORKDIR /go/src/github.com/capeprivacy/cape
 
 CMD ["make", "test"]

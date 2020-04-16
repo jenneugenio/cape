@@ -5,7 +5,7 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestAPIToken(t *testing.T) {

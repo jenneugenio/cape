@@ -12,9 +12,9 @@ import (
 	"github.com/manifoldco/go-base64"
 	"sigs.k8s.io/yaml"
 
-	"github.com/dropoutlabs/cape/coordinator"
-	errors "github.com/dropoutlabs/cape/partyerrors"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/coordinator"
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // All files and folders that contain cape cli configuration must only be

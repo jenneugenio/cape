@@ -5,7 +5,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/dropoutlabs/cape/database"
+	"github.com/capeprivacy/cape/database"
 )
 
 func updateCmd(c *cli.Context) error {

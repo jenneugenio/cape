@@ -10,8 +10,8 @@ import (
 	"github.com/chzyer/readline"
 	"github.com/manifoldco/promptui"
 
-	"github.com/dropoutlabs/cape/cmd/config"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/capeprivacy/cape/cmd/config"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // UI makes it easy to present prompts, animation, and other ui enhancements

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/badoux/checkmail"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // EmailType is an enum holding representing a user or

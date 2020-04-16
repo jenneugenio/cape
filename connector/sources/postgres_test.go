@@ -11,11 +11,11 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/cape/connector/proto"
-	"github.com/dropoutlabs/cape/database"
-	"github.com/dropoutlabs/cape/database/dbtest"
-	"github.com/dropoutlabs/cape/framework"
-	"github.com/dropoutlabs/cape/primitives"
+	"github.com/capeprivacy/cape/connector/proto"
+	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/database/dbtest"
+	"github.com/capeprivacy/cape/framework"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // TODO; We need to write the "error" flow tests for everything to do with the

@@ -5,8 +5,8 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/dropoutlabs/cape/database/types"
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	"github.com/capeprivacy/cape/database/types"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func TestDerive(t *testing.T) {

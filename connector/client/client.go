@@ -8,8 +8,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	pb "github.com/dropoutlabs/cape/connector/proto"
-	"github.com/dropoutlabs/cape/primitives"
+	pb "github.com/capeprivacy/cape/connector/proto"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // Client is a wrapper around the grpc client that

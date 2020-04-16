@@ -5,7 +5,7 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	errors "github.com/dropoutlabs/cape/partyerrors"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func TestSourcesRegistry(t *testing.T) {
