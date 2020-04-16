@@ -1,18 +1,36 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/manifoldco/go-base32"
+	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/cmd/ui"
+	"github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
+
+func setupSignalWatcher(server *framework.Server, logger *zerolog.Logger) (*framework.SignalWatcher, error) {
+	return framework.NewSignalWatcher(func(ctx context.Context, signal os.Signal) error {
+		logger.Info().Msgf("Received signal %s, attempting to shutdown", signal)
+
+		return server.Stop(ctx)
+	}, func(_ context.Context, err error) {
+		if err != nil {
+			logger.Error().Err(err).Msg("Encountered error while trying to shutdown")
+		}
+
+		logger.Info().Msg("Shutdown")
+		os.Exit(1)
+	}, nil)
+}
 
 func exitHandler(c *cli.Context, err error) {
 	// This is required because this function is called for every command

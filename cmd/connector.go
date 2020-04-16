@@ -69,5 +69,16 @@ func startConnectorCmd(c *cli.Context) error {
 		return err
 	}
 
+	watcher, err := setupSignalWatcher(server, logger)
+	if err != nil {
+		return err
+	}
+
+	err = watcher.Start()
+	if err != nil {
+		return err
+	}
+	defer watcher.Stop()
+
 	return server.Start(c.Context)
 }

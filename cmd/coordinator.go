@@ -1,12 +1,6 @@
 package main
 
 import (
-	"context"
-	"os"
-	"os/signal"
-	"time"
-
-	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/auth"
@@ -42,31 +36,6 @@ func init() {
 	}
 
 	commands = append(commands, coordinatorCmd.Package())
-}
-
-func catchShutdown(ctx context.Context, quit chan os.Signal, c *coordinator.Coordinator, logger *zerolog.Logger) error {
-	s := <-quit
-
-	// Once we've received a signal we will stop listening for additional
-	// signals. This will cause the behaviour to fall back to the underlying
-	// golang signal handler which will cause in the program immediately
-	// exiting.
-	//
-	// This is not desirable as we will not clean up all of the state but its
-	// the best option if we get stuck in an irrecoverable state (e.g. things
-	// are not timing out).
-	signal.Stop(quit)
-
-	logger.Warn().Msgf("Caught signal '%s': attempting to shutdown, 30 second timeout.", s.String())
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-
-	err := c.Teardown(ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // getDBURL looks at the environment and generates the database address if
@@ -140,11 +109,16 @@ func startCoordinatorCmd(c *cli.Context) error {
 		return err
 	}
 
-	// TODO: Move all of the signal bits into framework.Server
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	defer signal.Stop(quit)
+	watcher, err := setupSignalWatcher(server, logger)
+	if err != nil {
+		return err
+	}
 
-	go catchShutdown(c.Context, quit, ctrl, logger) //nolint: errcheck
+	err = watcher.Start()
+	if err != nil {
+		return err
+	}
+	defer watcher.Stop()
+
 	return server.Start(c.Context)
 }
