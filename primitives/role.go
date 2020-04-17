@@ -3,6 +3,7 @@ package primitives
 import (
 	"github.com/capeprivacy/cape/database"
 	"github.com/capeprivacy/cape/database/types"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 const (
@@ -25,6 +26,18 @@ type Role struct {
 	System bool  `json:"system"`
 }
 
+func (r *Role) Validate() error {
+	if err := r.Primitive.Validate(); err != nil {
+		return err
+	}
+
+	if err := r.Label.Validate(); err != nil {
+		return errors.Wrap(InvalidRoleCause, err)
+	}
+
+	return nil
+}
+
 // GetType returns the type of this entity
 func (r *Role) GetType() types.Type {
 	return RoleType
@@ -37,9 +50,11 @@ func NewRole(label Label, system bool) (*Role, error) {
 		return nil, err
 	}
 
-	return &Role{
+	role := &Role{
 		Primitive: p,
 		Label:     label,
 		System:    system,
-	}, nil
+	}
+
+	return role, role.Validate()
 }

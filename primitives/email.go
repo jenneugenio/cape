@@ -44,8 +44,7 @@ func NewEmail(in string) (Email, error) {
 		Type:  typ,
 	}
 
-	err := e.Validate()
-	return e, err
+	return e, e.Validate()
 }
 
 // Validate returns an error if the contents of the label are invalid

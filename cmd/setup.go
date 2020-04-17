@@ -60,7 +60,12 @@ func setupCoordinatorCmd(c *cli.Context) error {
 		return err
 	}
 
-	user, err := primitives.NewUser(name, email, creds.Package())
+	pCreds, err := creds.Package()
+	if err != nil {
+		return err
+	}
+
+	user, err := primitives.NewUser(name, email, pCreds)
 	if err != nil {
 		return err
 	}

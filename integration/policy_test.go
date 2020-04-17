@@ -230,7 +230,7 @@ func TestAttachments(t *testing.T) {
 		policy, err := client.CreatePolicy(ctx, p)
 		gm.Expect(err).To(gm.BeNil())
 
-		role, err := client.CreateRole(ctx, "cio", nil)
+		role, err := client.CreateRole(ctx, "cioo", nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		_, err = client.AssignRole(ctx, m.Admin.User.ID, role.ID)

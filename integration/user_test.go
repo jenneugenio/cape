@@ -39,7 +39,10 @@ func TestUsers(t *testing.T) {
 		email, err := primitives.NewEmail("jerry@jerry.berry")
 		gm.Expect(err).To(gm.BeNil())
 
-		user, err := primitives.NewUser("Jerry Berry", email, creds.Package())
+		pCreds, err := creds.Package()
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err := primitives.NewUser("Jerry Berry", email, pCreds)
 		gm.Expect(err).To(gm.BeNil())
 
 		result, err := client.CreateUser(ctx, user)
@@ -65,7 +68,10 @@ func TestUsers(t *testing.T) {
 		e, err := primitives.NewEmail("bones@tails.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		user, err := primitives.NewUser(n, e, creds.Package())
+		pCreds, err := creds.Package()
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err := primitives.NewUser(n, e, pCreds)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(user).NotTo(gm.BeNil())
 
@@ -78,7 +84,7 @@ func TestUsers(t *testing.T) {
 		e, err = primitives.NewEmail("bones@tails.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		user, err = primitives.NewUser(n, e, creds.Package())
+		user, err = primitives.NewUser(n, e, pCreds)
 		gm.Expect(err).To(gm.BeNil())
 
 		otherUser, err = client.CreateUser(ctx, user)

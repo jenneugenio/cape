@@ -5,6 +5,8 @@ import (
 
 	"github.com/capeprivacy/cape/database"
 	"github.com/capeprivacy/cape/database/types"
+	errors "github.com/capeprivacy/cape/partyerrors"
+
 	"github.com/manifoldco/go-base64"
 )
 
@@ -25,6 +27,26 @@ type Session struct {
 	Token      *base64.Value `json:"token"`
 
 	Credentials *AuthCredentials `json:"credentials"`
+}
+
+func (s *Session) Validate() error {
+	if err := s.Primitive.Validate(); err != nil {
+		return errors.Wrap(InvalidSessionCause, err)
+	}
+
+	if err := s.IdentityID.Validate(); err != nil {
+		return errors.Wrap(InvalidSessionCause, err)
+	}
+
+	if time.Now().UTC().After(s.ExpiresAt) {
+		return errors.New(InvalidSessionCause, "Session expires at must be after now")
+	}
+
+	if s.Token == nil {
+		return errors.New(InvalidSessionCause, "Session token must not be nil")
+	}
+
+	return nil
 }
 
 // GetType returns the type for this entity
@@ -65,5 +87,5 @@ func NewSession(identity Identity, expiresAt time.Time, typ TokenType,
 	}
 	session.ID = id
 
-	return session, nil
+	return session, session.Validate()
 }

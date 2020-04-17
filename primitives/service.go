@@ -36,22 +36,17 @@ func NewService(email Email, typ ServiceType, endpoint *URL, creds *Credentials)
 		Endpoint: endpoint,
 	}
 
-	err = service.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	return service, nil
+	return service, service.Validate()
 }
 
 // Validate returns an error if the serive is not valid
 func (s *Service) Validate() error {
 	if err := s.Primitive.Validate(); err != nil {
-		return err
+		return errors.Wrap(InvalidServiceCause, err)
 	}
 
 	if err := s.Type.Validate(); err != nil {
-		return err
+		return errors.Wrap(InvalidServiceCause, err)
 	}
 
 	switch s.Type {
@@ -64,16 +59,20 @@ func (s *Service) Validate() error {
 			return err
 		}
 
-		return nil
 	case UserServiceType:
 		if s.Endpoint != nil {
 			return errors.New(InvalidServiceCause, "Can't specify endpoint on user service type")
 		}
 
-		return nil
 	default:
 		return errors.New(InvalidServiceCause, "Unrecognized type: %s", s.Type.String())
 	}
+
+	if err := s.Credentials.Validate(); err != nil {
+		return errors.Wrap(InvalidServiceCause, err)
+	}
+
+	return nil
 }
 
 // GetCredentials satisfies Identity interface

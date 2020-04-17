@@ -71,8 +71,11 @@ func TestSource(t *testing.T) {
 		serviceURL, err := primitives.NewURL("https://localhost:8081")
 		gm.Expect(err).To(gm.BeNil())
 
+		pCreds, err := creds.Package()
+		gm.Expect(err).To(gm.BeNil())
+
 		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, serviceURL,
-			creds.Package())
+			pCreds)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err = client.CreateService(ctx, service)
@@ -115,7 +118,10 @@ func TestSource(t *testing.T) {
 		creds, err := auth.NewCredentials([]byte("random-password"), nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		service, err := primitives.NewService(email, primitives.UserServiceType, nil, creds.Package())
+		pCreds, err := creds.Package()
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err := primitives.NewService(email, primitives.UserServiceType, nil, pCreds)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err = client.CreateService(ctx, service)

@@ -18,12 +18,8 @@ func NewURL(in string) (*URL, error) {
 	}
 
 	c := &URL{URL: u}
-	err = c.Validate()
-	if err != nil {
-		return nil, err
-	}
 
-	return c, nil
+	return c, c.Validate()
 }
 
 // URL contains a url to a Cape coordinator

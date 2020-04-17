@@ -20,14 +20,18 @@ func (p *Policy) GetType() types.Type {
 
 // Validate that the policy is valid
 func (p *Policy) Validate() error {
+	if err := p.Primitive.Validate(); err != nil {
+		return errors.Wrap(InvalidPolicyCause, err)
+	}
+
 	err := p.Label.Validate()
 	if err != nil {
-		return errors.New(InvalidPolicyCause, "invalid policy: %e", err)
+		return errors.Wrap(InvalidPolicyCause, err)
 	}
 
 	err = p.Spec.Validate()
 	if err != nil {
-		return errors.New(InvalidPolicyCause, "invalid policy: %e", err)
+		return errors.Wrap(InvalidPolicyCause, err)
 	}
 
 	return nil

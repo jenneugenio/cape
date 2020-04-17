@@ -3,12 +3,33 @@ package primitives
 import (
 	"github.com/capeprivacy/cape/database"
 	"github.com/capeprivacy/cape/database/types"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // User represents a user of the system
 type User struct {
 	*IdentityImpl
 	Name Name `json:"name"`
+}
+
+func (u *User) Validate() error {
+	if err := u.Primitive.Validate(); err != nil {
+		return errors.Wrap(InvalidUserCause, err)
+	}
+
+	if err := u.Email.Validate(); err != nil {
+		return errors.Wrap(InvalidUserCause, err)
+	}
+
+	if err := u.Name.Validate(); err != nil {
+		return errors.Wrap(InvalidUserCause, err)
+	}
+
+	if err := u.Credentials.Validate(); err != nil {
+		return errors.Wrap(InvalidUserCause, err)
+	}
+
+	return nil
 }
 
 // GetType returns the type for this entity
@@ -23,14 +44,16 @@ func NewUser(name Name, email Email, creds *Credentials) (*User, error) {
 		return nil, err
 	}
 
-	return &User{
+	user := &User{
 		Name: name, // TODO: Figure out what to do about validation
 		IdentityImpl: &IdentityImpl{
 			Primitive:   p,
 			Email:       email,
 			Credentials: creds,
 		},
-	}, nil
+	}
+
+	return user, user.Validate()
 }
 
 // GetCredentials satisfies Identity interface

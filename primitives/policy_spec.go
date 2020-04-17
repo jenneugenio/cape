@@ -63,7 +63,7 @@ func (ps *PolicySpec) Validate() error {
 	for _, r := range ps.Rules {
 		err := r.Target.Validate()
 		if err != nil {
-			return errors.New(InvalidPolicySpecCause, "Invalid rule: %s", err)
+			return errors.Wrap(InvalidPolicySpecCause, err)
 		}
 
 		if len(r.Fields) > 0 && len(r.Where) > 0 {
@@ -78,7 +78,11 @@ func (ps *PolicySpec) Validate() error {
 func (ps *PolicySpec) UnmarshalGQL(v interface{}) error {
 	switch t := v.(type) {
 	case map[string]interface{}:
-		return mapstructure.Decode(t, ps)
+		if err := mapstructure.Decode(t, ps); err != nil {
+			return err
+		}
+
+		return ps.Validate()
 	default:
 		return errors.New(InvalidPolicySpecCause, "Unable to unmarshal gql policy spec")
 	}

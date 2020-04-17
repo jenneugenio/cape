@@ -5,8 +5,8 @@ import (
 )
 
 var (
-	RequiredMsgCause = errors.NewCause(errors.BadRequestCategory, "required_msg")
-	RequiredSigCause = errors.NewCause(errors.BadRequestCategory, "required_signature")
+	RequiredTokenCause = errors.NewCause(errors.BadRequestCategory, "required_token")
+	RequiredSigCause   = errors.NewCause(errors.BadRequestCategory, "required_signature")
 
 	RequiredPrivateKeyCause = errors.NewCause(errors.BadRequestCategory, "required_private_key")
 	RequiredPublicKeyCause  = errors.NewCause(errors.BadRequestCategory, "required_public_key")

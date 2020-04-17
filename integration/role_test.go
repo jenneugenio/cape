@@ -95,7 +95,10 @@ func TestRoles(t *testing.T) {
 		creds, err := auth.NewCredentials([]byte("randompassword"), nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		user, err := primitives.NewUser(name, email, creds.Package())
+		pCreds, err := creds.Package()
+		gm.Expect(err).To(gm.BeNil())
+
+		user, err := primitives.NewUser(name, email, pCreds)
 		gm.Expect(err).To(gm.BeNil())
 
 		user, err = client.CreateUser(ctx, user)
@@ -170,7 +173,7 @@ func TestListRoles(t *testing.T) {
 	dsRole, err := client.CreateRole(ctx, "data-scientist", nil)
 	gm.Expect(err).To(gm.BeNil())
 
-	ctoRole, err := client.CreateRole(ctx, "cto", nil)
+	ctoRole, err := client.CreateRole(ctx, "ctoo", nil)
 	gm.Expect(err).To(gm.BeNil())
 
 	roles, err := client.ListRoles(ctx)

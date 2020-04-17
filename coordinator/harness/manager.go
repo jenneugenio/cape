@@ -66,7 +66,12 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 		return nil, err
 	}
 
-	u, err := primitives.NewUser(AdminName, email, creds.Package())
+	pCreds, err := creds.Package()
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := primitives.NewUser(AdminName, email, pCreds)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +120,12 @@ func (m *Manager) CreateService(ctx context.Context, apiToken *auth.APIToken, se
 		return err
 	}
 
-	service, err := primitives.NewService(apiToken.Email, primitives.DataConnectorServiceType, serviceURL, creds.Package())
+	pCreds, err := creds.Package()
+	if err != nil {
+		return err
+	}
+
+	service, err := primitives.NewService(apiToken.Email, primitives.DataConnectorServiceType, serviceURL, pCreds)
 	if err != nil {
 		return err
 	}

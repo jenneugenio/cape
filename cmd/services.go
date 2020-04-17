@@ -151,7 +151,12 @@ func servicesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	service, err := primitives.NewService(email, typ, endpoint, creds.Package())
+	pCreds, err := creds.Package()
+	if err != nil {
+		return err
+	}
+
+	service, err := primitives.NewService(email, typ, endpoint, pCreds)
 	if err != nil {
 		return err
 	}

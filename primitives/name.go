@@ -14,8 +14,7 @@ type Name string
 // NewName validates that the string is a valid name before returning a Name
 func NewName(in string) (Name, error) {
 	n := Name(in)
-	err := n.Validate()
-	return n, err
+	return n, n.Validate()
 }
 
 // Validate returns an error if the name is not valid

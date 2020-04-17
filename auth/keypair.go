@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	SaltLength                = 16
 	SecretLength              = 8
 	GeneratedSecretByteLength = 8
 
@@ -58,8 +57,9 @@ func (kp *KeypairPackage) Validate() error {
 	salt := []byte(*kp.Salt)
 	secret := []byte(*kp.Secret)
 
-	if len(salt) != SaltLength {
-		return errors.New(BadSaltLength, "Salt must be at least %d bytes long, saw %d", SaltLength, len(salt))
+	if len(salt) != primitives.SaltLength {
+		return errors.New(BadSaltLength, "Salt must be at least %d bytes long, saw %d",
+			primitives.SaltLength, len(salt))
 	}
 
 	if len(secret) < SecretLength {
@@ -93,9 +93,9 @@ func (k *Keypair) Package() KeypairPackage {
 
 // DeriveKeypair returns a new keypair for
 func DeriveKeypair(secret []byte, salt []byte) (*Keypair, error) {
-	if len(salt) != SaltLength {
+	if len(salt) != primitives.SaltLength {
 		return nil, errors.New(BadSaltLength, "Salt must be at least %d bytes long, saw %d",
-			SaltLength, len(salt))
+			primitives.SaltLength, len(salt))
 	}
 
 	if len(secret) < SecretLength {
@@ -127,7 +127,7 @@ func DeriveKeypair(secret []byte, salt []byte) (*Keypair, error) {
 // NewKeypair returns a keypair generated from a newly created secret and salt!
 func NewKeypair() (*Keypair, error) {
 	secret := make([]byte, SecretLength)
-	salt := make([]byte, SaltLength)
+	salt := make([]byte, primitives.SaltLength)
 
 	_, err := rand.Read(secret)
 	if err != nil {
@@ -145,7 +145,7 @@ func NewKeypair() (*Keypair, error) {
 // NewKeypairWithSecret returns a keypair generated from the provided secret
 // and a generated salt!
 func NewKeypairWithSecret(secret []byte) (*Keypair, error) {
-	salt := make([]byte, SaltLength)
+	salt := make([]byte, primitives.SaltLength)
 	_, err := rand.Read(salt)
 	if err != nil {
 		return nil, err

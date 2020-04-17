@@ -1,6 +1,7 @@
 package primitives
 
 import (
+	"crypto/ed25519"
 	"testing"
 	"time"
 
@@ -14,10 +15,17 @@ func TestNewSession(t *testing.T) {
 	email, err := NewEmail("bob@bob.com")
 	gm.Expect(err).To(gm.BeNil())
 
-	user, err := NewUser("bob", email, &Credentials{})
+	pub, _, _ := ed25519.GenerateKey(nil)
+	pkey := base64.New(pub)
+	salt := base64.New([]byte("SALTSALTSALTSALT"))
+
+	creds, err := NewCredentials(pkey, salt)
 	gm.Expect(err).To(gm.BeNil())
 
-	ti := time.Now()
+	user, err := NewUser("bob", email, creds)
+	gm.Expect(err).To(gm.BeNil())
+
+	ti := time.Now().UTC().Add(time.Minute * 5)
 	token := base64.New([]byte("random-string"))
 	session, err := NewSession(user, ti, Login, token)
 	gm.Expect(err).To(gm.BeNil())

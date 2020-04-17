@@ -19,8 +19,7 @@ var (
 // NewSourceType returns a source type for the given string or an invalid type
 func NewSourceType(in string) (SourceType, error) {
 	t := SourceType(in)
-	err := t.Validate()
-	return t, err
+	return t, t.Validate()
 }
 
 // String returns the source type as a string

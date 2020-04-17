@@ -116,7 +116,10 @@ func TestServices(t *testing.T) {
 		url, err := primitives.NewURL("https://cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		s, err := primitives.NewService(email, primitives.DataConnectorServiceType, url, creds.Package())
+		pCreds, err := creds.Package()
+		gm.Expect(err).To(gm.BeNil())
+
+		s, err := primitives.NewService(email, primitives.DataConnectorServiceType, url, pCreds)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
@@ -204,7 +207,12 @@ func createServicePrimitive(email primitives.Email, secret []byte) (*primitives.
 		return nil, err
 	}
 
-	service, err := primitives.NewService(email, typ, nil, creds.Package())
+	pCreds, err := creds.Package()
+	if err != nil {
+		return nil, err
+	}
+
+	service, err := primitives.NewService(email, typ, nil, pCreds)
 	if err != nil {
 		return nil, err
 	}

@@ -15,8 +15,7 @@ type Label string
 // NewLabel validates that the string is a valid label before returning a label
 func NewLabel(in string) (Label, error) {
 	v := Label(in)
-	err := v.Validate()
-	return v, err
+	return v, v.Validate()
 }
 
 // Validate returns an error if the contents of the label are invalid

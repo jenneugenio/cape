@@ -89,6 +89,5 @@ func (t Target) String() string {
 // NewTarget validates that the target is valid label before returning it
 func NewTarget(in string) (Target, error) {
 	t := Target(in)
-	err := t.Validate()
-	return t, err
+	return t, t.Validate()
 }

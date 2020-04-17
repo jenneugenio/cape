@@ -16,7 +16,7 @@ func TestNewCredential(t *testing.T) {
 
 	creds, err := NewCredentials([]byte("my-cool-secret"), nil)
 	gm.Expect(err).To(gm.BeNil())
-	gm.Expect(len(*creds.Salt)).To(gm.Equal(SaltLength))
+	gm.Expect(len(*creds.Salt)).To(gm.Equal(primitives.SaltLength))
 	gm.Expect(len(*creds.PublicKey)).To(gm.Equal(ed25519.PublicKeySize))
 	gm.Expect(len(creds.privateKey)).To(gm.Equal(ed25519.PrivateKeySize))
 	gm.Expect(creds.Alg).To(gm.Equal(primitives.EDDSA))

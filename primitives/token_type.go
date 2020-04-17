@@ -18,6 +18,18 @@ var (
 	Authenticated TokenType = "AUTHENTICATED"
 )
 
+// Validate checks to see if the service type is valid
+func (t *TokenType) Validate() error {
+	switch *t {
+	case Login:
+		return nil
+	case Authenticated:
+		return nil
+	default:
+		return errors.New(InvalidTokenType, "%s is not a valid TokenType", t)
+	}
+}
+
 // String returns the string represented by the enum value
 func (t *TokenType) String() string {
 	return string(*t)
@@ -31,14 +43,7 @@ func (t *TokenType) UnmarshalGQL(v interface{}) error {
 	}
 
 	*t = TokenType(str)
-	switch *t {
-	case Login:
-		return nil
-	case Authenticated:
-		return nil
-	default:
-		return errors.New(InvalidTokenType, "%s is not a valid TokenType", str)
-	}
+	return t.Validate()
 }
 
 // MarshalGQL marshals a CredentailsAlgType enum to string

@@ -85,12 +85,14 @@ func NewSource(label Label, credentials *DBURL, serviceID *database.ID) (*Source
 	// delete the credential part of the URL for usage as the endpoint value.
 	endpoint.User = nil
 
-	return &Source{
+	source := &Source{
 		Primitive:   p,
 		Label:       label,
 		Type:        t,
 		Credentials: credentials,
 		Endpoint:    endpoint,
 		ServiceID:   serviceID,
-	}, nil
+	}
+
+	return source, source.Validate()
 }

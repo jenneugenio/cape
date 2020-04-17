@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/binary"
 	"math/rand"
@@ -19,7 +20,7 @@ func NewFakeIdentity(email primitives.Email) (primitives.Identity, error) {
 		return nil, err
 	}
 
-	salt := make([]byte, SaltLength)
+	salt := make([]byte, primitives.SaltLength)
 
 	var seed uint64 = binary.BigEndian.Uint64(h.Sum(nil))
 	rand.Seed(int64(seed))
@@ -28,11 +29,18 @@ func NewFakeIdentity(email primitives.Email) (primitives.Identity, error) {
 		return nil, err
 	}
 
+	pub, _, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		return nil, err
+	}
+
 	// It doesn't matter whether this is a user or a service
-	user, err := primitives.NewUser("", primitives.Email{Email: ""}, &primitives.Credentials{
-		Salt: base64.New(salt),
-		Alg:  primitives.EDDSA,
-	})
+	user, err := primitives.NewUser("Fake User", primitives.Email{Email: "fake@fake.com"},
+		&primitives.Credentials{
+			PublicKey: base64.New(pub),
+			Salt:      base64.New(salt),
+			Alg:       primitives.EDDSA,
+		})
 
 	if err != nil {
 		return nil, err

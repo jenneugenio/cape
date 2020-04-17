@@ -18,10 +18,9 @@ import (
 
 func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest) (*primitives.User, error) {
 	// Make the user
-	creds := &primitives.Credentials{
-		PublicKey: &input.PublicKey,
-		Salt:      &input.Salt,
-		Alg:       input.Alg,
+	creds, err := primitives.NewCredentials(&input.PublicKey, &input.Salt)
+	if err != nil {
+		return nil, err
 	}
 
 	user, err := primitives.NewUser(input.Name, input.Email, creds)
@@ -77,10 +76,9 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error) {
-	creds := &primitives.Credentials{
-		PublicKey: &input.PublicKey,
-		Salt:      &input.Salt,
-		Alg:       input.Alg,
+	creds, err := primitives.NewCredentials(&input.PublicKey, &input.Salt)
+	if err != nil {
+		return nil, err
 	}
 
 	user, err := primitives.NewUser(input.Name, input.Email, creds)

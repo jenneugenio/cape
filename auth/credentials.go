@@ -21,7 +21,7 @@ type Credentials struct {
 //Sign signs a message token
 func (c *Credentials) Sign(token *base64.Value) (*base64.Value, error) {
 	if token == nil {
-		return nil, errors.New(RequiredMsgCause, "Must provide message to sign")
+		return nil, errors.New(RequiredTokenCause, "Must provide token to sign")
 	}
 
 	if c.privateKey == nil {
@@ -35,7 +35,7 @@ func (c *Credentials) Sign(token *base64.Value) (*base64.Value, error) {
 // Verify verifies a given signature based on the token and the public key
 func (c *Credentials) Verify(token, sig *base64.Value) error {
 	if token == nil {
-		return errors.New(RequiredMsgCause, "Must provide message to verify")
+		return errors.New(RequiredTokenCause, "Must provide token to verify")
 	}
 
 	if sig == nil {
@@ -56,12 +56,8 @@ func (c *Credentials) Verify(token, sig *base64.Value) error {
 }
 
 // Package packages up a auth.Credentials into a primitives.Credentials
-func (c *Credentials) Package() *primitives.Credentials {
-	return &primitives.Credentials{
-		PublicKey: c.PublicKey,
-		Salt:      c.Salt,
-		Alg:       c.Alg,
-	}
+func (c *Credentials) Package() (*primitives.Credentials, error) {
+	return primitives.NewCredentials(c.PublicKey, c.Salt)
 }
 
 // NewCredentials returns a Credential struct for creating credentials & re-deriving credentials.
@@ -96,9 +92,9 @@ func LoadCredentials(publicKey, salt *base64.Value) (*Credentials, error) {
 			ed25519.PublicKeySize, len(*publicKey))
 	}
 
-	if len(*salt) != SaltLength {
+	if len(*salt) != primitives.SaltLength {
 		return nil, errors.New(BadSaltLength, "Salt must be at least %d bytes long, saw %d",
-			SaltLength, len(*salt))
+			primitives.SaltLength, len(*salt))
 	}
 
 	return &Credentials{

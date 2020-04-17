@@ -119,7 +119,12 @@ func createUserPrimitive(name primitives.Name, email primitives.Email, secret []
 		return nil, err
 	}
 
-	user, err := primitives.NewUser(name, email, creds.Package())
+	pCreds, err := creds.Package()
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := primitives.NewUser(name, email, pCreds)
 	if err != nil {
 		return nil, err
 	}

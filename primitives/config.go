@@ -3,11 +3,24 @@ package primitives
 import (
 	"github.com/capeprivacy/cape/database"
 	"github.com/capeprivacy/cape/database/types"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 type Config struct {
 	*database.Primitive
 	Setup bool `json:"setup"`
+}
+
+func (c *Config) Validate() error {
+	if err := c.Primitive.Validate(); err != nil {
+		return err
+	}
+
+	if !c.Setup {
+		return errors.New(InvalidConfigCause, "Config setup must be true")
+	}
+
+	return nil
 }
 
 // GetType returns the type for this entity
@@ -22,8 +35,10 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
-	return &Config{
+	cfg := &Config{
 		Primitive: p,
 		Setup:     true,
-	}, nil
+	}
+
+	return cfg, cfg.Validate()
 }

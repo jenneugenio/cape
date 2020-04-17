@@ -3,6 +3,7 @@ package primitives
 import (
 	"github.com/capeprivacy/cape/database"
 	"github.com/capeprivacy/cape/database/types"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // Assignment represents a policy being applied/attached to a role
@@ -10,6 +11,40 @@ type Assignment struct {
 	*database.Primitive
 	IdentityID database.ID `json:"identity_id"`
 	RoleID     database.ID `json:"role_id"`
+}
+
+func (a *Assignment) Validate() error {
+	if err := a.Primitive.Validate(); err != nil {
+		return errors.Wrap(InvalidAssignmentCause, err)
+	}
+
+	if err := a.IdentityID.Validate(); err != nil {
+		return errors.New(InvalidAssignmentCause, "Assignment identity id must be valid")
+	}
+
+	typ, err := a.IdentityID.Type()
+	if err != nil {
+		return errors.New(InvalidAssignmentCause, "Invalid Identity ID provided")
+	}
+
+	if typ != UserType && typ != ServicePrimitiveType {
+		return errors.New(InvalidAssignmentCause, "Invalid Identity ID provided")
+	}
+
+	if err := a.RoleID.Validate(); err != nil {
+		return errors.New(InvalidAssignmentCause, "Assignment role id must be valid")
+	}
+
+	typ, err = a.RoleID.Type()
+	if err != nil {
+		return errors.New(InvalidAssignmentCause, "Invalid Role ID provider")
+	}
+
+	if typ != RoleType {
+		return errors.New(InvalidAssignmentCause, "Invalid Role ID provider")
+	}
+
+	return nil
 }
 
 // GetType returns the type for this entity
@@ -38,5 +73,5 @@ func NewAssignment(identityID, roleID database.ID) (*Assignment, error) {
 	}
 
 	a.ID = ID
-	return a, nil
+	return a, a.Validate()
 }
