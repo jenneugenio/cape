@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	spb "github.com/golang/protobuf/ptypes/struct"
+	"github.com/rs/zerolog"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/capeprivacy/cape/auth"
@@ -24,6 +25,7 @@ import (
 type grpcHandler struct {
 	coordinator *Coordinator
 	cache       *sources.Cache
+	logger      *zerolog.Logger
 }
 
 func (g *grpcHandler) handleAuth(ctx context.Context) (primitives.Identity, error) {

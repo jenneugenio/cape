@@ -5,13 +5,16 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/NYTimes/gziphandler"
 	"github.com/justinas/alice"
 	"github.com/manifoldco/healthz"
+	"github.com/rs/cors"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 
 	pb "github.com/capeprivacy/cape/connector/proto"
 	"github.com/capeprivacy/cape/connector/sources"
+	"github.com/capeprivacy/cape/framework"
 )
 
 const connectorCertFile = "connector/certs/localhost.crt"
@@ -75,15 +78,23 @@ func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 	hndler := &grpcHandler{
 		coordinator: coordinator,
 		cache:       cache,
+		logger:      logger,
 	}
 
 	grpcServer := grpc.NewServer()
 	pb.RegisterDataConnectorServer(grpcServer, hndler)
 
-	mux := http.NewServeMux()
-	health := healthz.NewHandler(mux)
+	root := http.NewServeMux()
+	root.Handle("/v1/version", framework.VersionHandler(cfg.InstanceID.String()))
 
-	chain := alice.New().Then(health)
+	chain := alice.New(
+		framework.RequestIDMiddleware,
+		framework.LogMiddleware(logger),
+		framework.RoundtripLoggerMiddleware,
+		framework.RecoveryMiddleware,
+		gziphandler.GzipHandler,
+		cors.Default().Handler,
+	).Then(healthz.NewHandler(root))
 
 	return &Connector{
 		cfg:         cfg,
