@@ -135,10 +135,7 @@ clean: gocheck
 	go clean
 	rm $(PREFIX)bin/cape
 
-gogen: gocheck protoccheck gqlgen.yml coordinator/schema/*.graphql
-	go generate ./...
-
-.PHONY: bootstrap clean gogen
+.PHONY: bootstrap clean
 
 bootstrap-local-dev: bootstrap-helm
 
@@ -160,6 +157,29 @@ helm-update: helmcheck
 .PHONY: bootstrap-local-dev
 
 # ###############################################
+# Generating
+#
+# This section of the makefile focuses on rules needed to generate code.
+# ###############################################
+
+GQLSCHEMAS=policy roles schema services
+GQLRESOLVERS=$(foreach schema,$(GQLSCHEMAS),coordinator/graph/$(schema).resolvers.go)
+GQLGENERATED=coordinator/graph/generated/generated.go coordinator/graph/model/models_gen.go
+
+# This command uses a grouped target - which basically means that the recipe
+# (go generate) will generate all of these targets so it only needs to run this
+# rule once.
+$(GQLRESOLVERS) $(GQLGENERATED) &:: coordinator/schema/*.graphql coordinator/graph/resolver.go gqlgen.yml
+	go generate ./coordinator/graph/resolver.go
+
+connector/proto/data_connector.pb.go: connector/proto/proto.go connector/proto/data_connector.proto
+	go generate ./connector/proto/proto.go
+
+generate: gocheck protoccheck connector/proto/data_connector.pb.go $(GQLRESOLVERS) $(GQLGENERATED)
+
+.PHONY: generate
+
+# ###############################################
 # Testing, Building and Formatting
 #
 # This section of the makefile focuses on the rules needed to test and build
@@ -173,7 +193,7 @@ BUILD_DATE=$(date)
 PKG=github.com/capeprivacy/cape
 DATE=$(shell date)
 GO_BUILD=go build -i -v -ldflags "-w -X '$(PKG)/version.Version=$(VERSION)' -X '$(PKG)/version.BuildDate=$(DATE)' -s"
-$(PREFIX)bin/cape: gocheck $(SRC) gogen
+$(PREFIX)bin/cape: gocheck $(SRC) generate
 	$(GOOS_OVERRIDE) $(GO_BUILD) -o $@ $(PKG)/cmd
 
 build: $(PREFIX)bin/cape
@@ -203,7 +223,7 @@ tidy: gocheck
 
 ci: tidy lint build test docker
 
-.PHONY: lint build fmt test ci integration
+.PHONY: lint build fmt test ci integration generate
 
 # ###############################################
 # Building Docker Image
