@@ -23,6 +23,8 @@ spec:
       containers:
       - image: "{{ .Values.image.coordinator_repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: Always
+        command: ["cape"]
+        args: ["coordinator", "start"]
         name: coordinator
         env:
           {{ if (.Values.db.passwordSecret )}}

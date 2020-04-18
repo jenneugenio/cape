@@ -2,7 +2,7 @@ PREFIX?=
 GOOS_OVERRIDE?=
 SRC=$(shell find . -type f -name '*.go')
 
-all: ci
+all: build
 
 .PHONY: all
 
@@ -93,7 +93,7 @@ EXACT_TAG=$(shell [ -d .git ] && git describe --exact-match --tags HEAD 2> /dev/
 ifeq (,$(VERSION))
     VERSION=dev
 endif
-NOT_RC=$(shell git tag --points-at HEAD | grep -v -e -rc)
+NOT_RC=$(shell git tag --points-at HEAD | grep -v -e -rc 2> /dev/null)
 
 ifeq ($(EXACT_TAG),)
     PUSHTYPE=master
@@ -162,7 +162,7 @@ helm-update: helmcheck
 # This section of the makefile focuses on rules needed to generate code.
 # ###############################################
 
-GQLSCHEMAS=policy roles schema services
+GQLSCHEMAS=$(patsubst coordinator/schema/%.graphql,%,$(wildcard coordinator/schema/*.graphql))
 GQLRESOLVERS=$(foreach schema,$(GQLSCHEMAS),coordinator/graph/$(schema).resolvers.go)
 GQLGENERATED=coordinator/graph/generated/generated.go coordinator/graph/model/models_gen.go
 
@@ -193,7 +193,7 @@ BUILD_DATE=$(date)
 PKG=github.com/capeprivacy/cape
 DATE=$(shell date)
 GO_BUILD=go build -i -v -ldflags "-w -X '$(PKG)/version.Version=$(VERSION)' -X '$(PKG)/version.BuildDate=$(DATE)' -s"
-$(PREFIX)bin/cape: gocheck $(SRC) generate
+$(PREFIX)bin/cape: download $(SRC) generate
 	$(GOOS_OVERRIDE) $(GO_BUILD) -o $@ $(PKG)/cmd
 
 build: $(PREFIX)bin/cape
@@ -207,6 +207,7 @@ CAPE_DB_URL?="postgres://postgres:dev@localhost:5432/postgres?sslmode=disable"
 CAPE_DB_MIGRATIONS?="$(shell pwd)/migrations"
 CAPE_DB_TEST_MIGRATIONS?="$(shell pwd)/database/dbtest/migrations"
 CAPE_DB_SEED_MIGRATIONS?="$(shell pwd)/tools/seed"
+
 integration: gocheck
 	CAPE_DB_URL=$(CAPE_DB_URL) CAPE_DB_SEED_MIGRATIONS=$(CAPE_DB_SEED_MIGRATIONS) CAPE_DB_TEST_MIGRATIONS=$(CAPE_DB_TEST_MIGRATIONS) CAPE_DB_MIGRATIONS=$(CAPE_DB_MIGRATIONS) go test -v ./... -tags=integration
 
@@ -215,7 +216,7 @@ fmt: gocheck
 
 tidy: gocheck
 	go mod tidy
-	if [ -n "$(shell git status --untracked-files=no --porcelain)" ]; then \
+	if [ -n "$(shell git status --untracked-files=no --porcelain 2> /dev/null)" ]; then \
 		echo "Make sure to run and commit changes from go mod tidy"; \
 		exit 1; \
 	fi; \
@@ -232,14 +233,46 @@ ci: tidy lint build test docker
 # test.
 # ###############################################
 DOCKER_BUILD=docker build -t capeprivacy/$(1):$(2) -f $(3) .
-docker: dockerfiles/Dockerfile.base dockerfiles/Dockerfile.coordinator dockerfiles/Dockerfile.connector dockercheck
-	$(call DOCKER_BUILD,cape,latest,dockerfiles/Dockerfile.base)
-	$(call DOCKER_BUILD,coordinator,latest,dockerfiles/Dockerfile.coordinator)
-	$(call DOCKER_BUILD,connector,latest,dockerfiles/Dockerfile.connector)
+docker: dockerfiles/Dockerfile dockerfiles/Dockerfile.cape dockercheck
+	$(call DOCKER_BUILD,base,latest,dockerfiles/Dockerfile)
+	$(call DOCKER_BUILD,cape,latest,dockerfiles/Dockerfile.cape)
 	$(call DOCKER_BUILD,update,latest,dockerfiles/Dockerfile.update)
 	$(call DOCKER_BUILD,customer_seed,latest,tools/seed/Dockerfile.customer)
 
 .PHONY: docker
+
+# ##############################################
+# Targets for doing work inside the Cape Builder Container
+#
+# This enables a user to build cape locally without needing to have any of our
+# dependencies installed other than Go and Docker.
+# ##############################################
+
+GOCACHE?=$(shell go env GOCACHE)
+GOOS?=$(shell go env GOOS)
+GOARCH?=$(shell go env GOARCH)
+
+IMAGE=capeprivacy/builder
+DOCKER_RUN=docker run --name cape-builder --rm \
+	      -v $(CURDIR):/go/src/github.com/capeprivacy/cape \
+	      -v $(GOCACHE):/root/.cache/go-build \
+	      -e GOOS=$(GOOS) \
+	      -e GOARCH=$(GOARCH) \
+	      $(IMAGE) $(1)
+
+# This target builds the builder container if it does not already exist
+docker-container: gocheck dockercheck dockerfiles/Dockerfile dockerfiles/Dockerfile.builder
+	    $(call DOCKER_BUILD,base,latest,dockerfiles/Dockerfile); \
+	    $(call DOCKER_BUILD,builder,latest,dockerfiles/Dockerfile.builder); \
+
+docker-build: docker-container
+	$(call DOCKER_RUN,make build)
+
+# This target is used by GitHub actions to build and test our code 
+docker-ci: docker-container
+	$(call DOCKER_RUN,make ci)
+
+.PHONY: docker-build docker-ci
 
 # ###############################################
 # Releasing Docker Images
@@ -253,24 +286,12 @@ DOCKER_PUSH=docker push docker.pkg.github.com/capeprivacy/cape/$(1):$(2)
 
 docker-tag: dockercheck
 	$(call DOCKER_TAG,cape,latest,$(VERSION))
-	$(call DOCKER_TAG,coordinator,latest,$(VERSION))
-	$(call DOCKER_TAG,connector,latest,$(VERSION))
-	$(call DOCKER_TAG,update,latest,$(VERSION))
-	$(call DOCKER_TAG,customer_seed,latest,$(VERSION))
 
 docker-push-tag: dockercheck
 	$(call DOCKER_PUSH,cape,$(VERSION))
-	$(call DOCKER_PUSH,coordinator,$(VERSION))
-	$(call DOCKER_PUSH,connector,$(VERSION))
-	$(call DOCKER_PUSH,update,$(VERSION))
-	$(call DOCKER_PUSH,customer_seed,$(VERSION))
 
 docker-push-latest: dockercheck
 	$(call DOCKER_PUSH,cape,latest)
-	$(call DOCKER_PUSH,coordinator,latest)
-	$(call DOCKER_PUSH,connector,latest)
-	$(call DOCKER_PUSH,update,latest)
-	$(call DOCKER_PUSH,customer_seed,latest)
 
 .PHONY: docker-login docker-push-latest docker-push-tag docker-tag
 

@@ -1,8 +1,5 @@
-FROM golang:1.13.7-alpine
+FROM capeprivacy/cape:latest
 
-WORKDIR /root/
-
-COPY --from=capeprivacy/cape:latest /go/src/github.com/capeprivacy/cape/bin bin
-COPY --from=capeprivacy/cape:latest /go/src/github.com/capeprivacy/cape/migrations migrations
+COPY migrations ./
 
 CMD ["./bin/cape", "update"]

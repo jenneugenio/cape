@@ -1,7 +1,0 @@
-FROM golang:1.14.0-alpine
-
-WORKDIR /root/
-
-COPY --from=capeprivacy/cape:latest /go/src/github.com/capeprivacy/cape/bin/cape .
-
-CMD ["./cape", "connector", "start"]

@@ -1,0 +1,13 @@
+FROM capeprivacy/base:latest
+
+COPY . ./
+RUN make build
+
+# We copy the built binary into a new alpine container so we can package a
+# container with the smallest footprint possible
+FROM alpine:3.11
+
+RUN apk --no-cache add ca-certificates
+COPY --from=0 /go/src/github.com/capeprivacy/cape/bin/cape /usr/local/bin/cape
+
+ENTRYPOINT ["sh", "-c", "cape"]

@@ -1,5 +1,0 @@
-FROM capeprivacy/cape:latest
-
-WORKDIR /go/src/github.com/capeprivacy/cape
-
-CMD ["make", "test"]

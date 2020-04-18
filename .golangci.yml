@@ -1,6 +1,5 @@
 run:
   concurrency: 8
-
   timeout: 1m
 
 linters-settings:
