@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgconn"
 	pgx "github.com/jackc/pgx/v4"
 
+	"github.com/capeprivacy/cape/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
@@ -161,13 +162,17 @@ func (q *postgresQuerier) Query(ctx context.Context, arr interface{}, f Filter) 
 }
 
 // Delete an entity from the database
-func (q *postgresQuerier) Delete(ctx context.Context, id ID) error {
+func (q *postgresQuerier) Delete(ctx context.Context, typ types.Type, id ID) error {
 	t, err := id.Type()
 	if err != nil {
 		return err
 	}
 
-	sql := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, t.String())
+	if t != typ {
+		return errors.New(TypeMismatchCause, "Type of ID (%s) does not match specified type (%s)", t, typ)
+	}
+
+	sql := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, t)
 	ct, err := q.conn.Exec(ctx, sql, id.String())
 	if err != nil {
 		return err

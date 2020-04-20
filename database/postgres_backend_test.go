@@ -10,6 +10,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/database/dbtest"
+	"github.com/capeprivacy/cape/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
@@ -101,12 +102,30 @@ func TestPostgresBackend(t *testing.T) {
 		err = db.Create(ctx, e)
 		gm.Expect(err).To(gm.BeNil())
 
-		err = db.Delete(ctx, e.GetID())
+		err = db.Delete(ctx, types.Test, e.GetID())
 		gm.Expect(err).To(gm.BeNil())
 
 		target := &TestEntity{}
 		err = db.Get(ctx, e.GetID(), target)
 		gm.Expect(errors.FromCause(err, NotFoundCause)).To(gm.BeTrue())
+	})
+
+	t.Run("cannot delete an entity from wrong table", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		e, err := NewTestEntity("blah blah")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Create(ctx, e)
+		gm.Expect(err).To(gm.BeNil())
+
+		// TestEntity has type Test so shouldn't be able to delete a TestEntity when the
+		// specified table is TestMutable
+		err = db.Delete(ctx, types.TestMutable, e.GetID())
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(errors.CausedBy(err, TypeMismatchCause)).To(gm.BeTrue())
 	})
 
 	t.Run("can't retrieve an unknown entity", func(t *testing.T) {

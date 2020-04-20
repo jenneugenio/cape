@@ -154,7 +154,7 @@ func (r *mutationResolver) RemoveSource(ctx context.Context, input model.RemoveS
 		return nil, err
 	}
 
-	err = r.Backend.Delete(ctx, source.ID)
+	err = r.Backend.Delete(ctx, primitives.SourcePrimitiveType, source.ID)
 	return nil, err
 }
 
@@ -254,7 +254,7 @@ func (r *mutationResolver) DeleteSession(ctx context.Context, input model.Delete
 		return nil, err
 	}
 
-	err = r.Backend.Delete(ctx, session.ID)
+	err = r.Backend.Delete(ctx, primitives.SessionType, session.ID)
 	if err != nil {
 		return nil, err
 	}

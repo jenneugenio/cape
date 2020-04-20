@@ -60,7 +60,7 @@ func (r *mutationResolver) CreateService(ctx context.Context, input model.Create
 }
 
 func (r *mutationResolver) DeleteService(ctx context.Context, input model.DeleteServiceRequest) (*string, error) {
-	err := r.Backend.Delete(ctx, input.ID)
+	err := r.Backend.Delete(ctx, primitives.ServicePrimitiveType, input.ID)
 	if err != nil {
 		return nil, err
 	}

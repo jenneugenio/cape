@@ -26,7 +26,7 @@ func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreateP
 }
 
 func (r *mutationResolver) DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error) {
-	err := r.Backend.Delete(ctx, input.ID)
+	err := r.Backend.Delete(ctx, primitives.PolicyType, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachP
 		return nil, err
 	}
 
-	err = r.Backend.Delete(ctx, attachment.ID)
+	err = r.Backend.Delete(ctx, primitives.AttachmentType, attachment.ID)
 	if err != nil {
 		return nil, err
 	}

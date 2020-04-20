@@ -63,7 +63,7 @@ func (r *mutationResolver) DeleteRole(ctx context.Context, input model.DeleteRol
 		return nil, errs.New(CannotDeleteSystemRole, "Role %s is a system role. Cannot delete", role.Label)
 	}
 
-	err = r.Backend.Delete(ctx, input.ID)
+	err = r.Backend.Delete(ctx, primitives.RoleType, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignR
 		return nil, err
 	}
 
-	err = r.Backend.Delete(ctx, assignment.ID)
+	err = r.Backend.Delete(ctx, primitives.AssignmentType, assignment.ID)
 	if err != nil {
 		return nil, err
 	}
