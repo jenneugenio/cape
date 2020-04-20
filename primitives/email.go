@@ -51,7 +51,7 @@ func NewEmail(in string) (Email, error) {
 func (e Email) Validate() error {
 	s := e.String()
 	if e.Type == ServiceEmail {
-		s = strings.TrimPrefix(e.String(), ServicePrepend)
+		s = strings.TrimPrefix(s, ServicePrepend)
 	}
 
 	err := checkmail.ValidateFormat(s)
@@ -69,10 +69,12 @@ func (e Email) String() string {
 
 // SetType sets the email type and does the conversion for
 // service emails
-func (e Email) SetType(typ EmailType) {
+func (e *Email) SetType(typ EmailType) {
 	// just in case it already has the prefix, don't prefix again!!
 	if typ == ServiceEmail && !strings.HasPrefix(e.Email, ServicePrepend) {
 		e.Email = ServicePrepend + e.Email
+	} else if typ == UserEmail {
+		e.Email = strings.TrimPrefix(e.Email, ServicePrepend)
 	}
 
 	e.Type = typ

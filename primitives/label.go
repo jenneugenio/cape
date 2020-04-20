@@ -1,7 +1,10 @@
 package primitives
 
 import (
+	"fmt"
+	"io"
 	"regexp"
+	"strconv"
 
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
@@ -31,4 +34,24 @@ func (l Label) Validate() error {
 // String returns the string representation of the label
 func (l Label) String() string {
 	return string(l)
+}
+
+func (l *Label) UnmarshalGQL(v interface{}) error {
+	s, ok := v.(string)
+	if !ok {
+		return errors.New(InvalidLabelCause, "Cannot unmarshall provided Label")
+	}
+
+	label, err := NewLabel(s)
+	if err != nil {
+		return err
+	}
+
+	*l = label
+
+	return nil
+}
+
+func (l Label) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(l.String()))
 }

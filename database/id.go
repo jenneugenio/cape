@@ -33,7 +33,7 @@ func (id *ID) UnmarshalGQL(v interface{}) error {
 	}
 
 	*id = i
-	return nil
+	return i.Validate()
 }
 
 func (id ID) MarshalGQL(w io.Writer) {

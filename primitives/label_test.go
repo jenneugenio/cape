@@ -59,4 +59,21 @@ func TestLabel(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("Can gql unmarshal", func(t *testing.T) {
+		var label Label
+
+		err := label.UnmarshalGQL("heyyy")
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(label.String()).To(gm.Equal("heyyy"))
+	})
+
+	t.Run("GQL unmarshal throws validate error", func(t *testing.T) {
+		var label Label
+
+		// not long enough
+		err := label.UnmarshalGQL("hey")
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(errors.CausedBy(err, InvalidLabelCause))
+	})
 }

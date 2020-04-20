@@ -3,6 +3,8 @@ package primitives
 import (
 	gm "github.com/onsi/gomega"
 	"testing"
+
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func TestName(t *testing.T) {
@@ -31,5 +33,21 @@ func TestName(t *testing.T) {
 	t.Run("Can have a middle name", func(t *testing.T) {
 		_, err := NewName("Sandwich McLettuce Jr")
 		gm.Expect(err).To(gm.BeNil())
+	})
+
+	t.Run("Can gql unmarshal", func(t *testing.T) {
+		var name Name
+
+		err := name.UnmarshalGQL("Justin Patpat")
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(name.String()).To(gm.Equal("Justin Patpat"))
+	})
+
+	t.Run("GQL unmarshal throws validate error", func(t *testing.T) {
+		var name Name
+
+		err := name.UnmarshalGQL("1")
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(errors.CausedBy(err, InvalidNameCause))
 	})
 }

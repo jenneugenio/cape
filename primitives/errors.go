@@ -12,6 +12,7 @@ var (
 	InvalidSourceCause      = errors.NewCause(errors.BadRequestCategory, "invalid_source")
 	InvalidAlgType          = errors.NewCause(errors.BadRequestCategory, "invalid_alg_type")
 	InvalidLabelCause       = errors.NewCause(errors.BadRequestCategory, "invalid_label")
+	InvalidNameCause        = errors.NewCause(errors.BadRequestCategory, "invalid_name")
 	InvalidURLCause         = errors.NewCause(errors.BadRequestCategory, "invalid_url")
 	InvalidEmail            = errors.NewCause(errors.BadRequestCategory, "invalid_email")
 	InvalidPasswordCause    = errors.NewCause(errors.BadRequestCategory, "invalid_password")

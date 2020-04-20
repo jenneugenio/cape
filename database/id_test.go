@@ -56,3 +56,26 @@ func TestDecodeString(t *testing.T) {
 
 	gm.Expect(ID).To(gm.Equal(IDTwo))
 }
+
+func TestGQL(t *testing.T) {
+	t.Run("Can gql unmarshal", func(t *testing.T) {
+		e, err := NewTestMutableEntity("ha")
+		gm.Expect(err).To(gm.BeNil())
+
+		var id ID
+
+		err = id.UnmarshalGQL(e.ID.String())
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(id.String()).To(gm.Equal(e.ID.String()))
+	})
+
+	t.Run("GQL unmarshal throws validate error", func(t *testing.T) {
+		id := EmptyID
+
+		var newID ID
+
+		err := newID.UnmarshalGQL(id.String())
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(errors.CausedBy(err, InvalidIDCause))
+	})
+}

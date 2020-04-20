@@ -1,7 +1,10 @@
 package primitives
 
 import (
+	"fmt"
+	"io"
 	"regexp"
+	"strconv"
 
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
@@ -21,7 +24,7 @@ func NewName(in string) (Name, error) {
 func (n Name) Validate() error {
 	if !nameRegex.MatchString(string(n)) {
 		msg := "Names must only contain alphabetical characters and be between 2-64 characters in length."
-		return errors.New(InvalidLabelCause, msg)
+		return errors.New(InvalidNameCause, msg)
 	}
 
 	return nil
@@ -30,4 +33,24 @@ func (n Name) Validate() error {
 // String returns the string representation of the name
 func (n Name) String() string {
 	return string(n)
+}
+
+func (n *Name) UnmarshalGQL(v interface{}) error {
+	s, ok := v.(string)
+	if !ok {
+		return errors.New(InvalidNameCause, "Cannot unmarshall provided Name")
+	}
+
+	name, err := NewName(s)
+	if err != nil {
+		return err
+	}
+
+	*n = name
+
+	return nil
+}
+
+func (n Name) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(n.String()))
 }
