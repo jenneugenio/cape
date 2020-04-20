@@ -55,15 +55,6 @@ func useClusterFlag() cli.Flag {
 	}
 }
 
-func dbURLFlag() cli.Flag {
-	return &cli.StringFlag{
-		Name:     "db-url",
-		Usage:    "The database `URL`",
-		EnvVars:  []string{"CAPE_DB_URL"},
-		Required: true,
-	}
-}
-
 func instanceIDFlag() cli.Flag {
 	return &cli.StringFlag{
 		Name:    "instance-id",

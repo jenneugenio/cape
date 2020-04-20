@@ -1,21 +1,18 @@
 package main
 
 import (
-	"net/url"
-
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/database"
 )
 
 func updateCmd(c *cli.Context) error {
-	dbAddr := c.String("db-url")
-
-	dbURL, err := url.Parse(dbAddr)
+	dbURL, err := getDBURL(c)
 	if err != nil {
 		return err
 	}
-	migrator, err := database.NewMigrator(dbURL, "migrations")
+
+	migrator, err := database.NewMigrator(dbURL.URL, "migrations")
 	if err != nil {
 		return err
 	}
@@ -25,11 +22,11 @@ func updateCmd(c *cli.Context) error {
 
 func init() {
 	updateCmd := &Command{
-		Usage: "Update a running Cape coordinator to a new version",
+		Usage:     "Update a running Cape coordinator to a new version",
+		Variables: []*EnvVar{capeDBPassword, capeDBURL},
 		Command: &cli.Command{
 			Name:   "update",
 			Action: updateCmd,
-			Flags:  []cli.Flag{dbURLFlag()},
 		},
 	}
 

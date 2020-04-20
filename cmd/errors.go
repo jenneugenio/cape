@@ -25,6 +25,9 @@ var (
 	// NoLinkedService occurs when a service has not been linked to a source
 	NoLinkedService = errors.NewCause(errors.BadRequestCategory, "no_linked_service")
 
-	// ClusterExistsCause cause happens when you try to create a new cluster that already exists
+	// ClusterExistsCause happens when you try to create a new cluster that already exists
 	ClusterExistsCause = errors.NewCause(errors.BadRequestCategory, "cluster_already_exists")
+
+	// PasswordInURLCause happens when you set a password in a url
+	PasswordInURLCause = errors.NewCause(errors.BadRequestCategory, "password_in_url")
 )

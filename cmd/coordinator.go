@@ -1,6 +1,7 @@
 package main
 
 import (
+	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/auth"
@@ -13,12 +14,11 @@ import (
 func init() {
 	startCmd := &Command{
 		Usage:     "Start an instance of the Cape coordinator",
-		Variables: []*EnvVar{capeDBPassword},
+		Variables: []*EnvVar{capeDBPassword, capeDBURL},
 		Command: &cli.Command{
 			Name:   "start",
 			Action: startCoordinatorCmd,
 			Flags: []cli.Flag{
-				dbURLFlag(),
 				instanceIDFlag(),
 				loggingTypeFlag(),
 				loggingLevelFlag(),
@@ -41,25 +41,21 @@ func init() {
 // getDBURL looks at the environment and generates the database address if
 // needed.
 func getDBURL(c *cli.Context) (*primitives.DBURL, error) {
-	// We support passing the password in separately or as a part of the DB
-	// URL. If the password is contained in the CAPE_DB_URL then it should be
-	// passed entirely as a secret inside a kubernetes orchestration system.
-	u, err := primitives.NewDBURL(c.String("db-url"))
-	if err != nil {
-		return nil, err
+	url := EnvVariables(c.Context, capeDBURL).(*primitives.DBURL)
+	_, set := url.User.Password()
+	if set {
+		// We do not allow users to set the password in the URL as it is a bad security practice
+		return nil, errors.New(PasswordInURLCause, "You cannot set the database password in the URL. Please use CAPE_DB_PASSWORD")
 	}
-
 	// If the password is passed in via environment variables
 	// instead of part of the connection string.
 	//
 	// As this env variable is optional we have to check to see if the casting
 	// was successful
-	password, ok := EnvVariables(c.Context, capeDBPassword).(string)
-	if ok && password != "" {
-		u.SetPassword(password)
-	}
+	password := EnvVariables(c.Context, capeDBPassword).(string)
+	url.SetPassword(password)
 
-	return u, nil
+	return url, nil
 }
 
 func startCoordinatorCmd(c *cli.Context) error {

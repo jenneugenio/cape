@@ -33,11 +33,19 @@ var (
 	}
 	capeDBPassword = &EnvVar{
 		Name:     "CAPE_DB_PASSWORD",
-		Required: false,
+		Required: true,
 		Description: "The password for the database. This variable exists so the database password " +
 			" can be passed securely without being exposed outside the current userspace.",
 		Processor: func(in string) (interface{}, error) {
 			return in, nil
+		},
+	}
+	capeDBURL = &EnvVar{
+		Name:        "CAPE_DB_URL",
+		Required:    true,
+		Description: "The URL for the database.",
+		Processor: func(in string) (interface{}, error) {
+			return primitives.NewDBURL(in)
 		},
 	}
 )

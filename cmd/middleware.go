@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"os"
+	"strings"
 
 	"github.com/urfave/cli/v2"
 
@@ -97,10 +98,25 @@ func beforeMiddleware(c *cli.Context) error {
 func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 	return cli.ActionFunc(func(c *cli.Context) error {
 		envValues := EnvVarValues{}
+
+		// Before processing, figure out all missing environment variables
+		var missingEnvs []string
 		for _, e := range cmd.Variables {
 			input := os.Getenv(e.Name)
 			if input == "" && e.Required {
-				return errors.New(MissingEnvVarCause, "The environment variable %s is required but was not provided", e.Name)
+				missingEnvs = append(missingEnvs, e.Name)
+			}
+		}
+
+		// Let the user know everything they missed so they don't run and have it fail again
+		if len(missingEnvs) > 0 {
+			return errors.New(MissingEnvVarCause, "The following environment variables are required but missing\n\n  %s", strings.Join(missingEnvs, "\n  "))
+		}
+
+		for _, e := range cmd.Variables {
+			input := os.Getenv(e.Name)
+			if input == "" && e.Required {
+				missingEnvs = append(missingEnvs, e.Name)
 			}
 
 			if input == "" {
