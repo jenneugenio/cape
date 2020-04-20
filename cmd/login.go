@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/urfave/cli/v2"
 )
 
@@ -59,6 +57,14 @@ func loginCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("You are now authenticated as %s to '%s'.\n", email, cluster.String())
-	return nil
+	args := struct {
+		Email      string
+		ClusterURL string
+	}{
+		email.String(),
+		cluster.URL.String(),
+	}
+
+	u := provider.UI(c.Context)
+	return u.Template("You are now authenticated to {{ .ClusterURL | bold }} as {{ .Email | bold }}\n", args)
 }

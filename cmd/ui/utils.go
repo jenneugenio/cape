@@ -30,6 +30,14 @@ func bold(text string) string {
 	return stylize(ctx, text)
 }
 
+func italic(text string) string {
+	ctx := ansiterm.Context{
+		Styles: []ansiterm.Style{ansiterm.Italic},
+	}
+
+	return stylize(ctx, text)
+}
+
 func stylize(ctx ansiterm.Context, text string) string {
 	builder := &strings.Builder{}
 	w := ansiterm.NewWriter(builder)

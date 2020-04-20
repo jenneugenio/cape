@@ -176,6 +176,12 @@ func (u *Stdout) funcMap() template.FuncMap {
 			}
 			return bold(t)
 		},
+		"italic": func(t string) string {
+			if !u.CanColorize() {
+				return t
+			}
+			return italic(t)
+		},
 		"color": func(c ansiterm.Color, t string) string {
 			if !u.CanColorize() {
 				return t

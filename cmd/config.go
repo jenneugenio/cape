@@ -135,9 +135,18 @@ func addCluster(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("The '%s' cluster has been added to your configuration.\n", label)
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
+	err = u.Template("The {{ . | bold }} cluster has been added to your configuration.\n", label.String())
+	if err != nil {
+		return err
+	}
+
 	if use {
-		fmt.Printf("\nYour current cluster has been set to '%s'.\n", cluster.Label)
+		err = u.Template("Your current cluster has been set to {{ . | bold }}.\n", cluster.Label.String())
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -161,6 +170,7 @@ func removeCluster(c *cli.Context) error {
 
 	label := Arguments(c.Context, ClusterLabelArg).(primitives.Label)
 	if !skipConfirm {
+		// TODO -- template doesn't work with confirm right now
 		err := u.Confirm(fmt.Sprintf("Do you want to delete the '%s' cluster from configuration?", label))
 		if err != nil {
 			return err
@@ -173,7 +183,7 @@ func removeCluster(c *cli.Context) error {
 	}
 
 	if cluster != nil && cluster.Label == label {
-		err = cfg.Use(primitives.Label(""))
+		err = cfg.Use("")
 		if err != nil {
 			return err
 		}
@@ -184,9 +194,16 @@ func removeCluster(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("The cluster '%s' has been removed from your configation.\n", label)
+	err = u.Template("The cluster {{ . | bold }} has been removed from your configuration.\n", label.String())
+	if err != nil {
+		return err
+	}
+
 	if cluster != nil && cluster.Label == label {
-		fmt.Printf("\nA current cluster is no longer set, please set one using 'cape config clusters use <label>'\n")
+		err = u.Template("A current cluster is no longer set. You can set one with {{ . | italic | faded }}\n", "cape config clusters use <label>")
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -194,7 +211,6 @@ func removeCluster(c *cli.Context) error {
 
 func useCluster(c *cli.Context) error {
 	cfg := Config(c.Context)
-
 	label := Arguments(c.Context, ClusterLabelArg).(primitives.Label)
 	err := cfg.Use(label)
 	if err != nil {
@@ -206,6 +222,7 @@ func useCluster(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("Your current cluster has been set to '%s'.\n", label)
-	return nil
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
+	return u.Template("Your current cluster has been set to {{ . | bold }}.\n", label.String())
 }

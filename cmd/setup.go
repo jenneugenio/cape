@@ -102,8 +102,7 @@ func setupCoordinatorCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("\nSetup Complete! Welcome to Cape!\n\n")
-	fmt.Printf("Your current cluster has been set to '%s'.\n", label)
+	u := provider.UI(c.Context)
 
-	return nil
+	return u.Template("\nSetup Complete! Welcome to Cape!\n\nYour current cluster has been set to {{ . | bold }}\n", label.String())
 }

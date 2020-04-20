@@ -136,9 +136,15 @@ func policyAttachCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("'%s' policy has been attached to the '%s' role.\n", policyLabel, roleLabel)
-
-	return nil
+	args := struct {
+		Policy string
+		Role   string
+	}{
+		policyLabel.String(),
+		roleLabel.String(),
+	}
+	u := provider.UI(c.Context)
+	return u.Template("The policy {{ .Policy | bold }} has been attached to the role {{ .Role | bold }}\n", args)
 }
 
 func policyDetachCmd(c *cli.Context) error {
@@ -177,9 +183,15 @@ func policyDetachCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("The policy '%s' has been detached from the role '%s'.n", policyLabel, roleLabel)
+	args := struct {
+		Policy string
+		Role   string
+	}{
+		policyLabel.String(),
+		roleLabel.String(),
+	}
 
-	return nil
+	return u.Template("The policy {{ .Policy | bold }} has been detached from the {{ .Role | bold }} role\n", args)
 }
 
 func policiesListCmd(c *cli.Context) error {

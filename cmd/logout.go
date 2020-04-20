@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/urfave/cli/v2"
 )
 
@@ -47,6 +45,6 @@ func logoutCmd(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Printf("You have been logged out of '%s'.\n", cluster.String())
-	return nil
+	u := provider.UI(c.Context)
+	return u.Template("You have been logged out of {{ . | bold }}\n", cluster.String())
 }
