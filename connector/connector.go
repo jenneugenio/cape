@@ -7,15 +7,19 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_zerolog "github.com/grpc-ecosystem/go-grpc-middleware/logging/zerolog"
 	"github.com/justinas/alice"
 	"github.com/manifoldco/healthz"
 	"github.com/rs/cors"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 
+	"github.com/capeprivacy/cape/auth"
 	pb "github.com/capeprivacy/cape/connector/proto"
 	"github.com/capeprivacy/cape/connector/sources"
 	"github.com/capeprivacy/cape/framework"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 const connectorCertFile = "connector/certs/localhost.crt"
@@ -83,9 +87,10 @@ func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 	}
 
 	grpcServer := grpc.NewServer(grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+		errorStreamInterceptor,
 		authStreamInterceptor,
 		requestIDStreamInterceptor,
-		errorStreamInterceptor,
+		grpc_zerolog.StreamServerInterceptor(logger, grpc_zerolog.WithCodes(handleCodes)),
 	)))
 
 	pb.RegisterDataConnectorServer(grpcServer, hndler)
@@ -109,4 +114,16 @@ func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 		logger:      logger,
 		cache:       cache,
 	}, nil
+}
+
+func handleCodes(err error) codes.Code {
+	if err == nil {
+		return codes.OK
+	} else if errors.CausedBy(err, framework.AuthorizationFailure) {
+		return codes.PermissionDenied
+	} else if errors.CausedBy(err, auth.InvalidAuthHeader) {
+		return codes.Unauthenticated
+	}
+
+	return codes.Unknown
 }

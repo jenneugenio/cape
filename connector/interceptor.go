@@ -8,6 +8,7 @@ import (
 	"github.com/gofrs/uuid"
 	spb "github.com/golang/protobuf/ptypes/struct"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -26,10 +27,8 @@ type TokenValidator interface {
 
 func authStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	t := srv.(TokenValidator)
-
 	md, ok := metadata.FromIncomingContext(ss.Context())
 	if !ok {
-		fmt.Println(":D", ok)
 		return auth.ErrorInvalidAuthHeader
 	}
 
@@ -93,10 +92,14 @@ func requestIDStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grp
 
 	wStream := grpc_middleware.WrapServerStream(ss)
 
-	// TODO make sure we use this ID on the logger as well
 	wStream.WrappedContext = context.WithValue(wStream.Context(), fw.RequestIDContextKey, id)
 
 	md := metadata.Pairs("X-Request-ID", id.String())
+
+	// this then gets scooped up by the logger interceptor
+	tags := grpc_ctxtags.NewTags()
+	tags.Set("request_id", id.String())
+	wStream.WrappedContext = grpc_ctxtags.SetInContext(wStream.Context(), tags)
 
 	err = wStream.SendHeader(md)
 	if err != nil {

@@ -19,7 +19,7 @@ require (
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.24.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.1 // indirect
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/gostaticanalysis/analysisutil v0.0.3 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0
@@ -52,7 +52,7 @@ require (
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rs/cors v1.7.0
-	github.com/rs/zerolog v1.15.0
+	github.com/rs/zerolog v1.18.0
 	github.com/securego/gosec v0.0.0-20200316084457-7da9f46445fd // indirect
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
@@ -73,3 +73,5 @@ require (
 	sigs.k8s.io/yaml v1.2.0
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )
+
+replace github.com/grpc-ecosystem/go-grpc-middleware => github.com/capeprivacy/go-grpc-middleware v1.0.1-0.20200421173811-abd58a9536e9
