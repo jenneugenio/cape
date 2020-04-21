@@ -2,24 +2,17 @@ package connector
 
 import (
 	"context"
-	"encoding/json"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
-
-	spb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/rs/zerolog"
-	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/capeprivacy/cape/auth"
 	pb "github.com/capeprivacy/cape/connector/proto"
 	"github.com/capeprivacy/cape/connector/sources"
 	"github.com/capeprivacy/cape/framework"
-	errors "github.com/capeprivacy/cape/partyerrors"
+	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/policy"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/capeprivacy/cape/query"
+	"github.com/capeprivacy/cape/version"
 )
 
 type grpcHandler struct {
@@ -28,34 +21,17 @@ type grpcHandler struct {
 	logger      *zerolog.Logger
 }
 
-func (g *grpcHandler) handleAuth(ctx context.Context) (primitives.Identity, error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, auth.ErrorInvalidAuthHeader
-	}
-
-	authToken, ok := md["authorization"]
-	if !ok {
-		return nil, auth.ErrorInvalidAuthHeader
-	}
-
-	return g.coordinator.ValidateToken(ctx, authToken[0])
-}
-
 func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryServer) error {
 	err := g.handleQuery(req, server)
 	if err != nil {
-		return returnGRPCError(err)
+		return err
 	}
 
 	return nil
 }
 
 func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_QueryServer) error {
-	identity, err := g.handleAuth(server.Context())
-	if err != nil {
-		return err
-	}
+	identity := fw.Identity(server.Context())
 
 	policies, err := g.coordinator.GetIdentityPolicies(server.Context(), identity.GetID())
 	if err != nil {
@@ -100,30 +76,13 @@ func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_
 	return source.Query(context.Background(), server, query, req.GetLimit(), req.GetOffset())
 }
 
-func returnGRPCError(err error) error {
-	pErr, ok := err.(*errors.Error)
-	if !ok {
-		pErr = errors.New(errors.UnknownCause, err.Error())
-	}
+func (g *grpcHandler) Version(context.Context, *pb.VersionRequest) (*pb.VersionResponse, error) {
+	return &pb.VersionResponse{
+		Version:   version.Version,
+		BuildDate: version.BuildDate,
+	}, nil
+}
 
-	st := status.New(codes.Unknown, "Cape Error")
-
-	details := &spb.Struct{}
-
-	by, err := json.Marshal(pErr)
-	if err != nil {
-		return status.New(codes.Unknown, err.Error()).Err()
-	}
-
-	err = protojson.Unmarshal(by, details)
-	if err != nil {
-		return status.New(codes.Unknown, err.Error()).Err()
-	}
-
-	st, err = st.WithDetails(details)
-	if err != nil {
-		return status.New(codes.Unknown, err.Error()).Err()
-	}
-
-	return st.Err()
+func (g *grpcHandler) ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error) {
+	return g.coordinator.ValidateToken(ctx, tokenStr)
 }

@@ -41,6 +41,7 @@ type stream struct {
 // grpc client stream
 func NewStream(ctx context.Context, client pb.DataConnector_QueryClient) Stream {
 	ctx, cancel := context.WithCancel(ctx)
+
 	return &stream{
 		client: client,
 		ctx:    ctx,

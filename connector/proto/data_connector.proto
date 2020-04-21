@@ -9,6 +9,7 @@ import "google/protobuf/timestamp.proto";
 
 service DataConnector {
   rpc Query(QueryRequest) returns (stream Record);
+  rpc Version(VersionRequest) returns (VersionResponse);
 }
 
 message QueryRequest {
@@ -99,4 +100,11 @@ enum FieldType {
   TXIDSNAPSHOT = 39;
   UUID = 40;
   XML = 41;
+}
+
+message VersionRequest{};
+
+message VersionResponse{
+  string version = 1;
+  string build_date = 2;
 }

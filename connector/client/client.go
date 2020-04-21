@@ -58,6 +58,11 @@ func (c *Client) Query(ctx context.Context, dataSource primitives.Label, query s
 	return stream, nil
 }
 
+func (c *Client) Version(ctx context.Context) (*pb.VersionResponse, error) {
+	req := &pb.VersionRequest{}
+	return c.client.Version(ctx, req)
+}
+
 // Close closes the client connection
 func (c *Client) Close() error {
 	return c.conn.Close()

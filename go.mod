@@ -19,9 +19,10 @@ require (
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.24.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
-	github.com/google/uuid v1.1.1 // indirect
+	github.com/google/uuid v1.1.1
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/gostaticanalysis/analysisutil v0.0.3 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/huandu/xstrings v1.3.1 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect

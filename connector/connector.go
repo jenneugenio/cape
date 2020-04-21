@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/NYTimes/gziphandler"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/justinas/alice"
 	"github.com/manifoldco/healthz"
 	"github.com/rs/cors"
@@ -81,7 +82,12 @@ func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 		logger:      logger,
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+		authStreamInterceptor,
+		requestIDStreamInterceptor,
+		errorStreamInterceptor,
+	)))
+
 	pb.RegisterDataConnectorServer(grpcServer, hndler)
 
 	root := http.NewServeMux()
