@@ -258,6 +258,7 @@ DOCKER_RUN=docker run --name cape-builder --rm \
 	      -v $(GOCACHE):/root/.cache/go-build \
 	      -e GOOS=$(GOOS) \
 	      -e GOARCH=$(GOARCH) \
+	      --network bridge \
 	      $(IMAGE) $(1)
 
 # This target builds the builder container if it does not already exist
@@ -268,9 +269,9 @@ docker-container: gocheck dockercheck dockerfiles/Dockerfile dockerfiles/Dockerf
 docker-build: docker-container
 	$(call DOCKER_RUN,make build)
 
-# This target is used by GitHub actions to build and test our code 
+# This target is used by GitHub actions to build and test our code
 docker-ci: docker-container
-	$(call DOCKER_RUN,make ci)
+	$(call DOCKER_RUN,"make ci")
 
 .PHONY: docker-build docker-ci
 
