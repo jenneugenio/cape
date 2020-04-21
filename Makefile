@@ -268,7 +268,7 @@ docker-container: gocheck dockercheck dockerfiles/Dockerfile dockerfiles/Dockerf
 docker-build: docker-container
 	$(call DOCKER_RUN,make build)
 
-# This target is used by GitHub actions to build and test our code 
+# This target is used by GitHub actions to build and test our code
 docker-ci: docker-container
 	$(call DOCKER_RUN,make ci)
 

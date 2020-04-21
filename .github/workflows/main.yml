@@ -18,7 +18,17 @@ jobs:
     name: Build & Test
     runs-on: ubuntu-latest
     steps:
+    - name: Setup go1.14 Environment
+      uses: actions/setup-go@v1
+      with:
+          go-version: 1.14
+      id: go
     - name: Check out repository
       uses: actions/checkout@v1
-    - name: Build Testing Container
-      run: make docker-ci
+    - name: Run Make CI
+      run: |
+        export PATH=$PATH:$HOME/go/bin
+        export CAPE_DB_URL=postgres://postgres:dev@localhost:${{ job.services.postgres.ports[5432] }}/postgres?sslmode=disable
+        make bootstrap
+        make ci
+
