@@ -1083,22 +1083,22 @@ input DetachPolicyRequest {
 }
 
 extend type Query {
-  policy(id: ID!): Policy!
-  policyByLabel(label: Label!): Policy!
+  policy(id: ID!): Policy! @isAuthenticated()
+  policyByLabel(label: Label!): Policy! @isAuthenticated()
 
-  policies: [Policy!]
-  rolePolicies(role_id: ID!): [Policy!]
-  identityPolicies(identity_id: ID!): [Policy!]
+  policies: [Policy!] @isAuthenticated()
+  rolePolicies(role_id: ID!): [Policy!] @isAuthenticated()
+  identityPolicies(identity_id: ID!): [Policy!] @isAuthenticated()
 
-  attachment(role_id: ID!, policy_id: ID!): Attachment!
+  attachment(role_id: ID!, policy_id: ID!): Attachment! @isAuthenticated()
 }
 
 extend type Mutation {
-  createPolicy(input: CreatePolicyRequest!): Policy!
-  deletePolicy(input: DeletePolicyRequest!): String
+  createPolicy(input: CreatePolicyRequest!): Policy! @isAuthenticated()
+  deletePolicy(input: DeletePolicyRequest!): String @isAuthenticated()
 
-  attachPolicy(input: AttachPolicyRequest!): Attachment!
-  detachPolicy(input: DetachPolicyRequest!): String
+  attachPolicy(input: AttachPolicyRequest!): Attachment! @isAuthenticated()
+  detachPolicy(input: DetachPolicyRequest!): String @isAuthenticated()
 }
 `, BuiltIn: false},
 	&ast.Source{Name: "coordinator/schema/roles.graphql", Input: `type Role {
@@ -2667,8 +2667,32 @@ func (ec *executionContext) _Mutation_createPolicy(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreatePolicy(rctx, args["input"].(model.CreatePolicyRequest))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreatePolicy(rctx, args["input"].(model.CreatePolicyRequest))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*primitives.Policy); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Policy`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2708,8 +2732,32 @@ func (ec *executionContext) _Mutation_deletePolicy(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeletePolicy(rctx, args["input"].(model.DeletePolicyRequest))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeletePolicy(rctx, args["input"].(model.DeletePolicyRequest))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2746,8 +2794,32 @@ func (ec *executionContext) _Mutation_attachPolicy(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().AttachPolicy(rctx, args["input"].(model.AttachPolicyRequest))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AttachPolicy(rctx, args["input"].(model.AttachPolicyRequest))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Attachment); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/coordinator/graph/model.Attachment`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2787,8 +2859,32 @@ func (ec *executionContext) _Mutation_detachPolicy(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DetachPolicy(rctx, args["input"].(model.DetachPolicyRequest))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DetachPolicy(rctx, args["input"].(model.DetachPolicyRequest))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3732,8 +3828,32 @@ func (ec *executionContext) _Query_policy(ctx context.Context, field graphql.Col
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Policy(rctx, args["id"].(database.ID))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Policy(rctx, args["id"].(database.ID))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*primitives.Policy); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Policy`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3773,8 +3893,32 @@ func (ec *executionContext) _Query_policyByLabel(ctx context.Context, field grap
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().PolicyByLabel(rctx, args["label"].(primitives.Label))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().PolicyByLabel(rctx, args["label"].(primitives.Label))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*primitives.Policy); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Policy`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3807,8 +3951,32 @@ func (ec *executionContext) _Query_policies(ctx context.Context, field graphql.C
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Policies(rctx)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Policies(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*primitives.Policy); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Policy`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3845,8 +4013,32 @@ func (ec *executionContext) _Query_rolePolicies(ctx context.Context, field graph
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().RolePolicies(rctx, args["role_id"].(database.ID))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().RolePolicies(rctx, args["role_id"].(database.ID))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*primitives.Policy); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Policy`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3883,8 +4075,32 @@ func (ec *executionContext) _Query_identityPolicies(ctx context.Context, field g
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().IdentityPolicies(rctx, args["identity_id"].(database.ID))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().IdentityPolicies(rctx, args["identity_id"].(database.ID))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*primitives.Policy); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Policy`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3921,8 +4137,32 @@ func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Attachment(rctx, args["role_id"].(database.ID), args["policy_id"].(database.ID))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Attachment(rctx, args["role_id"].(database.ID), args["policy_id"].(database.ID))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Attachment); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/coordinator/graph/model.Attachment`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8167,18 +8407,12 @@ func (ec *executionContext) marshalNIdentity2githubᚗcomᚋcapeprivacyᚋcape�
 }
 
 func (ec *executionContext) unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx context.Context, v interface{}) (primitives.Label, error) {
-	tmp, err := graphql.UnmarshalString(v)
-	return primitives.Label(tmp), err
+	var res primitives.Label
+	return res, res.UnmarshalGQL(v)
 }
 
 func (ec *executionContext) marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx context.Context, sel ast.SelectionSet, v primitives.Label) graphql.Marshaler {
-	res := graphql.MarshalString(string(v))
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
+	return v
 }
 
 func (ec *executionContext) unmarshalNLoginSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐLoginSessionRequest(ctx context.Context, v interface{}) (model.LoginSessionRequest, error) {
@@ -8186,18 +8420,12 @@ func (ec *executionContext) unmarshalNLoginSessionRequest2githubᚗcomᚋcapepri
 }
 
 func (ec *executionContext) unmarshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐName(ctx context.Context, v interface{}) (primitives.Name, error) {
-	tmp, err := graphql.UnmarshalString(v)
-	return primitives.Name(tmp), err
+	var res primitives.Name
+	return res, res.UnmarshalGQL(v)
 }
 
 func (ec *executionContext) marshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐName(ctx context.Context, sel ast.SelectionSet, v primitives.Name) graphql.Marshaler {
-	res := graphql.MarshalString(string(v))
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
+	return v
 }
 
 func (ec *executionContext) unmarshalNNewUserRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐNewUserRequest(ctx context.Context, v interface{}) (model.NewUserRequest, error) {
