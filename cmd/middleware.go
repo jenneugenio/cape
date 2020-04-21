@@ -160,7 +160,7 @@ func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 // Apply this middleware to commands that need to run actions against a cape
 // cluster.
 func handleSessionOverrides(next cli.ActionFunc) cli.ActionFunc {
-	return cli.ActionFunc(func(c *cli.Context) error {
+	return func(c *cli.Context) error {
 		cfg := Config(c.Context)
 		clusterStr := c.String("cluster")
 
@@ -184,5 +184,5 @@ func handleSessionOverrides(next cli.ActionFunc) cli.ActionFunc {
 		session := config.NewSession(cfg, cluster)
 		c.Context = context.WithValue(c.Context, SessionContextKey, session)
 		return next(c)
-	})
+	}
 }

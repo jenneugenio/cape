@@ -1,5 +1,6 @@
 db:
-  url: postgres://postgres:dev@fake-customer-db-postgresql.default.svc.cluster.local/customer_data?sslmode=disable
+  url: postgres://postgres@fake-customer-db-postgresql.default.svc.cluster.local/customer_data?sslmode=disable
+  password: dev
 image:
   seed: capeprivacy/customer_seed
   tag: latest

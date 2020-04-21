@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/cmd/config"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/urfave/cli/v2"
@@ -39,6 +41,15 @@ func setupCoordinatorCmd(c *cli.Context) error {
 		removeCmd := fmt.Sprintf("cape config clusters remove %s", label)
 		return errors.New(ClusterExistsCause, "A cluster named '%s' has already been configured! You can use `%s` to remove it.", label, removeCmd)
 	}
+
+	// Since nothing is set up, ie no clusters exist, we make one here that the provider can fetch
+	cluster, err := cfg.AddCluster(label, clusterURL, "")
+	if err != nil {
+		return err
+	}
+
+	s := config.NewSession(cfg, cluster)
+	c.Context = context.WithValue(c.Context, SessionContextKey, s)
 
 	name, err := getName(c, "")
 	if err != nil {
@@ -87,10 +98,8 @@ func setupCoordinatorCmd(c *cli.Context) error {
 		return err
 	}
 
-	_, err = cfg.AddCluster(label, clusterURL, session.Token.String())
-	if err != nil {
-		return err
-	}
+	// Now that we're logged in, update the token on our cluster
+	cluster.AuthToken = session.Token.String()
 
 	err = cfg.Use(label)
 	if err != nil {

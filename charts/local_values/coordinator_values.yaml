@@ -1,5 +1,6 @@
 db:
-  url: postgres://postgres:dev@cape-db-postgresql.default.svc.cluster.local/postgres?sslmode=disable
+  url: postgres://postgres@cape-db-postgresql.default.svc.cluster.local/postgres?sslmode=disable
+  password: dev
 image:
   coordinator_repository: capeprivacy/cape
   update_repository: capeprivacy/update
