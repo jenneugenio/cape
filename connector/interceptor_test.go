@@ -118,7 +118,7 @@ func TestInterceptors(t *testing.T) {
 		strs := stream.md.Get("x-request-id")
 		gm.Expect(len(strs)).To(gm.Equal(1))
 
-		_, err = uuid.Parse(strs[0])
+		_, err = uuid.FromString(strs[0])
 		gm.Expect(err).To(gm.BeNil())
 	})
 }

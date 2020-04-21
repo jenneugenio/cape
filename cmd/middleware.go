@@ -96,7 +96,7 @@ func beforeMiddleware(c *cli.Context) error {
 }
 
 func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
-	return cli.ActionFunc(func(c *cli.Context) error {
+	return func(c *cli.Context) error {
 		envValues := EnvVarValues{}
 
 		// Before processing, figure out all missing environment variables
@@ -115,9 +115,6 @@ func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 
 		for _, e := range cmd.Variables {
 			input := os.Getenv(e.Name)
-			if input == "" && e.Required {
-				missingEnvs = append(missingEnvs, e.Name)
-			}
 
 			if input == "" {
 				continue
@@ -154,7 +151,7 @@ func processVariables(cmd *Command, next cli.ActionFunc) cli.ActionFunc {
 		c.Context = context.WithValue(c.Context, EnvVarContextKey, envValues)
 
 		return next(c)
-	})
+	}
 }
 
 // Apply this middleware to commands that need to run actions against a cape
