@@ -4,6 +4,8 @@ package integration
 
 import (
 	"context"
+	"github.com/capeprivacy/cape/database"
+	errors "github.com/capeprivacy/cape/partyerrors"
 	"io/ioutil"
 	"testing"
 
@@ -92,6 +94,24 @@ func TestPolicies(t *testing.T) {
 
 		_, err = client.GetPolicyByLabel(ctx, label)
 		gm.Expect(err).To(gm.BeNil())
+	})
+
+	t.Run("cannot create the same policy twice", func(t *testing.T) {
+		label, err := primitives.NewLabel("make-me-twice")
+		gm.Expect(err).To(gm.BeNil())
+
+		p1, err := primitives.NewPolicy(label, spec)
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = client.CreatePolicy(ctx, p1)
+		gm.Expect(err).To(gm.BeNil())
+
+		p2, err := primitives.NewPolicy(label, spec)
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = client.CreatePolicy(ctx, p2)
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(errors.CausedBy(err, database.DuplicateCause))
 	})
 }
 
@@ -244,5 +264,28 @@ func TestAttachments(t *testing.T) {
 
 		gm.Expect(len(policies)).To(gm.Equal(1))
 		gm.Expect(policies[0].Label).To(gm.Equal(label))
+	})
+
+	t.Run("attach policy twice", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		label, err := primitives.NewLabel("attachme")
+		gm.Expect(err).To(gm.BeNil())
+
+		p, err := primitives.NewPolicy(label, spec)
+		gm.Expect(err).To(gm.BeNil())
+
+		policy, err := client.CreatePolicy(ctx, p)
+		gm.Expect(err).To(gm.BeNil())
+
+		role, err := client.CreateRole(ctx, "coolguy", nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = client.AttachPolicy(ctx, policy.ID, role.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = client.AttachPolicy(ctx, policy.ID, role.ID)
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(errors.CausedBy(err, database.DuplicateCause))
 	})
 }
