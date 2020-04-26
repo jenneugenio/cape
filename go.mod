@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/99designs/gqlgen v0.11.2
 	github.com/Masterminds/goutils v1.1.0 // indirect
-	github.com/Masterminds/semver v1.5.0 // indirect
+	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad
@@ -38,6 +38,7 @@ require (
 	github.com/lib/pq v1.3.0 // indirect
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/machinebox/graphql v0.2.2
+	github.com/magefile/mage v1.9.0
 	github.com/manifoldco/go-base32 v1.0.4
 	github.com/manifoldco/go-base64 v1.0.3
 	github.com/manifoldco/healthz v1.2.0
