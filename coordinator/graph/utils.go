@@ -9,25 +9,22 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
-func queryIdentity(ctx context.Context, db database.Backend, email primitives.Email) (primitives.Identity, error) {
+func queryEmailProvider(ctx context.Context, db database.Backend, email primitives.Email) (primitives.CredentialProvider, error) {
 	filter := database.NewFilter(database.Where{"email": email.String()}, nil, nil)
 
 	user := &primitives.User{}
 	err := db.QueryOne(ctx, user, filter)
-	if err != nil && !errors.FromCause(err, database.NotFoundCause) {
-		return nil, err
-	}
-	if err == nil {
-		return user, err
-	}
 
-	service := &primitives.Service{}
-	err = db.QueryOne(ctx, service, filter)
-	if err != nil {
-		return nil, err
-	}
+	return user, err
+}
 
-	return service, nil
+func queryTokenProvider(ctx context.Context, db database.Backend, tokenId database.ID) (primitives.CredentialProvider, error) {
+	filter := database.NewFilter(database.Where{"id": tokenId.String()}, nil, nil)
+
+	token := &primitives.TokenCredentials{}
+	err := db.QueryOne(ctx, token, filter)
+
+	return token, err
 }
 
 // buildAttachment takes a primitives attachment and builds at graphql

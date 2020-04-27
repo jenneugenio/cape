@@ -55,7 +55,7 @@ func (s *Session) GetType() types.Type {
 }
 
 // NewSession returns a new Session struct
-func NewSession(identity Identity, expiresAt time.Time, typ TokenType,
+func NewSession(identity CredentialProvider, expiresAt time.Time, typ TokenType,
 	token *base64.Value) (*Session, error) {
 	p, err := database.NewPrimitive(SessionType)
 	if err != nil {
@@ -73,7 +73,10 @@ func NewSession(identity Identity, expiresAt time.Time, typ TokenType,
 	}
 
 	if typ == Login {
-		creds := identity.GetCredentials()
+		creds, err := identity.GetCredentials()
+		if err != nil {
+			return nil, err
+		}
 
 		session.Credentials = &AuthCredentials{
 			Salt: creds.Salt,

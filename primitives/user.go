@@ -57,8 +57,8 @@ func NewUser(name Name, email Email, creds *Credentials) (*User, error) {
 }
 
 // GetCredentials satisfies Identity interface
-func (u *User) GetCredentials() *Credentials {
-	return u.Credentials
+func (u *User) GetCredentials() (*Credentials, error) {
+	return u.Credentials, nil
 }
 
 // GetEmail satisfies the Identity interface

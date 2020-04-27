@@ -241,7 +241,8 @@ func rolesMembersCmd(c *cli.Context) error {
 			typeStr = primitives.ServicePrimitiveType.String()
 		}
 
-		body[i] = []string{typeStr, identity.GetEmail().String()}
+		// TODO -- rewrite
+		body[i] = []string{typeStr, "woot@gmail.com"}
 	}
 
 	return u.Table(header, body)

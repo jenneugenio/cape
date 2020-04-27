@@ -22,6 +22,10 @@ func (tc *TokenCredentials) Validate() error {
 	return nil
 }
 
+func (tc *TokenCredentials) GetCredentials() (*Credentials, error) {
+	return NewCredentials(tc.PublicKey, tc.Salt)
+}
+
 func NewTokenCredentials(identityID database.ID, creds *Credentials) (*TokenCredentials, error) {
 	p, err := database.NewPrimitive(TokenPrimitiveType)
 	if err != nil {

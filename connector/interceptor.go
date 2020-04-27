@@ -43,7 +43,7 @@ func authStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.Str
 	}
 
 	wStream := grpc_middleware.WrapServerStream(ss)
-	wStream.WrappedContext = context.WithValue(wStream.WrappedContext, fw.IdentityContextKey, identity)
+	wStream.WrappedContext = context.WithValue(wStream.WrappedContext, fw.CredentialProviderContextKey, identity)
 
 	return handler(srv, wStream)
 }

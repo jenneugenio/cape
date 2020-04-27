@@ -34,8 +34,11 @@ const (
 	// SessionContextKey is the name of the session key stored on the context
 	SessionContextKey ContextKey = "session"
 
-	// IdentityContextKey is the name of the identity key stored on the context
+	// CredentialProviderContextKey is the name of the identity key stored on the context
 	IdentityContextKey ContextKey = "identity"
+
+	// CredentialProviderContextKey is the name of the credential provider key stored on the context
+	CredentialProviderContextKey ContextKey = "credential-provider"
 )
 
 // RequestID returns the request id stored on a given context
@@ -80,7 +83,7 @@ func Session(ctx context.Context) *primitives.Session {
 	return session.(*primitives.Session)
 }
 
-// Identity returns the identity stored on the given context
+// CredentialProvider returns the identity stored on the given context
 func Identity(ctx context.Context) primitives.Identity {
 	identity := ctx.Value(IdentityContextKey)
 	if identity == nil {
@@ -88,6 +91,16 @@ func Identity(ctx context.Context) primitives.Identity {
 	}
 
 	return identity.(primitives.Identity)
+}
+
+// CredentialProvider returns the identity stored on the given context
+func CredentialProvider(ctx context.Context) primitives.CredentialProvider {
+	identity := ctx.Value(CredentialProviderContextKey)
+	if identity == nil {
+		panic("identity not available on context")
+	}
+
+	return identity.(primitives.CredentialProvider)
 }
 
 // RequestIDMiddleware sets a UUID on the response header and request context

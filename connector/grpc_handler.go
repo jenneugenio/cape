@@ -31,7 +31,7 @@ func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryS
 }
 
 func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_QueryServer) error {
-	identity := fw.Identity(server.Context())
+	identity := fw.CredentialProvider(server.Context())
 
 	policies, err := g.coordinator.GetIdentityPolicies(server.Context(), identity.GetID())
 	if err != nil {

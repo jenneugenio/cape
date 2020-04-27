@@ -1148,7 +1148,7 @@ func (c *Client) GetIdentities(ctx context.Context, emails []primitives.Email) (
 	return clientIdentitiesToPrimitive(resp.Identities)
 }
 
-func (c *Client) NewToken(ctx context.Context, identity primitives.Identity) (*auth.APIToken, error) {
+func (c *Client) NewToken(ctx context.Context, identity primitives.Identity, credentials *auth.Credentials) (*auth.APIToken, error) {
 	// If the user provides no identity, we will make a token for the current session user
 	if identity == nil {
 		i, err := c.Me(ctx)
@@ -1159,12 +1159,7 @@ func (c *Client) NewToken(ctx context.Context, identity primitives.Identity) (*a
 		identity = i
 	}
 
-	creds, err := auth.RandomCredentials()
-	if err != nil {
-		return nil, err
-	}
-
-	pCreds, err := creds.Package()
+	pCreds, err := credentials.Package()
 	if err != nil {
 		return nil, err
 	}

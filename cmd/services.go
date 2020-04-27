@@ -108,18 +108,11 @@ func init() {
 }
 
 func servicesCreateCmd(c *cli.Context) error {
-	cfgSession := Session(c.Context)
-
 	provider := GetProvider(c.Context)
 	u := provider.UI(c.Context)
 
 	typeStr := c.String("type")
 	endpointStr := c.String("endpoint")
-
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
 
 	typ, err := primitives.NewServiceType(typeStr)
 	if err != nil {
@@ -136,17 +129,8 @@ func servicesCreateCmd(c *cli.Context) error {
 	}
 
 	email := Arguments(c.Context, ServiceIdentifierArg).(primitives.Email)
-	clusterURL, err := cluster.GetURL()
-	if err != nil {
-		return err
-	}
 
-	apiToken, err := auth.NewAPIToken(email, clusterURL)
-	if err != nil {
-		return err
-	}
-
-	creds, err := apiToken.Credentials()
+	creds, err := auth.RandomCredentials()
 	if err != nil {
 		return err
 	}
@@ -156,6 +140,7 @@ func servicesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
+	// TODO -- services need to lose credentials
 	service, err := primitives.NewService(email, typ, endpoint, pCreds)
 	if err != nil {
 		return err
@@ -166,7 +151,12 @@ func servicesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	_, err = client.CreateService(c.Context, service)
+	service, err = client.CreateService(c.Context, service)
+	if err != nil {
+		return err
+	}
+
+	apiToken, err := client.NewToken(c.Context, service, creds)
 	if err != nil {
 		return err
 	}

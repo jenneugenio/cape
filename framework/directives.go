@@ -71,7 +71,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 		}
 
 		ctx = context.WithValue(ctx, SessionContextKey, session)
-		ctx = context.WithValue(ctx, IdentityContextKey, identity)
+		ctx = context.WithValue(ctx, CredentialProviderContextKey, identity)
 
 		return next(ctx)
 	}

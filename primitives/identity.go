@@ -7,7 +7,7 @@ import (
 // Identity represents an identity type such as user or service
 type Identity interface {
 	database.Entity
-	GetCredentials() *Credentials
+	//GetCredentials() *Credentials
 	GetEmail() Email
 }
 
@@ -21,9 +21,9 @@ type IdentityImpl struct {
 }
 
 // GetCredentials implements Identity interface
-func (i *IdentityImpl) GetCredentials() *Credentials {
-	return i.Credentials
-}
+//func (i *IdentityImpl) GetCredentials() *Credentials {
+//	return i.Credentials
+//}
 
 // GetEmail implements Identity interface
 func (i *IdentityImpl) GetEmail() Email {
