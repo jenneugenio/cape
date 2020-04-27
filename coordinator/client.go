@@ -27,6 +27,7 @@ var UnrecognizedIdentityType = errors.NewCause(errors.BadRequestCategory, "unrec
 type ClientTransport struct {
 	client    *graphql.Client
 	authToken *base64.Value
+	url       *primitives.URL
 }
 
 func NewTransport(coordinatorURL *primitives.URL, authToken *base64.Value) Transport {
@@ -38,6 +39,7 @@ func NewTransport(coordinatorURL *primitives.URL, authToken *base64.Value) Trans
 	return &ClientTransport{
 		client:    client,
 		authToken: authToken,
+		url:       coordinatorURL,
 	}
 }
 
@@ -102,6 +104,10 @@ func (c *ClientTransport) createAuthSession(ctx context.Context, sig *base64.Val
 	}
 
 	return &resp.Session, nil
+}
+
+func (c *ClientTransport) URL() *primitives.URL {
+	return c.url
 }
 
 // Raw wraps the NewRequest and does common req changes like adding authorization
@@ -1140,4 +1146,52 @@ func (c *Client) GetIdentities(ctx context.Context, emails []primitives.Email) (
 	}
 
 	return clientIdentitiesToPrimitive(resp.Identities)
+}
+
+func (c *Client) NewToken(ctx context.Context, identity primitives.Identity) (*auth.APIToken, error) {
+	// If the user provides no identity, we will make a token for the current session user
+	if identity == nil {
+		i, err := c.Me(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		identity = i
+	}
+
+	creds, err := auth.RandomCredentials()
+	if err != nil {
+		return nil, err
+	}
+
+	pCreds, err := creds.Package()
+	if err != nil {
+		return nil, err
+	}
+
+	tokenCredentials, err := primitives.NewTokenCredentials(identity.GetID(), pCreds)
+	if err != nil {
+		return nil, err
+	}
+
+	variables := make(map[string]interface{})
+	variables["identity_id"] = tokenCredentials.IdentityID
+	variables["public_key"] = tokenCredentials.PublicKey
+	variables["salt"] = tokenCredentials.Salt
+	variables["alg"] = tokenCredentials.Alg
+
+	var resp struct {
+		Credentials primitives.TokenCredentials `json:"createToken"`
+	}
+
+	err = c.transport.Raw(ctx, `
+		mutation CreateToken($identity_id: ID!, $public_key: Base64!, $salt: Base64!, $alg: CredentialsAlgType!) {
+			createToken(input: { identity_id: $identity_id, public_key: $public_key, salt: $salt, alg: $alg }) {
+				id
+			}
+        }
+    `, variables, &resp)
+
+	token, err := auth.NewAPIToken(resp.Credentials.ID, c.transport.URL())
+	return token, err
 }

@@ -115,32 +115,33 @@ func (m *Manager) CreateSource(ctx context.Context, dbURL *primitives.DBURL, ser
 
 // CreateService creates a service on the coordinator with the given APIToken and URL
 func (m *Manager) CreateService(ctx context.Context, apiToken *auth.APIToken, serviceURL *primitives.URL) error {
-	creds, err := apiToken.Credentials()
-	if err != nil {
-		return err
-	}
-
-	pCreds, err := creds.Package()
-	if err != nil {
-		return err
-	}
-
-	service, err := primitives.NewService(apiToken.Email, primitives.DataConnectorServiceType, serviceURL, pCreds)
-	if err != nil {
-		return err
-	}
-
-	service, err = m.Admin.Client.CreateService(ctx, service)
-	if err != nil {
-		return err
-	}
-
-	m.Connector = &Service{
-		ID:    service.ID,
-		Token: apiToken,
-	}
-
-	return nil
+	panic("currently broken")
+	//creds, err := apiToken.Credentials()
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//pCreds, err := creds.Package()
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//service, err := primitives.NewService(apiToken.Email, primitives.DataConnectorServiceType, serviceURL, pCreds)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//service, err = m.Admin.Client.CreateService(ctx, service)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//m.Connector = &Service{
+	//	ID:    service.ID,
+	//	Token: apiToken,
+	//}
+	//
+	//return nil
 }
 
 // CreatePolicy creates a policy on the coordinator!

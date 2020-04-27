@@ -11,6 +11,7 @@ import (
 type Transport interface {
 	Raw(ctx context.Context, query string, variables map[string]interface{}, resp interface{}) error
 	Authenticated() bool
+	URL() *primitives.URL
 
 	Login(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error)
 	Logout(ctx context.Context, authToken *base64.Value) error

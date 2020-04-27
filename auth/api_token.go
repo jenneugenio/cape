@@ -3,6 +3,7 @@ package auth
 import (
 	"crypto/rand"
 	"fmt"
+	"github.com/capeprivacy/cape/database"
 	"strings"
 
 	"github.com/capeprivacy/cape/primitives"
@@ -34,14 +35,14 @@ func (s Secret) Validate() error {
 // the APIToken will be tied to a token (token_id will replace email)
 // that is tied to an identity (user or service)
 type APIToken struct {
-	Email   primitives.Email
-	URL     *primitives.URL
-	Version byte
-	Secret  Secret
+	TokenCredentialID database.ID
+	URL               *primitives.URL
+	Version           byte
+	Secret            Secret
 }
 
 // NewAPIToken returns a new api token from email and url
-func NewAPIToken(email primitives.Email, u *primitives.URL) (*APIToken, error) {
+func NewAPIToken(tokenCredentialID database.ID, u *primitives.URL) (*APIToken, error) {
 	secretBytes := make([]byte, secretBytes)
 	_, err := rand.Read(secretBytes)
 	if err != nil {
@@ -49,20 +50,16 @@ func NewAPIToken(email primitives.Email, u *primitives.URL) (*APIToken, error) {
 	}
 
 	return &APIToken{
-		Email:   email,
-		URL:     u,
-		Version: tokenVersion,
-		Secret:  secretBytes,
+		TokenCredentialID: tokenCredentialID,
+		URL:               u,
+		Version:           tokenVersion,
+		Secret:            secretBytes,
 	}, nil
 }
 
 // Validate returns an error if the underlying APIToken has invalid contents in
 // its fields.
 func (a *APIToken) Validate() error {
-	if err := a.Email.Validate(); err != nil {
-		return err
-	}
-
 	if err := a.URL.Validate(); err != nil {
 		return err
 	}
@@ -104,7 +101,7 @@ func (a *APIToken) Marshal() (string, error) {
 
 	val := base64.New(bytes)
 
-	tokenStr := fmt.Sprintf("%s,%s", a.Email, val.String())
+	tokenStr := fmt.Sprintf("%s,%s", a.TokenCredentialID, val.String())
 
 	return tokenStr, nil
 }
@@ -116,12 +113,12 @@ func (a *APIToken) Unmarshal(token string) error {
 		return errors.New(BadTokenFormat, "Invalid API Token provided")
 	}
 
-	email, err := primitives.NewEmail(strs[0])
+	tokenCredentialID, err := database.DecodeFromString(strs[0])
 	if err != nil {
 		return err
 	}
 
-	a.Email = email
+	a.TokenCredentialID = tokenCredentialID
 
 	val, err := base64.NewFromString(strs[1])
 	if err != nil {
@@ -152,4 +149,19 @@ func ParseAPIToken(in string) (*APIToken, error) {
 	}
 
 	return token, nil
+}
+
+func RandomCredentials() (*Credentials, error) {
+	secret := make([]byte, secretBytes)
+	_, err := rand.Read(secret)
+	if err != nil {
+		return nil, err
+	}
+
+	creds, err := NewCredentials(secret, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return creds, nil
 }

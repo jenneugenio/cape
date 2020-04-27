@@ -65,6 +65,13 @@ type CreateServiceRequest struct {
 	Alg       primitives.CredentialsAlgType `json:"alg"`
 }
 
+type CreateTokenRequest struct {
+	IdentityID database.ID                   `json:"identity_id"`
+	PublicKey  base64.Value                  `json:"public_key"`
+	Salt       base64.Value                  `json:"salt"`
+	Alg        primitives.CredentialsAlgType `json:"alg"`
+}
+
 type DeletePolicyRequest struct {
 	ID database.ID `json:"id"`
 }
