@@ -1,4 +1,4 @@
-package build
+package mage
 
 import (
 	"sync"

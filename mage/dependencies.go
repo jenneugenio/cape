@@ -1,4 +1,4 @@
-package build
+package mage
 
 import (
 	"context"
@@ -9,13 +9,21 @@ import (
 // Dependencies contains a list of external dependencies
 var Dependencies = deps{}
 
+// TODO: Change this from a global init function to something thats created for
+// each magefile command invocation. That way, it's less hard coding, easier to
+// test!
 func init() {
-	godep, err := NewGo()
+	godep, err := NewGolang("github.com/capeprivacy/cape", "1.14")
 	if err != nil {
 		panic(err)
 	}
 
-	dockerdep, err := NewDocker()
+	dockerdep, err := NewDocker("18.0")
+	if err != nil {
+		panic(err)
+	}
+
+	protoc, err := NewProtoc("3.11.4", "connector/proto/proto.go", "connector/proto/data_connector.proto", "connector/proto/data_connector.pb.go")
 	if err != nil {
 		panic(err)
 	}
@@ -26,6 +34,11 @@ func init() {
 	}
 
 	err = Dependencies.Add(dockerdep)
+	if err != nil {
+		panic(err)
+	}
+
+	err = Dependencies.Add(protoc)
 	if err != nil {
 		panic(err)
 	}
@@ -96,6 +109,7 @@ func (d deps) Run(names []string, f RunnerFunc) error {
 	}
 
 	wg.Wait()
+
 	// TODO: Introduce a "multi-error" type enabling us to return multiple
 	// errors, cleanly.
 	for _, err := range errors.Get() {

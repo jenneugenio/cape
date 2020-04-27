@@ -1,4 +1,4 @@
-package build
+package mage
 
 import (
 	"context"
@@ -12,38 +12,35 @@ import (
 
 var goVersionRegex = regexp.MustCompile(`go([0-9]\.[0-9]*)`)
 
-const goMinVersion = "1.14"
-const goRootPackage = "github.com/capeprivacy/cape"
-
-// Go is a dependency checker for the Go language
-type Go struct {
+// Golang is a dependency checker for the Go language
+type Golang struct {
 	Version *semver.Version
 	RootPkg string
 	mod     *GoMod
 	tools   *GoTools
 }
 
-func NewGo() (*Go, error) {
-	v, err := semver.NewVersion(goMinVersion)
+func NewGolang(rootPkg string, required string) (*Golang, error) {
+	v, err := semver.NewVersion(required)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Go{
+	return &Golang{
 		Version: v,
-		RootPkg: goRootPackage,
+		RootPkg: rootPkg,
 		mod:     &GoMod{},
 		tools:   &GoTools{},
 	}, nil
 }
 
 // Name returns the internal "name" for the dependency
-func (g *Go) Name() string {
+func (g *Golang) Name() string {
 	return "go"
 }
 
 // Check returns an error if Go isn't available or the version is incorrect.
-func (g *Go) Check(_ context.Context) error {
+func (g *Golang) Check(_ context.Context) error {
 	out, err := sh.Output("go", "version")
 	if err != nil {
 		return err
@@ -66,7 +63,7 @@ func (g *Go) Check(_ context.Context) error {
 	return nil
 }
 
-func (g *Go) Setup(ctx context.Context) error {
+func (g *Golang) Setup(ctx context.Context) error {
 	if err := g.mod.Setup(ctx); err != nil {
 		return err
 	}
@@ -74,7 +71,7 @@ func (g *Go) Setup(ctx context.Context) error {
 	return g.tools.Setup(ctx)
 }
 
-func (g *Go) Clean(ctx context.Context) error {
+func (g *Golang) Clean(ctx context.Context) error {
 	errors := []error{} // Collect errors and deal with them at the end
 	if err := g.tools.Clean(ctx); err != nil {
 		errors = append(errors, err) // Collect errors and return at the end

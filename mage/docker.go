@@ -1,4 +1,4 @@
-package build
+package mage
 
 import (
 	"context"
@@ -9,10 +9,8 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-var dockerVersionRegex = regexp.MustCompile(`Docker version (([0-9]\.?)*)`)
+var dockerVersionRegex = regexp.MustCompile(`Docker version (([0-9]+\.?)*)`)
 var dockerImages = []string{} // TODO: Add list of docker images built here
-
-const dockerMinVersion = "18.0"
 
 // Docker is a dependency check for Docker
 type Docker struct {
@@ -20,8 +18,8 @@ type Docker struct {
 	Images  []string
 }
 
-func NewDocker() (*Docker, error) {
-	v, err := semver.NewVersion(dockerMinVersion)
+func NewDocker(required string) (*Docker, error) {
+	v, err := semver.NewVersion(required)
 	if err != nil {
 		return nil, err
 	}
