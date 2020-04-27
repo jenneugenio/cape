@@ -13,6 +13,11 @@ var Dependencies = deps{}
 // each magefile command invocation. That way, it's less hard coding, easier to
 // test!
 func init() {
+	gitdep, err := NewGit("2.0")
+	if err != nil {
+		panic(err)
+	}
+
 	godep, err := NewGolang("github.com/capeprivacy/cape", "1.14")
 	if err != nil {
 		panic(err)
@@ -39,6 +44,11 @@ func init() {
 	}
 
 	err = Dependencies.Add(protoc)
+	if err != nil {
+		panic(err)
+	}
+
+	err = Dependencies.Add(gitdep)
 	if err != nil {
 		panic(err)
 	}

@@ -3,6 +3,8 @@ package mage
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"sync"
 
@@ -92,6 +94,20 @@ func (g *Golang) Clean(ctx context.Context) error {
 	}
 
 	return errors[0]
+}
+
+// Build provides functionality for building a go binary given the pkg path of
+// its main and a output path for the binary.
+func (g *Golang) Build(_ context.Context, version *Version, pkg, out string) error {
+	env := map[string]string{
+		"GOOS":   os.Getenv("GOOS"),
+		"GOARCH": os.Getenv("GOARCH"),
+	}
+
+	pkg = filepath.Join(g.RootPkg, pkg)
+	ldflags := fmt.Sprintf(`'-w -X "%s/version.Version=%s" -X "%s/version.BuildDate=%s" -s'`,
+		g.RootPkg, version.Version(), g.RootPkg, version.BuildDate())
+	return sh.RunWith(env, "go", "build", "-i", "-v", "-ldflags", ldflags, "-o", out, pkg)
 }
 
 // GoMod represents the `go mod` command and all of the logic associated with
