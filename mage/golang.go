@@ -98,7 +98,12 @@ func (g *Golang) Clean(ctx context.Context) error {
 
 // Build provides functionality for building a go binary given the pkg path of
 // its main and a output path for the binary.
-func (g *Golang) Build(_ context.Context, version *Version, pkg, out string) error {
+func (g *Golang) Build(ctx context.Context, version *Version, pkg, out string) error {
+	err := g.mod.Setup(ctx)
+	if err != nil {
+		return err
+	}
+
 	env := map[string]string{
 		"GOOS":   os.Getenv("GOOS"),
 		"GOARCH": os.Getenv("GOARCH"),
