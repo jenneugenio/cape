@@ -3,7 +3,7 @@
 package version
 
 // Version contains the current build version
-var Version = "dev"
+var Version = "0.0.0"
 
 // BuildDate contain the current build date as a string in UTC
 var BuildDate = "never"
