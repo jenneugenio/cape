@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/magefile/mage/mg"
@@ -15,7 +16,7 @@ type Test mg.Namespace
 
 // All runs the entire test suite (lint, unit and integration tests)
 func (t Test) All(ctx context.Context) error {
-	mg.Deps(t.Lint, t.Integration)
+	mg.Deps(t.Lint, t.Integration, build.Build.Docker)
 	return nil
 }
 
@@ -63,4 +64,46 @@ func (t Test) Integration(_ context.Context) error {
 
 	_, err := sh.Exec(env, os.Stdout, os.Stderr, "go", "test", "-v", "./...", "-tags=integration")
 	return err
+}
+
+// CI runs the full test suite that is ran during continuous integration
+func (t Test) CI(_ context.Context) error {
+	mg.Deps(t.Lint, t.Integration, build.Build.Docker, t.Tidy)
+	return nil
+}
+
+// Tidy runs `go mod tidy` and then checks for changes in `go.mod` and `go.sum`
+// to ensure that go.mod and go.sum are up to date.
+func (t Test) Tidy(ctx context.Context) error {
+	required := []string{"git", "go"}
+	deps, err := mage.Dependencies.Get(required)
+	if err != nil {
+		return err
+	}
+
+	git := deps[0].(*mage.Git)
+	golang := deps[1].(*mage.Golang)
+
+	err = git.Check(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = golang.Check(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = golang.Mod.Tidy(ctx)
+	if err != nil {
+		return err
+	}
+
+	files := []string{"go.mod", "go.sum"}
+	err = git.Porcelain(ctx, files)
+	if err != nil {
+		return fmt.Errorf("Files %s have been modified: %s", files, err)
+	}
+
+	return nil
 }

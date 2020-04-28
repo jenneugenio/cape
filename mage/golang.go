@@ -18,8 +18,8 @@ var goVersionRegex = regexp.MustCompile(`go([0-9]\.[0-9]*)`)
 type Golang struct {
 	Version *semver.Version
 	RootPkg string
-	mod     *GoMod
-	tools   *GoTools
+	Mod     *GoMod
+	Tools   *GoTools
 }
 
 func NewGolang(rootPkg string, required string) (*Golang, error) {
@@ -31,8 +31,8 @@ func NewGolang(rootPkg string, required string) (*Golang, error) {
 	return &Golang{
 		Version: v,
 		RootPkg: rootPkg,
-		mod:     &GoMod{},
-		tools:   &GoTools{},
+		Mod:     &GoMod{},
+		Tools:   &GoTools{},
 	}, nil
 }
 
@@ -66,20 +66,20 @@ func (g *Golang) Check(_ context.Context) error {
 }
 
 func (g *Golang) Setup(ctx context.Context) error {
-	if err := g.mod.Setup(ctx); err != nil {
+	if err := g.Mod.Setup(ctx); err != nil {
 		return err
 	}
 
-	return g.tools.Setup(ctx)
+	return g.Tools.Setup(ctx)
 }
 
 func (g *Golang) Clean(ctx context.Context) error {
 	errors := []error{} // Collect errors and deal with them at the end
-	if err := g.tools.Clean(ctx); err != nil {
+	if err := g.Tools.Clean(ctx); err != nil {
 		errors = append(errors, err) // Collect errors and return at the end
 	}
 
-	if err := g.mod.Clean(ctx, g.RootPkg); err != nil {
+	if err := g.Mod.Clean(ctx, g.RootPkg); err != nil {
 		errors = append(errors, err)
 	}
 
@@ -99,7 +99,7 @@ func (g *Golang) Clean(ctx context.Context) error {
 // Build provides functionality for building a go binary given the pkg path of
 // its main and a output path for the binary.
 func (g *Golang) Build(ctx context.Context, version *Version, pkg, out string) error {
-	err := g.mod.Setup(ctx)
+	err := g.Mod.Setup(ctx)
 	if err != nil {
 		return err
 	}
@@ -121,6 +121,10 @@ type GoMod struct{}
 
 func (g *GoMod) Setup(_ context.Context) error {
 	return sh.Run("go", "mod", "download")
+}
+
+func (g *GoMod) Tidy(_ context.Context) error {
+	return sh.Run("go", "mod", "tidy")
 }
 
 func (g *GoMod) Clean(_ context.Context, pkg string) error {

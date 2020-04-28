@@ -71,6 +71,27 @@ func (g *Git) Tag(_ context.Context) (*Version, error) {
 	return NewVersion(HEAD)
 }
 
+func (g *Git) Porcelain(_ context.Context, files []string) error {
+	args := []string{"status", "--untracked-files=no", "--porcelain"}
+	if len(files) > 0 {
+		args = append(args, "--")
+		args = append(args, files...)
+	} else {
+		args = append(args, ".")
+	}
+
+	out, err := sh.Output("git", args...)
+	if err != nil {
+		return err
+	}
+
+	if len(out) > 0 {
+		return fmt.Errorf("uncommited changes found")
+	}
+
+	return nil
+}
+
 func (g *Git) Setup(_ context.Context) error {
 	return nil
 }
