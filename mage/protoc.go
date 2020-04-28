@@ -53,7 +53,7 @@ func (p *Protoc) Check(_ context.Context) error {
 	}
 
 	if v.LessThan(p.Version) {
-		return fmt.Errorf("Please upgrade your version of Protoc to %s or greater", p.Version.String())
+		return fmt.Errorf("Please upgrade your version of Protoc from %s to %s or greater", v.String(), p.Version.String())
 	}
 
 	return nil

@@ -2,7 +2,6 @@ package targets
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"github.com/magefile/mage/mg"
@@ -10,21 +9,25 @@ import (
 	"github.com/capeprivacy/cape/mage"
 )
 
-var dockerImages = []mage.DockerImage{
+var dockerImages = []*mage.DockerImage{
 	{
 		Name: "capeprivacy/base",
+		Tag:  "latest",
 		File: "dockerfiles/Dockerfile",
 	},
 	{
 		Name: "capeprivacy/cape",
+		Tag:  "latest",
 		File: "dockerfiles/Dockerfile.cape",
 	},
 	{
 		Name: "capeprivacy/update",
+		Tag:  "latest",
 		File: "dockerfiles/Dockerfile.update",
 	},
 	{
 		Name: "capeprivacy/customer_seed",
+		Tag:  "latest",
 		File: "tools/seed/Dockerfile.customer",
 	},
 }
@@ -36,7 +39,7 @@ func init() {
 	}
 
 	for _, image := range dockerImages {
-		err := mage.Tracker.Add("docker://"+image.Name, mage.CleanDockerImage(image.Name))
+		err := mage.Tracker.Add("docker://"+image.Name, mage.CleanDockerImage(image))
 		if err != nil {
 			panic(err)
 		}
@@ -53,7 +56,7 @@ type Build mg.Namespace
 func (b Build) Binary(ctx context.Context) error {
 	mg.Deps(b.Generate)
 
-	required := []string{"git", "go"}
+	required := []string{"go"}
 	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
 		return d.Check(ctx)
 	})
@@ -66,10 +69,12 @@ func (b Build) Binary(ctx context.Context) error {
 		return err
 	}
 
-	git := deps[0].(*mage.Git)
-	golang := deps[1].(*mage.Golang)
+	golang := deps[0].(*mage.Golang)
 
-	version, err := git.Tag(ctx)
+	// We optionally support specifying the version via an env variable. This
+	// gets around us having to pull the version from Git which is useful when
+	// we're building Cape inside of a container without a checkout of git.
+	version, err := getVersion(ctx)
 	if err != nil {
 		return err
 	}
@@ -117,7 +122,7 @@ func (b Build) Generate(ctx context.Context) error {
 // Docker builds all of the cape docker containers
 func (b Build) Docker(ctx context.Context) error {
 	required := []string{"docker"}
-	err := mage.Dependencies.Run([]string{"docker"}, func(d mage.Dependency) error {
+	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
 		return d.Check(ctx)
 	})
 	if err != nil {
@@ -129,9 +134,18 @@ func (b Build) Docker(ctx context.Context) error {
 		return err
 	}
 
+	version, err := getVersion(ctx)
+	if err != nil {
+		return err
+	}
+
+	args := map[string]string{
+		"VERSION": version.Version(),
+	}
+
 	docker := deps[0].(*mage.Docker)
 	for _, image := range dockerImages {
-		err := docker.Build(ctx, fmt.Sprintf("%s:latest", image.Name), image.File)
+		err := docker.Build(ctx, image.String(), image.File, args)
 		if err != nil {
 			return err
 		}

@@ -59,7 +59,7 @@ func (g *Golang) Check(_ context.Context) error {
 	}
 
 	if v.LessThan(g.Version) {
-		return fmt.Errorf("Please upgrade your version of Go to %s or greater", g.Version.String())
+		return fmt.Errorf("Please upgrade your version of Go from %s to %s or greater", v.String(), g.Version.String())
 	}
 
 	return nil

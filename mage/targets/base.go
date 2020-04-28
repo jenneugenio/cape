@@ -11,7 +11,7 @@ import (
 func Bootstrap(ctx context.Context) error {
 	// TODO: Look into making a UI or similar (e.g. printing success output)
 	// TODO: Add warning that this could take time on the first run.
-	deps := []string{"git", "go", "docker"} // TODO: Make Type Safe & Compile Time
+	deps := []string{"go"} // TODO: Make Type Safe & Compile Time
 	err := mage.Dependencies.Run(deps, func(d mage.Dependency) error {
 		return d.Check(ctx)
 	})
@@ -21,6 +21,14 @@ func Bootstrap(ctx context.Context) error {
 
 	return mage.Dependencies.Run(deps, func(d mage.Dependency) error {
 		return d.Setup(ctx)
+	})
+}
+
+// Check checks whether or not the environment contains all of the required
+// dependencies to bootstrap, test, build, and deploy Cape locally.
+func Check(ctx context.Context) error {
+	return mage.Dependencies.Run(mage.Dependencies.List(), func(d mage.Dependency) error {
+		return d.Check(ctx)
 	})
 }
 

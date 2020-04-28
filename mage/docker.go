@@ -3,6 +3,7 @@ package mage
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 
 	"github.com/Masterminds/semver"
@@ -14,6 +15,11 @@ var dockerVersionRegex = regexp.MustCompile(`Docker version (([0-9]+\.?)*)`)
 type DockerImage struct {
 	Name string
 	File string
+	Tag  string
+}
+
+func (i *DockerImage) String() string {
+	return fmt.Sprintf("%s:%s", i.Name, i.Tag)
 }
 
 // Docker is a dependency check for Docker
@@ -34,6 +40,10 @@ func NewDocker(required string) (*Docker, error) {
 
 // Check returns an error if Docker isn't available or the version is incorrect
 func (d *Docker) Check(_ context.Context) error {
+	if len(os.Getenv("SKIP_DOCKER_CHECK")) > 0 {
+		return nil
+	}
+
 	out, err := sh.Output("docker", "-v")
 	if err != nil {
 		return err
@@ -50,14 +60,22 @@ func (d *Docker) Check(_ context.Context) error {
 	}
 
 	if v.LessThan(d.Version) {
-		return fmt.Errorf("Please upgrade your version of Docker to %s or greater", d.Version.String())
+		return fmt.Errorf("Please upgrade your version of Docker from %s to %s or greater", v.String(), d.Version.String())
 	}
 
 	return nil
 }
 
-func (d *Docker) Build(_ context.Context, label, dockerfile string) error {
-	return sh.RunV("docker", "build", "-t", label, "-f", dockerfile, ".")
+func (d *Docker) Build(_ context.Context, label, dockerfile string, args map[string]string) error {
+	cmd := []string{"build", "-t", label, "-f", dockerfile}
+	if len(args) > 0 {
+		for key, value := range args {
+			cmd = append(cmd, "--build-arg", fmt.Sprintf("\"%s=%s\"", key, value))
+		}
+	}
+
+	cmd = append(cmd, ".")
+	return sh.RunV("docker", cmd...)
 }
 
 func (d *Docker) Name() string {
@@ -72,8 +90,8 @@ func (d *Docker) Clean(_ context.Context) error {
 	return nil
 }
 
-func CleanDockerImage(name string) Cleaner {
+func CleanDockerImage(image *DockerImage) Cleaner {
 	return func(_ context.Context) error {
-		return sh.Run("docker", "images", "rm", "-f", name)
+		return sh.Run("docker", "rm", "-f", image.String())
 	}
 }

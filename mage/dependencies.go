@@ -28,7 +28,7 @@ func init() {
 		panic(err)
 	}
 
-	protoc, err := NewProtoc("3.11.4", "connector/proto/proto.go", "connector/proto/data_connector.proto", "connector/proto/data_connector.pb.go")
+	protoc, err := NewProtoc("3.11.0", "connector/proto/proto.go", "connector/proto/data_connector.proto", "connector/proto/data_connector.pb.go")
 	if err != nil {
 		panic(err)
 	}
