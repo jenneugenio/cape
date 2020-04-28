@@ -1,4 +1,4 @@
-package build
+package targets
 
 import (
 	"context"
@@ -120,7 +120,7 @@ func (b Build) Generate(ctx context.Context) error {
 	return nil
 }
 
-// Build builds all of the cape docker containers
+// Docker builds all of the cape docker containers
 func (b Build) Docker(ctx context.Context) error {
 	required := []string{"docker"}
 	err := mage.Dependencies.Run([]string{"docker"}, func(d mage.Dependency) error {

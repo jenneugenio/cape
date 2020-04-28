@@ -86,7 +86,7 @@ func (g *Git) Porcelain(_ context.Context, files []string) error {
 	}
 
 	if len(out) > 0 {
-		return fmt.Errorf("uncommited changes found")
+		return fmt.Errorf("uncommitted changes found")
 	}
 
 	return nil

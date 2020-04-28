@@ -1,4 +1,4 @@
-package test
+package targets
 
 import (
 	"context"
@@ -9,20 +9,19 @@ import (
 	"github.com/magefile/mage/sh"
 
 	"github.com/capeprivacy/cape/mage"
-	"github.com/capeprivacy/cape/mage/build"
 )
 
 type Test mg.Namespace
 
 // All runs the entire test suite (lint, unit and integration tests)
 func (t Test) All(ctx context.Context) error {
-	mg.Deps(t.Lint, t.Integration, build.Build.Docker)
+	mg.Deps(t.Lint, t.Integration, Build.Docker)
 	return nil
 }
 
 // Lint runs only the code linting portion of the test suite
 func (t Test) Lint(ctx context.Context) error {
-	mg.Deps(build.Build.Generate)
+	mg.Deps(Build.Generate)
 
 	required := []string{"go"}
 	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
@@ -37,7 +36,7 @@ func (t Test) Lint(ctx context.Context) error {
 
 // Unit runs the unit test portion of the test suite (does not require postgres)
 func (t Test) Unit(ctx context.Context) error {
-	mg.Deps(build.Build.Generate)
+	mg.Deps(Build.Generate)
 
 	required := []string{"go"}
 	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
@@ -52,7 +51,7 @@ func (t Test) Unit(ctx context.Context) error {
 
 // Integration runs the integration portion of the test suite (requires postgres)
 func (t Test) Integration(_ context.Context) error {
-	mg.Deps(build.Build.Generate)
+	mg.Deps(Build.Generate)
 
 	env := mage.Env{
 		"CAPE_DB_URL":             "postgres://postgres:dev@localhost:5432/postgres?sslmode=disable",
@@ -68,7 +67,7 @@ func (t Test) Integration(_ context.Context) error {
 
 // CI runs the full test suite that is ran during continuous integration
 func (t Test) CI(_ context.Context) error {
-	mg.Deps(t.Lint, t.Integration, build.Build.Docker, t.Tidy)
+	mg.Deps(t.Lint, t.Integration, Build.Docker, t.Tidy)
 	return nil
 }
 
