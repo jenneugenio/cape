@@ -46,18 +46,10 @@ func (a Artifacts) Clean(ctx context.Context) error {
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	// TODO: Introduce a multi error type
-	errors := []error{}
+	errors := NewErrors()
 	for _, f := range a.artifacts {
-		err := f(ctx)
-		if err != nil {
-			errors = append(errors, err)
-		}
+		errors.Append(f(ctx))
 	}
 
-	if len(errors) != 0 {
-		return errors[0]
-	}
-
-	return nil
+	return errors.Err()
 }

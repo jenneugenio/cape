@@ -96,7 +96,7 @@ func (b Build) Generate(ctx context.Context) error {
 		return err
 	}
 
-	errors := mage.NewSafeSlice()
+	errors := mage.NewErrors()
 	wg := &sync.WaitGroup{}
 
 	generators := []mage.Generator{gql, deps[0].(mage.Generator)}
@@ -105,19 +105,13 @@ func (b Build) Generate(ctx context.Context) error {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			errors.Add(generator.Generate(ctx))
+			errors.Append(generator.Generate(ctx))
 		}()
 	}
 
 	wg.Wait()
 
-	for _, err := range errors.Get() {
-		if err != nil {
-			return err.(error)
-		}
-	}
-
-	return nil
+	return errors.Err()
 }
 
 // Docker builds all of the cape docker containers

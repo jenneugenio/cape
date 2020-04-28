@@ -74,26 +74,14 @@ func (g *Golang) Setup(ctx context.Context) error {
 }
 
 func (g *Golang) Clean(ctx context.Context) error {
-	errors := []error{} // Collect errors and deal with them at the end
-	if err := g.Tools.Clean(ctx); err != nil {
-		errors = append(errors, err) // Collect errors and return at the end
-	}
+	// Collect errors and return them as a multi error at the end!
+	errors := NewErrors()
 
-	if err := g.Mod.Clean(ctx, g.RootPkg); err != nil {
-		errors = append(errors, err)
-	}
+	errors.Append(g.Tools.Clean(ctx))
+	errors.Append(g.Mod.Clean(ctx, g.RootPkg))
+	errors.Append(sh.Run("go", "clean", "-cache", "-testcache", "-r", g.RootPkg))
 
-	if err := sh.Run("go", "clean", "-cache", "-testcache", "-r", g.RootPkg); err != nil {
-		errors = append(errors, err)
-	}
-
-	// TODO: Introduce multi-error type we can use for bucketing errors
-	// together.
-	if len(errors) == 0 {
-		return nil
-	}
-
-	return errors[0]
+	return errors.Err()
 }
 
 // Build provides functionality for building a go binary given the pkg path of
@@ -162,7 +150,7 @@ func (g *GoTools) List() ([]string, error) {
 }
 
 func (g *GoTools) run(_ context.Context, pkgs []string, f func(pkg string) error) error {
-	errors := NewSafeSlice()
+	errors := NewErrors()
 	wg := &sync.WaitGroup{}
 	for _, p := range pkgs {
 		pkg := p
@@ -170,16 +158,11 @@ func (g *GoTools) run(_ context.Context, pkgs []string, f func(pkg string) error
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			errors.Add(f(pkg))
+			errors.Append(f(pkg))
 		}()
 	}
 
 	wg.Wait()
-	for _, err := range errors.Get() {
-		if err != nil {
-			return err.(error)
-		}
-	}
 
-	return nil
+	return errors.Err()
 }

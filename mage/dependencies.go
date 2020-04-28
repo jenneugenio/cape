@@ -106,7 +106,7 @@ func (d deps) Run(names []string, f RunnerFunc) error {
 		return err
 	}
 
-	errors := NewSafeSlice()
+	errors := NewErrors()
 	wg := &sync.WaitGroup{}
 
 	for _, dep := range deps {
@@ -114,21 +114,13 @@ func (d deps) Run(names []string, f RunnerFunc) error {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			errors.Add(f(item))
+			errors.Append(f(item))
 		}()
 	}
 
 	wg.Wait()
 
-	// TODO: Introduce a "multi-error" type enabling us to return multiple
-	// errors, cleanly.
-	for _, err := range errors.Get() {
-		if err != nil {
-			return err.(error)
-		}
-	}
-
-	return nil
+	return errors.Err()
 }
 
 func (d deps) Add(dep Dependency) error {
