@@ -7,4 +7,6 @@ import (
 	_ "github.com/capeprivacy/cape/mage/base"
 	// mage:import
 	_ "github.com/capeprivacy/cape/mage/build"
+	// mage:import
+	_ "github.com/capeprivacy/cape/mage/test"
 )

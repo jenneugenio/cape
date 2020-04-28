@@ -2,6 +2,7 @@ package build
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/magefile/mage/mg"
@@ -9,10 +10,36 @@ import (
 	"github.com/capeprivacy/cape/mage"
 )
 
+var dockerImages = []mage.DockerImage{
+	{
+		Name: "capeprivacy/base",
+		File: "dockerfiles/Dockerfile",
+	},
+	{
+		Name: "capeprivacy/cape",
+		File: "dockerfiles/Dockerfile.cape",
+	},
+	{
+		Name: "capeprivacy/update",
+		File: "dockerfiles/Dockerfile.update",
+	},
+	{
+		Name: "capeprivacy/customer_seed",
+		File: "tools/seed/Dockerfile.customer",
+	},
+}
+
 func init() {
-	err := mage.Tracker.Add("bin/cape")
+	err := mage.Tracker.Add("file://bin/cape", mage.CleanFile("bin/cape"))
 	if err != nil {
 		panic(err)
+	}
+
+	for _, image := range dockerImages {
+		err := mage.Tracker.Add("docker://"+image.Name, mage.CleanDockerImage(image.Name))
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -87,6 +114,32 @@ func (b Build) Generate(ctx context.Context) error {
 	for _, err := range errors.Get() {
 		if err != nil {
 			return err.(error)
+		}
+	}
+
+	return nil
+}
+
+// Build builds all of the cape docker containers
+func (b Build) Docker(ctx context.Context) error {
+	required := []string{"docker"}
+	err := mage.Dependencies.Run([]string{"docker"}, func(d mage.Dependency) error {
+		return d.Check(ctx)
+	})
+	if err != nil {
+		return err
+	}
+
+	deps, err := mage.Dependencies.Get(required)
+	if err != nil {
+		return err
+	}
+
+	docker := deps[0].(*mage.Docker)
+	for _, image := range dockerImages {
+		err := docker.Build(ctx, fmt.Sprintf("%s:latest", image.Name), image.File)
+		if err != nil {
+			return err
 		}
 	}
 

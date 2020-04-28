@@ -10,12 +10,15 @@ import (
 )
 
 var dockerVersionRegex = regexp.MustCompile(`Docker version (([0-9]+\.?)*)`)
-var dockerImages = []string{} // TODO: Add list of docker images built here
+
+type DockerImage struct {
+	Name string
+	File string
+}
 
 // Docker is a dependency check for Docker
 type Docker struct {
 	Version *semver.Version
-	Images  []string
 }
 
 func NewDocker(required string) (*Docker, error) {
@@ -26,7 +29,6 @@ func NewDocker(required string) (*Docker, error) {
 
 	return &Docker{
 		Version: v,
-		Images:  dockerImages,
 	}, nil
 }
 
@@ -54,6 +56,10 @@ func (d *Docker) Check(_ context.Context) error {
 	return nil
 }
 
+func (d *Docker) Build(_ context.Context, label, dockerfile string) error {
+	return sh.RunV("docker", "build", "-t", label, "-f", dockerfile, ".")
+}
+
 func (d *Docker) Name() string {
 	return "docker"
 }
@@ -63,11 +69,11 @@ func (d *Docker) Setup(_ context.Context) error {
 }
 
 func (d *Docker) Clean(_ context.Context) error {
-	if len(d.Images) == 0 {
-		return nil
-	}
+	return nil
+}
 
-	args := []string{"images", "rm", "-f"}
-	args = append(args, d.Images...)
-	return sh.Run("docker", args...)
+func CleanDockerImage(name string) Cleaner {
+	return func(_ context.Context) error {
+		return sh.Run("docker", "images", "rm", "-f", name)
+	}
 }
