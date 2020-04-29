@@ -47,7 +47,6 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
-	IsAuthenticated func(ctx context.Context, obj interface{}, next graphql.Resolver, typeArg primitives.TokenType) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -1083,22 +1082,22 @@ input DetachPolicyRequest {
 }
 
 extend type Query {
-  policy(id: ID!): Policy! @isAuthenticated()
-  policyByLabel(label: Label!): Policy! @isAuthenticated()
+  policy(id: ID!): Policy!
+  policyByLabel(label: Label!): Policy!
 
-  policies: [Policy!] @isAuthenticated()
-  rolePolicies(role_id: ID!): [Policy!] @isAuthenticated()
-  identityPolicies(identity_id: ID!): [Policy!] @isAuthenticated()
+  policies: [Policy!]
+  rolePolicies(role_id: ID!): [Policy!]
+  identityPolicies(identity_id: ID!): [Policy!]
 
-  attachment(role_id: ID!, policy_id: ID!): Attachment! @isAuthenticated()
+  attachment(role_id: ID!, policy_id: ID!): Attachment!
 }
 
 extend type Mutation {
-  createPolicy(input: CreatePolicyRequest!): Policy! @isAuthenticated()
-  deletePolicy(input: DeletePolicyRequest!): String @isAuthenticated()
+  createPolicy(input: CreatePolicyRequest!): Policy!
+  deletePolicy(input: DeletePolicyRequest!): String
 
-  attachPolicy(input: AttachPolicyRequest!): Attachment! @isAuthenticated()
-  detachPolicy(input: DetachPolicyRequest!): String @isAuthenticated()
+  attachPolicy(input: AttachPolicyRequest!): Attachment!
+  detachPolicy(input: DetachPolicyRequest!): String
 }
 `, BuiltIn: false},
 	&ast.Source{Name: "coordinator/schema/roles.graphql", Input: `type Role {
@@ -1124,27 +1123,21 @@ input AssignRoleRequest {
 }
 
 extend type Query {
-  role(id: ID!): Role! @isAuthenticated()
-  roleByLabel(label: Label!): Role! @isAuthenticated()
-  roles: [Role!] @isAuthenticated()
-  roleMembers(role_id: ID!): [Identity!] @isAuthenticated()
+  role(id: ID!): Role!
+  roleByLabel(label: Label!): Role!
+  roles: [Role!]
+  roleMembers(role_id: ID!): [Identity!]
 }
 
 extend type Mutation {
-  createRole(input: CreateRoleRequest!): Role! @isAuthenticated()
-  deleteRole(input: DeleteRoleRequest!): String @isAuthenticated()
+  createRole(input: CreateRoleRequest!): Role!
+  deleteRole(input: DeleteRoleRequest!): String
 
-  assignRole(input: AssignRoleRequest!): Assignment! @isAuthenticated()
-  unassignRole(input: AssignRoleRequest!): String @isAuthenticated()
+  assignRole(input: AssignRoleRequest!): Assignment!
+  unassignRole(input: AssignRoleRequest!): String
 }
 `, BuiltIn: false},
-	&ast.Source{Name: "coordinator/schema/schema.graphql", Input: `# isAuthenticated depends on having access to an auth token and checks that the
-# auth token is valid and appends the related user and session to the request context.
-# Most graphql queries and mutation should be annotated with this except for createLoginSession
-# and other exceptions as needed
-directive @isAuthenticated(type: TokenType! = AUTHENTICATED) on FIELD_DEFINITION
-
-type AuthCredentials {
+	&ast.Source{Name: "coordinator/schema/schema.graphql", Input: `type AuthCredentials {
   salt: Base64!
   alg: CredentialsAlgType!
 }
@@ -1251,11 +1244,11 @@ type Query {
   user(id: ID!): User!
   users: [User!]
 
-  me: Identity! @isAuthenticated()
+  me: Identity!
 
-  sources: [Source!]! @isAuthenticated()
-  source(id: ID!): Source! @isAuthenticated()
-  sourceByLabel(label: Label!): Source! @isAuthenticated()
+  sources: [Source!]!
+  source(id: ID!): Source!
+  sourceByLabel(label: Label!): Source!
 
   identities(emails: [Email!]): [Identity!]
 }
@@ -1263,13 +1256,13 @@ type Query {
 type Mutation {
   setup(input: NewUserRequest!): User!
 
-  createUser(input: NewUserRequest!): User! @isAuthenticated()
-  addSource(input: AddSourceRequest!): Source! @isAuthenticated()
-  removeSource(input: RemoveSourceRequest!): String @isAuthenticated()
+  createUser(input: NewUserRequest!): User!
+  addSource(input: AddSourceRequest!): Source!
+  removeSource(input: RemoveSourceRequest!): String
 
   createLoginSession(input: LoginSessionRequest!): Session!
-  createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
-  deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
+  createAuthSession(input: AuthSessionRequest!): Session!
+  deleteSession(input: DeleteSessionRequest!): String
 }
 
 # Scalar definitions
@@ -1310,14 +1303,14 @@ input DeleteServiceRequest {
 }
 
 extend type Query {
-    service(id: ID!): Service! @isAuthenticated()
-    serviceByEmail(email: Email!): Service! @isAuthenticated()
-    services: [Service!] @isAuthenticated()
+    service(id: ID!): Service!
+    serviceByEmail(email: Email!): Service!
+    services: [Service!]
 }
 
 extend type Mutation {
-    createService(input: CreateServiceRequest!): Service! @isAuthenticated()
-    deleteService(input: DeleteServiceRequest!): String @isAuthenticated()
+    createService(input: CreateServiceRequest!): Service!
+    deleteService(input: DeleteServiceRequest!): String
 }
 
 scalar ServiceType
@@ -1328,20 +1321,6 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
-
-func (ec *executionContext) dir_isAuthenticated_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 primitives.TokenType
-	if tmp, ok := rawArgs["type"]; ok {
-		arg0, err = ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["type"] = arg0
-	return args, nil
-}
 
 func (ec *executionContext) field_Mutation_addSource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -2307,32 +2286,8 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateUser(rctx, args["input"].(model.NewUserRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.User); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.User`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateUser(rctx, args["input"].(model.NewUserRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2372,32 +2327,8 @@ func (ec *executionContext) _Mutation_addSource(ctx context.Context, field graph
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().AddSource(rctx, args["input"].(model.AddSourceRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Source); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Source`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddSource(rctx, args["input"].(model.AddSourceRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2437,32 +2368,8 @@ func (ec *executionContext) _Mutation_removeSource(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().RemoveSource(rctx, args["input"].(model.RemoveSourceRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().RemoveSource(rctx, args["input"].(model.RemoveSourceRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2540,32 +2447,8 @@ func (ec *executionContext) _Mutation_createAuthSession(ctx context.Context, fie
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateAuthSession(rctx, args["input"].(model.AuthSessionRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "LOGIN")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Session); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Session`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateAuthSession(rctx, args["input"].(model.AuthSessionRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2605,32 +2488,8 @@ func (ec *executionContext) _Mutation_deleteSession(ctx context.Context, field g
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DeleteSession(rctx, args["input"].(model.DeleteSessionRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteSession(rctx, args["input"].(model.DeleteSessionRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2667,32 +2526,8 @@ func (ec *executionContext) _Mutation_createPolicy(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreatePolicy(rctx, args["input"].(model.CreatePolicyRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Policy); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Policy`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreatePolicy(rctx, args["input"].(model.CreatePolicyRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2732,32 +2567,8 @@ func (ec *executionContext) _Mutation_deletePolicy(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DeletePolicy(rctx, args["input"].(model.DeletePolicyRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeletePolicy(rctx, args["input"].(model.DeletePolicyRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2794,32 +2605,8 @@ func (ec *executionContext) _Mutation_attachPolicy(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().AttachPolicy(rctx, args["input"].(model.AttachPolicyRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Attachment); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/coordinator/graph/model.Attachment`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AttachPolicy(rctx, args["input"].(model.AttachPolicyRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2859,32 +2646,8 @@ func (ec *executionContext) _Mutation_detachPolicy(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DetachPolicy(rctx, args["input"].(model.DetachPolicyRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DetachPolicy(rctx, args["input"].(model.DetachPolicyRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2921,32 +2684,8 @@ func (ec *executionContext) _Mutation_createRole(ctx context.Context, field grap
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateRole(rctx, args["input"].(model.CreateRoleRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Role); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Role`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateRole(rctx, args["input"].(model.CreateRoleRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2986,32 +2725,8 @@ func (ec *executionContext) _Mutation_deleteRole(ctx context.Context, field grap
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DeleteRole(rctx, args["input"].(model.DeleteRoleRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteRole(rctx, args["input"].(model.DeleteRoleRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3048,32 +2763,8 @@ func (ec *executionContext) _Mutation_assignRole(ctx context.Context, field grap
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().AssignRole(rctx, args["input"].(model.AssignRoleRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Assignment); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/coordinator/graph/model.Assignment`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AssignRole(rctx, args["input"].(model.AssignRoleRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3113,32 +2804,8 @@ func (ec *executionContext) _Mutation_unassignRole(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UnassignRole(rctx, args["input"].(model.AssignRoleRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UnassignRole(rctx, args["input"].(model.AssignRoleRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3175,32 +2842,8 @@ func (ec *executionContext) _Mutation_createService(ctx context.Context, field g
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateService(rctx, args["input"].(model.CreateServiceRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Service); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Service`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateService(rctx, args["input"].(model.CreateServiceRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3240,32 +2883,8 @@ func (ec *executionContext) _Mutation_deleteService(ctx context.Context, field g
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DeleteService(rctx, args["input"].(model.DeleteServiceRequest))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteService(rctx, args["input"].(model.DeleteServiceRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3537,32 +3156,8 @@ func (ec *executionContext) _Query_me(ctx context.Context, field graphql.Collect
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Me(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(primitives.Identity); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/capeprivacy/cape/primitives.Identity`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Me(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3595,32 +3190,8 @@ func (ec *executionContext) _Query_sources(ctx context.Context, field graphql.Co
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Sources(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*primitives.Source); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Source`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Sources(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3660,32 +3231,8 @@ func (ec *executionContext) _Query_source(ctx context.Context, field graphql.Col
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Source(rctx, args["id"].(database.ID))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Source); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Source`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Source(rctx, args["id"].(database.ID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3725,32 +3272,8 @@ func (ec *executionContext) _Query_sourceByLabel(ctx context.Context, field grap
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().SourceByLabel(rctx, args["label"].(primitives.Label))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Source); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Source`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SourceByLabel(rctx, args["label"].(primitives.Label))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3828,32 +3351,8 @@ func (ec *executionContext) _Query_policy(ctx context.Context, field graphql.Col
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Policy(rctx, args["id"].(database.ID))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Policy); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Policy`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Policy(rctx, args["id"].(database.ID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3893,32 +3392,8 @@ func (ec *executionContext) _Query_policyByLabel(ctx context.Context, field grap
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().PolicyByLabel(rctx, args["label"].(primitives.Label))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Policy); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Policy`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().PolicyByLabel(rctx, args["label"].(primitives.Label))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3951,32 +3426,8 @@ func (ec *executionContext) _Query_policies(ctx context.Context, field graphql.C
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Policies(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*primitives.Policy); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Policy`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Policies(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4013,32 +3464,8 @@ func (ec *executionContext) _Query_rolePolicies(ctx context.Context, field graph
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().RolePolicies(rctx, args["role_id"].(database.ID))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*primitives.Policy); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Policy`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().RolePolicies(rctx, args["role_id"].(database.ID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4075,32 +3502,8 @@ func (ec *executionContext) _Query_identityPolicies(ctx context.Context, field g
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().IdentityPolicies(rctx, args["identity_id"].(database.ID))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*primitives.Policy); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Policy`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().IdentityPolicies(rctx, args["identity_id"].(database.ID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4137,32 +3540,8 @@ func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Attachment(rctx, args["role_id"].(database.ID), args["policy_id"].(database.ID))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.Attachment); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/coordinator/graph/model.Attachment`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Attachment(rctx, args["role_id"].(database.ID), args["policy_id"].(database.ID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4202,32 +3581,8 @@ func (ec *executionContext) _Query_role(ctx context.Context, field graphql.Colle
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Role(rctx, args["id"].(database.ID))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Role); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Role`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Role(rctx, args["id"].(database.ID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4267,32 +3622,8 @@ func (ec *executionContext) _Query_roleByLabel(ctx context.Context, field graphq
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().RoleByLabel(rctx, args["label"].(primitives.Label))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Role); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Role`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().RoleByLabel(rctx, args["label"].(primitives.Label))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4325,32 +3656,8 @@ func (ec *executionContext) _Query_roles(ctx context.Context, field graphql.Coll
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Roles(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*primitives.Role); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Role`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Roles(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4387,32 +3694,8 @@ func (ec *executionContext) _Query_roleMembers(ctx context.Context, field graphq
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().RoleMembers(rctx, args["role_id"].(database.ID))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]primitives.Identity); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []github.com/capeprivacy/cape/primitives.Identity`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().RoleMembers(rctx, args["role_id"].(database.ID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4449,32 +3732,8 @@ func (ec *executionContext) _Query_service(ctx context.Context, field graphql.Co
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Service(rctx, args["id"].(database.ID))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Service); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Service`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Service(rctx, args["id"].(database.ID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4514,32 +3773,8 @@ func (ec *executionContext) _Query_serviceByEmail(ctx context.Context, field gra
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().ServiceByEmail(rctx, args["email"].(primitives.Email))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*primitives.Service); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Service`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ServiceByEmail(rctx, args["email"].(primitives.Email))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4572,32 +3807,8 @@ func (ec *executionContext) _Query_services(ctx context.Context, field graphql.C
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Services(rctx)
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.IsAuthenticated == nil {
-				return nil, errors.New("directive isAuthenticated is not implemented")
-			}
-			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, err
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*primitives.Service); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Service`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Services(rctx)
 	})
 	if err != nil {
 		ec.Error(ctx, err)

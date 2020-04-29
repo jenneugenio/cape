@@ -80,13 +80,17 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		TokenAuthority: tokenAuth,
 	}}
 
-	config.Directives.IsAuthenticated = framework.IsAuthenticatedDirective(backend, tokenAuth)
 	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 	gqlHandler.SetErrorPresenter(errorPresenter)
 
+	authChain := alice.New(
+		framework.AuthTokenMiddleware,
+		framework.IsAuthenticatedMiddleware(backend, tokenAuth),
+	).Then(gqlHandler)
+
 	root := http.NewServeMux()
 	root.Handle("/v1", playground.Handler("GraphQL playground", "/query"))
-	root.Handle("/v1/query", framework.AuthTokenMiddleware(gqlHandler))
+	root.Handle("/v1/query", authChain)
 	root.Handle("/v1/version", framework.VersionHandler(cfg.InstanceID.String()))
 
 	health := healthz.NewHandler(root)

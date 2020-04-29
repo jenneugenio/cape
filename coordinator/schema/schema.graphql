@@ -1,9 +1,3 @@
-# isAuthenticated depends on having access to an auth token and checks that the
-# auth token is valid and appends the related user and session to the request context.
-# Most graphql queries and mutation should be annotated with this except for createLoginSession
-# and other exceptions as needed
-directive @isAuthenticated(type: TokenType! = AUTHENTICATED) on FIELD_DEFINITION
-
 type AuthCredentials {
   salt: Base64!
   alg: CredentialsAlgType!
@@ -111,11 +105,11 @@ type Query {
   user(id: ID!): User!
   users: [User!]
 
-  me: Identity! @isAuthenticated()
+  me: Identity!
 
-  sources: [Source!]! @isAuthenticated()
-  source(id: ID!): Source! @isAuthenticated()
-  sourceByLabel(label: Label!): Source! @isAuthenticated()
+  sources: [Source!]!
+  source(id: ID!): Source!
+  sourceByLabel(label: Label!): Source!
 
   identities(emails: [Email!]): [Identity!]
 }
@@ -123,13 +117,13 @@ type Query {
 type Mutation {
   setup(input: NewUserRequest!): User!
 
-  createUser(input: NewUserRequest!): User! @isAuthenticated()
-  addSource(input: AddSourceRequest!): Source! @isAuthenticated()
-  removeSource(input: RemoveSourceRequest!): String @isAuthenticated()
+  createUser(input: NewUserRequest!): User!
+  addSource(input: AddSourceRequest!): Source!
+  removeSource(input: RemoveSourceRequest!): String
 
   createLoginSession(input: LoginSessionRequest!): Session!
-  createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
-  deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
+  createAuthSession(input: AuthSessionRequest!): Session!
+  deleteSession(input: DeleteSessionRequest!): String
 }
 
 # Scalar definitions

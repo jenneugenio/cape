@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -12,8 +13,11 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/manifoldco/go-base64"
 	"github.com/rs/zerolog"
+	"github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2/parser"
 
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -144,6 +148,111 @@ func AuthTokenMiddleware(next http.Handler) http.Handler {
 		req = req.WithContext(ctx)
 		next.ServeHTTP(rw, req)
 	})
+}
+
+// IsAuthenticatedMiddleware sets the session ID on the request context for us in
+// graphql handlers and elsewhere
+func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAuthority) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			ctx := req.Context()
+
+			route, err := getGraphqlRoute(req)
+			if err != nil {
+				fmt.Println("HELLO", err)
+				respondWithGQLError(rw, ErrAuthentication)
+				return
+			}
+
+			if route == "createLoginSession" {
+				next.ServeHTTP(rw, req)
+				return
+			}
+
+			logger := Logger(ctx)
+			token := AuthToken(ctx)
+
+			if token == nil {
+				msg := "Could not authenticate. Token missing"
+				logger.Info().Msg(msg)
+				respondWithGQLError(rw, ErrAuthentication)
+				return
+			}
+
+			err = tokenAuthority.Verify(token)
+			if err != nil {
+				msg := "Could not authenticate. Unable to verify auth token"
+				logger.Info().Err(err).Msg(msg)
+				respondWithGQLError(rw, ErrAuthentication)
+				return
+			}
+
+			session := &primitives.Session{}
+			err = db.QueryOne(ctx, session, database.NewFilter(database.Where{"token": token.String()}, nil, nil))
+			if err != nil {
+				msg := "Could not authenticate. Unable to find session"
+				logger.Info().Err(err).Msg(msg)
+				respondWithGQLError(rw, ErrAuthentication)
+				return
+			}
+
+			typ, err := session.IdentityID.Type()
+			if err != nil {
+				msg := "Could not authenticate. Unable get identity type"
+				logger.Info().Err(err).Msg(msg)
+				respondWithGQLError(rw, ErrAuthentication)
+				return
+			}
+
+			var identity primitives.Identity
+			if typ == primitives.UserType {
+				user := &primitives.User{}
+				err = db.Get(ctx, session.IdentityID, user)
+				if err != nil {
+					msg := "Could not authenticate. Unable to find identity"
+					logger.Error().Err(err).Msg(msg)
+					respondWithGQLError(rw, ErrAuthentication)
+					return
+				}
+				identity = user
+			} else if typ == primitives.ServicePrimitiveType {
+				service := &primitives.Service{}
+				err = db.Get(ctx, session.IdentityID, service)
+				if err != nil {
+					msg := "Could not authenticate. Unable to find identity"
+					logger.Error().Err(err).Msg(msg)
+					respondWithGQLError(rw, ErrAuthentication)
+					return
+				}
+				identity = service
+			}
+
+			ctx = context.WithValue(ctx, SessionContextKey, session)
+			ctx = context.WithValue(ctx, IdentityContextKey, identity)
+
+			next.ServeHTTP(rw, req)
+		})
+	}
+}
+
+func getGraphqlRoute(req *http.Request) (string, error) {
+	params := &graphql.RawParams{}
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return "", err
+	}
+
+	err = json.Unmarshal(body, params)
+	if err != nil {
+		return "", err
+	}
+
+	doc, gerr := parser.ParseQuery(&ast.Source{Input: params.Query})
+	if gerr != nil {
+		return "", err
+	}
+
+	return doc.Operations[0].SelectionSet[0].(*ast.Field).Name, nil
 }
 
 // RoundtripLoggerMiddleware logs information about request and response
