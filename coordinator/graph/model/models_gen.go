@@ -57,12 +57,9 @@ type CreateRoleRequest struct {
 }
 
 type CreateServiceRequest struct {
-	Email     primitives.Email              `json:"email"`
-	Type      primitives.ServiceType        `json:"type"`
-	Endpoint  *primitives.URL               `json:"endpoint"`
-	PublicKey base64.Value                  `json:"public_key"`
-	Salt      base64.Value                  `json:"salt"`
-	Alg       primitives.CredentialsAlgType `json:"alg"`
+	Email    primitives.Email       `json:"email"`
+	Type     primitives.ServiceType `json:"type"`
+	Endpoint *primitives.URL        `json:"endpoint"`
 }
 
 type CreateTokenRequest struct {

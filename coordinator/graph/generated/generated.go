@@ -1378,9 +1378,6 @@ input CreateServiceRequest {
     email: Email!
     type: ServiceType!
     endpoint: URL
-    public_key: Base64!
-    salt: Base64!
-    alg: CredentialsAlgType!
 }
 
 input DeleteServiceRequest {
@@ -7301,24 +7298,6 @@ func (ec *executionContext) unmarshalInputCreateServiceRequest(ctx context.Conte
 		case "endpoint":
 			var err error
 			it.Endpoint, err = ec.unmarshalOURL2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐURL(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "public_key":
-			var err error
-			it.PublicKey, err = ec.unmarshalNBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "salt":
-			var err error
-			it.Salt, err = ec.unmarshalNBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "alg":
-			var err error
-			it.Alg, err = ec.unmarshalNCredentialsAlgType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐCredentialsAlgType(ctx, v)
 			if err != nil {
 				return it, err
 			}

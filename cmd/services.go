@@ -6,7 +6,6 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/cmd/ui"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -130,18 +129,8 @@ func servicesCreateCmd(c *cli.Context) error {
 
 	email := Arguments(c.Context, ServiceIdentifierArg).(primitives.Email)
 
-	creds, err := auth.RandomCredentials()
-	if err != nil {
-		return err
-	}
-
-	pCreds, err := creds.Package()
-	if err != nil {
-		return err
-	}
-
 	// TODO -- services need to lose credentials
-	service, err := primitives.NewService(email, typ, endpoint, pCreds)
+	service, err := primitives.NewService(email, typ, endpoint)
 	if err != nil {
 		return err
 	}
@@ -156,7 +145,7 @@ func servicesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	apiToken, err := client.NewToken(c.Context, service, creds)
+	apiToken, err := client.NewToken(c.Context, service)
 	if err != nil {
 		return err
 	}

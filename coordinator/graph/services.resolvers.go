@@ -13,12 +13,7 @@ import (
 )
 
 func (r *mutationResolver) CreateService(ctx context.Context, input model.CreateServiceRequest) (*primitives.Service, error) {
-	creds, err := primitives.NewCredentials(&input.PublicKey, &input.Salt)
-	if err != nil {
-		return nil, err
-	}
-
-	service, err := primitives.NewService(input.Email, input.Type, input.Endpoint, creds)
+	service, err := primitives.NewService(input.Email, input.Type, input.Endpoint)
 	if err != nil {
 		return nil, err
 	}

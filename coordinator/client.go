@@ -867,8 +867,6 @@ func (c *Client) CreateService(ctx context.Context, service *primitives.Service)
 
 	variables := make(map[string]interface{})
 	variables["email"] = service.Email
-	variables["public_key"] = service.Credentials.PublicKey
-	variables["salt"] = service.Credentials.Salt
 	variables["type"] = service.Type
 
 	variables["endpoint"] = nil
@@ -877,8 +875,8 @@ func (c *Client) CreateService(ctx context.Context, service *primitives.Service)
 	}
 
 	err := c.transport.Raw(ctx, `
-		mutation CreateService($email: Email!, $type: ServiceType!, $endpoint: URL, $public_key: Base64!, $salt: Base64!) {
-			createService(input: { email: $email, type: $type, endpoint: $endpoint, public_key: $public_key, salt: $salt, alg: "EDDSA"}) {
+		mutation CreateService($email: Email!, $type: ServiceType!, $endpoint: URL) {
+			createService(input: { email: $email, type: $type, endpoint: $endpoint }) {
 				id
 				email
 				type
