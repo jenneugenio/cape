@@ -56,6 +56,10 @@ func NewUser(name Name, email Email, creds *Credentials) (*User, error) {
 	return user, user.Validate()
 }
 
+func (u *User) GetIdentityID() database.ID {
+	return u.ID
+}
+
 // GetCredentials satisfies Identity interface
 func (u *User) GetCredentials() (*Credentials, error) {
 	return u.Credentials, nil

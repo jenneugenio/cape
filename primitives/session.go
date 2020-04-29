@@ -22,6 +22,7 @@ type AuthCredentials struct {
 type Session struct {
 	*database.Primitive
 	IdentityID database.ID   `json:"identity_id"`
+	OwnerID    database.ID   `json:"owner_id"`
 	ExpiresAt  time.Time     `json:"expires_at"`
 	Type       TokenType     `json:"type"`
 	Token      *base64.Value `json:"token"`
@@ -64,7 +65,8 @@ func NewSession(identity CredentialProvider, expiresAt time.Time, typ TokenType,
 
 	session := &Session{
 		Primitive:  p,
-		IdentityID: identity.GetID(),
+		IdentityID: identity.GetIdentityID(),
+		OwnerID:    identity.GetID(),
 		ExpiresAt:  expiresAt,
 		Type:       typ,
 		Token:      token,

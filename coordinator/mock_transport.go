@@ -30,7 +30,7 @@ func (m MockTransport) Authenticated() bool {
 	return true
 }
 
-// Login implements Login on the Transport interface
+// EmailLogin implements EmailLogin on the Transport interface
 func (m MockTransport) Login(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
 	panic("Not Implemented")
 }

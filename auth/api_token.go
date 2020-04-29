@@ -42,7 +42,7 @@ type APIToken struct {
 }
 
 // NewAPIToken returns a new api token from email and url
-func NewAPIToken(tokenCredentialID database.ID, u *primitives.URL) (*APIToken, error) {
+func NewAPIToken(secret Secret, tokenCredentialID database.ID, u *primitives.URL) (*APIToken, error) {
 	secretBytes := make([]byte, secretBytes)
 	_, err := rand.Read(secretBytes)
 	if err != nil {
@@ -53,7 +53,7 @@ func NewAPIToken(tokenCredentialID database.ID, u *primitives.URL) (*APIToken, e
 		TokenCredentialID: tokenCredentialID,
 		URL:               u,
 		Version:           tokenVersion,
-		Secret:            secretBytes,
+		Secret:            secret,
 	}, nil
 }
 
@@ -151,17 +151,8 @@ func ParseAPIToken(in string) (*APIToken, error) {
 	return token, nil
 }
 
-func RandomCredentials() (*Credentials, error) {
+func RandomSecret() (Secret, error) {
 	secret := make([]byte, secretBytes)
 	_, err := rand.Read(secret)
-	if err != nil {
-		return nil, err
-	}
-
-	creds, err := NewCredentials(secret, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return creds, nil
+	return secret, err
 }

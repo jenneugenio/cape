@@ -46,7 +46,7 @@ func loginCmd(c *cli.Context) error {
 		return err
 	}
 
-	session, err := client.Login(c.Context, email, password.Bytes())
+	session, err := client.EmailLogin(c.Context, email, password.Bytes())
 	if err != nil {
 		return err
 	}

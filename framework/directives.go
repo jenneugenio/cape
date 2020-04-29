@@ -42,36 +42,36 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			return nil, ErrAuthentication
 		}
 
-		typ, err := session.IdentityID.Type()
+		typ, err := session.OwnerID.Type()
 		if err != nil {
-			msg := "Could not authenticate. Unable get identity type"
+			msg := "Could not authenticate. Unable get credentialProvider type"
 			logger.Info().Err(err).Msg(msg)
 			return nil, ErrAuthentication
 		}
 
-		var identity primitives.Identity
+		var credentialProvider primitives.CredentialProvider
 		if typ == primitives.UserType {
 			user := &primitives.User{}
 			err = db.Get(ctx, session.IdentityID, user)
 			if err != nil {
-				msg := "Could not authenticate. Unable to find identity"
+				msg := "Could not authenticate. Unable to find credentialProvider"
 				logger.Error().Err(err).Msg(msg)
 				return nil, ErrAuthentication
 			}
-			identity = user
-		} else if typ == primitives.ServicePrimitiveType {
-			service := &primitives.Service{}
-			err = db.Get(ctx, session.IdentityID, service)
+			credentialProvider = user
+		} else if typ == primitives.TokenPrimitiveType {
+			token := &primitives.TokenCredentials{}
+			err = db.Get(ctx, session.OwnerID, token)
 			if err != nil {
-				msg := "Could not authenticate. Unable to find identity"
+				msg := "Could not authenticate. Unable to find credentialProvider"
 				logger.Error().Err(err).Msg(msg)
 				return nil, ErrAuthentication
 			}
-			identity = service
+			credentialProvider = token
 		}
 
 		ctx = context.WithValue(ctx, SessionContextKey, session)
-		ctx = context.WithValue(ctx, CredentialProviderContextKey, identity)
+		ctx = context.WithValue(ctx, CredentialProviderContextKey, credentialProvider)
 
 		return next(ctx)
 	}

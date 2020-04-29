@@ -114,5 +114,5 @@ type RemoveSourceRequest struct {
 }
 
 type TokenLoginSessionRequest struct {
-	TokenID database.ID `json:"tokenId"`
+	TokenID database.ID `json:"token_id"`
 }

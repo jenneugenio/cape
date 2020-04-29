@@ -54,7 +54,7 @@ func TestSetup(t *testing.T) {
 		gm.Expect(admin.Name).To(gm.Equal(user.Name))
 		gm.Expect(admin.Email).To(gm.Equal(user.Email))
 
-		_, err = client.Login(ctx, admin.Email, password)
+		_, err = client.EmailLogin(ctx, admin.Email, password)
 		gm.Expect(err).To(gm.BeNil())
 
 		roles, err := client.ListRoles(ctx)

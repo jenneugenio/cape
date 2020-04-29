@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
@@ -201,7 +202,6 @@ func (r *mutationResolver) CreateEmailLoginSession(ctx context.Context, input mo
 	return session, nil
 }
 
-// TODO -- this is super similar to CreateEmailLoginSession
 func (r *mutationResolver) CreateTokenLoginSession(ctx context.Context, input model.TokenLoginSessionRequest) (*primitives.Session, error) {
 	isFakeIdentity := false
 	provider, err := queryTokenProvider(ctx, r.Backend, input.TokenID)

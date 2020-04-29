@@ -12,7 +12,7 @@ import (
 type TokenType string
 
 var (
-	// Login is the session type used during the login flow
+	// EmailLogin is the session type used during the login flow
 	Login TokenType = "LOGIN"
 	// Authenticated is the session type used on normal API calls
 	Authenticated TokenType = "AUTHENTICATED"

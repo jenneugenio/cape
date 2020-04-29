@@ -148,6 +148,7 @@ type ComplexityRoot struct {
 		ExpiresAt   func(childComplexity int) int
 		ID          func(childComplexity int) int
 		IdentityID  func(childComplexity int) int
+		OwnerID     func(childComplexity int) int
 		Token       func(childComplexity int) int
 		Type        func(childComplexity int) int
 	}
@@ -912,6 +913,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Session.IdentityID(childComplexity), true
 
+	case "Session.owner_id":
+		if e.complexity.Session.OwnerID == nil {
+			break
+		}
+
+		return e.complexity.Session.OwnerID(childComplexity), true
+
 	case "Session.token":
 		if e.complexity.Session.Token == nil {
 			break
@@ -1243,6 +1251,7 @@ type User implements Identity {
 type Session {
   id: ID!
   identity_id: ID!
+  owner_id: ID!
   expires_at: Time!
   type: TokenType!
   token: Base64!
@@ -1289,7 +1298,7 @@ input EmailLoginSessionRequest {
 }
 
 input TokenLoginSessionRequest {
-  tokenId: ID!
+  token_id: ID!
 }
 
 input AuthSessionRequest {
@@ -5370,6 +5379,40 @@ func (ec *executionContext) _Session_identity_id(ctx context.Context, field grap
 	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Session_owner_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Session) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Session",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OwnerID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(database.ID)
+	fc.Result = res
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Session_expires_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Session) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7519,7 +7562,7 @@ func (ec *executionContext) unmarshalInputTokenLoginSessionRequest(ctx context.C
 
 	for k, v := range asMap {
 		switch k {
-		case "tokenId":
+		case "token_id":
 			var err error
 			it.TokenID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
@@ -8242,6 +8285,11 @@ func (ec *executionContext) _Session(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "identity_id":
 			out.Values[i] = ec._Session_identity_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "owner_id":
+			out.Values[i] = ec._Session_owner_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

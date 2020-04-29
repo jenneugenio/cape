@@ -87,7 +87,7 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 		Password: pw,
 	}
 
-	session, err := client.Login(ctx, email, pw)
+	session, err := client.EmailLogin(ctx, email, pw)
 	if err != nil {
 		return nil, err
 	}

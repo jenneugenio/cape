@@ -59,7 +59,7 @@ func (c *Coordinator) authenticateClient(ctx context.Context) error {
 		return nil
 	}
 
-	_, err := c.Login(ctx, c.token.Email, c.token.Secret)
+	_, err := c.EmailLogin(ctx, c.token.Email, c.token.Secret)
 	if err != nil {
 		c.logger.Info().Msgf("Unable to log into the coordinator at %s. Err: %s", c.token.URL, err)
 		return err

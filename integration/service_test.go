@@ -258,7 +258,7 @@ func TestServiceLogin(t *testing.T) {
 	serviceClient, err := h.Client()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = serviceClient.Login(ctx, token.Email, token.Secret)
+	_, err = serviceClient.EmailLogin(ctx, token.Email, token.Secret)
 	gm.Expect(err).To(gm.BeNil())
 
 	sources, err := serviceClient.ListSources(ctx)

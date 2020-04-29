@@ -13,6 +13,8 @@ type Transport interface {
 	Authenticated() bool
 	URL() *primitives.URL
 
-	Login(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error)
+	EmailLogin(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error)
+	TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*primitives.Session, error)
+
 	Logout(ctx context.Context, authToken *base64.Value) error
 }

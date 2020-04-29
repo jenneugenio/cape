@@ -22,6 +22,10 @@ func (tc *TokenCredentials) Validate() error {
 	return nil
 }
 
+func (tc *TokenCredentials) GetIdentityID() database.ID {
+	return tc.IdentityID
+}
+
 func (tc *TokenCredentials) GetCredentials() (*Credentials, error) {
 	return NewCredentials(tc.PublicKey, tc.Salt)
 }

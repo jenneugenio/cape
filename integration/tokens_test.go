@@ -30,9 +30,23 @@ func TestTokens(t *testing.T) {
 	t.Run("Create a token", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		token, err := client.NewToken(ctx, nil)
+		token, err := client.NewToken(ctx, m.Admin.User)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(token).ToNot(gm.BeNil())
+	})
+
+	t.Run("Can login with a token", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		token, err := client.NewToken(ctx, m.Admin.User)
 		gm.Expect(err).To(gm.BeNil())
 
-		fmt.Println("make a token!", token)
+		err = client.Logout(ctx, m.Admin.Token)
+		gm.Expect(err).To(gm.BeNil())
+
+		session, err := client.TokenLogin(ctx, token)
+		gm.Expect(err).To(gm.BeNil())
+
+		fmt.Println("wow", session)
 	})
 }

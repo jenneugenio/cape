@@ -43,19 +43,52 @@ func NewTransport(coordinatorURL *primitives.URL, authToken *base64.Value) Trans
 	}
 }
 
-// createLoginSession runs a CreateLoginSession mutation that creates a
+// createEmailLoginSession runs a CreateLoginSession mutation that creates a
 // login session and returns it and also sets it on the
-func (c *ClientTransport) createLoginSession(ctx context.Context, email primitives.Email) (*primitives.Session, error) {
+func (c *ClientTransport) createTokenLoginSession(ctx context.Context, token *auth.APIToken) (*primitives.Session, error) {
 	var resp struct {
-		Session primitives.Session `json:"createLoginSession"`
+		Session primitives.Session `json:"createTokenLoginSession"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["token_id"] = token.TokenCredentialID
+
+	err := c.Raw(ctx, `
+		mutation CreateTokenLoginSession($token_id: ID!) {
+			createTokenLoginSession(input: { token_id: $token_id }) {
+				id
+				identity_id
+				expires_at
+				type
+				token
+				credentials {
+					salt
+					alg
+				}
+			}
+		}
+	`, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Session, nil
+}
+
+// createEmailLoginSession runs a CreateLoginSession mutation that creates a
+// login session and returns it and also sets it on the
+func (c *ClientTransport) createEmailLoginSession(ctx context.Context, email primitives.Email) (*primitives.Session, error) {
+	var resp struct {
+		Session primitives.Session `json:"createEmailLoginSession"`
 	}
 
 	variables := make(map[string]interface{})
 	variables["email"] = email
 
 	err := c.Raw(ctx, `
-		mutation CreateLoginSession($email: Email!) {
-			createLoginSession(input: { email: $email }) {
+		mutation CreateEmailLoginSession($email: Email!) {
+			createEmailLoginSession(input: { email: $email }) {
 				id
 				identity_id
 				expires_at
@@ -134,8 +167,36 @@ func (c *ClientTransport) Raw(ctx context.Context, query string, variables map[s
 	return nil
 }
 
-func (c *ClientTransport) Login(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
-	session, err := c.createLoginSession(ctx, email)
+func (c *ClientTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*primitives.Session, error) {
+	session, err := c.createTokenLoginSession(ctx, apiToken)
+	if err != nil {
+		return nil, err
+	}
+
+	c.authToken = session.Token
+
+	creds, err := auth.NewCredentials(apiToken.Secret, session.Credentials.Salt)
+	if err != nil {
+		return nil, err
+	}
+
+	sig, err := creds.Sign(c.authToken)
+	if err != nil {
+		return nil, err
+	}
+
+	session, err = c.createAuthSession(ctx, sig)
+	if err != nil {
+		return nil, err
+	}
+
+	c.authToken = session.Token
+
+	return session, nil
+}
+
+func (c *ClientTransport) EmailLogin(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
+	session, err := c.createEmailLoginSession(ctx, email)
 	if err != nil {
 		return nil, err
 	}
@@ -294,10 +355,13 @@ func (c *Client) Authenticated() bool {
 	return c.transport.Authenticated()
 }
 
-// Login calls the CreateLoginSession and CreateAuthSession
-// mutations
-func (c *Client) Login(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
-	return c.transport.Login(ctx, email, password)
+// EmailLogin calls the CreateLoginSession and CreateAuthSession mutations
+func (c *Client) EmailLogin(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
+	return c.transport.EmailLogin(ctx, email, password)
+}
+
+func (c *Client) TokenLogin(ctx context.Context, token *auth.APIToken) (*primitives.Session, error) {
+	return c.transport.TokenLogin(ctx, token)
 }
 
 // Logout calls the deleteSession mutation
@@ -1148,7 +1212,7 @@ func (c *Client) GetIdentities(ctx context.Context, emails []primitives.Email) (
 	return clientIdentitiesToPrimitive(resp.Identities)
 }
 
-func (c *Client) NewToken(ctx context.Context, identity primitives.Identity, credentials *auth.Credentials) (*auth.APIToken, error) {
+func (c *Client) NewToken(ctx context.Context, identity primitives.Identity) (*auth.APIToken, error) {
 	// If the user provides no identity, we will make a token for the current session user
 	if identity == nil {
 		i, err := c.Me(ctx)
@@ -1159,7 +1223,17 @@ func (c *Client) NewToken(ctx context.Context, identity primitives.Identity, cre
 		identity = i
 	}
 
-	pCreds, err := credentials.Package()
+	secret, err := auth.RandomSecret()
+	if err != nil {
+		return nil, err
+	}
+
+	creds, err := auth.NewCredentials(secret, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	pCreds, err := creds.Package()
 	if err != nil {
 		return nil, err
 	}
@@ -1187,6 +1261,6 @@ func (c *Client) NewToken(ctx context.Context, identity primitives.Identity, cre
         }
     `, variables, &resp)
 
-	token, err := auth.NewAPIToken(resp.Credentials.ID, c.transport.URL())
+	token, err := auth.NewAPIToken(secret, resp.Credentials.ID, c.transport.URL())
 	return token, err
 }
