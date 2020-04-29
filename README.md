@@ -18,26 +18,65 @@ TODO
 
 ## Getting Started
 
-You can install everything you need with ```make bootstrap```. We also leverage helm to run the database with tilt (see below).
-If you do not have helm you can install it with ```make bootstrap-local-dev```.
+TODO
 
 ## Development
 
-Cape requires go1.14.X to build and run the executable. You can follow the official instructions to install it [here](https://golang.org/doc/install) or use [gvm](https://github.com/moovweb/gvm) to manage multiple go installations.
+In the following section we describe how to setup your environment so you can
+develop Cape itself locally including how to test, build, and deploy Cape to a
+local kubernetes cluster.
 
-We're using [Github Actions](https://github.com/features/actions) to automate our CI/CD. To test basic CI locally you can run the following command:
+### Getting Started
+
+To get up and running with contributing to Cape or to run Cape locally using
+our development tooling you will need to have the following dependencies
+installed:
+
+- [git](https://git-scm.com/) (version 2.0+)
+- [docker](https://docs.docker.com/get-docker/) (version 18.0+)
+- [golang](https://golang.org/doc/install) (version 1.14+)
+
+In addition, if you plan on running tests or building Cape outside of a docker
+container, you'll need to install:
+
+- [protoc](https://developers.google.com/protocol-buffers/docs/downloads) (version 3.11.4+)
+
+Once you have the base dependencies available on your system you can bootstrap
+your local environment by running:
 
 ```
-make ci
+$ go run bootstrap.go bootstrap
 ```
 
-If this passes than this should also pass on Github Actions.
+This will install any additional local dependencies and check that your system
+has everything installed to build and deploy Cape to your local environment.
 
-To test Docker image building you can run:
+To see a list of all local development options please run `mage -l` in the root
+of the repository.
+
+At any time, you can run `mage check` to check the status of your local
+development environment.
+
+### Building
+
+Once your development environment is bootstrapped you can build the Cape binary
+by running the following command:
 
 ```
-make docker
+$ mage build:binary
 ```
+
+This will output the cape binary to `bin/cape`.
+
+### Testing
+
+You can run the full test suite locally through mage by running `mage test:ci`.
+For these tests to pass you must have an instance of postgres running that is
+connectable and configured. See the list of testing commands via `mage -l`.
+
+We're using [GitHub Actions](https://github.com/features/actions) to automate
+our continus integration and delivery suite which invokes `mage test:ci` to
+determine the state of the build.
 
 ### Tilt
 

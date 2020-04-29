@@ -1,7 +1,10 @@
 FROM capeprivacy/base:latest
 
+ENV VERSION="0.0.0"
+
 COPY . ./
-RUN make build
+
+RUN mage build:binary
 
 # We copy the built binary into a new alpine container so we can package a
 # container with the smallest footprint possible

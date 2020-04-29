@@ -27,6 +27,6 @@ func TestVersionHandler(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	gm.Expect(v.InstanceID).To(gm.Equal("cape-hi"))
-	gm.Expect(v.Version).To(gm.Equal("dev"))
+	gm.Expect(v.Version).To(gm.Equal("0.0.0"))
 	gm.Expect(v.BuildDate).To(gm.Equal("never"))
 }
