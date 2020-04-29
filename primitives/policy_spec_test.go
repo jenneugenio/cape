@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	gm "github.com/onsi/gomega"
+
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func loadPolicy(file string) ([]byte, error) {
@@ -91,7 +93,7 @@ func TestPolicySpecRuleSudo(t *testing.T) {
 
 func TestPolicySpecValidation(t *testing.T) {
 	gm.RegisterTestingT(t)
-	t.Run("cannot specify a where & fields clause in the same rule", func(t *testing.T) {
+	t.Run("cannot specify a where & fields clause in the same rule for records", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 		spec := &PolicySpec{
 			Version: PolicyVersion(1),
@@ -113,6 +115,29 @@ func TestPolicySpecValidation(t *testing.T) {
 		err := spec.Validate()
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(err.Error()).To(gm.Equal("invalid_policy_spec: Fields & Where cannot be specified on the same rule"))
+	})
+
+	t.Run("cannot specify a where or fields clause for internal policies", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+		spec := &PolicySpec{
+			Version: PolicyVersion(1),
+			Label:   "protect-users",
+			Rules: []*Rule{
+				{
+					Target: "internal:users.*",
+					Action: Read,
+					Effect: Deny,
+					Fields: []Field{"FIELD"},
+					Where: []Where{
+						{"HEY": "HELLO"},
+					},
+				},
+			},
+		}
+
+		err := spec.Validate()
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(errors.CausedBy(err, InvalidPolicySpecCause)).To(gm.BeTrue())
 	})
 }
 

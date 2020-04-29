@@ -4,6 +4,8 @@ import (
 	"fmt"
 	gm "github.com/onsi/gomega"
 	"testing"
+
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func TestTarget(t *testing.T) {
@@ -27,7 +29,7 @@ func TestTarget(t *testing.T) {
 		t.Run(fmt.Sprintf("Invalid target: %s", invalid), func(t *testing.T) {
 			gm.RegisterTestingT(t)
 			_, err := NewTarget(invalid)
-			gm.Expect(err.Error()).To(gm.Equal("invalid_target: Target must be in the form <type>:<collection>.<entity>"))
+			gm.Expect(errors.CausedBy(err, InvalidTargetCause)).To(gm.BeTrue())
 		})
 	}
 }
@@ -52,6 +54,8 @@ func TestCollectionWildcard(t *testing.T) {
 	gm.RegisterTestingT(t)
 	target, err := NewTarget("records:*")
 	gm.Expect(err).To(gm.BeNil())
+
+	gm.Expect(target.Type()).To(gm.Equal(Records))
 	gm.Expect(target.Collection().String()).To(gm.Equal("*"))
 	gm.Expect(target.Entity().String()).To(gm.Equal("*"))
 }
@@ -60,6 +64,18 @@ func TestEntityWildcard(t *testing.T) {
 	gm.RegisterTestingT(t)
 	target, err := NewTarget("records:mycollection.*")
 	gm.Expect(err).To(gm.BeNil())
+
+	gm.Expect(target.Type()).To(gm.Equal(Records))
 	gm.Expect(target.Collection().String()).To(gm.Equal("mycollection"))
+	gm.Expect(target.Entity().String()).To(gm.Equal("*"))
+}
+
+func TestInternalCollection(t *testing.T) {
+	gm.RegisterTestingT(t)
+	target, err := NewTarget("internal:users.*")
+	gm.Expect(err).To(gm.BeNil())
+
+	gm.Expect(target.Type()).To(gm.Equal(Internal))
+	gm.Expect(target.Collection().String()).To(gm.Equal("users"))
 	gm.Expect(target.Entity().String()).To(gm.Equal("*"))
 }

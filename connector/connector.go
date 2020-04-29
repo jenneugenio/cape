@@ -119,7 +119,7 @@ func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 func handleCodes(err error) codes.Code {
 	if err == nil {
 		return codes.OK
-	} else if errors.CausedBy(err, framework.AuthorizationFailure) {
+	} else if errors.CausedBy(err, auth.AuthorizationFailure) {
 		return codes.PermissionDenied
 	} else if errors.CausedBy(err, auth.InvalidAuthHeader) {
 		return codes.Unauthenticated
