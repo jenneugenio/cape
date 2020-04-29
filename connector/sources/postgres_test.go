@@ -12,8 +12,8 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/connector/proto"
-	"github.com/capeprivacy/cape/database"
-	"github.com/capeprivacy/cape/database/dbtest"
+	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database/dbtest"
 	"github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/primitives"
 )

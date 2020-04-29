@@ -13,9 +13,9 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
-	"github.com/capeprivacy/cape/database"
 	"github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )

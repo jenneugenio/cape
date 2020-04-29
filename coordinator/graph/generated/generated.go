@@ -14,8 +14,8 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
-	"github.com/capeprivacy/cape/database"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/manifoldco/go-base64"
 	gqlparser "github.com/vektah/gqlparser/v2"
@@ -1600,7 +1600,7 @@ func (ec *executionContext) field_Query_attachment_args(ctx context.Context, raw
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["role_id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1608,7 +1608,7 @@ func (ec *executionContext) field_Query_attachment_args(ctx context.Context, raw
 	args["role_id"] = arg0
 	var arg1 database.ID
 	if tmp, ok := rawArgs["policy_id"]; ok {
-		arg1, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg1, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1636,7 +1636,7 @@ func (ec *executionContext) field_Query_identityPolicies_args(ctx context.Contex
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["identity_id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1664,7 +1664,7 @@ func (ec *executionContext) field_Query_policy_args(ctx context.Context, rawArgs
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1692,7 +1692,7 @@ func (ec *executionContext) field_Query_roleMembers_args(ctx context.Context, ra
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["role_id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1706,7 +1706,7 @@ func (ec *executionContext) field_Query_rolePolicies_args(ctx context.Context, r
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["role_id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1720,7 +1720,7 @@ func (ec *executionContext) field_Query_role_args(ctx context.Context, rawArgs m
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1748,7 +1748,7 @@ func (ec *executionContext) field_Query_service_args(ctx context.Context, rawArg
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1776,7 +1776,7 @@ func (ec *executionContext) field_Query_source_args(ctx context.Context, rawArgs
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1790,7 +1790,7 @@ func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs m
 	args := map[string]interface{}{}
 	var arg0 database.ID
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1866,7 +1866,7 @@ func (ec *executionContext) _Assignment_id(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Assignment_role(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
@@ -2036,7 +2036,7 @@ func (ec *executionContext) _Attachment_id(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Attachment_created_at(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
@@ -3310,7 +3310,7 @@ func (ec *executionContext) _Policy_id(ctx context.Context, field graphql.Collec
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Policy_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
@@ -4711,7 +4711,7 @@ func (ec *executionContext) _Role_id(ctx context.Context, field graphql.Collecte
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Role_label(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
@@ -4881,7 +4881,7 @@ func (ec *executionContext) _Service_id(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Service_email(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
@@ -5113,7 +5113,7 @@ func (ec *executionContext) _Session_id(ctx context.Context, field graphql.Colle
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Session_identity_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Session) (ret graphql.Marshaler) {
@@ -5147,7 +5147,7 @@ func (ec *executionContext) _Session_identity_id(ctx context.Context, field grap
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Session_expires_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Session) (ret graphql.Marshaler) {
@@ -5314,7 +5314,7 @@ func (ec *executionContext) _Source_id(ctx context.Context, field graphql.Collec
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Source_label(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
@@ -5478,7 +5478,7 @@ func (ec *executionContext) _Source_service_id(ctx context.Context, field graphq
 	}
 	res := resTmp.(*database.ID)
 	fc.Result = res
-	return ec.marshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_id(ctx context.Context, field graphql.CollectedField, obj *primitives.User) (ret graphql.Marshaler) {
@@ -5512,7 +5512,7 @@ func (ec *executionContext) _User_id(ctx context.Context, field graphql.Collecte
 	}
 	res := resTmp.(database.ID)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_name(ctx context.Context, field graphql.CollectedField, obj *primitives.User) (ret graphql.Marshaler) {
@@ -6757,7 +6757,7 @@ func (ec *executionContext) unmarshalInputAddSourceRequest(ctx context.Context, 
 			}
 		case "service_id":
 			var err error
-			it.ServiceID, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.ServiceID, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6775,13 +6775,13 @@ func (ec *executionContext) unmarshalInputAssignRoleRequest(ctx context.Context,
 		switch k {
 		case "role_id":
 			var err error
-			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "identity_id":
 			var err error
-			it.IdentityID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.IdentityID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6799,13 +6799,13 @@ func (ec *executionContext) unmarshalInputAttachPolicyRequest(ctx context.Contex
 		switch k {
 		case "policy_id":
 			var err error
-			it.PolicyID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.PolicyID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "role_id":
 			var err error
-			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6871,7 +6871,7 @@ func (ec *executionContext) unmarshalInputCreateRoleRequest(ctx context.Context,
 			}
 		case "identity_ids":
 			var err error
-			it.IdentityIds, err = ec.unmarshalOID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐIDᚄ(ctx, v)
+			it.IdentityIds, err = ec.unmarshalOID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐIDᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6937,7 +6937,7 @@ func (ec *executionContext) unmarshalInputDeletePolicyRequest(ctx context.Contex
 		switch k {
 		case "id":
 			var err error
-			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6955,7 +6955,7 @@ func (ec *executionContext) unmarshalInputDeleteRoleRequest(ctx context.Context,
 		switch k {
 		case "id":
 			var err error
-			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6973,7 +6973,7 @@ func (ec *executionContext) unmarshalInputDeleteServiceRequest(ctx context.Conte
 		switch k {
 		case "id":
 			var err error
-			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7009,13 +7009,13 @@ func (ec *executionContext) unmarshalInputDetachPolicyRequest(ctx context.Contex
 		switch k {
 		case "policy_id":
 			var err error
-			it.PolicyID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.PolicyID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "role_id":
 			var err error
-			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
+			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8387,12 +8387,12 @@ func (ec *executionContext) marshalNEmail2ᚖgithubᚗcomᚋcapeprivacyᚋcape�
 	return v
 }
 
-func (ec *executionContext) unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
+func (ec *executionContext) unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
 	var res database.ID
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v database.ID) graphql.Marshaler {
+func (ec *executionContext) marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v database.ID) graphql.Marshaler {
 	return v
 }
 
@@ -8955,16 +8955,16 @@ func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcap
 	return ret
 }
 
-func (ec *executionContext) unmarshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
+func (ec *executionContext) unmarshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
 	var res database.ID
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v database.ID) graphql.Marshaler {
+func (ec *executionContext) marshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v database.ID) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐIDᚄ(ctx context.Context, v interface{}) ([]database.ID, error) {
+func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐIDᚄ(ctx context.Context, v interface{}) ([]database.ID, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -8976,7 +8976,7 @@ func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋ
 	var err error
 	res := make([]database.ID, len(vSlice))
 	for i := range vSlice {
-		res[i], err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -8984,27 +8984,27 @@ func (ec *executionContext) unmarshalOID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋ
 	return res, nil
 }
 
-func (ec *executionContext) marshalOID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐIDᚄ(ctx context.Context, sel ast.SelectionSet, v []database.ID) graphql.Marshaler {
+func (ec *executionContext) marshalOID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐIDᚄ(ctx context.Context, sel ast.SelectionSet, v []database.ID) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	ret := make(graphql.Array, len(v))
 	for i := range v {
-		ret[i] = ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, sel, v[i])
+		ret[i] = ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, sel, v[i])
 	}
 
 	return ret
 }
 
-func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (*database.ID, error) {
+func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx context.Context, v interface{}) (*database.ID, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
+	res, err := ec.unmarshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v *database.ID) graphql.Marshaler {
+func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v *database.ID) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

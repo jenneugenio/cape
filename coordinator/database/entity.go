@@ -3,7 +3,7 @@ package database
 import (
 	"time"
 
-	"github.com/capeprivacy/cape/database/types"
+	"github.com/capeprivacy/cape/coordinator/database/types"
 )
 
 // Entity represents any primitive data structure stored inside the Coordinator.

@@ -9,8 +9,8 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/capeprivacy/cape/database/dbtest"
-	"github.com/capeprivacy/cape/database/types"
+	"github.com/capeprivacy/cape/coordinator/database/dbtest"
+	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 

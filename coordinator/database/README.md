@@ -11,7 +11,7 @@ A database is represented by a `Backend`.  This is probably the most important c
 
 ### `Entity`
 
-All objects we store in the data layer must satisfy the `Entity` interface. `Entity` represents any primitive data 
+All objects we store in the data layer must satisfy the `Entity` interface. `Entity` represents any primitive data
 structure stored inside the Coordinator.
 
 ### `Primitive`
@@ -51,6 +51,6 @@ gm.Expect(err).To(gm.BeNil())
 db, err := dbConnect(ctx, testDB)
 
 // db is a backend!
-``` 
+```
 
 See `postgres_backend_test.go` for more details.

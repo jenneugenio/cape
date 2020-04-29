@@ -6,8 +6,8 @@ import (
 	"github.com/manifoldco/go-base64"
 
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
-	"github.com/capeprivacy/cape/database"
 	"github.com/capeprivacy/cape/primitives"
 
 	"encoding/json"

@@ -1,5 +1,5 @@
 FROM capeprivacy/cape:latest
 
-COPY migrations ./
+COPY coordinator/migrations ./coordinator/migrations
 
 CMD ["./bin/cape", "update"]

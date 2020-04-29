@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/capeprivacy/cape/database/types"
+	"github.com/capeprivacy/cape/coordinator/database/types"
 )
 
 // buildInsert returns the values statement for a multi-value query

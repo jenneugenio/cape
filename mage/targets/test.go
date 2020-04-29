@@ -61,8 +61,8 @@ func (t Test) Integration(ctx context.Context) error {
 
 	env := mage.Env{
 		"CAPE_DB_URL":             "postgres://postgres:dev@localhost:5432/postgres?sslmode=disable",
-		"CAPE_DB_MIGRATIONS":      filepath.Join(wd, "migrations"),
-		"CAPE_DB_TEST_MIGRATIONS": filepath.Join(wd, "database/dbtest/migrations"),
+		"CAPE_DB_MIGRATIONS":      filepath.Join(wd, "coordinator/migrations"),
+		"CAPE_DB_TEST_MIGRATIONS": filepath.Join(wd, "coordinator/database/dbtest/migrations"),
 		"CAPE_DB_SEED_MIGRATIONS": filepath.Join(wd, "tools/seed"),
 	}
 	env.Source()

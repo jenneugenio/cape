@@ -5,7 +5,7 @@ package model
 import (
 	"time"
 
-	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/manifoldco/go-base64"
 )

@@ -3,8 +3,8 @@ package primitives
 import (
 	"time"
 
-	"github.com/capeprivacy/cape/database"
-	"github.com/capeprivacy/cape/database/types"
+	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
 
 	"github.com/manifoldco/go-base64"

@@ -4,7 +4,7 @@ package integration
 
 import (
 	"context"
-	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/coordinator/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"io/ioutil"
 	"testing"

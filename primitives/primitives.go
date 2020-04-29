@@ -3,7 +3,7 @@
 package primitives
 
 import (
-	"github.com/capeprivacy/cape/database/types"
+	"github.com/capeprivacy/cape/coordinator/database/types"
 )
 
 var (
