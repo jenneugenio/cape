@@ -214,7 +214,6 @@ func (r *mutationResolver) CreateTokenLoginSession(ctx context.Context, input mo
 		return nil, err
 	}
 
-	// TODO -- should this return a user or a token identity??
 	if err != nil && !errs.FromCause(err, database.NotFoundCause) {
 		logger.Info().Err(err).Msg("Could not authenticate. Error querying database")
 		return nil, fw.ErrAuthentication
