@@ -4,68 +4,37 @@ package integration
 
 import (
 	"context"
+	"github.com/manifoldco/go-base64"
 	"testing"
 
-	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 
-	connHarness "github.com/capeprivacy/cape/connector/harness"
-	"github.com/capeprivacy/cape/coordinator/harness"
-	"github.com/capeprivacy/cape/primitives"
+	"github.com/capeprivacy/cape/connector/harness"
 )
 
 func TestLogin(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-	cfg, err := harness.NewConfig()
+
+	s, err := harness.NewStack(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	h, err := harness.NewHarness(cfg)
-	gm.Expect(err)
+	defer s.Teardown(ctx)
 
-	err = h.Setup(ctx)
+	err = s.Manager.CreateSource(ctx, s.ConnHarness.SourceCredentials(), s.Manager.Connector.ID)
 	gm.Expect(err).To(gm.BeNil())
 
-	defer h.Teardown(ctx)
-
-	m := h.Manager()
-	_, err = m.Setup(ctx)
+	err = s.Manager.CreatePolicy(ctx, "./testdata/policy.yaml")
 	gm.Expect(err).To(gm.BeNil())
 
-	coordinatorURL, err := m.URL()
-	gm.Expect(err).To(gm.BeNil())
-
-	connCfg, err := connHarness.NewConfig(coordinatorURL)
-	gm.Expect(err).To(gm.BeNil())
-
-	connH, err := connHarness.NewHarness(connCfg)
-	gm.Expect(err).To(gm.BeNil())
-
-	err = connH.Setup(ctx)
-	gm.Expect(err).To(gm.BeNil())
-
-	defer connH.Teardown(ctx)
-
-	connectorURL, err := connH.URL()
-	gm.Expect(err).To(gm.BeNil())
-
-	err = m.CreateService(ctx, connHarness.ConnectorEmail, connH.APIToken(), connectorURL)
-	gm.Expect(err).To(gm.BeNil())
-
-	err = m.CreateSource(ctx, connH.SourceCredentials(), m.Connector.ID)
-	gm.Expect(err).To(gm.BeNil())
-
-	err = m.CreatePolicy(ctx, "./testdata/policy.yaml")
-	gm.Expect(err).To(gm.BeNil())
-
-	connClient, err := connH.Client(m.Admin.Token)
+	connClient, err := s.ConnHarness.Client(s.Manager.Admin.Token)
 	gm.Expect(err).To(gm.BeNil())
 
 	defer connClient.Close()
 
 	t.Run("can submit query that logs in", func(t *testing.T) {
-		stream, err := connClient.Query(ctx, m.TestSource.Label, "SELECT * FROM transactions", 50, 0)
+		stream, err := connClient.Query(ctx, s.Manager.TestSource.Label, "SELECT * FROM transactions", 50, 0)
 		gm.Expect(err).To(gm.BeNil())
 
 		defer stream.Close()
@@ -78,7 +47,7 @@ func TestLogin(t *testing.T) {
 	})
 
 	t.Run("can still submit query that logs in", func(t *testing.T) {
-		stream, err := connClient.Query(ctx, m.TestSource.Label, "SELECT * FROM transactions", 50, 0)
+		stream, err := connClient.Query(ctx, s.Manager.TestSource.Label, "SELECT * FROM transactions", 50, 0)
 		gm.Expect(err).To(gm.BeNil())
 
 		defer stream.Close()
@@ -95,22 +64,12 @@ func TestLoginFail(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-
-	url, err := primitives.NewURL("http://localhost:8080")
+	s, err := harness.NewStack(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	cfg, err := connHarness.NewConfig(url)
-	gm.Expect(err).To(gm.BeNil())
+	defer s.Teardown(ctx)
 
-	h, err := connHarness.NewHarness(cfg)
-	gm.Expect(err).To(gm.BeNil())
-
-	err = h.Setup(ctx)
-	gm.Expect(err).To(gm.BeNil())
-
-	defer h.Teardown(ctx)
-
-	connClient, err := h.Client(base64.New([]byte("abcdefgh")))
+	connClient, err := s.ConnHarness.Client(base64.New([]byte("abcdefgh")))
 	gm.Expect(err).To(gm.BeNil())
 
 	defer connClient.Close()

@@ -43,12 +43,6 @@ type APIToken struct {
 
 // NewAPIToken returns a new api token from email and url
 func NewAPIToken(secret Secret, tokenCredentialID database.ID, u *primitives.URL) (*APIToken, error) {
-	secretBytes := make([]byte, secretBytes)
-	_, err := rand.Read(secretBytes)
-	if err != nil {
-		return nil, err
-	}
-
 	return &APIToken{
 		TokenCredentialID: tokenCredentialID,
 		URL:               u,

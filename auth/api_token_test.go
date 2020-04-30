@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/capeprivacy/cape/database"
+	"github.com/manifoldco/go-base64"
 	"testing"
 
 	gm "github.com/onsi/gomega"
@@ -16,13 +17,18 @@ func TestAPIToken(t *testing.T) {
 	u, err := primitives.NewURL(host)
 	gm.Expect(err).To(gm.BeNil())
 
+	// So the ID doesn't change every test
+	// Originally generated with database.GenerateID(primitives.UserType)
 	userID, err := database.GenerateID(primitives.UserType)
 	gm.Expect(err).To(gm.BeNil())
 
 	secret, err := RandomSecret()
 	gm.Expect(err).To(gm.BeNil())
 
-	creds, err := NewCredentials(secret, nil)
+	salt, err := base64.NewFromString("AAYoFZmu0W8skw0ipGIM8g")
+	gm.Expect(err).To(gm.BeNil())
+
+	creds, err := NewCredentials(secret, salt)
 	gm.Expect(err).To(gm.BeNil())
 
 	pCreds, err := creds.Package()
@@ -63,10 +69,14 @@ func TestAPIToken(t *testing.T) {
 	})
 
 	t.Run("test unmarshal on raw string", func(t *testing.T) {
-		tokenStr := "2019e393djc7u39dzm9nevtb80,AWitj064DiOeJEVFQn6d_E5odHRwczovL215LmNvb3JkaW5hdG9yLmNvbQ"
+		writeToken, err := NewAPIToken(secret, tc.ID, u)
+		gm.Expect(err).To(gm.BeNil())
+
+		tokenStr, err := writeToken.Marshal()
+		gm.Expect(err).To(gm.BeNil())
 
 		token := &APIToken{}
-		err := token.Unmarshal(tokenStr)
+		err = token.Unmarshal(tokenStr)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(token.TokenCredentialID).To(gm.Equal(tc.ID))

@@ -42,7 +42,14 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			return nil, ErrAuthentication
 		}
 
-		typ, err := session.OwnerID.Type()
+		ownerType, err := session.OwnerID.Type()
+		if err != nil {
+			msg := "Could not authenticate. Unable get credentialProvider type"
+			logger.Info().Err(err).Msg(msg)
+			return nil, ErrAuthentication
+		}
+
+		identityType, err := session.IdentityID.Type()
 		if err != nil {
 			msg := "Could not authenticate. Unable get credentialProvider type"
 			logger.Info().Err(err).Msg(msg)
@@ -50,7 +57,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 		}
 
 		var credentialProvider primitives.CredentialProvider
-		if typ == primitives.UserType {
+		if ownerType == primitives.UserType {
 			user := &primitives.User{}
 			err = db.Get(ctx, session.IdentityID, user)
 			if err != nil {
@@ -59,7 +66,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 				return nil, ErrAuthentication
 			}
 			credentialProvider = user
-		} else if typ == primitives.TokenPrimitiveType {
+		} else if ownerType == primitives.TokenPrimitiveType {
 			token := &primitives.TokenCredentials{}
 			err = db.Get(ctx, session.OwnerID, token)
 			if err != nil {
@@ -70,6 +77,28 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			credentialProvider = token
 		}
 
+		var identity primitives.Identity
+		if identityType == primitives.UserType {
+			user := &primitives.User{}
+			err = db.Get(ctx, session.IdentityID, user)
+			if err != nil {
+				msg := "Could not authenticate. Unable to find identity"
+				logger.Error().Err(err).Msg(msg)
+				return nil, ErrAuthentication
+			}
+			identity = user
+		} else if identityType == primitives.ServicePrimitiveType {
+			service := &primitives.Service{}
+			err = db.Get(ctx, session.IdentityID, service)
+			if err != nil {
+				msg := "Could not authenticate. Unable to find identity"
+				logger.Error().Err(err).Msg(msg)
+				return nil, ErrAuthentication
+			}
+			identity = service
+		}
+
+		ctx = context.WithValue(ctx, IdentityContextKey, identity)
 		ctx = context.WithValue(ctx, SessionContextKey, session)
 		ctx = context.WithValue(ctx, CredentialProviderContextKey, credentialProvider)
 
