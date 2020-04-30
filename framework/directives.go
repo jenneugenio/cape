@@ -53,7 +53,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 		if err != nil {
 			msg := "Could not authenticate. Unable get credentialProvider type"
 			logger.Info().Err(err).Msg(msg)
-			return nil, ErrAuthentication
+			return nil, auth.ErrAuthentication
 		}
 
 		var credentialProvider primitives.CredentialProvider
@@ -63,7 +63,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			if err != nil {
 				msg := "Could not authenticate. Unable to find credentialProvider"
 				logger.Error().Err(err).Msg(msg)
-				return nil, ErrAuthentication
+				return nil, auth.ErrAuthentication
 			}
 			credentialProvider = user
 		} else if ownerType == primitives.TokenPrimitiveType {
@@ -72,7 +72,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			if err != nil {
 				msg := "Could not authenticate. Unable to find credentialProvider"
 				logger.Error().Err(err).Msg(msg)
-				return nil, ErrAuthentication
+				return nil, auth.ErrAuthentication
 			}
 			credentialProvider = token
 		}
