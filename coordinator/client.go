@@ -43,8 +43,8 @@ func NewTransport(coordinatorURL *primitives.URL, authToken *base64.Value) Trans
 	}
 }
 
-// createEmailLoginSession runs a CreateLoginSession mutation that creates a
-// login session and returns it and also sets it on the
+// createTokenLoginSession runs a CreateTokenLoginSession mutation that creates a
+// login session and returns it
 func (c *ClientTransport) createTokenLoginSession(ctx context.Context, token *auth.APIToken) (*primitives.Session, error) {
 	var resp struct {
 		Session primitives.Session `json:"createTokenLoginSession"`
@@ -77,7 +77,7 @@ func (c *ClientTransport) createTokenLoginSession(ctx context.Context, token *au
 }
 
 // createEmailLoginSession runs a CreateLoginSession mutation that creates a
-// login session and returns it and also sets it on the
+// login session and returns it
 func (c *ClientTransport) createEmailLoginSession(ctx context.Context, email primitives.Email) (*primitives.Session, error) {
 	var resp struct {
 		Session primitives.Session `json:"createEmailLoginSession"`
@@ -167,6 +167,7 @@ func (c *ClientTransport) Raw(ctx context.Context, query string, variables map[s
 	return nil
 }
 
+// TokenLogin starts step 1 of the login flow using an API token
 func (c *ClientTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*primitives.Session, error) {
 	session, err := c.createTokenLoginSession(ctx, apiToken)
 	if err != nil {
@@ -195,6 +196,7 @@ func (c *ClientTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToke
 	return session, nil
 }
 
+// EmailLogin starts step 1 of the login flow using an email & password
 func (c *ClientTransport) EmailLogin(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
 	session, err := c.createEmailLoginSession(ctx, email)
 	if err != nil {
@@ -223,6 +225,7 @@ func (c *ClientTransport) EmailLogin(ctx context.Context, email primitives.Email
 	return session, nil
 }
 
+// Logout of the active session
 func (c *ClientTransport) Logout(ctx context.Context, authToken *base64.Value) error {
 	token := authToken
 	if authToken == nil {
@@ -1210,6 +1213,7 @@ func (c *Client) GetIdentities(ctx context.Context, emails []primitives.Email) (
 	return clientIdentitiesToPrimitive(resp.Identities)
 }
 
+// NewToken creates a new API token for the provided identity. You can pass nil and it will return a token for you
 func (c *Client) NewToken(ctx context.Context, identity primitives.Identity) (*auth.APIToken, error) {
 	// If the user provides no identity, we will make a token for the current session user
 	if identity == nil {

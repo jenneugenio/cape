@@ -20,7 +20,7 @@ import (
 )
 
 // ConnectorEmail is the email of the connector
-const ConnectorEmail = "service:data-connector@cape.com"
+ConnectorEmail = primitives.URL("service:data-connector@cape.com")
 
 var (
 	// TimeoutCause the connector took to long to start

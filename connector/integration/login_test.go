@@ -50,7 +50,7 @@ func TestLogin(t *testing.T) {
 	connectorURL, err := connH.URL()
 	gm.Expect(err).To(gm.BeNil())
 
-	err = m.CreateService(ctx, connH.APIToken(), connectorURL)
+	err = m.CreateService(ctx, connHarness.ConnectorEmail, connH.APIToken(), connectorURL)
 	gm.Expect(err).To(gm.BeNil())
 
 	err = m.CreateSource(ctx, connH.SourceCredentials(), m.Connector.ID)

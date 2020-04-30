@@ -129,7 +129,6 @@ func servicesCreateCmd(c *cli.Context) error {
 
 	email := Arguments(c.Context, ServiceIdentifierArg).(primitives.Email)
 
-	// TODO -- services need to lose credentials
 	service, err := primitives.NewService(email, typ, endpoint)
 	if err != nil {
 		return err
