@@ -40,16 +40,13 @@ func Check(ctx context.Context) error {
 func Clean(ctx context.Context) error {
 	deps := mage.Dependencies.List()
 
-	// TODO: introduce a "force" where if we encounter an error we record it
-	// but keep going.
-	//
-	// A multi-error type will be required to manage this appropriately.
-	err := mage.Tracker.Clean(ctx)
-	if err != nil {
-		return err
-	}
-
-	return mage.Dependencies.Run(deps, func(d mage.Dependency) error {
+	// We collect all of the errors that occurred and don't report them until
+	// the end. This way we can clean up everything to the best of our ability.
+	errors := mage.NewErrors()
+	errors.Append(mage.Tracker.Clean(ctx))
+	errors.Append(mage.Dependencies.Run(deps, func(d mage.Dependency) error {
 		return d.Clean(ctx)
-	})
+	}))
+
+	return errors.Err()
 }
