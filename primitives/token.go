@@ -29,7 +29,7 @@ func (t *Token) GetType() types.Type {
 	return TokenPrimitiveType
 }
 
-// NewToken returns an immutable token struct
+// CreateToken returns an immutable token struct
 func NewToken(identityID database.ID) (*Token, error) {
 	p, err := database.NewPrimitive(TokenPrimitiveType)
 	if err != nil {

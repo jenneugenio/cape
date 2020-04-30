@@ -232,7 +232,7 @@ func TestServiceLogin(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(service.Email).To(gm.Equal(email))
 
-	token, err := client.NewToken(ctx, service)
+	token, err := client.CreateToken(ctx, service)
 	gm.Expect(err).To(gm.BeNil())
 
 	serviceClient, err := h.Client()

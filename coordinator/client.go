@@ -1213,8 +1213,8 @@ func (c *Client) GetIdentities(ctx context.Context, emails []primitives.Email) (
 	return clientIdentitiesToPrimitive(resp.Identities)
 }
 
-// NewToken creates a new API token for the provided identity. You can pass nil and it will return a token for you
-func (c *Client) NewToken(ctx context.Context, identity primitives.Identity) (*auth.APIToken, error) {
+// CreateToken creates a new API token for the provided identity. You can pass nil and it will return a token for you
+func (c *Client) CreateToken(ctx context.Context, identity primitives.Identity) (*auth.APIToken, error) {
 	// If the user provides no identity, we will make a token for the current session user
 	if identity == nil {
 		i, err := c.Me(ctx)

@@ -130,7 +130,7 @@ func (m *Manager) CreateService(ctx context.Context, email string, serviceURL *p
 		return err
 	}
 
-	token, err := m.Admin.Client.NewToken(ctx, service)
+	token, err := m.Admin.Client.CreateToken(ctx, service)
 	if err != nil {
 		return err
 	}
