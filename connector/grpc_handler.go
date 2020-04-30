@@ -5,9 +5,9 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/capeprivacy/cape/auth"
 	pb "github.com/capeprivacy/cape/connector/proto"
 	"github.com/capeprivacy/cape/connector/sources"
-	"github.com/capeprivacy/cape/framework"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/policy"
 	"github.com/capeprivacy/cape/primitives"
@@ -39,7 +39,7 @@ func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_
 	}
 
 	if len(policies) == 0 {
-		return framework.ErrAuthorization
+		return auth.ErrAuthorization
 	}
 
 	dataSource, err := primitives.NewLabel(req.GetDataSource())

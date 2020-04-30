@@ -1,11 +1,13 @@
 package policy
 
 import (
+	"testing"
+
+	gm "github.com/onsi/gomega"
+
 	"github.com/capeprivacy/cape/connector/proto"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/capeprivacy/cape/query"
-	gm "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestEvaluator(t *testing.T) {
@@ -35,7 +37,7 @@ func TestEvaluator(t *testing.T) {
 
 		evaluator := NewEvaluator(q, schema, make([]*primitives.Policy, 0)...)
 		_, err = evaluator.Evaluate()
-		gm.Expect(err.Error()).To(gm.Equal("access_denied: No policies match the provided query"))
+		gm.Expect(err.Error()).To(gm.Equal("authorization_failure: No policies match the provided query"))
 	})
 
 	t.Run("Fails if there are policies attached but none match", func(t *testing.T) {

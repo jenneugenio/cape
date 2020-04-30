@@ -4,5 +4,8 @@ package primitives
 type Action string
 
 const (
-	Read Action = "read"
+	Create Action = "create"
+	Read   Action = "read"
+	Update Action = "update"
+	Delete Action = "delete"
 )

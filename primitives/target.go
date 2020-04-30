@@ -10,8 +10,16 @@ import (
 // or <target>:*
 //
 // If the fully specified regex fails, we will try against the other wildcard regex
-var fullySpecifiedRegex = regexp.MustCompile(`^records:(.*)\.(.*)+$`)
-var collectionWildcardRegex = regexp.MustCompile(`^records:(\*)$`)
+var fullySpecifiedRegex = regexp.MustCompile(`^(.*):(.*)\.(.*)+$`)
+var collectionWildcardRegex = regexp.MustCompile(`^(.*):(\*)$`)
+
+const (
+	// These are the indices for the string slice returned
+	// by the above regular expressions
+	TypeIndex       = 1
+	CollectionIndex = 2
+	EntityIndex     = 3
+)
 
 // Collection for this target
 type Collection string
@@ -33,7 +41,8 @@ func (e Entity) String() string {
 type TargetType string
 
 const (
-	Records TargetType = "records"
+	Records  TargetType = "records"
+	Internal TargetType = "internal"
 )
 
 // Entity of a policy
@@ -46,7 +55,14 @@ func (t Target) Validate() error {
 		return errors.New(InvalidTargetCause, msg)
 	}
 
-	return nil
+	switch t.Type() {
+	case Records:
+		return nil
+	case Internal:
+		return nil
+	default:
+		return errors.New(InvalidTargetCause, "Target type must be Records or Internal, not %s", t.Type())
+	}
 }
 
 // Checks if this target and the provided target match. This supports wildcards
@@ -56,18 +72,24 @@ func (t Target) Matches(other Target) bool {
 
 // Type returns what type this is targeting
 func (t Target) Type() TargetType {
-	return Records
+	res := fullySpecifiedRegex.FindStringSubmatch(t.String())
+	if res != nil {
+		return TargetType(res[TypeIndex])
+	}
+
+	res = collectionWildcardRegex.FindStringSubmatch(t.String())
+	return TargetType(res[TypeIndex])
 }
 
 // Collection returns which collection this target refers to
 func (t Target) Collection() Collection {
 	res := fullySpecifiedRegex.FindStringSubmatch(t.String())
 	if res != nil {
-		return Collection(res[1])
+		return Collection(res[CollectionIndex])
 	}
 
 	res = collectionWildcardRegex.FindStringSubmatch(t.String())
-	return Collection(res[1])
+	return Collection(res[CollectionIndex])
 }
 
 // Entity returns which entity this target refers to
@@ -75,7 +97,7 @@ func (t Target) Entity() Entity {
 	// if the collection was wildcarded, then this won't match
 	res := fullySpecifiedRegex.FindStringSubmatch(t.String())
 	if res != nil {
-		return Entity(res[2])
+		return Entity(res[EntityIndex])
 	}
 
 	return "*"

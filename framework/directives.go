@@ -24,14 +24,14 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 		if token == nil {
 			msg := "Could not authenticate. Token missing"
 			logger.Info().Msg(msg)
-			return nil, ErrAuthentication
+			return nil, auth.ErrAuthentication
 		}
 
 		err := tokenAuthority.Verify(token)
 		if err != nil {
 			msg := "Could not authenticate. Unable to verify auth token"
 			logger.Info().Err(err).Msg(msg)
-			return nil, ErrAuthentication
+			return nil, auth.ErrAuthentication
 		}
 
 		session := &primitives.Session{}
@@ -39,14 +39,14 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 		if err != nil {
 			msg := "Could not authenticate. Unable to find session"
 			logger.Info().Err(err).Msg(msg)
-			return nil, ErrAuthentication
+			return nil, auth.ErrAuthentication
 		}
 
 		ownerType, err := session.OwnerID.Type()
 		if err != nil {
 			msg := "Could not authenticate. Unable get credentialProvider type"
 			logger.Info().Err(err).Msg(msg)
-			return nil, ErrAuthentication
+			return nil, auth.ErrAuthentication
 		}
 
 		identityType, err := session.IdentityID.Type()
@@ -84,7 +84,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			if err != nil {
 				msg := "Could not authenticate. Unable to find identity"
 				logger.Error().Err(err).Msg(msg)
-				return nil, ErrAuthentication
+				return nil, auth.ErrAuthentication
 			}
 			identity = user
 		} else if identityType == primitives.ServicePrimitiveType {
@@ -93,7 +93,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			if err != nil {
 				msg := "Could not authenticate. Unable to find identity"
 				logger.Error().Err(err).Msg(msg)
-				return nil, ErrAuthentication
+				return nil, auth.ErrAuthentication
 			}
 			identity = service
 		}

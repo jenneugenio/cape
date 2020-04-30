@@ -9,7 +9,7 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-var gitVersionRegexp = regexp.MustCompile(`git version (([0-9]+\.?)*)$`)
+var gitVersionRegexp = regexp.MustCompile(`git version (([0-9]+\.?)*)`)
 
 type Git struct {
 	Version *semver.Version

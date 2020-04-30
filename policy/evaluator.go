@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/connector/proto"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -110,7 +111,7 @@ func (e *Evaluator) evaluateStar() (*query.Query, error) {
 	}
 
 	if len(fields) == 0 {
-		return nil, errors.New(AccessDeniedCause, "No policies match the provided query")
+		return nil, errors.New(auth.AuthorizationFailure, "No policies match the provided query")
 	}
 
 	// now, remove the fields that our policy denyFieldRules
@@ -133,7 +134,7 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 	}
 
 	if len(e.allowFieldRules) == 0 {
-		return nil, errors.New(AccessDeniedCause, "No policies match the provided query")
+		return nil, errors.New(auth.AuthorizationFailure, "No policies match the provided query")
 	}
 
 	// Now, we must find a rule that allowFieldRules the provided query to run
@@ -179,7 +180,7 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 	}
 
 	if !allowed {
-		return nil, errors.New(AccessDeniedCause, "No policies allow the requested action to run")
+		return nil, errors.New(auth.AuthorizationFailure, "No policies allow the requested action to run")
 	}
 
 	denied := false
@@ -195,7 +196,7 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 	}
 
 	if denied {
-		return nil, errors.New(AccessDeniedCause, "Policy denyFieldRules the query from running")
+		return nil, errors.New(auth.AuthorizationFailure, "Policy denyFieldRules the query from running")
 	}
 
 	err := e.attachConditions()
