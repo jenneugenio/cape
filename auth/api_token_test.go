@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/capeprivacy/cape/database"
 	"testing"
 
 	gm "github.com/onsi/gomega"
@@ -11,25 +12,37 @@ import (
 func TestAPIToken(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	email, err := primitives.NewEmail("email@email.com")
-	gm.Expect(err).To(gm.BeNil())
-
 	host := "https://my.coordinator.com"
 	u, err := primitives.NewURL(host)
 	gm.Expect(err).To(gm.BeNil())
 
+	userID, err := database.GenerateID(primitives.UserType)
+	gm.Expect(err).To(gm.BeNil())
+
+	secret, err := RandomSecret()
+	gm.Expect(err).To(gm.BeNil())
+
+	creds, err := NewCredentials(secret, nil)
+	gm.Expect(err).To(gm.BeNil())
+
+	pCreds, err := creds.Package()
+	gm.Expect(err).To(gm.BeNil())
+
+	tc, err := primitives.NewTokenCredentials(userID, pCreds)
+	gm.Expect(err).To(gm.BeNil())
+
 	t.Run("new api token", func(t *testing.T) {
-		token, err := NewAPIToken(email, u)
+		token, err := NewAPIToken(secret, tc.ID, u)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(token.Email).To(gm.Equal(email))
+		gm.Expect(token.TokenCredentialID).To(gm.Equal(tc.ID))
 		gm.Expect(token.URL).To(gm.Equal(u))
 		gm.Expect(token.Version).To(gm.Equal(uint8(tokenVersion)))
 		gm.Expect(len(token.Secret)).To(gm.Equal(secretBytes))
 	})
 
 	t.Run("marhsal unmarhal token", func(t *testing.T) {
-		token, err := NewAPIToken(email, u)
+		token, err := NewAPIToken(secret, tc.ID, u)
 		gm.Expect(err).To(gm.BeNil())
 
 		tokenStr, err := token.Marshal()
@@ -40,7 +53,7 @@ func TestAPIToken(t *testing.T) {
 		err = otherToken.Unmarshal(tokenStr)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(otherToken.Email).To(gm.Equal(email))
+		gm.Expect(otherToken.TokenCredentialID).To(gm.Equal(tc.ID))
 		gm.Expect(otherToken.URL).To(gm.Equal(u))
 		gm.Expect(otherToken.Version).To(gm.Equal(uint8(tokenVersion)))
 		gm.Expect(len(otherToken.Secret)).To(gm.Equal(secretBytes))
@@ -50,13 +63,13 @@ func TestAPIToken(t *testing.T) {
 	})
 
 	t.Run("test unmarshal on raw string", func(t *testing.T) {
-		tokenStr := "email@email.com,AZuOupKXIRoHbJ04wZthGgNodHRwczovL215LmNvb3JkaW5hdG9yLmNvbQ"
+		tokenStr := "2019e393djc7u39dzm9nevtb80,AWitj064DiOeJEVFQn6d_E5odHRwczovL215LmNvb3JkaW5hdG9yLmNvbQ"
 
 		token := &APIToken{}
 		err := token.Unmarshal(tokenStr)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(token.Email).To(gm.Equal(email))
+		gm.Expect(token.TokenCredentialID).To(gm.Equal(tc.ID))
 		gm.Expect(token.URL.String()).To(gm.Equal(host))
 		gm.Expect(token.Version).To(gm.Equal(uint8(tokenVersion)))
 		gm.Expect(len(token.Secret)).To(gm.Equal(secretBytes))

@@ -18,8 +18,8 @@ func queryEmailProvider(ctx context.Context, db database.Backend, email primitiv
 	return user, err
 }
 
-func queryTokenProvider(ctx context.Context, db database.Backend, tokenId database.ID) (primitives.CredentialProvider, error) {
-	filter := database.NewFilter(database.Where{"id": tokenId.String()}, nil, nil)
+func queryTokenProvider(ctx context.Context, db database.Backend, tokenID database.ID) (primitives.CredentialProvider, error) {
+	filter := database.NewFilter(database.Where{"id": tokenID.String()}, nil, nil)
 
 	token := &primitives.TokenCredentials{}
 	err := db.QueryOne(ctx, token, filter)

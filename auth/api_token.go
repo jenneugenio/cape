@@ -151,6 +151,7 @@ func ParseAPIToken(in string) (*APIToken, error) {
 	return token, nil
 }
 
+// Random secret will return a random password
 func RandomSecret() (Secret, error) {
 	secret := make([]byte, secretBytes)
 	_, err := rand.Read(secret)
