@@ -34,7 +34,7 @@ const (
 	// SessionContextKey is the name of the session key stored on the context
 	SessionContextKey ContextKey = "session"
 
-	// CredentialProviderContextKey is the name of the identity key stored on the context
+	// IdentityContextKey is the name of the identity key stored on the context
 	IdentityContextKey ContextKey = "identity"
 
 	// CredentialProviderContextKey is the name of the credential provider key stored on the context
@@ -83,7 +83,7 @@ func Session(ctx context.Context) *primitives.Session {
 	return session.(*primitives.Session)
 }
 
-// CredentialProvider returns the identity stored on the given context
+// Identity returns the identity stored on the given context
 func Identity(ctx context.Context) primitives.Identity {
 	identity := ctx.Value(IdentityContextKey)
 	if identity == nil {

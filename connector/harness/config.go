@@ -1,9 +1,9 @@
 package harness
 
 import (
-	"github.com/capeprivacy/cape/auth"
 	"os"
 
+	"github.com/capeprivacy/cape/auth"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )

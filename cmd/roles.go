@@ -242,7 +242,7 @@ func rolesMembersCmd(c *cli.Context) error {
 		}
 
 		// TODO -- rewrite
-		body[i] = []string{typeStr, "woot@gmail.com"}
+		body[i] = []string{typeStr, identity.GetEmail().String()}
 	}
 
 	return u.Table(header, body)

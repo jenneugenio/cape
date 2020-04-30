@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"fmt"
+
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
@@ -205,6 +206,8 @@ func (r *mutationResolver) CreateEmailLoginSession(ctx context.Context, input mo
 
 // CreateTokenLoginSession creates a login session (phase 1 of 2 of the login flow) using an API token
 func (r *mutationResolver) CreateTokenLoginSession(ctx context.Context, input model.TokenLoginSessionRequest) (*primitives.Session, error) {
+	logger := fw.Logger(ctx)
+
 	isFakeIdentity := false
 	provider, err := queryTokenProvider(ctx, r.Backend, input.TokenID)
 	if err != nil {
@@ -212,18 +215,23 @@ func (r *mutationResolver) CreateTokenLoginSession(ctx context.Context, input mo
 	}
 
 	// TODO -- should this return a user or a token identity??
-	//if err != nil && !errs.FromCause(err, database.NotFoundCause) {
-	//	logger.Info().Err(err).Msg("Could not authenticate. Error querying database")
-	//	return nil, fw.ErrAuthentication
-	//} else if errs.FromCause(err, database.NotFoundCause) {
-	//	// if identity doesn't exist need to return fake data
-	//	isFakeIdentity = true
-	//	provider, err = auth.NewFakeIdentity()
-	//	if err != nil {
-	//		logger.Info().Err(err).Msg("Could not authenticate. Unable to create fake identity")
-	//		return nil, fw.ErrAuthentication
-	//	}
-	//}
+	if err != nil && !errs.FromCause(err, database.NotFoundCause) {
+		logger.Info().Err(err).Msg("Could not authenticate. Error querying database")
+		return nil, fw.ErrAuthentication
+	} else if errs.FromCause(err, database.NotFoundCause) {
+		// if identity doesn't exist need to return fake data
+		isFakeIdentity = true
+		e, err := primitives.NewEmail("fake@cape.com")
+		if err != nil {
+			return nil, err
+		}
+
+		provider, err = auth.NewFakeIdentity(e)
+		if err != nil {
+			logger.Info().Err(err).Msg("Could not authenticate. Unable to create fake identity")
+			return nil, fw.ErrAuthentication
+		}
+	}
 
 	token, expiresIn, err := r.TokenAuthority.Generate(primitives.Login)
 	if err != nil {

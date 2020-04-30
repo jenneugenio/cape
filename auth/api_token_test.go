@@ -1,12 +1,11 @@
 package auth
 
 import (
-	"github.com/capeprivacy/cape/database"
-	"github.com/manifoldco/go-base64"
 	"testing"
 
 	gm "github.com/onsi/gomega"
 
+	"github.com/capeprivacy/cape/database"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -17,18 +16,13 @@ func TestAPIToken(t *testing.T) {
 	u, err := primitives.NewURL(host)
 	gm.Expect(err).To(gm.BeNil())
 
-	// So the ID doesn't change every test
-	// Originally generated with database.GenerateID(primitives.UserType)
 	userID, err := database.GenerateID(primitives.UserType)
 	gm.Expect(err).To(gm.BeNil())
 
 	secret, err := RandomSecret()
 	gm.Expect(err).To(gm.BeNil())
 
-	salt, err := base64.NewFromString("AAYoFZmu0W8skw0ipGIM8g")
-	gm.Expect(err).To(gm.BeNil())
-
-	creds, err := NewCredentials(secret, salt)
+	creds, err := NewCredentials(secret, nil)
 	gm.Expect(err).To(gm.BeNil())
 
 	pCreds, err := creds.Package()
