@@ -8,7 +8,6 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/database"
 	"github.com/capeprivacy/cape/primitives"
@@ -65,17 +64,10 @@ func TestSource(t *testing.T) {
 		email, err := primitives.NewEmail(emailStr)
 		gm.Expect(err).To(gm.BeNil())
 
-		creds, err := auth.NewCredentials([]byte("random-password"), nil)
-		gm.Expect(err).To(gm.BeNil())
-
 		serviceURL, err := primitives.NewURL("https://localhost:8081")
 		gm.Expect(err).To(gm.BeNil())
 
-		pCreds, err := creds.Package()
-		gm.Expect(err).To(gm.BeNil())
-
-		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, serviceURL,
-			pCreds)
+		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, serviceURL)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err = client.CreateService(ctx, service)
@@ -115,13 +107,7 @@ func TestSource(t *testing.T) {
 		email, err := primitives.NewEmail(emailStr)
 		gm.Expect(err).To(gm.BeNil())
 
-		creds, err := auth.NewCredentials([]byte("random-password"), nil)
-		gm.Expect(err).To(gm.BeNil())
-
-		pCreds, err := creds.Package()
-		gm.Expect(err).To(gm.BeNil())
-
-		service, err := primitives.NewService(email, primitives.UserServiceType, nil, pCreds)
+		service, err := primitives.NewService(email, primitives.UserServiceType, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err = client.CreateService(ctx, service)

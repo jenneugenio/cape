@@ -68,7 +68,7 @@ func createServices(ctx context.Context, client *coordinator.Client, numServices
 			return nil, err
 		}
 
-		service, err := createServicePrimitive(email, []byte("randompassword"))
+		service, err := createServicePrimitive(email)
 		if err != nil {
 			return nil, err
 		}
