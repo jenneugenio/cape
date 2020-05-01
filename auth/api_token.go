@@ -3,13 +3,15 @@ package auth
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/capeprivacy/cape/database"
 	"strings"
+
+	"github.com/capeprivacy/cape/coordinator/database"
 
 	"github.com/capeprivacy/cape/primitives"
 
-	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/manifoldco/go-base64"
+
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 const (
