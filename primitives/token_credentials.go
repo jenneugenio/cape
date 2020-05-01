@@ -6,7 +6,7 @@ import (
 	"github.com/manifoldco/go-base64"
 )
 
-type TokenCredentials struct {
+type Token struct {
 	*database.Primitive
 	IdentityID database.ID        `json:"identity_id"`
 	PublicKey  *base64.Value      `json:"public_key"`
@@ -14,29 +14,39 @@ type TokenCredentials struct {
 	Alg        CredentialsAlgType `json:"alg"`
 }
 
-func (tc *TokenCredentials) GetType() types.Type {
+func (tc *Token) GetType() types.Type {
 	return TokenPrimitiveType
 }
 
-func (tc *TokenCredentials) Validate() error {
+func (tc *Token) Validate() error {
+	creds, err := tc.GetCredentials()
+	if err != nil {
+		return err
+	}
+
+	err = creds.Validate()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (tc *TokenCredentials) GetIdentityID() database.ID {
+func (tc *Token) GetIdentityID() database.ID {
 	return tc.IdentityID
 }
 
-func (tc *TokenCredentials) GetCredentials() (*Credentials, error) {
+func (tc *Token) GetCredentials() (*Credentials, error) {
 	return NewCredentials(tc.PublicKey, tc.Salt)
 }
 
-func NewTokenCredentials(identityID database.ID, creds *Credentials) (*TokenCredentials, error) {
+func NewTokenCredentials(identityID database.ID, creds *Credentials) (*Token, error) {
 	p, err := database.NewPrimitive(TokenPrimitiveType)
 	if err != nil {
 		return nil, err
 	}
 
-	tc := &TokenCredentials{
+	tc := &Token{
 		Primitive:  p,
 		IdentityID: identityID,
 		PublicKey:  creds.PublicKey,

@@ -35,19 +35,19 @@ func (s Secret) Validate() error {
 // the APIToken will be tied to a token (token_id will replace email)
 // that is tied to an identity (user or service)
 type APIToken struct {
-	TokenCredentialID database.ID
-	URL               *primitives.URL
-	Version           byte
-	Secret            Secret
+	TokenID database.ID
+	URL     *primitives.URL
+	Version byte
+	Secret  Secret
 }
 
 // NewAPIToken returns a new api token from email and url
 func NewAPIToken(secret Secret, tokenCredentialID database.ID, u *primitives.URL) (*APIToken, error) {
 	return &APIToken{
-		TokenCredentialID: tokenCredentialID,
-		URL:               u,
-		Version:           tokenVersion,
-		Secret:            secret,
+		TokenID: tokenCredentialID,
+		URL:     u,
+		Version: tokenVersion,
+		Secret:  secret,
 	}, nil
 }
 
@@ -95,7 +95,7 @@ func (a *APIToken) Marshal() (string, error) {
 
 	val := base64.New(bytes)
 
-	tokenStr := fmt.Sprintf("%s,%s", a.TokenCredentialID, val.String())
+	tokenStr := fmt.Sprintf("%s,%s", a.TokenID, val.String())
 
 	return tokenStr, nil
 }
@@ -112,7 +112,7 @@ func (a *APIToken) Unmarshal(token string) error {
 		return err
 	}
 
-	a.TokenCredentialID = tokenCredentialID
+	a.TokenID = tokenCredentialID
 
 	val, err := base64.NewFromString(strs[1])
 	if err != nil {

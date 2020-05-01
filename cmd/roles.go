@@ -241,7 +241,6 @@ func rolesMembersCmd(c *cli.Context) error {
 			typeStr = primitives.ServicePrimitiveType.String()
 		}
 
-		// TODO -- rewrite
 		body[i] = []string{typeStr, identity.GetEmail().String()}
 	}
 

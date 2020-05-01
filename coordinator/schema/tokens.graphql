@@ -1,4 +1,4 @@
-type TokenCredentials {
+type Token {
     id: ID!
     public_key: Base64!
     salt: Base64!
@@ -13,5 +13,5 @@ input CreateTokenRequest {
 }
 
 extend type Mutation {
-    createToken(input: CreateTokenRequest!): TokenCredentials! @isAuthenticated
+    createToken(input: CreateTokenRequest!): Token! @isAuthenticated
 }

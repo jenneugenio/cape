@@ -35,7 +35,7 @@ func TestAPIToken(t *testing.T) {
 		token, err := NewAPIToken(secret, tc.ID, u)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(token.TokenCredentialID).To(gm.Equal(tc.ID))
+		gm.Expect(token.TokenID).To(gm.Equal(tc.ID))
 		gm.Expect(token.URL).To(gm.Equal(u))
 		gm.Expect(token.Version).To(gm.Equal(uint8(tokenVersion)))
 		gm.Expect(len(token.Secret)).To(gm.Equal(secretBytes))
@@ -53,7 +53,7 @@ func TestAPIToken(t *testing.T) {
 		err = otherToken.Unmarshal(tokenStr)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(otherToken.TokenCredentialID).To(gm.Equal(tc.ID))
+		gm.Expect(otherToken.TokenID).To(gm.Equal(tc.ID))
 		gm.Expect(otherToken.URL).To(gm.Equal(u))
 		gm.Expect(otherToken.Version).To(gm.Equal(uint8(tokenVersion)))
 		gm.Expect(len(otherToken.Secret)).To(gm.Equal(secretBytes))
@@ -73,7 +73,7 @@ func TestAPIToken(t *testing.T) {
 		err = token.Unmarshal(tokenStr)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(token.TokenCredentialID).To(gm.Equal(tc.ID))
+		gm.Expect(token.TokenID).To(gm.Equal(tc.ID))
 		gm.Expect(token.URL.String()).To(gm.Equal(host))
 		gm.Expect(token.Version).To(gm.Equal(uint8(tokenVersion)))
 		gm.Expect(len(token.Secret)).To(gm.Equal(secretBytes))

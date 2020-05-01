@@ -73,25 +73,24 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddSource               func(childComplexity int, input model.AddSourceRequest) int
-		AssignRole              func(childComplexity int, input model.AssignRoleRequest) int
-		AttachPolicy            func(childComplexity int, input model.AttachPolicyRequest) int
-		CreateAuthSession       func(childComplexity int, input model.AuthSessionRequest) int
-		CreateEmailLoginSession func(childComplexity int, input model.EmailLoginSessionRequest) int
-		CreatePolicy            func(childComplexity int, input model.CreatePolicyRequest) int
-		CreateRole              func(childComplexity int, input model.CreateRoleRequest) int
-		CreateService           func(childComplexity int, input model.CreateServiceRequest) int
-		CreateToken             func(childComplexity int, input model.CreateTokenRequest) int
-		CreateTokenLoginSession func(childComplexity int, input model.TokenLoginSessionRequest) int
-		CreateUser              func(childComplexity int, input model.NewUserRequest) int
-		DeletePolicy            func(childComplexity int, input model.DeletePolicyRequest) int
-		DeleteRole              func(childComplexity int, input model.DeleteRoleRequest) int
-		DeleteService           func(childComplexity int, input model.DeleteServiceRequest) int
-		DeleteSession           func(childComplexity int, input model.DeleteSessionRequest) int
-		DetachPolicy            func(childComplexity int, input model.DetachPolicyRequest) int
-		RemoveSource            func(childComplexity int, input model.RemoveSourceRequest) int
-		Setup                   func(childComplexity int, input model.NewUserRequest) int
-		UnassignRole            func(childComplexity int, input model.AssignRoleRequest) int
+		AddSource          func(childComplexity int, input model.AddSourceRequest) int
+		AssignRole         func(childComplexity int, input model.AssignRoleRequest) int
+		AttachPolicy       func(childComplexity int, input model.AttachPolicyRequest) int
+		CreateAuthSession  func(childComplexity int, input model.AuthSessionRequest) int
+		CreateLoginSession func(childComplexity int, input model.LoginSessionRequest) int
+		CreatePolicy       func(childComplexity int, input model.CreatePolicyRequest) int
+		CreateRole         func(childComplexity int, input model.CreateRoleRequest) int
+		CreateService      func(childComplexity int, input model.CreateServiceRequest) int
+		CreateToken        func(childComplexity int, input model.CreateTokenRequest) int
+		CreateUser         func(childComplexity int, input model.NewUserRequest) int
+		DeletePolicy       func(childComplexity int, input model.DeletePolicyRequest) int
+		DeleteRole         func(childComplexity int, input model.DeleteRoleRequest) int
+		DeleteService      func(childComplexity int, input model.DeleteServiceRequest) int
+		DeleteSession      func(childComplexity int, input model.DeleteSessionRequest) int
+		DetachPolicy       func(childComplexity int, input model.DetachPolicyRequest) int
+		RemoveSource       func(childComplexity int, input model.RemoveSourceRequest) int
+		Setup              func(childComplexity int, input model.NewUserRequest) int
+		UnassignRole       func(childComplexity int, input model.AssignRoleRequest) int
 	}
 
 	Policy struct {
@@ -162,7 +161,7 @@ type ComplexityRoot struct {
 		Type        func(childComplexity int) int
 	}
 
-	TokenCredentials struct {
+	Token struct {
 		Alg       func(childComplexity int) int
 		ID        func(childComplexity int) int
 		PublicKey func(childComplexity int) int
@@ -184,8 +183,7 @@ type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error)
 	AddSource(ctx context.Context, input model.AddSourceRequest) (*primitives.Source, error)
 	RemoveSource(ctx context.Context, input model.RemoveSourceRequest) (*string, error)
-	CreateEmailLoginSession(ctx context.Context, input model.EmailLoginSessionRequest) (*primitives.Session, error)
-	CreateTokenLoginSession(ctx context.Context, input model.TokenLoginSessionRequest) (*primitives.Session, error)
+	CreateLoginSession(ctx context.Context, input model.LoginSessionRequest) (*primitives.Session, error)
 	CreateAuthSession(ctx context.Context, input model.AuthSessionRequest) (*primitives.Session, error)
 	DeleteSession(ctx context.Context, input model.DeleteSessionRequest) (*string, error)
 	CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*primitives.Policy, error)
@@ -198,7 +196,7 @@ type MutationResolver interface {
 	UnassignRole(ctx context.Context, input model.AssignRoleRequest) (*string, error)
 	CreateService(ctx context.Context, input model.CreateServiceRequest) (*primitives.Service, error)
 	DeleteService(ctx context.Context, input model.DeleteServiceRequest) (*string, error)
-	CreateToken(ctx context.Context, input model.CreateTokenRequest) (*primitives.TokenCredentials, error)
+	CreateToken(ctx context.Context, input model.CreateTokenRequest) (*primitives.Token, error)
 }
 type QueryResolver interface {
 	User(ctx context.Context, id database.ID) (*primitives.User, error)
@@ -376,17 +374,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateAuthSession(childComplexity, args["input"].(model.AuthSessionRequest)), true
 
-	case "Mutation.createEmailLoginSession":
-		if e.complexity.Mutation.CreateEmailLoginSession == nil {
+	case "Mutation.createLoginSession":
+		if e.complexity.Mutation.CreateLoginSession == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createEmailLoginSession_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createLoginSession_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateEmailLoginSession(childComplexity, args["input"].(model.EmailLoginSessionRequest)), true
+		return e.complexity.Mutation.CreateLoginSession(childComplexity, args["input"].(model.LoginSessionRequest)), true
 
 	case "Mutation.createPolicy":
 		if e.complexity.Mutation.CreatePolicy == nil {
@@ -435,18 +433,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateToken(childComplexity, args["input"].(model.CreateTokenRequest)), true
-
-	case "Mutation.createTokenLoginSession":
-		if e.complexity.Mutation.CreateTokenLoginSession == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createTokenLoginSession_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateTokenLoginSession(childComplexity, args["input"].(model.TokenLoginSessionRequest)), true
 
 	case "Mutation.createUser":
 		if e.complexity.Mutation.CreateUser == nil {
@@ -976,33 +962,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Source.Type(childComplexity), true
 
-	case "TokenCredentials.Alg":
-		if e.complexity.TokenCredentials.Alg == nil {
+	case "Token.Alg":
+		if e.complexity.Token.Alg == nil {
 			break
 		}
 
-		return e.complexity.TokenCredentials.Alg(childComplexity), true
+		return e.complexity.Token.Alg(childComplexity), true
 
-	case "TokenCredentials.id":
-		if e.complexity.TokenCredentials.ID == nil {
+	case "Token.id":
+		if e.complexity.Token.ID == nil {
 			break
 		}
 
-		return e.complexity.TokenCredentials.ID(childComplexity), true
+		return e.complexity.Token.ID(childComplexity), true
 
-	case "TokenCredentials.public_key":
-		if e.complexity.TokenCredentials.PublicKey == nil {
+	case "Token.public_key":
+		if e.complexity.Token.PublicKey == nil {
 			break
 		}
 
-		return e.complexity.TokenCredentials.PublicKey(childComplexity), true
+		return e.complexity.Token.PublicKey(childComplexity), true
 
-	case "TokenCredentials.salt":
-		if e.complexity.TokenCredentials.Salt == nil {
+	case "Token.salt":
+		if e.complexity.Token.Salt == nil {
 			break
 		}
 
-		return e.complexity.TokenCredentials.Salt(childComplexity), true
+		return e.complexity.Token.Salt(childComplexity), true
 
 	case "User.created_at":
 		if e.complexity.User.CreatedAt == nil {
@@ -1293,12 +1279,9 @@ input NewUserRequest {
   alg: CredentialsAlgType!
 }
 
-input EmailLoginSessionRequest {
-  email: Email!
-}
-
-input TokenLoginSessionRequest {
-  token_id: ID!
+input LoginSessionRequest {
+  email: Email
+  token_id: ID
 }
 
 input AuthSessionRequest {
@@ -1343,9 +1326,7 @@ type Mutation {
   addSource(input: AddSourceRequest!): Source! @isAuthenticated()
   removeSource(input: RemoveSourceRequest!): String @isAuthenticated()
 
-  createEmailLoginSession(input: EmailLoginSessionRequest!): Session!
-  createTokenLoginSession(input: TokenLoginSessionRequest!): Session!
-
+  createLoginSession(input: LoginSessionRequest!): Session!
   createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
   deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
 }
@@ -1397,7 +1378,7 @@ extend type Mutation {
 
 scalar ServiceType
 `, BuiltIn: false},
-	&ast.Source{Name: "coordinator/schema/tokens.graphql", Input: `type TokenCredentials {
+	&ast.Source{Name: "coordinator/schema/tokens.graphql", Input: `type Token {
     id: ID!
     public_key: Base64!
     salt: Base64!
@@ -1412,7 +1393,7 @@ input CreateTokenRequest {
 }
 
 extend type Mutation {
-    createToken(input: CreateTokenRequest!): TokenCredentials! @isAuthenticated
+    createToken(input: CreateTokenRequest!): Token! @isAuthenticated
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -1491,12 +1472,12 @@ func (ec *executionContext) field_Mutation_createAuthSession_args(ctx context.Co
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createEmailLoginSession_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createLoginSession_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.EmailLoginSessionRequest
+	var arg0 model.LoginSessionRequest
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNEmailLoginSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐEmailLoginSessionRequest(ctx, tmp)
+		arg0, err = ec.unmarshalNLoginSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐLoginSessionRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1539,20 +1520,6 @@ func (ec *executionContext) field_Mutation_createService_args(ctx context.Contex
 	var arg0 model.CreateServiceRequest
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalNCreateServiceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateServiceRequest(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_createTokenLoginSession_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.TokenLoginSessionRequest
-	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNTokenLoginSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐTokenLoginSessionRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2596,7 +2563,7 @@ func (ec *executionContext) _Mutation_removeSource(ctx context.Context, field gr
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_createEmailLoginSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_createLoginSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2612,7 +2579,7 @@ func (ec *executionContext) _Mutation_createEmailLoginSession(ctx context.Contex
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_createEmailLoginSession_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_createLoginSession_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -2620,48 +2587,7 @@ func (ec *executionContext) _Mutation_createEmailLoginSession(ctx context.Contex
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateEmailLoginSession(rctx, args["input"].(model.EmailLoginSessionRequest))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*primitives.Session)
-	fc.Result = res
-	return ec.marshalNSession2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSession(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_createTokenLoginSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Mutation",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_createTokenLoginSession_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateTokenLoginSession(rctx, args["input"].(model.TokenLoginSessionRequest))
+		return ec.resolvers.Mutation().CreateLoginSession(rctx, args["input"].(model.LoginSessionRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3485,10 +3411,10 @@ func (ec *executionContext) _Mutation_createToken(ctx context.Context, field gra
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*primitives.TokenCredentials); ok {
+		if data, ok := tmp.(*primitives.Token); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.TokenCredentials`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Token`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3500,9 +3426,9 @@ func (ec *executionContext) _Mutation_createToken(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.TokenCredentials)
+	res := resTmp.(*primitives.Token)
 	fc.Result = res
-	return ec.marshalNTokenCredentials2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenCredentials(ctx, field.Selections, res)
+	return ec.marshalNToken2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐToken(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Policy_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
@@ -5741,7 +5667,7 @@ func (ec *executionContext) _Source_service_id(ctx context.Context, field graphq
 	return ec.marshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TokenCredentials_id(ctx context.Context, field graphql.CollectedField, obj *primitives.TokenCredentials) (ret graphql.Marshaler) {
+func (ec *executionContext) _Token_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Token) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5749,7 +5675,7 @@ func (ec *executionContext) _TokenCredentials_id(ctx context.Context, field grap
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:   "TokenCredentials",
+		Object:   "Token",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -5775,7 +5701,7 @@ func (ec *executionContext) _TokenCredentials_id(ctx context.Context, field grap
 	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TokenCredentials_public_key(ctx context.Context, field graphql.CollectedField, obj *primitives.TokenCredentials) (ret graphql.Marshaler) {
+func (ec *executionContext) _Token_public_key(ctx context.Context, field graphql.CollectedField, obj *primitives.Token) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5783,7 +5709,7 @@ func (ec *executionContext) _TokenCredentials_public_key(ctx context.Context, fi
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:   "TokenCredentials",
+		Object:   "Token",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -5809,7 +5735,7 @@ func (ec *executionContext) _TokenCredentials_public_key(ctx context.Context, fi
 	return ec.marshalNBase642ᚖgithubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TokenCredentials_salt(ctx context.Context, field graphql.CollectedField, obj *primitives.TokenCredentials) (ret graphql.Marshaler) {
+func (ec *executionContext) _Token_salt(ctx context.Context, field graphql.CollectedField, obj *primitives.Token) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5817,7 +5743,7 @@ func (ec *executionContext) _TokenCredentials_salt(ctx context.Context, field gr
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:   "TokenCredentials",
+		Object:   "Token",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -5843,7 +5769,7 @@ func (ec *executionContext) _TokenCredentials_salt(ctx context.Context, field gr
 	return ec.marshalNBase642ᚖgithubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TokenCredentials_Alg(ctx context.Context, field graphql.CollectedField, obj *primitives.TokenCredentials) (ret graphql.Marshaler) {
+func (ec *executionContext) _Token_Alg(ctx context.Context, field graphql.CollectedField, obj *primitives.Token) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5851,7 +5777,7 @@ func (ec *executionContext) _TokenCredentials_Alg(ctx context.Context, field gra
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:   "TokenCredentials",
+		Object:   "Token",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -7439,15 +7365,21 @@ func (ec *executionContext) unmarshalInputDetachPolicyRequest(ctx context.Contex
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputEmailLoginSessionRequest(ctx context.Context, obj interface{}) (model.EmailLoginSessionRequest, error) {
-	var it model.EmailLoginSessionRequest
+func (ec *executionContext) unmarshalInputLoginSessionRequest(ctx context.Context, obj interface{}) (model.LoginSessionRequest, error) {
+	var it model.LoginSessionRequest
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
 		switch k {
 		case "email":
 			var err error
-			it.Email, err = ec.unmarshalNEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, v)
+			it.Email, err = ec.unmarshalOEmail2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "token_id":
+			var err error
+			it.TokenID, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7526,24 +7458,6 @@ func (ec *executionContext) unmarshalInputRemoveSourceRequest(ctx context.Contex
 		case "label":
 			var err error
 			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputTokenLoginSessionRequest(ctx context.Context, obj interface{}) (model.TokenLoginSessionRequest, error) {
-	var it model.TokenLoginSessionRequest
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "token_id":
-			var err error
-			it.TokenID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7738,13 +7652,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "removeSource":
 			out.Values[i] = ec._Mutation_removeSource(ctx, field)
-		case "createEmailLoginSession":
-			out.Values[i] = ec._Mutation_createEmailLoginSession(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "createTokenLoginSession":
-			out.Values[i] = ec._Mutation_createTokenLoginSession(ctx, field)
+		case "createLoginSession":
+			out.Values[i] = ec._Mutation_createLoginSession(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -8346,34 +8255,34 @@ func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, o
 	return out
 }
 
-var tokenCredentialsImplementors = []string{"TokenCredentials"}
+var tokenImplementors = []string{"Token"}
 
-func (ec *executionContext) _TokenCredentials(ctx context.Context, sel ast.SelectionSet, obj *primitives.TokenCredentials) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, tokenCredentialsImplementors)
+func (ec *executionContext) _Token(ctx context.Context, sel ast.SelectionSet, obj *primitives.Token) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, tokenImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("TokenCredentials")
+			out.Values[i] = graphql.MarshalString("Token")
 		case "id":
-			out.Values[i] = ec._TokenCredentials_id(ctx, field, obj)
+			out.Values[i] = ec._Token_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "public_key":
-			out.Values[i] = ec._TokenCredentials_public_key(ctx, field, obj)
+			out.Values[i] = ec._Token_public_key(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "salt":
-			out.Values[i] = ec._TokenCredentials_salt(ctx, field, obj)
+			out.Values[i] = ec._Token_salt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "Alg":
-			out.Values[i] = ec._TokenCredentials_Alg(ctx, field, obj)
+			out.Values[i] = ec._Token_Alg(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -8880,10 +8789,6 @@ func (ec *executionContext) marshalNEmail2ᚖgithubᚗcomᚋcapeprivacyᚋcape�
 	return v
 }
 
-func (ec *executionContext) unmarshalNEmailLoginSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐEmailLoginSessionRequest(ctx context.Context, v interface{}) (model.EmailLoginSessionRequest, error) {
-	return ec.unmarshalInputEmailLoginSessionRequest(ctx, v)
-}
-
 func (ec *executionContext) unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
 	var res database.ID
 	return res, res.UnmarshalGQL(v)
@@ -8910,6 +8815,10 @@ func (ec *executionContext) unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋ
 
 func (ec *executionContext) marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx context.Context, sel ast.SelectionSet, v primitives.Label) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNLoginSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐLoginSessionRequest(ctx context.Context, v interface{}) (model.LoginSessionRequest, error) {
+	return ec.unmarshalInputLoginSessionRequest(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐName(ctx context.Context, v interface{}) (primitives.Name, error) {
@@ -9109,22 +9018,18 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalNTokenCredentials2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenCredentials(ctx context.Context, sel ast.SelectionSet, v primitives.TokenCredentials) graphql.Marshaler {
-	return ec._TokenCredentials(ctx, sel, &v)
+func (ec *executionContext) marshalNToken2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐToken(ctx context.Context, sel ast.SelectionSet, v primitives.Token) graphql.Marshaler {
+	return ec._Token(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTokenCredentials2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenCredentials(ctx context.Context, sel ast.SelectionSet, v *primitives.TokenCredentials) graphql.Marshaler {
+func (ec *executionContext) marshalNToken2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐToken(ctx context.Context, sel ast.SelectionSet, v *primitives.Token) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	return ec._TokenCredentials(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNTokenLoginSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐTokenLoginSessionRequest(ctx context.Context, v interface{}) (model.TokenLoginSessionRequest, error) {
-	return ec.unmarshalInputTokenLoginSessionRequest(ctx, v)
+	return ec._Token(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx context.Context, v interface{}) (primitives.TokenType, error) {
@@ -9434,6 +9339,15 @@ func (ec *executionContext) marshalODBURL2ᚖgithubᚗcomᚋcapeprivacyᚋcape�
 	return v
 }
 
+func (ec *executionContext) unmarshalOEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx context.Context, v interface{}) (primitives.Email, error) {
+	var res primitives.Email
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalOEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx context.Context, sel ast.SelectionSet, v primitives.Email) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalOEmail2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmailᚄ(ctx context.Context, v interface{}) ([]*primitives.Email, error) {
 	var vSlice []interface{}
 	if v != nil {
@@ -9464,6 +9378,21 @@ func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcap
 	}
 
 	return ret
+}
+
+func (ec *executionContext) unmarshalOEmail2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx context.Context, v interface{}) (*primitives.Email, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOEmail2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx context.Context, sel ast.SelectionSet, v *primitives.Email) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {

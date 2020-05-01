@@ -10,7 +10,7 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
-func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTokenRequest) (*primitives.TokenCredentials, error) {
+func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTokenRequest) (*primitives.Token, error) {
 	creds, err := primitives.NewCredentials(&input.PublicKey, &input.Salt)
 	if err != nil {
 		return nil, err

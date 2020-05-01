@@ -47,15 +47,15 @@ func NewTransport(coordinatorURL *primitives.URL, authToken *base64.Value) Trans
 // login session and returns it
 func (c *ClientTransport) createTokenLoginSession(ctx context.Context, token *auth.APIToken) (*primitives.Session, error) {
 	var resp struct {
-		Session primitives.Session `json:"createTokenLoginSession"`
+		Session primitives.Session `json:"createLoginSession"`
 	}
 
 	variables := make(map[string]interface{})
-	variables["token_id"] = token.TokenCredentialID
+	variables["token_id"] = token.TokenID
 
 	err := c.Raw(ctx, `
-		mutation CreateTokenLoginSession($token_id: ID!) {
-			createTokenLoginSession(input: { token_id: $token_id }) {
+		mutation CreateLoginSession($token_id: ID!) {
+			createLoginSession(input: { token_id: $token_id }) {
 				id
 				identity_id
 				expires_at
@@ -80,15 +80,15 @@ func (c *ClientTransport) createTokenLoginSession(ctx context.Context, token *au
 // login session and returns it
 func (c *ClientTransport) createEmailLoginSession(ctx context.Context, email primitives.Email) (*primitives.Session, error) {
 	var resp struct {
-		Session primitives.Session `json:"createEmailLoginSession"`
+		Session primitives.Session `json:"createLoginSession"`
 	}
 
 	variables := make(map[string]interface{})
 	variables["email"] = email
 
 	err := c.Raw(ctx, `
-		mutation CreateEmailLoginSession($email: Email!) {
-			createEmailLoginSession(input: { email: $email }) {
+		mutation CreateLoginSession($email: Email!) {
+			createLoginSession(input: { email: $email }) {
 				id
 				identity_id
 				expires_at
@@ -1252,7 +1252,7 @@ func (c *Client) CreateToken(ctx context.Context, identity primitives.Identity) 
 	variables["alg"] = tokenCredentials.Alg
 
 	var resp struct {
-		Credentials primitives.TokenCredentials `json:"createToken"`
+		Credentials primitives.Token `json:"createToken"`
 	}
 
 	err = c.transport.Raw(ctx, `

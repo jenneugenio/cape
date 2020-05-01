@@ -90,8 +90,9 @@ type DetachPolicyRequest struct {
 	RoleID   database.ID `json:"role_id"`
 }
 
-type EmailLoginSessionRequest struct {
-	Email primitives.Email `json:"email"`
+type LoginSessionRequest struct {
+	Email   *primitives.Email `json:"email"`
+	TokenID *database.ID      `json:"token_id"`
 }
 
 type NewUserRequest struct {
@@ -108,8 +109,4 @@ type PolicyInput struct {
 
 type RemoveSourceRequest struct {
 	Label primitives.Label `json:"label"`
-}
-
-type TokenLoginSessionRequest struct {
-	TokenID database.ID `json:"token_id"`
 }

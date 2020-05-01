@@ -82,12 +82,9 @@ input NewUserRequest {
   alg: CredentialsAlgType!
 }
 
-input EmailLoginSessionRequest {
-  email: Email!
-}
-
-input TokenLoginSessionRequest {
-  token_id: ID!
+input LoginSessionRequest {
+  email: Email
+  token_id: ID
 }
 
 input AuthSessionRequest {
@@ -132,9 +129,7 @@ type Mutation {
   addSource(input: AddSourceRequest!): Source! @isAuthenticated()
   removeSource(input: RemoveSourceRequest!): String @isAuthenticated()
 
-  createEmailLoginSession(input: EmailLoginSessionRequest!): Session!
-  createTokenLoginSession(input: TokenLoginSessionRequest!): Session!
-
+  createLoginSession(input: LoginSessionRequest!): Session!
   createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
   deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
 }

@@ -67,7 +67,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			}
 			credentialProvider = user
 		} else if ownerType == primitives.TokenPrimitiveType {
-			token := &primitives.TokenCredentials{}
+			token := &primitives.Token{}
 			err = db.Get(ctx, session.OwnerID, token)
 			if err != nil {
 				msg := "Could not authenticate. Unable to find credentialProvider"
