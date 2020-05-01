@@ -33,6 +33,11 @@ func init() {
 		panic(err)
 	}
 
+	kind, err := NewKind(dockerdep, "1.11")
+	if err != nil {
+		panic(err)
+	}
+
 	err = Dependencies.Add(godep)
 	if err != nil {
 		panic(err)
@@ -49,6 +54,11 @@ func init() {
 	}
 
 	err = Dependencies.Add(gitdep)
+	if err != nil {
+		panic(err)
+	}
+
+	err = Dependencies.Add(kind)
 	if err != nil {
 		panic(err)
 	}

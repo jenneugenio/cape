@@ -44,7 +44,6 @@ require (
 	github.com/mitchellh/mapstructure v1.2.2
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/onsi/gomega v1.9.0
-	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/rs/cors v1.7.0
 	github.com/rs/zerolog v1.18.0
 	github.com/securego/gosec v0.0.0-20200316084457-7da9f46445fd // indirect
@@ -63,6 +62,7 @@ require (
 	helm.sh/helm/v3 v3.2.0
 	mvdan.cc/unparam v0.0.0-20200314162735-0ac8026f7d06 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
+	sigs.k8s.io/kind v0.7.0
 	sigs.k8s.io/yaml v1.2.0
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )

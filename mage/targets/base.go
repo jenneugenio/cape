@@ -33,7 +33,7 @@ func Check(ctx context.Context) error {
 }
 
 // Clean removes any installed tools, modules, or build artifacts created by
-// any targers.
+// any targets.
 //
 // This command will remove 'Magefile' which will need to be installed again if
 // you run it multiple times via the bootstrap.go command.
