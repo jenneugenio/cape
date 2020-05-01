@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/capeprivacy/cape/database/types"
+	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )

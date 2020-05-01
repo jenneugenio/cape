@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/urfave/cli/v2"
 
-	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
 

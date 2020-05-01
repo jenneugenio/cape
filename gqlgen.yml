@@ -28,7 +28,7 @@ models:
   Session:
     model: github.com/capeprivacy/cape/primitives.Session
   ID:
-    model: github.com/capeprivacy/cape/database.ID
+    model: github.com/capeprivacy/cape/coordinator/database.ID
   Base64:
     model: github.com/capeprivacy/cape/primitives.Base64Value
   URL:

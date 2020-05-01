@@ -9,7 +9,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/harness"
-	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
 

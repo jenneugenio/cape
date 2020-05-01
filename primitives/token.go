@@ -1,9 +1,10 @@
 package primitives
 
 import (
-	"github.com/capeprivacy/cape/database"
-	"github.com/capeprivacy/cape/database/types"
 	"github.com/manifoldco/go-base64"
+
+	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database/types"
 )
 
 type Token struct {

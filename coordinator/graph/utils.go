@@ -3,8 +3,8 @@ package graph
 import (
 	"context"
 
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
-	"github.com/capeprivacy/cape/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )

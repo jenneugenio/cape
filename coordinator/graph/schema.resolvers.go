@@ -8,9 +8,9 @@ import (
 	"fmt"
 
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
-	"github.com/capeprivacy/cape/database"
 	fw "github.com/capeprivacy/cape/framework"
 	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"

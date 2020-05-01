@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/urfave/cli/v2"
 
-	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/coordinator/database"
 )
 
 func updateCmd(c *cli.Context) error {
@@ -12,7 +12,7 @@ func updateCmd(c *cli.Context) error {
 		return err
 	}
 
-	migrator, err := database.NewMigrator(dbURL.URL, "migrations")
+	migrator, err := database.NewMigrator(dbURL.URL, "coordinator/migrations")
 	if err != nil {
 		return err
 	}

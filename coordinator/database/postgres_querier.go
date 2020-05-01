@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgconn"
 	pgx "github.com/jackc/pgx/v4"
 
-	"github.com/capeprivacy/cape/database/types"
+	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 

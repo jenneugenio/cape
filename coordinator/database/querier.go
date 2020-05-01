@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 
-	"github.com/capeprivacy/cape/database/types"
+	"github.com/capeprivacy/cape/coordinator/database/types"
 )
 
 // Querier represents various backend queries you can perform

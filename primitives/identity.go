@@ -1,7 +1,7 @@
 package primitives
 
 import (
-	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/coordinator/database"
 )
 
 // Identity represents an identity type such as user or service

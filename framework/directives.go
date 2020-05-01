@@ -6,7 +6,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 
 	"github.com/capeprivacy/cape/auth"
-	"github.com/capeprivacy/cape/database"
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
 

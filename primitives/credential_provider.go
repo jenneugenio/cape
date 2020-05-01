@@ -1,6 +1,6 @@
 package primitives
 
-import "github.com/capeprivacy/cape/database"
+import "github.com/capeprivacy/cape/coordinator/database"
 
 type CredentialProvider interface {
 	database.Entity
