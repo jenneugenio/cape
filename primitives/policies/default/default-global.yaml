@@ -1,0 +1,43 @@
+version: 1
+label: default-global
+rules:
+  # Only a user can create/delete a token for themselves
+  - target: "tokens:*"
+    action: create
+    effect: allow
+  - target: "tokens:*"
+    action: delete
+    effect: allow
+  # Identities can create a session for themselves
+  - target: "sessions:*"
+    action: create
+    effect: allow
+  # Identities can delete a session for themselves
+  - target: "sessions:*"
+    action: delete
+    effect: allow
+  # All identities can list all users and services
+  - target: "users:*"
+    action: read
+    effect: allow
+  - target: "services:*"
+    action: read
+    effect: allow
+  # All identities can list all roles, their attachments, and assignments
+  - target: "roles:*"
+    action: read
+    effect: allow
+  - target: "attachments:*"
+    action: read
+    effect: allow
+  - target: "assignments:*"
+    action: read
+    effect: allow
+  # All identities can list all policies and their attachments
+  - target: "policies:*"
+    action: read
+    effect: allow
+  # All identities can list all source but cannot retrieve their credentials
+  - target: "sources:*"
+    action: read
+    effect: allow

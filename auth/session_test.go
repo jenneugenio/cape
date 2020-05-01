@@ -28,7 +28,7 @@ func TestCan(t *testing.T) {
 		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{})
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = session.Can(primitives.Create, primitives.UserType)
+		err = session.Can(primitives.Create, primitives.UserType)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(errors.CausedBy(err, AuthorizationFailure)).To(gm.BeTrue())
 	})
@@ -42,7 +42,7 @@ func TestCan(t *testing.T) {
 			Label:   "my-policy",
 			Rules: []*primitives.Rule{
 				{
-					Target: "internal:users.*",
+					Target: "users:*",
 					Action: primitives.Create,
 					Effect: primitives.Deny,
 				},
@@ -55,7 +55,7 @@ func TestCan(t *testing.T) {
 		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{p})
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = session.Can(primitives.Create, primitives.UserType)
+		err = session.Can(primitives.Create, primitives.UserType)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(errors.CausedBy(err, AuthorizationFailure)).To(gm.BeTrue())
 	})
@@ -69,7 +69,7 @@ func TestCan(t *testing.T) {
 			Label:   "my-policy",
 			Rules: []*primitives.Rule{
 				{
-					Target: "internal:users.*",
+					Target: "users:*",
 					Action: primitives.Create,
 					Effect: primitives.Allow,
 				},
@@ -82,8 +82,7 @@ func TestCan(t *testing.T) {
 		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{p})
 		gm.Expect(err).To(gm.BeNil())
 
-		allowed, err := session.Can(primitives.Create, primitives.UserType)
+		err = session.Can(primitives.Create, primitives.UserType)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(allowed).To(gm.BeTrue())
 	})
 }

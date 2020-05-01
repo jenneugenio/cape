@@ -6,6 +6,12 @@ import (
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
+const (
+	DefaultAdminPolicy         = Label("default-admin")
+	DefaultGlobalPolicy        = Label("default-global")
+	DefaultDataConnectorPolicy = Label("default-data-connector")
+)
+
 // Policy is a single defined policy
 type Policy struct {
 	*database.Primitive

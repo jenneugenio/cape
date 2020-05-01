@@ -127,6 +127,7 @@ func (q *postgresQuerier) Query(ctx context.Context, arr interface{}, f Filter) 
 	if !itemType.Type().Implements(entityType) && itemType.Kind() == reflect.Ptr {
 		itemType = reflect.New(arrValue.Type().Elem().Elem())
 	}
+
 	e := itemType.Interface().(Entity)
 
 	where, params, err := buildFilter(f)
@@ -235,4 +236,32 @@ func getItem(v reflect.Value, pos int) interface{} {
 	}
 
 	return v.Index(pos).Addr().Interface()
+}
+
+func EntityTypeFromPtrSlice(arr interface{}) types.Type {
+	// We want to use reflect to check whether or not the underlying type of
+	// arr is a pointer to a slice or not.
+	arrPtr := reflect.ValueOf(arr)
+	if arrPtr.Kind() != reflect.Ptr {
+		panic("Expected arr to be a pointer to a slice")
+	}
+
+	arrValue := arrPtr.Elem()
+	if arrValue.Kind() != reflect.Slice {
+		panic("Expected arr to be a pointer to a slice")
+	}
+
+	// Now we need to figure out the underlying concrete type and ensure that
+	// it satisfies the primitive.Entity interface. If it doesn't then we've
+	// encountered a developer error!
+	//
+	// To do this, we create an instance of the underlying type of this slice.
+	// This can then be used later on to determine the actual table to query.
+	entityType := reflect.TypeOf((*Entity)(nil)).Elem()
+	itemType := reflect.New(arrValue.Type().Elem())
+	if !itemType.Type().Implements(entityType) && itemType.Kind() == reflect.Ptr {
+		itemType = reflect.New(arrValue.Type().Elem().Elem())
+	}
+
+	return itemType.Interface().(Entity).GetType()
 }

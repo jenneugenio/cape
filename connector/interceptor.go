@@ -21,12 +21,12 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
-type TokenValidator interface {
-	ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error)
+type CoordinatorProvider interface {
+	GetCoordinator() Coordinator
 }
 
 func authStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	t := srv.(TokenValidator)
+	c := srv.(CoordinatorProvider)
 	md, ok := metadata.FromIncomingContext(ss.Context())
 	if !ok {
 		return auth.ErrorInvalidAuthHeader
@@ -37,13 +37,25 @@ func authStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.Str
 		return auth.ErrorInvalidAuthHeader
 	}
 
-	identity, err := t.ValidateToken(ss.Context(), authToken[0])
+	coordinator := c.GetCoordinator()
+
+	identity, err := coordinator.ValidateToken(ss.Context(), authToken[0])
+	if err != nil {
+		return err
+	}
+
+	policies, err := coordinator.GetIdentityPolicies(ss.Context(), identity.GetID())
+	if err != nil {
+		return err
+	}
+
+	session, err := auth.NewSession(identity, &primitives.Session{}, policies)
 	if err != nil {
 		return err
 	}
 
 	wStream := grpc_middleware.WrapServerStream(ss)
-	wStream.WrappedContext = context.WithValue(wStream.WrappedContext, fw.IdentityContextKey, identity)
+	wStream.WrappedContext = context.WithValue(wStream.WrappedContext, fw.SessionContextKey, session)
 
 	return handler(srv, wStream)
 }

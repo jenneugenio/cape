@@ -2,6 +2,9 @@ package graph
 
 import (
 	"context"
+	"io/ioutil"
+
+	"github.com/markbates/pkger"
 
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
@@ -58,7 +61,7 @@ func buildAttachment(ctx context.Context, db database.Backend,
 // createSystemRoles is a helper intended to be used by the Setup graphql route.
 // It creates all the roles given by the list of role labels and makes sure
 // they are system roles
-func createSystemRoles(ctx context.Context, tx database.Transaction) error {
+func createSystemRoles(ctx context.Context, db database.Querier) error {
 	entities := make([]database.Entity, len(primitives.SystemRoles))
 	for i, roleLabel := range primitives.SystemRoles {
 		role, err := primitives.NewRole(roleLabel, true)
@@ -69,21 +72,21 @@ func createSystemRoles(ctx context.Context, tx database.Transaction) error {
 		entities[i] = role
 	}
 
-	return tx.Create(ctx, entities...)
+	return db.Create(ctx, entities...)
 }
 
 // getRolesByLabel is a helper to retrieve a specific role from the database. This is
 // useful for getting a system role from the database.
-func getRolesByLabel(ctx context.Context, tx database.Transaction, labels []primitives.Label) ([]*primitives.Role, error) {
+func getRolesByLabel(ctx context.Context, db database.Querier, labels []primitives.Label) ([]*primitives.Role, error) {
 	in := make(database.In, len(labels))
 	for i, label := range labels {
 		in[i] = label
 	}
 
 	f := database.NewFilter(database.Where{"label": in}, nil, nil)
-	roles := []*primitives.Role{}
+	var roles []*primitives.Role
 
-	err := tx.Query(ctx, &roles, f)
+	err := db.Query(ctx, &roles, f)
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +99,8 @@ func getRolesByLabel(ctx context.Context, tx database.Transaction, labels []prim
 }
 
 // getRoles is a helper that returns all of the roles assigned to a given identity.
-func getRoles(ctx context.Context, db database.Backend, identityID database.ID) ([]*primitives.Role, error) {
-	assignments := []*primitives.Assignment{}
+func getRoles(ctx context.Context, db database.Querier, identityID database.ID) ([]*primitives.Role, error) {
+	var assignments []*primitives.Assignment
 	filter := database.NewFilter(database.Where{
 		"identity_id": identityID,
 	}, nil, nil)
@@ -110,7 +113,7 @@ func getRoles(ctx context.Context, db database.Backend, identityID database.ID) 
 		return e.(*primitives.Assignment).RoleID
 	})
 
-	roles := []*primitives.Role{}
+	var roles []*primitives.Role
 	err = db.Query(ctx, &roles, database.NewFilter(database.Where{
 		"id": roleIDs,
 	}, nil, nil))
@@ -123,7 +126,7 @@ func getRoles(ctx context.Context, db database.Backend, identityID database.ID) 
 
 // createAssignments is a helper function that makes it easy to assign roles to
 // a given identity.
-func createAssignments(ctx context.Context, tx database.Transaction,
+func createAssignments(ctx context.Context, db database.Querier,
 	identity primitives.Identity, roles []*primitives.Role) error {
 	assignments := make([]database.Entity, len(roles))
 	for i, role := range roles {
@@ -135,5 +138,80 @@ func createAssignments(ctx context.Context, tx database.Transaction,
 		assignments[i] = assignment
 	}
 
-	return tx.Create(ctx, assignments...)
+	return db.Create(ctx, assignments...)
+}
+
+func attachDefaultPolicy(ctx context.Context, db database.Querier) error {
+	adminPolicy, err := loadPolicyFile(primitives.DefaultAdminPolicy.String() + ".yaml")
+	if err != nil {
+		return err
+	}
+
+	globalPolicy, err := loadPolicyFile(primitives.DefaultGlobalPolicy.String() + ".yaml")
+	if err != nil {
+		return err
+	}
+
+	dcPolicy, err := loadPolicyFile(primitives.DefaultDataConnectorPolicy.String() + ".yaml")
+	if err != nil {
+		return err
+	}
+
+	err = db.Create(ctx, adminPolicy, globalPolicy, dcPolicy)
+	if err != nil {
+		return err
+	}
+
+	adminAttachment, err := createAttachment(ctx, db, adminPolicy.ID, primitives.AdminRole)
+	if err != nil {
+		return err
+	}
+
+	globalAttachment, err := createAttachment(ctx, db, globalPolicy.ID, primitives.GlobalRole)
+	if err != nil {
+		return err
+	}
+
+	dcAttachment, err := createAttachment(ctx, db, dcPolicy.ID, primitives.DataConnectorRole)
+	if err != nil {
+		return err
+	}
+
+	err = db.Create(ctx, adminAttachment, globalAttachment, dcAttachment)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createAttachment(ctx context.Context, db database.Querier, policyID database.ID,
+	roleLabel primitives.Label) (*primitives.Attachment, error) {
+	roles, err := getRolesByLabel(ctx, db, []primitives.Label{roleLabel})
+	if err != nil {
+		return nil, err
+	}
+
+	attachment, err := primitives.NewAttachment(policyID, roles[0].ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return attachment, nil
+}
+
+func loadPolicyFile(file string) (*primitives.Policy, error) {
+	dir := pkger.Dir("/primitives/policies/default")
+
+	f, err := dir.Open(file)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	return primitives.ParsePolicy(b)
 }

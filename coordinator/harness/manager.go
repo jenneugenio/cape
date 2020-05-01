@@ -4,11 +4,12 @@ import (
 	"context"
 	"io/ioutil"
 
+	"github.com/manifoldco/go-base64"
+
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
-	"github.com/manifoldco/go-base64"
 )
 
 const AdminEmail = "admin@cape.com"

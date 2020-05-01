@@ -92,14 +92,14 @@ func Register(t Type, name string, mutable bool) {
 }
 
 // Get returns an Type for the given
-func Get(name string) Type {
+func Get(name string) (Type, bool) {
 	name = strings.ToLower(name)
 	i, ok := inverse[name]
 	if !ok {
-		panic(fmt.Sprintf("Unknown entity type with name: %s", name))
+		return 0, false
 	}
 
-	return i.t
+	return i.t, true
 }
 
 // DecodeBytes returns an entity type for the given bytes, if a type hasn't been

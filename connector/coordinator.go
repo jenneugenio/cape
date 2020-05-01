@@ -6,22 +6,29 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/capeprivacy/cape/auth"
-	"github.com/capeprivacy/cape/coordinator"
+	coor "github.com/capeprivacy/cape/coordinator"
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
+
+type Coordinator interface {
+	ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error)
+	GetIdentityPolicies(ctx context.Context, id database.ID) ([]*primitives.Policy, error)
+	GetSourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error)
+}
 
 // Coordinator wraps a coordinator client giving some extra features
 // such as lazily authenticated (i.e. only authenticating when necessary)
 // and validating that a given token has a valid sessio
-type Coordinator struct {
-	*coordinator.Client
+type coordinator struct {
+	*coor.Client
 	token  *auth.APIToken
 	logger *zerolog.Logger
 }
 
 // NewCoordinator returns a new Coordinator
-func NewCoordinator(token *auth.APIToken, logger *zerolog.Logger) *Coordinator {
-	return &Coordinator{
+func NewCoordinator(token *auth.APIToken, logger *zerolog.Logger) Coordinator {
+	return &coordinator{
 		token:  token,
 		logger: logger,
 	}
@@ -30,7 +37,7 @@ func NewCoordinator(token *auth.APIToken, logger *zerolog.Logger) *Coordinator {
 // ValidateToken validates that a given token has a valid session and returns the
 // related identity. Used for validating that a user making a request actually
 // has a valid session.
-func (c *Coordinator) ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error) {
+func (c *coordinator) ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error) {
 	// make sure the connector is actually authenticated before continuing
 	err := c.authenticateClient(ctx)
 	if err != nil {
@@ -42,17 +49,17 @@ func (c *Coordinator) ValidateToken(ctx context.Context, tokenStr string) (primi
 		return nil, err
 	}
 
-	transport := coordinator.NewTransport(c.token.URL, token)
-	userClient := coordinator.NewClient(transport)
+	transport := coor.NewTransport(c.token.URL, token)
+	userClient := coor.NewClient(transport)
 
 	return userClient.Me(ctx)
 }
 
 // authenticateClient lazily authenticates with a coordinator if required
-func (c *Coordinator) authenticateClient(ctx context.Context) error {
+func (c *coordinator) authenticateClient(ctx context.Context) error {
 	if c.Client == nil {
-		transport := coordinator.NewTransport(c.token.URL, nil)
-		c.Client = coordinator.NewClient(transport)
+		transport := coor.NewTransport(c.token.URL, nil)
+		c.Client = coor.NewClient(transport)
 	}
 
 	if c.Authenticated() {

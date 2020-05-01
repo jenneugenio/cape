@@ -59,6 +59,11 @@ func (t Test) Integration(ctx context.Context) error {
 		return err
 	}
 
+	file := os.Getenv("CAPE_TEST_FILE")
+	if file == "" {
+		file = "./..."
+	}
+
 	env := mage.Env{
 		"CAPE_DB_URL":             "postgres://postgres:dev@localhost:5432/postgres?sslmode=disable",
 		"CAPE_DB_MIGRATIONS":      filepath.Join(wd, "coordinator/migrations"),
@@ -67,7 +72,7 @@ func (t Test) Integration(ctx context.Context) error {
 	}
 	env.Source()
 
-	_, err = sh.Exec(env, os.Stdout, os.Stderr, "go", "test", "-v", "./...", "-tags=integration")
+	_, err = sh.Exec(env, os.Stdout, os.Stderr, "go", "test", "-v", file, "-tags=integration")
 	return err
 }
 

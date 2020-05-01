@@ -6,35 +6,36 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
-// Info holds information related to authenticating and
+// Session holds information related to authenticating and
 // authorizing the contained identity
 type Session struct {
-	identity primitives.Identity
-	session  *primitives.Session
-	policies []*primitives.Policy
+	Identity primitives.Identity
+	Session  *primitives.Session
+	Policies []*primitives.Policy
 }
 
 // NewSession returns a new auth Session
 func NewSession(identity primitives.Identity, session *primitives.Session, policies []*primitives.Policy) (*Session, error) {
-	info := &Session{
-		identity: identity,
-		session:  session,
-		policies: policies,
+	s := &Session{
+		Identity: identity,
+		Session:  session,
+		Policies: policies,
 	}
 
-	return info, info.Validate()
+	return s, s.Validate()
 }
 
+// Validate validates that the Session contains valid data
 func (s *Session) Validate() error {
-	if s.identity == nil {
+	if s.Identity == nil {
 		return errors.New(InvalidInfo, "Identity must not be nil")
 	}
 
-	if s.session == nil {
+	if s.Session == nil {
 		return errors.New(InvalidInfo, "Session must not be nil")
 	}
 
-	if s.policies == nil {
+	if s.Policies == nil {
 		return errors.New(InvalidInfo, "Policies must not be nil")
 	}
 
@@ -43,14 +44,14 @@ func (s *Session) Validate() error {
 
 // Can checks to see if the given identity can do an action on the given primitive type. This
 // is intended to work on internal authorization and policy decisions.
-func (s *Session) Can(action primitives.Action, typ types.Type) (bool, error) {
+func (s *Session) Can(action primitives.Action, typ types.Type) error {
 	var rules []*primitives.Rule
 
-	for _, p := range s.policies {
+	for _, p := range s.Policies {
 		for _, r := range p.Spec.Rules {
-			if r.Target.Collection().String() == typ.String() && r.Action == action {
+			if r.Target.Type().String() == typ.String() && r.Action == action {
 				if r.Effect == primitives.Deny {
-					return false, errors.New(AuthorizationFailure, "A rule denies this action")
+					return errors.New(AuthorizationFailure, "A rule denies this action")
 				}
 				rules = append(rules, r)
 			}
@@ -58,8 +59,8 @@ func (s *Session) Can(action primitives.Action, typ types.Type) (bool, error) {
 	}
 
 	if len(rules) == 0 {
-		return false, errors.New(AuthorizationFailure, "No rules match this target and action")
+		return errors.New(AuthorizationFailure, "No rules match this target and action")
 	}
 
-	return true, nil
+	return nil
 }
