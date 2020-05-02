@@ -42,7 +42,7 @@ func (a *AppProvider) Client(ctx context.Context) (*coordinator.Client, error) {
 // UI implements UI on the provider interface
 func (a *AppProvider) UI(ctx context.Context) ui.UI {
 	cfg := Config(ctx)
-	return ui.NewStdout(cfg)
+	return ui.NewStdout(cfg.UI.Colors, cfg.UI.Animations)
 }
 
 // NewAppProvider returns a provider

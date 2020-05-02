@@ -33,7 +33,12 @@ func init() {
 		panic(err)
 	}
 
-	kind, err := NewKind(dockerdep, "1.11")
+	registry, err := NewDockerRegistry(dockerdep)
+	if err != nil {
+		panic(err)
+	}
+
+	kind, err := NewKind(dockerdep, "0.8", "1.11")
 	if err != nil {
 		panic(err)
 	}
@@ -59,6 +64,11 @@ func init() {
 	}
 
 	err = Dependencies.Add(kind)
+	if err != nil {
+		panic(err)
+	}
+
+	err = Dependencies.Add(registry)
 	if err != nil {
 		panic(err)
 	}

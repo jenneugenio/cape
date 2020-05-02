@@ -2,6 +2,7 @@ package mage
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
@@ -63,6 +64,15 @@ func (d *Docker) Check(_ context.Context) error {
 		return fmt.Errorf("Please upgrade your version of Docker from %s to %s or greater", v.String(), d.Version.String())
 	}
 
+	out, err = sh.Output("docker", "info", "-f", "{{json .ServerErrors}}")
+	if err != nil {
+		return fmt.Errorf("Could not run `docker info`: %s", err.Error())
+	}
+
+	if out != "null" {
+		return fmt.Errorf("Encountered docker server errors: %s", out)
+	}
+
 	return nil
 }
 
@@ -70,12 +80,34 @@ func (d *Docker) Build(_ context.Context, label, dockerfile string, args map[str
 	cmd := []string{"build", "-t", label, "-f", dockerfile}
 	if len(args) > 0 {
 		for key, value := range args {
-			cmd = append(cmd, "--build-arg", fmt.Sprintf("\"%s=%s\"", key, value))
+			cmd = append(cmd, "--build-arg", fmt.Sprintf("%s=%s", key, value))
 		}
 	}
 
 	cmd = append(cmd, ".")
 	return sh.RunV("docker", cmd...)
+}
+
+type NetworkSettings struct {
+	Networks map[string]struct {
+		IPAddress string `json:"IPAddress"`
+	} `json:"Networks"`
+	IPAddress string `json:"IPAddress"`
+}
+
+func (d *Docker) Network(_ context.Context, label string) (*NetworkSettings, error) {
+	out, err := sh.Output("docker", "inspect", "-f", "{{json .NetworkSettings}}", label)
+	if err != nil {
+		return nil, err
+	}
+
+	settings := &NetworkSettings{}
+	err = json.Unmarshal([]byte(out), settings)
+	if err != nil {
+		return nil, err
+	}
+
+	return settings, nil
 }
 
 func (d *Docker) Name() string {

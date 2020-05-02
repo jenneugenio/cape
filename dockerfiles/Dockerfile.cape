@@ -1,6 +1,7 @@
 FROM capeprivacy/base:latest
 
-ENV VERSION="0.0.0"
+ARG VERSION="0.0.0"
+ENV VERSION=$VERSION
 
 COPY . ./
 
