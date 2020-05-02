@@ -62,7 +62,7 @@ require (
 	helm.sh/helm/v3 v3.2.0
 	mvdan.cc/unparam v0.0.0-20200314162735-0ac8026f7d06 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect
-	sigs.k8s.io/kind v0.7.0
+	sigs.k8s.io/kind v0.8.0
 	sigs.k8s.io/yaml v1.2.0
 	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )

@@ -6,16 +6,27 @@ import (
 
 	"github.com/magefile/mage/mg"
 
+	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/capeprivacy/cape/mage"
 )
 
 var cluster = &mage.Cluster{
 	Name:       "cape-local",
-	ConfigFile: "mage/config/kind/cape-local.yaml",
+	ConfigFile: "build/local/kind/cape-local.yaml",
+}
+
+var registry = &mage.Registry{
+	Name: "cape-local-docker-registry",
+	Port: "5000",
 }
 
 func init() {
 	err := mage.Tracker.Add(fmt.Sprintf("kind://%s", cluster.Name), mage.CleanKind(cluster))
+	if err != nil {
+		panic(err)
+	}
+
+	err = mage.Tracker.Add(fmt.Sprintf("registry://%s", registry.Name), mage.CleanDockerRegistry(registry))
 	if err != nil {
 		panic(err)
 	}
@@ -26,7 +37,7 @@ type Local mg.Namespace
 // Create creates a local kubernetes cluster, builds the required docker
 // images, and then deploys their subsequent helm packages into the cluster.
 func (l Local) Create(ctx context.Context) error {
-	required := []string{"kind"}
+	required := []string{"kind", "docker_registry"}
 	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
 		return d.Check(ctx)
 	})
@@ -40,13 +51,31 @@ func (l Local) Create(ctx context.Context) error {
 	}
 
 	kind := deps[0].(*mage.Kind)
-	return kind.Create(ctx, cluster)
+	dockerRegistry := deps[1].(*mage.DockerRegistry)
+
+	network, err := dockerRegistry.Create(ctx, registry)
+	if err != nil {
+		return err
+	}
+
+	err = kind.Create(ctx, cluster, registry)
+	if err != nil {
+		return err
+	}
+
+	if _, ok := network.Networks["kind"]; ok {
+		return nil
+	}
+
+	// Need to connecto the docker registry to the kind docker network
+	return dockerRegistry.Connect(ctx, registry, "kind")
 }
 
 // Status returns the current status of the kubernetes cluster, services, and
 // jobs that are deployed by cape into the local cape cluster.
 func (l Local) Status(ctx context.Context) error {
-	required := []string{"kind"}
+	u := ui.NewStdout(true, false)
+	required := []string{"kind", "docker_registry"}
 	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
 		return d.Check(ctx)
 	})
@@ -60,7 +89,24 @@ func (l Local) Status(ctx context.Context) error {
 	}
 
 	kind := deps[0].(*mage.Kind)
-	return kind.Status(ctx, cluster)
+	dockerRegistry := deps[1].(*mage.DockerRegistry)
+
+	kindState, err := kind.Status(ctx, cluster)
+	if err != nil {
+		return err
+	}
+
+	registryState, err := dockerRegistry.Status(ctx, registry)
+	if err != nil {
+		return err
+	}
+
+	return u.Details(ui.Details{
+		"Kind Cluster":    kindState,
+		"Docker Registry": registryState,
+	})
+
+	return nil
 }
 
 // Destroy deletes the kubernetes clusters and any managed volumes completely

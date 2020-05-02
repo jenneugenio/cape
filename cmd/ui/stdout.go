@@ -13,22 +13,23 @@ import (
 	"github.com/chzyer/readline"
 	"github.com/manifoldco/promptui"
 
-	"github.com/capeprivacy/cape/cmd/config"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // Stdout is an implementation of UI that prints to stdout
 // while taking into account the state of a users terminal.
 type Stdout struct {
-	Config   *config.Config
-	Attached bool
+	Attached   bool
+	Animations bool
+	Colors     bool
 }
 
 // NewStdout returns a configured Stdout struct
-func NewStdout(cfg *config.Config) *Stdout {
+func NewStdout(colors bool, animations bool) *Stdout {
 	return &Stdout{
-		Config:   cfg,
-		Attached: Attached(),
+		Colors:     colors,
+		Animations: animations,
+		Attached:   Attached(),
 	}
 }
 
@@ -207,7 +208,7 @@ func (u *Stdout) Template(t string, args interface{}) error {
 
 // CanColorized returns whether or not colorization can be supported
 func (u *Stdout) CanColorize() bool {
-	return u.Config.UI.Colors && u.Attached
+	return u.Colors && u.Attached
 }
 
 // Attached return a boolean representing whether or not the current session is
