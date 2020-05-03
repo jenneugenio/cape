@@ -23,7 +23,7 @@ func TestIdentities(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	h, err := harness.NewHarness(cfg)
-	gm.Expect(err)
+	gm.Expect(err).To(gm.BeNil())
 
 	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())

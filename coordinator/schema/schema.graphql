@@ -108,8 +108,8 @@ input RemoveSourceRequest {
 # ------------------------------------------------------------------
 
 type Query {
-  user(id: ID!): User!
-  users: [User!]
+  user(id: ID!): User! @isAuthenticated()
+  users: [User!] @isAuthenticated()
 
   me: Identity! @isAuthenticated()
 
@@ -117,7 +117,7 @@ type Query {
   source(id: ID!): Source! @isAuthenticated()
   sourceByLabel(label: Label!): Source! @isAuthenticated()
 
-  identities(emails: [Email!]): [Identity!]
+  identities(emails: [Email!]): [Identity!] @isAuthenticated()
 }
 
 type Mutation {

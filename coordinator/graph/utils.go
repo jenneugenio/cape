@@ -6,13 +6,14 @@ import (
 
 	"github.com/markbates/pkger"
 
+	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
 
-func queryIdentity(ctx context.Context, db database.Backend, email primitives.Email) (primitives.Identity, error) {
+func queryIdentity(ctx context.Context, db database.Querier, email primitives.Email) (primitives.Identity, error) {
 	filter := database.NewFilter(database.Where{"email": email.String()}, nil, nil)
 
 	user := &primitives.User{}
@@ -35,7 +36,7 @@ func queryIdentity(ctx context.Context, db database.Backend, email primitives.Em
 
 // buildAttachment takes a primitives attachment and builds at graphql
 // model representation of it
-func buildAttachment(ctx context.Context, db database.Backend,
+func buildAttachment(ctx context.Context, db *auth.Enforcer,
 	attachment *primitives.Attachment) (*model.Attachment, error) {
 	role := &primitives.Role{}
 	err := db.Get(ctx, attachment.RoleID, role)
@@ -99,7 +100,7 @@ func getRolesByLabel(ctx context.Context, db database.Querier, labels []primitiv
 }
 
 // getRoles is a helper that returns all of the roles assigned to a given identity.
-func getRoles(ctx context.Context, db database.Querier, identityID database.ID) ([]*primitives.Role, error) {
+func getRoles(ctx context.Context, db *auth.Enforcer, identityID database.ID) ([]*primitives.Role, error) {
 	var assignments []*primitives.Assignment
 	filter := database.NewFilter(database.Where{
 		"identity_id": identityID,

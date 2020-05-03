@@ -6,8 +6,10 @@ package graph
 import (
 	"context"
 
+	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
+	fw "github.com/capeprivacy/cape/framework"
 	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -24,7 +26,10 @@ func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRol
 	}
 	defer tx.Rollback(ctx) // nolint: errcheck
 
-	err = tx.Create(ctx, role)
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	err = enforcer.Create(ctx, role)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +43,7 @@ func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRol
 			}
 			assignments[i] = assignment
 		}
-		err = tx.Create(ctx, assignments...)
+		err = enforcer.Create(ctx, assignments...)
 		if err != nil {
 			return nil, err
 		}
@@ -53,8 +58,11 @@ func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRol
 }
 
 func (r *mutationResolver) DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	role := &primitives.Role{}
-	err := r.Backend.Get(ctx, input.ID, role)
+	err := enforcer.Get(ctx, input.ID, role)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +71,7 @@ func (r *mutationResolver) DeleteRole(ctx context.Context, input model.DeleteRol
 		return nil, errs.New(CannotDeleteSystemRole, "Role %s is a system role. Cannot delete", role.Label)
 	}
 
-	err = r.Backend.Delete(ctx, primitives.RoleType, input.ID)
+	err = enforcer.Delete(ctx, primitives.RoleType, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -72,18 +80,21 @@ func (r *mutationResolver) DeleteRole(ctx context.Context, input model.DeleteRol
 }
 
 func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRoleRequest) (*model.Assignment, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	assignment, err := primitives.NewAssignment(input.IdentityID, input.RoleID)
 	if err != nil {
 		return nil, err
 	}
 
-	err = r.Backend.Create(ctx, assignment)
+	err = enforcer.Create(ctx, assignment)
 	if err != nil {
 		return nil, err
 	}
 
 	role := &primitives.Role{}
-	err = r.Backend.Get(ctx, input.RoleID, role)
+	err = enforcer.Get(ctx, input.RoleID, role)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +111,7 @@ func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRol
 		identity = &primitives.Service{}
 	}
 
-	err = r.Backend.Get(ctx, input.IdentityID, identity)
+	err = enforcer.Get(ctx, input.IdentityID, identity)
 	if err != nil {
 		return nil, err
 	}
@@ -115,6 +126,9 @@ func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRol
 }
 
 func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignRoleRequest) (*string, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	assignment := &primitives.Assignment{}
 
 	filter := database.NewFilter(database.Where{
@@ -122,12 +136,12 @@ func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignR
 		"identity_id": input.IdentityID.String(),
 	}, nil, nil)
 
-	err := r.Backend.QueryOne(ctx, assignment, filter)
+	err := enforcer.QueryOne(ctx, assignment, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	err = r.Backend.Delete(ctx, primitives.AssignmentType, assignment.ID)
+	err = enforcer.Delete(ctx, primitives.AssignmentType, assignment.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -136,8 +150,11 @@ func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignR
 }
 
 func (r *queryResolver) Role(ctx context.Context, id database.ID) (*primitives.Role, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	var primitive primitives.Role
-	err := r.Backend.Get(ctx, id, &primitive)
+	err := enforcer.Get(ctx, id, &primitive)
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +163,11 @@ func (r *queryResolver) Role(ctx context.Context, id database.ID) (*primitives.R
 }
 
 func (r *queryResolver) RoleByLabel(ctx context.Context, label primitives.Label) (*primitives.Role, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	role := &primitives.Role{}
-	err := r.Backend.QueryOne(ctx, role, database.NewFilter(database.Where{"label": label}, nil, nil))
+	err := enforcer.QueryOne(ctx, role, database.NewFilter(database.Where{"label": label}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
@@ -156,8 +176,11 @@ func (r *queryResolver) RoleByLabel(ctx context.Context, label primitives.Label)
 }
 
 func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
-	roles := []*primitives.Role{}
-	err := r.Backend.Query(ctx, &roles, database.NewEmptyFilter())
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	var roles []*primitives.Role
+	err := enforcer.Query(ctx, &roles, database.NewEmptyFilter())
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +189,11 @@ func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
 }
 
 func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]primitives.Identity, error) {
-	assignments := []*primitives.Assignment{}
-	err := r.Backend.Query(ctx, &assignments, database.NewFilter(database.Where{"role_id": roleID.String()}, nil, nil))
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	var assignments []*primitives.Assignment
+	err := enforcer.Query(ctx, &assignments, database.NewFilter(database.Where{"role_id": roleID.String()}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +215,7 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 
 	var users []*primitives.User
 	if len(userIDs) > 0 {
-		err = r.Backend.Query(ctx, &users, database.NewFilter(database.Where{"id": userIDs}, nil, nil))
+		err = enforcer.Query(ctx, &users, database.NewFilter(database.Where{"id": userIDs}, nil, nil))
 		if err != nil {
 			return nil, err
 		}
@@ -197,7 +223,7 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 
 	var services []*primitives.Service
 	if len(serviceIDs) > 0 {
-		err = r.Backend.Query(ctx, &services, database.NewFilter(database.Where{"id": serviceIDs}, nil, nil))
+		err = enforcer.Query(ctx, &services, database.NewFilter(database.Where{"id": serviceIDs}, nil, nil))
 		if err != nil {
 			return nil, err
 		}
@@ -205,15 +231,11 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 
 	identities := make([]primitives.Identity, len(assignments))
 	for i, user := range users {
-		u := &primitives.User{}
-		*u = *user
-		identities[i] = u
+		identities[i] = user
 	}
 
 	for i, service := range services {
-		s := &primitives.Service{}
-		*s = *service
-		identities[i+len(users)] = s
+		identities[i+len(users)] = service
 	}
 
 	return identities, nil

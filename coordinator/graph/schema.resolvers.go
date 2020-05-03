@@ -130,9 +130,12 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRe
 }
 
 func (r *mutationResolver) AddSource(ctx context.Context, input model.AddSourceRequest) (*primitives.Source, error) {
+	session := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(session, r.Backend)
+
 	if input.ServiceID != nil {
 		service := &primitives.Service{}
-		err := r.Backend.Get(ctx, *input.ServiceID, service)
+		err := enforcer.Get(ctx, *input.ServiceID, service)
 		if err != nil {
 			return nil, err
 		}
@@ -147,7 +150,7 @@ func (r *mutationResolver) AddSource(ctx context.Context, input model.AddSourceR
 		return nil, err
 	}
 
-	err = r.Backend.Create(ctx, source)
+	err = enforcer.Create(ctx, source)
 	if err != nil {
 		return nil, err
 	}
@@ -156,14 +159,17 @@ func (r *mutationResolver) AddSource(ctx context.Context, input model.AddSourceR
 }
 
 func (r *mutationResolver) RemoveSource(ctx context.Context, input model.RemoveSourceRequest) (*string, error) {
+	session := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(session, r.Backend)
+
 	source := primitives.Source{}
 	filter := database.Filter{Where: database.Where{"label": input.Label}}
-	err := r.Backend.QueryOne(ctx, &source, filter)
+	err := enforcer.QueryOne(ctx, &source, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	err = r.Backend.Delete(ctx, primitives.SourcePrimitiveType, source.ID)
+	err = enforcer.Delete(ctx, primitives.SourcePrimitiveType, source.ID)
 	return nil, err
 }
 
@@ -216,6 +222,8 @@ func (r *mutationResolver) CreateAuthSession(ctx context.Context, input model.Au
 	logger := fw.Logger(ctx)
 	s := fw.Session(ctx)
 
+	enforcer := auth.NewEnforcer(s, r.Backend)
+
 	session := s.Session
 	identity := s.Identity
 
@@ -247,7 +255,7 @@ func (r *mutationResolver) CreateAuthSession(ctx context.Context, input model.Au
 		return nil, auth.ErrAuthentication
 	}
 
-	err = r.Backend.Create(ctx, authSession)
+	err = enforcer.Create(ctx, authSession)
 	if err != nil {
 		msg := fmt.Sprintf("Could not authenticate identity %s. Create session in database", identity.GetEmail())
 		logger.Error().Err(err).Msg(msg)
@@ -258,13 +266,16 @@ func (r *mutationResolver) CreateAuthSession(ctx context.Context, input model.Au
 }
 
 func (r *mutationResolver) DeleteSession(ctx context.Context, input model.DeleteSessionRequest) (*string, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	session := &primitives.Session{}
-	err := r.Backend.QueryOne(ctx, session, database.NewFilter(database.Where{"token": input.Token.String()}, nil, nil))
+	err := enforcer.QueryOne(ctx, session, database.NewFilter(database.Where{"token": input.Token.String()}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
 
-	err = r.Backend.Delete(ctx, primitives.SessionType, session.ID)
+	err = enforcer.Delete(ctx, primitives.SessionType, session.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -273,8 +284,11 @@ func (r *mutationResolver) DeleteSession(ctx context.Context, input model.Delete
 }
 
 func (r *queryResolver) User(ctx context.Context, id database.ID) (*primitives.User, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	user := &primitives.User{}
-	err := r.Backend.Get(ctx, id, user)
+	err := enforcer.Get(ctx, id, user)
 	if err != nil {
 		return nil, err
 	}
@@ -292,8 +306,11 @@ func (r *queryResolver) Me(ctx context.Context) (primitives.Identity, error) {
 }
 
 func (r *queryResolver) Sources(ctx context.Context) ([]*primitives.Source, error) {
-	sources := []*primitives.Source{}
-	err := r.Backend.Query(ctx, &sources, database.NewEmptyFilter())
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	var sources []*primitives.Source
+	err := enforcer.Query(ctx, &sources, database.NewEmptyFilter())
 	if err != nil {
 		return nil, err
 	}
@@ -302,8 +319,11 @@ func (r *queryResolver) Sources(ctx context.Context) ([]*primitives.Source, erro
 }
 
 func (r *queryResolver) Source(ctx context.Context, id database.ID) (*primitives.Source, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	source := &primitives.Source{}
-	err := r.Backend.Get(ctx, id, source)
+	err := enforcer.Get(ctx, id, source)
 	if err != nil {
 		return nil, err
 	}
@@ -312,8 +332,11 @@ func (r *queryResolver) Source(ctx context.Context, id database.ID) (*primitives
 }
 
 func (r *queryResolver) SourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	source := &primitives.Source{}
-	err := r.Backend.QueryOne(ctx, source, database.NewFilter(database.Where{"label": label.String()}, nil, nil))
+	err := enforcer.QueryOne(ctx, source, database.NewFilter(database.Where{"label": label.String()}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
@@ -322,6 +345,9 @@ func (r *queryResolver) SourceByLabel(ctx context.Context, label primitives.Labe
 }
 
 func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Email) ([]primitives.Identity, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	serviceEmails := database.In{}
 	userEmails := database.In{}
 
@@ -333,17 +359,17 @@ func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Ema
 		}
 	}
 
-	users := []primitives.User{}
+	var users []*primitives.User
 	if len(userEmails) > 0 {
-		err := r.Backend.Query(ctx, &users, database.NewFilter(database.Where{"email": userEmails}, nil, nil))
+		err := enforcer.Query(ctx, &users, database.NewFilter(database.Where{"email": userEmails}, nil, nil))
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	services := []primitives.Service{}
+	var services []*primitives.Service
 	if len(serviceEmails) > 0 {
-		err := r.Backend.Query(ctx, &services, database.NewFilter(database.Where{"email": serviceEmails}, nil, nil))
+		err := enforcer.Query(ctx, &services, database.NewFilter(database.Where{"email": serviceEmails}, nil, nil))
 		if err != nil {
 			return nil, err
 		}
@@ -351,22 +377,21 @@ func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Ema
 
 	identities := make([]primitives.Identity, len(users)+len(services))
 	for i, user := range users {
-		u := &primitives.User{}
-		*u = user
-		identities[i] = u
+		identities[i] = user
 	}
 
 	for i, service := range services {
-		s := &primitives.Service{}
-		*s = service
-		identities[i+len(users)] = s
+		identities[i+len(users)] = service
 	}
 
 	return identities, nil
 }
 
 func (r *userResolver) Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error) {
-	return getRoles(ctx, r.Backend, obj.ID)
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	return getRoles(ctx, enforcer, obj.ID)
 }
 
 // Mutation returns generated.MutationResolver implementation.

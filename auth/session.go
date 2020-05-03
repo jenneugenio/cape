@@ -59,7 +59,7 @@ func (s *Session) Can(action primitives.Action, typ types.Type) error {
 	}
 
 	if len(rules) == 0 {
-		return errors.New(AuthorizationFailure, "No rules match this target and action")
+		return errors.New(AuthorizationFailure, "No rules match this target (%s) and action (%s)", typ, action)
 	}
 
 	return nil
