@@ -49,10 +49,10 @@ func (q *Query) Fields() []primitives.Field {
 }
 
 // Conditions returns the fields being used in the conditional part of the query (e.g. the where block)
-func (q *Query) Conditions() []primitives.Field {
-	fields := make([]primitives.Field, len(q.q.Conditions))
-	for i, f := range q.q.Conditions {
-		fields[i] = primitives.Field(f.Operand1)
+func (q *Query) Conditions() map[primitives.Field]string {
+	fields := make(map[primitives.Field]string, len(q.q.Conditions))
+	for _, f := range q.q.Conditions {
+		fields[primitives.Field(f.Operand1)] = f.Operand2
 	}
 
 	return fields

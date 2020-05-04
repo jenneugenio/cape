@@ -114,6 +114,10 @@ func (e *Evaluator) evaluateStar() (*query.Query, error) {
 		return nil, errors.New(auth.AuthorizationFailure, "No policies match the provided query")
 	}
 
+	if e.checkDeniedWheres() {
+		return nil, errors.New(auth.AuthorizationFailure, "Policy where rules denies the query from running")
+	}
+
 	// now, remove the fields that our policy denyFieldRules
 	fields = difference(fields, e.deniedFields())
 	e.q.SetFields(fields)
@@ -150,7 +154,7 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 	}
 
 	// also check which fields they are using in a conditional
-	for _, f := range e.q.Conditions() {
+	for f := range e.q.Conditions() {
 		requestedFields[f] = false
 	}
 
@@ -199,12 +203,38 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 		return nil, errors.New(auth.AuthorizationFailure, "Policy denyFieldRules the query from running")
 	}
 
+	if e.checkDeniedWheres() {
+		return nil, errors.New(auth.AuthorizationFailure, "Policy where rules denies the query from running")
+	}
+
 	err := e.attachConditions()
 	if err != nil {
 		return nil, err
 	}
 
 	return e.q, nil
+}
+
+func (e *Evaluator) checkDeniedWheres() bool {
+	// This checks to see if there is a condition in the submitted query
+	// that has been disallowed. If one is found it denies the whole query.
+	// For example, if a policy does not allow access to a "processor" field
+	// where it equals "Visa" and a user submits a query like:
+	// "SELECT * FROM transactions WHERE processor = 'Visa'" then the
+	// query will be rejected.
+	denied := false
+	for _, r := range e.denyWhereRules {
+		wheres := r.Where
+		for _, w := range wheres {
+			for f, qw := range e.q.Conditions() {
+				if qw == w[f.String()] {
+					denied = true
+				}
+			}
+		}
+	}
+
+	return denied
 }
 
 // NewEvaluator returns a new Evaluator

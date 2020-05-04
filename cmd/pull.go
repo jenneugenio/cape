@@ -177,14 +177,20 @@ func pullDataCmd(c *cli.Context) error {
 		return err
 	}
 
+	u := provider.UI(c.Context)
+
 	// We make the header second as the schema will not be on the stream until after we have received our first record
 	schema := stream.Schema()
 	var header ui.TableHeader
-	for _, f := range schema.Fields {
-		header = append(header, f.Name)
+	if schema != nil && len(body) > 0 {
+		for _, f := range schema.Fields {
+			header = append(header, f.Name)
+		}
+		err := u.Table(header, body)
+		if err != nil {
+			return err
+		}
 	}
 
-	u := provider.UI(c.Context)
-
-	return u.Table(header, body)
+	return u.Template("\nFound {{ . | toString | faded }} record{{ . | pluralize \"s\"}}\n", len(body))
 }

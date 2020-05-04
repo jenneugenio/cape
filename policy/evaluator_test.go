@@ -284,7 +284,7 @@ func TestEvaluator(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 	})
 
-	t.Run("can filter rows with where rules", func(t *testing.T) {
+	t.Run("can filter rows with multiple where rules", func(t *testing.T) {
 		spec := &primitives.PolicySpec{
 			Version: 1,
 			Label:   "my-policy",
@@ -295,22 +295,13 @@ func TestEvaluator(t *testing.T) {
 					Effect: primitives.Allow,
 					Fields: []primitives.Field{primitives.Star},
 				},
-
-				{
-					Target: "records:mycollection.transactions",
-					Action: primitives.Read,
-					Effect: primitives.Deny,
-					Where: []primitives.Where{
-						{"processor": "visa"},
-					},
-				},
 			},
 		}
 
 		p, err := primitives.NewPolicy("my-policy", spec)
 		gm.Expect(err).To(gm.BeNil())
 
-		q, err := query.New("my-query", "SELECT card_number FROM transactions")
+		q, err := query.New("my-query", "SELECT card_number FROM transactions WHERE processor = 'Visa' AND value = 'Kassulke Group'")
 		gm.Expect(err).To(gm.BeNil())
 
 		e := NewEvaluator(q, schema, p)
@@ -319,8 +310,9 @@ func TestEvaluator(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		raw, params := q.Raw()
-		gm.Expect(raw).To(gm.Equal("SELECT card_number FROM transactions WHERE processor != $1"))
-		gm.Expect(params[0]).To(gm.Equal("visa"))
+		gm.Expect(raw).To(gm.Equal("SELECT card_number FROM transactions WHERE processor = $1 AND value = $2"))
+		gm.Expect(params[0]).To(gm.Equal("Visa"))
+		gm.Expect(params[1]).To(gm.Equal("Kassulke Group"))
 	})
 
 	t.Run("can filter rows with multiple where rules", func(t *testing.T) {
@@ -352,5 +344,70 @@ func TestEvaluator(t *testing.T) {
 		gm.Expect(raw).To(gm.Equal("SELECT card_number FROM transactions WHERE processor = $1 AND value = $2"))
 		gm.Expect(params[0]).To(gm.Equal("Visa"))
 		gm.Expect(params[1]).To(gm.Equal("Kassulke Group"))
+	})
+
+	visaDeniedSpec := &primitives.PolicySpec{
+		Version: 1,
+		Label:   "my-policy",
+		Rules: []*primitives.Rule{
+			{
+				Target: "records:mycollection.transactions",
+				Action: primitives.Read,
+				Effect: primitives.Allow,
+				Fields: []primitives.Field{primitives.Star},
+			},
+
+			{
+				Target: "records:mycollection.transactions",
+				Action: primitives.Read,
+				Effect: primitives.Deny,
+				Where: []primitives.Where{
+					{"processor": "visa"},
+				},
+			},
+		},
+	}
+
+	t.Run("can filter rows with where rules", func(t *testing.T) {
+		p, err := primitives.NewPolicy("my-policy", visaDeniedSpec)
+		gm.Expect(err).To(gm.BeNil())
+
+		q, err := query.New("my-query", "SELECT card_number FROM transactions")
+		gm.Expect(err).To(gm.BeNil())
+
+		e := NewEvaluator(q, schema, p)
+
+		q, err = e.Evaluate()
+		gm.Expect(err).To(gm.BeNil())
+
+		raw, params := q.Raw()
+		gm.Expect(raw).To(gm.Equal("SELECT card_number FROM transactions WHERE processor != $1"))
+		gm.Expect(params[0]).To(gm.Equal("visa"))
+	})
+
+	t.Run("rejects query that tries to query denied where clause without *", func(t *testing.T) {
+		p, err := primitives.NewPolicy("my-policy", visaDeniedSpec)
+		gm.Expect(err).To(gm.BeNil())
+
+		q, err := query.New("my-query", "SELECT processor FROM transactions WHERE processor = 'visa'")
+		gm.Expect(err).To(gm.BeNil())
+
+		e := NewEvaluator(q, schema, p)
+
+		_, err = e.Evaluate()
+		gm.Expect(err).NotTo(gm.BeNil())
+	})
+
+	t.Run("rejects query that tries to query denied where clause with *", func(t *testing.T) {
+		p, err := primitives.NewPolicy("my-policy", visaDeniedSpec)
+		gm.Expect(err).To(gm.BeNil())
+
+		q, err := query.New("my-query", "SELECT * FROM transactions WHERE processor = 'visa'")
+		gm.Expect(err).To(gm.BeNil())
+
+		e := NewEvaluator(q, schema, p)
+
+		_, err = e.Evaluate()
+		gm.Expect(err).NotTo(gm.BeNil())
 	})
 }
