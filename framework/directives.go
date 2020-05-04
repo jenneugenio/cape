@@ -103,7 +103,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			return nil, err
 		}
 
-		aSession, err := auth.NewSession(identity, session, policies)
+		aSession, err := auth.NewSession(identity, session, policies, credentialProvider)
 		if err != nil {
 			return nil, err
 		}

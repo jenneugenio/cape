@@ -239,7 +239,12 @@ func (r *mutationResolver) CreateAuthSession(ctx context.Context, input model.Au
 	s := fw.Session(ctx)
 
 	session := s.Session
-	identity := s.Identity
+	credentialProvider := s.CredentialProvider
+
+	pCreds, err := credentialProvider.GetCredentials()
+	if err != nil {
+		return nil, auth.ErrAuthentication
+	}
 
 	creds, err := auth.LoadCredentials(pCreds.PublicKey, pCreds.Salt)
 	if err != nil {

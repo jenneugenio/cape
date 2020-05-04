@@ -49,7 +49,8 @@ func authStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.Str
 		return err
 	}
 
-	session, err := auth.NewSession(identity, &primitives.Session{}, policies)
+	// TODO
+	session, err := auth.NewSession(identity, &primitives.Session{}, policies, nil)
 	if err != nil {
 		return err
 	}
