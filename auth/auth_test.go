@@ -18,8 +18,8 @@ func TestDefaultAdminPolicy(t *testing.T) {
 	policy, err := loadPolicyFile(primitives.DefaultAdminPolicy.String() + ".yaml")
 	gm.Expect(err).To(gm.BeNil())
 
-	user := &primitives.User{}
-	session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{policy}, user)
+	session, err := NewSession(&primitives.User{}, &primitives.Session{}, []*primitives.Policy{policy},
+		[]*primitives.Role{})
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(session).ToNot(gm.BeNil())
 
@@ -50,8 +50,8 @@ func TestDefaultGlobalPolicy(t *testing.T) {
 	policy, err := loadPolicyFile(primitives.DefaultGlobalPolicy.String() + ".yaml")
 	gm.Expect(err).To(gm.BeNil())
 
-	user := &primitives.User{}
-	session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{policy}, user)
+	session, err := NewSession(&primitives.User{}, &primitives.Session{}, []*primitives.Policy{policy},
+		[]*primitives.Role{})
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(session).ToNot(gm.BeNil())
 
@@ -110,8 +110,8 @@ func TestDefaultDataConnectorPolicy(t *testing.T) {
 	policy, err := loadPolicyFile(primitives.DefaultDataConnectorPolicy.String() + ".yaml")
 	gm.Expect(err).To(gm.BeNil())
 
-	user := &primitives.User{}
-	session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{policy}, user)
+	session, err := NewSession(&primitives.User{}, &primitives.Session{}, []*primitives.Policy{policy},
+		[]*primitives.Role{})
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(session).ToNot(gm.BeNil())
 

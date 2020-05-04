@@ -23,7 +23,7 @@ func TestIdentities(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	h, err := harness.NewHarness(cfg)
-	gm.Expect(err)
+	gm.Expect(err).To(gm.BeNil())
 
 	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
@@ -68,7 +68,7 @@ func createServices(ctx context.Context, client *coordinator.Client, numServices
 			return nil, err
 		}
 
-		service, err := createServicePrimitive(email)
+		service, err := createServicePrimitive(email, []byte("randompassword"))
 		if err != nil {
 			return nil, err
 		}

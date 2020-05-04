@@ -6,19 +6,23 @@ package graph
 import (
 	"context"
 
+	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
-	"github.com/capeprivacy/cape/framework"
+	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/primitives"
 )
 
 func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*primitives.Policy, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	policy, err := primitives.NewPolicy(input.Label, &input.Spec)
 	if err != nil {
 		return nil, err
 	}
 
-	err = r.Backend.Create(ctx, policy)
+	err = enforcer.Create(ctx, policy)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +31,10 @@ func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreateP
 }
 
 func (r *mutationResolver) DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error) {
-	err := r.Backend.Delete(ctx, primitives.PolicyType, input.ID)
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	err := enforcer.Delete(ctx, primitives.PolicyType, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -36,20 +43,26 @@ func (r *mutationResolver) DeletePolicy(ctx context.Context, input model.DeleteP
 }
 
 func (r *mutationResolver) AttachPolicy(ctx context.Context, input model.AttachPolicyRequest) (*model.Attachment, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	attachment, err := primitives.NewAttachment(input.PolicyID, input.RoleID)
 	if err != nil {
 		return nil, err
 	}
 
-	err = r.Backend.Create(ctx, attachment)
+	err = enforcer.Create(ctx, attachment)
 	if err != nil {
 		return nil, err
 	}
 
-	return buildAttachment(ctx, r.Backend, attachment)
+	return buildAttachment(ctx, enforcer, attachment)
 }
 
 func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachPolicyRequest) (*string, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	attachment := &primitives.Attachment{}
 
 	filter := database.NewFilter(database.Where{
@@ -57,12 +70,12 @@ func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachP
 		"policy_id": input.PolicyID.String(),
 	}, nil, nil)
 
-	err := r.Backend.QueryOne(ctx, attachment, filter)
+	err := enforcer.QueryOne(ctx, attachment, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	err = r.Backend.Delete(ctx, primitives.AttachmentType, attachment.ID)
+	err = enforcer.Delete(ctx, primitives.AttachmentType, attachment.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +84,11 @@ func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachP
 }
 
 func (r *queryResolver) Policy(ctx context.Context, id database.ID) (*primitives.Policy, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	policy := &primitives.Policy{}
-	err := r.Backend.Get(ctx, id, policy)
+	err := enforcer.Get(ctx, id, policy)
 	if err != nil {
 		return nil, err
 	}
@@ -81,8 +97,11 @@ func (r *queryResolver) Policy(ctx context.Context, id database.ID) (*primitives
 }
 
 func (r *queryResolver) PolicyByLabel(ctx context.Context, label primitives.Label) (*primitives.Policy, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	policy := &primitives.Policy{}
-	err := r.Backend.QueryOne(ctx, policy, database.NewFilter(database.Where{"label": label}, nil, nil))
+	err := enforcer.QueryOne(ctx, policy, database.NewFilter(database.Where{"label": label}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
@@ -91,28 +110,29 @@ func (r *queryResolver) PolicyByLabel(ctx context.Context, label primitives.Labe
 }
 
 func (r *queryResolver) Policies(ctx context.Context) ([]*primitives.Policy, error) {
-	var s []primitives.Policy
-	err := r.Backend.Query(ctx, &s, database.NewEmptyFilter())
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	var policies []*primitives.Policy
+	err := enforcer.Query(ctx, &policies, database.NewEmptyFilter())
 	if err != nil {
 		return nil, err
-	}
-
-	policies := make([]*primitives.Policy, len(s))
-	for i := 0; i < len(policies); i++ {
-		policies[i] = &(s[i])
 	}
 
 	return policies, nil
 }
 
 func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	var attachments []*primitives.Attachment
-	err := r.Backend.Query(ctx, &attachments, database.NewFilter(database.Where{"role_id": roleID.String()}, nil, nil))
+	err := enforcer.Query(ctx, &attachments, database.NewFilter(database.Where{"role_id": roleID.String()}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
 
-	policies := []*primitives.Policy{}
+	var policies []*primitives.Policy
 	if len(attachments) == 0 {
 		return policies, nil
 	}
@@ -120,7 +140,7 @@ func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([
 	policyIDs := database.InFromEntities(attachments, func(e interface{}) interface{} {
 		return e.(*primitives.Attachment).PolicyID
 	})
-	err = r.Backend.Query(ctx, &policies, database.NewFilter(database.Where{"id": policyIDs}, nil, nil))
+	err = enforcer.Query(ctx, &policies, database.NewFilter(database.Where{"id": policyIDs}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
@@ -129,10 +149,16 @@ func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([
 }
 
 func (r *queryResolver) IdentityPolicies(ctx context.Context, identityID database.ID) ([]*primitives.Policy, error) {
-	return framework.QueryIdentityPolicies(ctx, r.Backend, identityID)
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	return fw.QueryIdentityPolicies(ctx, enforcer, identityID)
 }
 
 func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	attachment := &primitives.Attachment{}
 
 	filter := database.NewFilter(database.Where{
@@ -140,10 +166,10 @@ func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, poli
 		"policy_id": policyID,
 	}, nil, nil)
 
-	err := r.Backend.QueryOne(ctx, attachment, filter)
+	err := enforcer.QueryOne(ctx, attachment, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	return buildAttachment(ctx, r.Backend, attachment)
+	return buildAttachment(ctx, enforcer, attachment)
 }

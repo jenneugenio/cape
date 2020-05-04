@@ -3,7 +3,6 @@ package harness
 import (
 	"os"
 
-	"github.com/capeprivacy/cape/auth"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -17,7 +16,6 @@ var (
 type Config struct {
 	CoordinatorURL      *primitives.URL
 	dbURL               *primitives.DBURL
-	token               *auth.APIToken
 	sourceMigrationsDir string
 }
 
@@ -31,7 +29,7 @@ func (c *Config) Validate() error {
 }
 
 // NewConfig returns an instantiated version of the Coordinator Harness configuration
-func NewConfig(coordinatorURL *primitives.URL, token *auth.APIToken) (*Config, error) {
+func NewConfig(coordinatorURL *primitives.URL) (*Config, error) {
 	dbURL, err := primitives.NewDBURL(os.Getenv("CAPE_DB_URL"))
 	if err != nil {
 		return nil, err
@@ -40,7 +38,6 @@ func NewConfig(coordinatorURL *primitives.URL, token *auth.APIToken) (*Config, e
 	c := &Config{
 		CoordinatorURL:      coordinatorURL,
 		sourceMigrationsDir: os.Getenv("CAPE_DB_SEED_MIGRATIONS"),
-		token:               token,
 		dbURL:               dbURL,
 	}
 

@@ -6,14 +6,21 @@ package graph
 import (
 	"context"
 
+	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
+	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/primitives"
 )
 
 func (r *mutationResolver) CreateService(ctx context.Context, input model.CreateServiceRequest) (*primitives.Service, error) {
-	service, err := primitives.NewService(input.Email, input.Type, input.Endpoint)
+	creds, err := primitives.NewCredentials(&input.PublicKey, &input.Salt)
+	if err != nil {
+		return nil, err
+	}
+
+	service, err := primitives.NewService(input.Email, input.Type, input.Endpoint, creds)
 	if err != nil {
 		return nil, err
 	}
@@ -24,6 +31,9 @@ func (r *mutationResolver) CreateService(ctx context.Context, input model.Create
 	}
 	defer tx.Rollback(ctx) // nolint: errcheck
 
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, tx)
+
 	// We're building up a list of role labels that we will create assignments
 	// for once we've gotten their objects
 	roleLabels := []primitives.Label{primitives.GlobalRole}
@@ -31,17 +41,17 @@ func (r *mutationResolver) CreateService(ctx context.Context, input model.Create
 		roleLabels = append(roleLabels, primitives.DataConnectorRole)
 	}
 
-	roles, err := getRolesByLabel(ctx, tx, roleLabels)
+	roles, err := getRolesByLabel(ctx, enforcer, roleLabels)
 	if err != nil {
 		return nil, err
 	}
 
-	err = tx.Create(ctx, service)
+	err = enforcer.Create(ctx, service)
 	if err != nil {
 		return nil, err
 	}
 
-	err = createAssignments(ctx, tx, service, roles)
+	err = createAssignments(ctx, enforcer, service, roles)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +65,10 @@ func (r *mutationResolver) CreateService(ctx context.Context, input model.Create
 }
 
 func (r *mutationResolver) DeleteService(ctx context.Context, input model.DeleteServiceRequest) (*string, error) {
-	err := r.Backend.Delete(ctx, primitives.ServicePrimitiveType, input.ID)
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	err := enforcer.Delete(ctx, primitives.ServicePrimitiveType, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -64,8 +77,11 @@ func (r *mutationResolver) DeleteService(ctx context.Context, input model.Delete
 }
 
 func (r *queryResolver) Service(ctx context.Context, id database.ID) (*primitives.Service, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	service := &primitives.Service{}
-	err := r.Backend.Get(ctx, id, service)
+	err := enforcer.Get(ctx, id, service)
 	if err != nil {
 		return nil, err
 	}
@@ -74,8 +90,11 @@ func (r *queryResolver) Service(ctx context.Context, id database.ID) (*primitive
 }
 
 func (r *queryResolver) ServiceByEmail(ctx context.Context, email primitives.Email) (*primitives.Service, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	service := &primitives.Service{}
-	err := r.Backend.QueryOne(ctx, service, database.NewFilter(database.Where{"email": email.String()}, nil, nil))
+	err := enforcer.QueryOne(ctx, service, database.NewFilter(database.Where{"email": email.String()}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +103,11 @@ func (r *queryResolver) ServiceByEmail(ctx context.Context, email primitives.Ema
 }
 
 func (r *queryResolver) Services(ctx context.Context) ([]*primitives.Service, error) {
-	services := []*primitives.Service{}
-	err := r.Backend.Query(ctx, &services, database.NewEmptyFilter())
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	var services []*primitives.Service
+	err := enforcer.Query(ctx, &services, database.NewEmptyFilter())
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +116,10 @@ func (r *queryResolver) Services(ctx context.Context) ([]*primitives.Service, er
 }
 
 func (r *serviceResolver) Roles(ctx context.Context, obj *primitives.Service) ([]*primitives.Role, error) {
-	return getRoles(ctx, r.Backend, obj.ID)
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	return fw.QueryRoles(ctx, enforcer, obj.ID)
 }
 
 // Service returns generated.ServiceResolver implementation.

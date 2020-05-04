@@ -22,7 +22,6 @@ type AuthCredentials struct {
 type Session struct {
 	*database.Primitive
 	IdentityID database.ID   `json:"identity_id"`
-	OwnerID    database.ID   `json:"owner_id"`
 	ExpiresAt  time.Time     `json:"expires_at"`
 	Type       TokenType     `json:"type"`
 	Token      *base64.Value `json:"token"`
@@ -56,7 +55,7 @@ func (s *Session) GetType() types.Type {
 }
 
 // NewSession returns a new Session struct
-func NewSession(identity CredentialProvider, expiresAt time.Time, typ TokenType,
+func NewSession(identity Identity, expiresAt time.Time, typ TokenType,
 	token *base64.Value) (*Session, error) {
 	p, err := database.NewPrimitive(SessionType)
 	if err != nil {
@@ -65,8 +64,7 @@ func NewSession(identity CredentialProvider, expiresAt time.Time, typ TokenType,
 
 	session := &Session{
 		Primitive:  p,
-		IdentityID: identity.GetIdentityID(),
-		OwnerID:    identity.GetID(),
+		IdentityID: identity.GetID(),
 		ExpiresAt:  expiresAt,
 		Type:       typ,
 		Token:      token,
@@ -75,10 +73,7 @@ func NewSession(identity CredentialProvider, expiresAt time.Time, typ TokenType,
 	}
 
 	if typ == Login {
-		creds, err := identity.GetCredentials()
-		if err != nil {
-			return nil, err
-		}
+		creds := identity.GetCredentials()
 
 		session.Credentials = &AuthCredentials{
 			Salt: creds.Salt,

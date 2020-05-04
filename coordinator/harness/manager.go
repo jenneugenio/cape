@@ -88,7 +88,7 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 		Password: pw,
 	}
 
-	session, err := client.EmailLogin(ctx, email, pw)
+	session, err := client.Login(ctx, email, pw)
 	if err != nil {
 		return nil, err
 	}
@@ -115,13 +115,18 @@ func (m *Manager) CreateSource(ctx context.Context, dbURL *primitives.DBURL, ser
 }
 
 // CreateService creates a service on the coordinator with the given APIToken and URL
-func (m *Manager) CreateService(ctx context.Context, email string, serviceURL *primitives.URL) error {
-	e, err := primitives.NewEmail(email)
+func (m *Manager) CreateService(ctx context.Context, apiToken *auth.APIToken, serviceURL *primitives.URL) error {
+	creds, err := apiToken.Credentials()
 	if err != nil {
 		return err
 	}
 
-	service, err := primitives.NewService(e, primitives.DataConnectorServiceType, serviceURL)
+	pCreds, err := creds.Package()
+	if err != nil {
+		return err
+	}
+
+	service, err := primitives.NewService(apiToken.Email, primitives.DataConnectorServiceType, serviceURL, pCreds)
 	if err != nil {
 		return err
 	}
@@ -131,14 +136,9 @@ func (m *Manager) CreateService(ctx context.Context, email string, serviceURL *p
 		return err
 	}
 
-	token, err := m.Admin.Client.CreateToken(ctx, service)
-	if err != nil {
-		return err
-	}
-
 	m.Connector = &Service{
 		ID:    service.ID,
-		Token: token,
+		Token: apiToken,
 	}
 
 	return nil

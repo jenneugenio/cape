@@ -4,22 +4,35 @@ package integration
 
 import (
 	"context"
-	"github.com/capeprivacy/cape/connector/harness"
-	"github.com/capeprivacy/cape/version"
-	gm "github.com/onsi/gomega"
 	"testing"
+
+	gm "github.com/onsi/gomega"
+
+	"github.com/capeprivacy/cape/connector/harness"
+	"github.com/capeprivacy/cape/primitives"
+	"github.com/capeprivacy/cape/version"
 )
 
 func TestVersion(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-	s, err := harness.NewStack(ctx)
+
+	url, err := primitives.NewURL("http://localhost:8080")
 	gm.Expect(err).To(gm.BeNil())
 
-	defer s.Teardown(ctx)
+	connCfg, err := harness.NewConfig(url)
+	gm.Expect(err).To(gm.BeNil())
 
-	client, err := s.ConnHarness.Client(nil)
+	h, err := harness.NewHarness(connCfg)
+	gm.Expect(err).To(gm.BeNil())
+
+	err = h.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	defer h.Teardown(ctx) //nolint: errcheck
+
+	client, err := h.Client(nil)
 	gm.Expect(err).To(gm.BeNil())
 
 	defer client.Close()

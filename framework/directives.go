@@ -42,43 +42,15 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			return nil, auth.ErrAuthentication
 		}
 
-		ownerType, err := session.OwnerID.Type()
+		typ, err := session.IdentityID.Type()
 		if err != nil {
-			msg := "Could not authenticate. Unable get credentialProvider type"
+			msg := "Could not authenticate. Unable get identity type"
 			logger.Info().Err(err).Msg(msg)
 			return nil, auth.ErrAuthentication
-		}
-
-		identityType, err := session.IdentityID.Type()
-		if err != nil {
-			msg := "Could not authenticate. Unable get credentialProvider type"
-			logger.Info().Err(err).Msg(msg)
-			return nil, auth.ErrAuthentication
-		}
-
-		var credentialProvider primitives.CredentialProvider
-		if ownerType == primitives.UserType {
-			user := &primitives.User{}
-			err = db.Get(ctx, session.IdentityID, user)
-			if err != nil {
-				msg := "Could not authenticate. Unable to find credentialProvider"
-				logger.Error().Err(err).Msg(msg)
-				return nil, auth.ErrAuthentication
-			}
-			credentialProvider = user
-		} else if ownerType == primitives.TokenPrimitiveType {
-			token := &primitives.Token{}
-			err = db.Get(ctx, session.OwnerID, token)
-			if err != nil {
-				msg := "Could not authenticate. Unable to find credentialProvider"
-				logger.Error().Err(err).Msg(msg)
-				return nil, auth.ErrAuthentication
-			}
-			credentialProvider = token
 		}
 
 		var identity primitives.Identity
-		if identityType == primitives.UserType {
+		if typ == primitives.UserType {
 			user := &primitives.User{}
 			err = db.Get(ctx, session.IdentityID, user)
 			if err != nil {
@@ -87,7 +59,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 				return nil, auth.ErrAuthentication
 			}
 			identity = user
-		} else if identityType == primitives.ServicePrimitiveType {
+		} else if typ == primitives.ServicePrimitiveType {
 			service := &primitives.Service{}
 			err = db.Get(ctx, session.IdentityID, service)
 			if err != nil {
@@ -103,7 +75,12 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			return nil, err
 		}
 
-		aSession, err := auth.NewSession(identity, session, policies, credentialProvider)
+		roles, err := QueryRoles(ctx, db, identity.GetID())
+		if err != nil {
+			return nil, err
+		}
+
+		aSession, err := auth.NewSession(identity, session, policies, roles)
 		if err != nil {
 			return nil, err
 		}

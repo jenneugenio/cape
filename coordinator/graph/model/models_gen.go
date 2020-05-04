@@ -57,16 +57,12 @@ type CreateRoleRequest struct {
 }
 
 type CreateServiceRequest struct {
-	Email    primitives.Email       `json:"email"`
-	Type     primitives.ServiceType `json:"type"`
-	Endpoint *primitives.URL        `json:"endpoint"`
-}
-
-type CreateTokenRequest struct {
-	IdentityID database.ID                   `json:"identity_id"`
-	PublicKey  base64.Value                  `json:"public_key"`
-	Salt       base64.Value                  `json:"salt"`
-	Alg        primitives.CredentialsAlgType `json:"alg"`
+	Email     primitives.Email              `json:"email"`
+	Type      primitives.ServiceType        `json:"type"`
+	Endpoint  *primitives.URL               `json:"endpoint"`
+	PublicKey base64.Value                  `json:"public_key"`
+	Salt      base64.Value                  `json:"salt"`
+	Alg       primitives.CredentialsAlgType `json:"alg"`
 }
 
 type DeletePolicyRequest struct {
@@ -82,7 +78,7 @@ type DeleteServiceRequest struct {
 }
 
 type DeleteSessionRequest struct {
-	Token base64.Value `json:"token"`
+	Token *base64.Value `json:"token"`
 }
 
 type DetachPolicyRequest struct {
@@ -91,8 +87,7 @@ type DetachPolicyRequest struct {
 }
 
 type LoginSessionRequest struct {
-	Email   *primitives.Email `json:"email"`
-	TokenID *database.ID      `json:"token_id"`
+	Email primitives.Email `json:"email"`
 }
 
 type NewUserRequest struct {

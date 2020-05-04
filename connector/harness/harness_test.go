@@ -6,45 +6,62 @@ import (
 	"context"
 	"testing"
 
+	"github.com/capeprivacy/cape/primitives"
 	gm "github.com/onsi/gomega"
 )
 
 func TestHarness(t *testing.T) {
 	gm.RegisterTestingT(t)
 
+	coordinatorURL, err := primitives.NewURL("http://localhost:8080")
+	gm.Expect(err).To(gm.BeNil())
+
 	t.Run("Can start the connector", func(t *testing.T) {
 		ctx := context.Background()
-		s, err := NewStack(ctx)
+
+		cfg, err := NewConfig(coordinatorURL)
 		gm.Expect(err).To(gm.BeNil())
 
-		defer s.Teardown(ctx)
+		h, err := NewHarness(cfg)
+		gm.Expect(err).To(gm.BeNil())
+		defer h.Teardown(ctx) //nolint: errcheck
 
-		url, err := s.ConnHarness.URL()
+		err = h.Setup(ctx)
+		gm.Expect(err).To(gm.BeNil())
+
+		url, err := h.URL()
 		gm.Expect(err).To(gm.BeNil())
 
 		// ensure the connector is running
-		resp, err := s.ConnHarness.server.Client().Get(url.String() + "/_healthz")
+		resp, err := h.server.Client().Get(url.String() + "/_healthz")
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(resp.StatusCode).To(gm.Equal(200))
 	})
 
 	t.Run("Can start and stop the connector", func(t *testing.T) {
 		ctx := context.Background()
-		s, err := NewStack(ctx)
+
+		cfg, err := NewConfig(coordinatorURL)
 		gm.Expect(err).To(gm.BeNil())
 
-		u, err := s.ConnHarness.URL()
+		h, err := NewHarness(cfg)
+		gm.Expect(err).To(gm.BeNil())
+
+		err = h.Setup(ctx)
+		gm.Expect(err).To(gm.BeNil())
+
+		url, err := h.URL()
 		gm.Expect(err).To(gm.BeNil())
 
 		// ensure the connector is running
-		resp, err := s.ConnHarness.server.Client().Get(u.String() + "/_healthz")
+		resp, err := h.server.Client().Get(url.String() + "/_healthz")
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(resp.StatusCode).To(gm.Equal(200))
 
-		err = s.Teardown(ctx)
+		err = h.Teardown(ctx)
 		gm.Expect(err).To(gm.BeNil())
 
 		// httptest server is gone
-		gm.Expect(s.ConnHarness.server).To(gm.BeNil())
+		gm.Expect(h.server).To(gm.BeNil())
 	})
 }

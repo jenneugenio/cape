@@ -12,6 +12,9 @@ input CreateServiceRequest {
     email: Email!
     type: ServiceType!
     endpoint: URL
+    public_key: Base64!
+    salt: Base64!
+    alg: CredentialsAlgType!
 }
 
 input DeleteServiceRequest {

@@ -49,14 +49,12 @@ func authStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.Str
 		return err
 	}
 
-	// TODO
-	session, err := auth.NewSession(identity, &primitives.Session{}, policies, nil)
+	session, err := auth.NewSession(identity, &primitives.Session{}, policies, []*primitives.Role{})
 	if err != nil {
 		return err
 	}
 
 	wStream := grpc_middleware.WrapServerStream(ss)
-
 	wStream.WrappedContext = context.WithValue(wStream.WrappedContext, fw.SessionContextKey, session)
 
 	return handler(srv, wStream)

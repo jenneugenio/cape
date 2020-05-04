@@ -4,40 +4,73 @@ package integration
 
 import (
 	"context"
-	"github.com/capeprivacy/cape/connector/harness"
-	"github.com/capeprivacy/cape/connector/sources"
-	errors "github.com/capeprivacy/cape/partyerrors"
-	gm "github.com/onsi/gomega"
 	"testing"
+
+	gm "github.com/onsi/gomega"
+
+	connHarness "github.com/capeprivacy/cape/connector/harness"
+	"github.com/capeprivacy/cape/connector/sources"
+	"github.com/capeprivacy/cape/coordinator/harness"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func TestQuery(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-	s, err := harness.NewStack(ctx)
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	defer s.Teardown(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
 
-	err = s.Manager.CreateSource(ctx, s.ConnHarness.SourceCredentials(), s.Manager.Connector.ID)
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	err = s.Manager.CreatePolicy(ctx, "./testdata/policy.yaml")
+	defer h.Teardown(ctx) // nolint: errcheck
+
+	m := h.Manager()
+	_, err = m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	connClient, err := s.ConnHarness.Client(s.Manager.Admin.Token)
+	coordinatorURL, err := m.URL()
+	gm.Expect(err).To(gm.BeNil())
+
+	connCfg, err := connHarness.NewConfig(coordinatorURL)
+	gm.Expect(err).To(gm.BeNil())
+
+	connH, err := connHarness.NewHarness(connCfg)
+	gm.Expect(err).To(gm.BeNil())
+
+	err = connH.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	defer connH.Teardown(ctx) // nolint: errcheck
+
+	connectorURL, err := connH.URL()
+	gm.Expect(err).To(gm.BeNil())
+
+	err = m.CreateService(ctx, connH.APIToken(), connectorURL)
+	gm.Expect(err).To(gm.BeNil())
+
+	err = m.CreateSource(ctx, connH.SourceCredentials(), m.Connector.ID)
+	gm.Expect(err).To(gm.BeNil())
+
+	err = m.CreatePolicy(ctx, "./testdata/policy.yaml")
+	gm.Expect(err).To(gm.BeNil())
+
+	connClient, err := connH.Client(m.Admin.Token)
 	gm.Expect(err).To(gm.BeNil())
 
 	defer connClient.Close()
 
 	query := "SELECT * FROM transactions"
-	stream, err := connClient.Query(context.Background(), s.Manager.TestSource.Label, query, 50, 50)
+	stream, err := connClient.Query(context.Background(), m.TestSource.Label, query, 50, 50)
 	gm.Expect(err).To(gm.BeNil())
 
 	defer stream.Close()
 
-	expectedRows, err := sources.GetExpectedRows(ctx, s.ConnHarness.SourceCredentials().ToURL(), query+" LIMIT 50 OFFSET 50", nil)
+	expectedRows, err := sources.GetExpectedRows(ctx, connH.SourceCredentials().ToURL(), query+" LIMIT 50 OFFSET 50", nil)
 	gm.Expect(err).To(gm.BeNil())
 
 	i := 0
@@ -57,21 +90,51 @@ func TestQueryDenied(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
-	s, err := harness.NewStack(ctx)
+	cfg, err := harness.NewConfig()
 	gm.Expect(err).To(gm.BeNil())
 
-	defer s.Teardown(ctx)
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
 
-	err = s.Manager.CreateSource(ctx, s.ConnHarness.SourceCredentials(), s.Manager.Connector.ID)
+	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	connClient, err := s.ConnHarness.Client(s.Manager.Admin.Token)
+	defer h.Teardown(ctx) // nolint: errcheck
+
+	m := h.Manager()
+	_, err = m.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	coordinatorURL, err := m.URL()
+	gm.Expect(err).To(gm.BeNil())
+
+	connCfg, err := connHarness.NewConfig(coordinatorURL)
+	gm.Expect(err).To(gm.BeNil())
+
+	connH, err := connHarness.NewHarness(connCfg)
+	gm.Expect(err).To(gm.BeNil())
+
+	err = connH.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	defer connH.Teardown(ctx) // nolint: errcheck
+
+	connectorURL, err := connH.URL()
+	gm.Expect(err).To(gm.BeNil())
+
+	err = m.CreateService(ctx, connH.APIToken(), connectorURL)
+	gm.Expect(err).To(gm.BeNil())
+
+	err = m.CreateSource(ctx, connH.SourceCredentials(), m.Connector.ID)
+	gm.Expect(err).To(gm.BeNil())
+
+	connClient, err := connH.Client(m.Admin.Token)
 	gm.Expect(err).To(gm.BeNil())
 
 	defer connClient.Close()
 
 	query := "SELECT * FROM transactions"
-	stream, err := connClient.Query(context.Background(), s.Manager.TestSource.Label, query, 50, 0)
+	stream, err := connClient.Query(context.Background(), m.TestSource.Label, query, 50, 0)
 	gm.Expect(err).To(gm.BeNil())
 
 	defer stream.Close()

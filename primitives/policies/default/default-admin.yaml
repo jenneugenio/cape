@@ -65,3 +65,6 @@ rules:
   - target: "tokens:*"
     action: delete
     effect: allow
+  - target: "sessions:*"
+    action: read
+    effect: allow

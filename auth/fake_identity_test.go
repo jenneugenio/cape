@@ -16,10 +16,7 @@ func TestNewFakeIdentity(t *testing.T) {
 
 		identity, err := NewFakeIdentity(email)
 		gm.Expect(err).To(gm.BeNil())
-
-		creds, err := identity.GetCredentials()
-		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(creds.Salt).NotTo(gm.BeNil())
+		gm.Expect(identity.GetCredentials().Salt).NotTo(gm.BeNil())
 	})
 
 	t.Run("test fake identity returns same data for email", func(t *testing.T) {
@@ -34,12 +31,6 @@ func TestNewFakeIdentity(t *testing.T) {
 		otherIdentity, err := NewFakeIdentity(email)
 		gm.Expect(err).To(gm.BeNil())
 
-		creds, err := identity.GetCredentials()
-		gm.Expect(err).To(gm.BeNil())
-
-		otherCreds, err := otherIdentity.GetCredentials()
-		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(creds.Salt).To(gm.Equal(otherCreds.Salt))
+		gm.Expect(identity.GetCredentials().Salt).To(gm.Equal(otherIdentity.GetCredentials().Salt))
 	})
 }

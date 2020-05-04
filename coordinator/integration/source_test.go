@@ -8,8 +8,10 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/capeprivacy/cape/coordinator/harness"
+	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -21,7 +23,7 @@ func TestSource(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	h, err := harness.NewHarness(cfg)
-	gm.Expect(err)
+	gm.Expect(err).To(gm.BeNil())
 
 	err = h.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
@@ -50,8 +52,10 @@ func TestSource(t *testing.T) {
 		gm.Expect(source.ID).ToNot(gm.BeNil())
 		gm.Expect(source.Type).To(gm.Equal(primitives.PostgresType))
 		gm.Expect(source.Endpoint.String()).To(gm.Equal(endpoint))
-		gm.Expect(source.Credentials.String()).To(gm.Equal(dbURL.String()))
 		gm.Expect(source.ServiceID).To(gm.BeNil())
+
+		// Credentials are only returned for linked data connector
+		gm.Expect(source.Credentials).To(gm.BeNil())
 	})
 
 	t.Run("create a new source with link", func(t *testing.T) {
@@ -64,10 +68,17 @@ func TestSource(t *testing.T) {
 		email, err := primitives.NewEmail(emailStr)
 		gm.Expect(err).To(gm.BeNil())
 
+		creds, err := auth.NewCredentials([]byte("random-password"), nil)
+		gm.Expect(err).To(gm.BeNil())
+
 		serviceURL, err := primitives.NewURL("https://localhost:8081")
 		gm.Expect(err).To(gm.BeNil())
 
-		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, serviceURL)
+		pCreds, err := creds.Package()
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, serviceURL,
+			pCreds)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err = client.CreateService(ctx, service)
@@ -79,7 +90,6 @@ func TestSource(t *testing.T) {
 		gm.Expect(source.Label).To(gm.Equal(l))
 		gm.Expect(source.ID).ToNot(gm.BeNil())
 		gm.Expect(source.Endpoint.String()).To(gm.Equal(endpoint))
-		gm.Expect(source.Credentials.String()).To(gm.Equal(dbURL.String()))
 		gm.Expect(source.ServiceID).ToNot(gm.BeNil())
 		gm.Expect(*source.ServiceID).To(gm.Equal(service.ID))
 	})
@@ -107,7 +117,13 @@ func TestSource(t *testing.T) {
 		email, err := primitives.NewEmail(emailStr)
 		gm.Expect(err).To(gm.BeNil())
 
-		service, err := primitives.NewService(email, primitives.UserServiceType, nil)
+		creds, err := auth.NewCredentials([]byte("random-password"), nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		pCreds, err := creds.Package()
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err := primitives.NewService(email, primitives.UserServiceType, nil, pCreds)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err = client.CreateService(ctx, service)
@@ -132,6 +148,7 @@ func TestSource(t *testing.T) {
 
 		gm.Expect(out.Label).To(gm.Equal(label))
 		gm.Expect(out.Endpoint.String()).To(gm.Equal(endpoint))
+		gm.Expect(out.Credentials).To(gm.BeNil())
 	})
 
 	t.Run("pull a single data source by label", func(t *testing.T) {
@@ -148,6 +165,7 @@ func TestSource(t *testing.T) {
 
 		gm.Expect(otherSource.Label).To(gm.Equal(source.Label))
 		gm.Expect(otherSource.Endpoint).To(gm.Equal(source.Endpoint))
+		gm.Expect(otherSource.Credentials).To(gm.BeNil())
 	})
 
 	t.Run("insert the same data source", func(t *testing.T) {
@@ -175,6 +193,50 @@ func TestSource(t *testing.T) {
 
 		_, err = client.GetSource(ctx, source.ID)
 		gm.Expect(err).ToNot(gm.BeNil())
+	})
+
+	t.Run("get credentials as linked data-connector", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		l, err := primitives.NewLabel("cool-source")
+		gm.Expect(err).To(gm.BeNil())
+
+		emailStr := "service:connector-cool@connector.com"
+		email, err := primitives.NewEmail(emailStr)
+		gm.Expect(err).To(gm.BeNil())
+
+		pw := []byte("random-password")
+		creds, err := auth.NewCredentials(pw, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		serviceURL, err := primitives.NewURL("https://localhost:8081")
+		gm.Expect(err).To(gm.BeNil())
+
+		pCreds, err := creds.Package()
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, serviceURL,
+			pCreds)
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err = client.CreateService(ctx, service)
+		gm.Expect(err).To(gm.BeNil())
+
+		source, err := client.AddSource(ctx, l, dbURL, &service.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		u, err := m.URL()
+		gm.Expect(err).To(gm.BeNil())
+		transport := coordinator.NewTransport(u, nil)
+		serviceClient := coordinator.NewClient(transport)
+
+		_, err = serviceClient.Login(ctx, email, pw)
+		gm.Expect(err).To(gm.BeNil())
+
+		source, err = serviceClient.GetSource(ctx, source.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(source.Credentials.String()).To(gm.Equal(dbURL.String()))
 	})
 }
 

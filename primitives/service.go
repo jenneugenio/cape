@@ -20,7 +20,7 @@ func (s *Service) GetType() types.Type {
 }
 
 // NewService returns a mutable service struct
-func NewService(email Email, typ ServiceType, endpoint *URL) (*Service, error) {
+func NewService(email Email, typ ServiceType, endpoint *URL, creds *Credentials) (*Service, error) {
 	p, err := database.NewPrimitive(ServicePrimitiveType)
 	if err != nil {
 		return nil, err
@@ -28,8 +28,9 @@ func NewService(email Email, typ ServiceType, endpoint *URL) (*Service, error) {
 
 	service := &Service{
 		IdentityImpl: &IdentityImpl{
-			Primitive: p,
-			Email:     email,
+			Primitive:   p,
+			Email:       email,
+			Credentials: creds,
 		},
 		Type:     typ,
 		Endpoint: endpoint,
@@ -67,7 +68,16 @@ func (s *Service) Validate() error {
 		return errors.New(InvalidServiceCause, "Unrecognized type: %s", s.Type.String())
 	}
 
+	if err := s.Credentials.Validate(); err != nil {
+		return errors.Wrap(InvalidServiceCause, err)
+	}
+
 	return nil
+}
+
+// GetCredentials satisfies Identity interface
+func (s *Service) GetCredentials() *Credentials {
+	return s.Credentials
 }
 
 // GetEmail satisfies Identity interface

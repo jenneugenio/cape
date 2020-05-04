@@ -6,33 +6,37 @@ import (
 
 	"github.com/markbates/pkger"
 
+	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
 
-func queryEmailProvider(ctx context.Context, db database.Backend, email primitives.Email) (primitives.CredentialProvider, error) {
+func queryIdentity(ctx context.Context, db database.Querier, email primitives.Email) (primitives.Identity, error) {
 	filter := database.NewFilter(database.Where{"email": email.String()}, nil, nil)
 
 	user := &primitives.User{}
 	err := db.QueryOne(ctx, user, filter)
+	if err != nil && !errors.FromCause(err, database.NotFoundCause) {
+		return nil, err
+	}
+	if err == nil {
+		return user, err
+	}
 
-	return user, err
-}
+	service := &primitives.Service{}
+	err = db.QueryOne(ctx, service, filter)
+	if err != nil {
+		return nil, err
+	}
 
-func queryTokenProvider(ctx context.Context, db database.Backend, tokenID database.ID) (primitives.CredentialProvider, error) {
-	filter := database.NewFilter(database.Where{"id": tokenID.String()}, nil, nil)
-
-	token := &primitives.Token{}
-	err := db.QueryOne(ctx, token, filter)
-
-	return token, err
+	return service, nil
 }
 
 // buildAttachment takes a primitives attachment and builds at graphql
 // model representation of it
-func buildAttachment(ctx context.Context, db database.Backend,
+func buildAttachment(ctx context.Context, db *auth.Enforcer,
 	attachment *primitives.Attachment) (*model.Attachment, error) {
 	role := &primitives.Role{}
 	err := db.Get(ctx, attachment.RoleID, role)
@@ -90,32 +94,6 @@ func getRolesByLabel(ctx context.Context, db database.Querier, labels []primitiv
 
 	if len(labels) != len(roles) {
 		return nil, errors.New(NotFoundCause, "Could not find a role")
-	}
-
-	return roles, nil
-}
-
-// getRoles is a helper that returns all of the roles assigned to a given identity.
-func getRoles(ctx context.Context, db database.Querier, identityID database.ID) ([]*primitives.Role, error) {
-	var assignments []*primitives.Assignment
-	filter := database.NewFilter(database.Where{
-		"identity_id": identityID,
-	}, nil, nil)
-	err := db.Query(ctx, &assignments, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	roleIDs := database.InFromEntities(assignments, func(e interface{}) interface{} {
-		return e.(*primitives.Assignment).RoleID
-	})
-
-	var roles []*primitives.Role
-	err = db.Query(ctx, &roles, database.NewFilter(database.Where{
-		"id": roleIDs,
-	}, nil, nil))
-	if err != nil {
-		return nil, err
 	}
 
 	return roles, nil

@@ -59,15 +59,6 @@ var (
 			return in, nil
 		},
 	}
-
-	TokenIdentityArg = &Argument{
-		Name:        "identity",
-		Description: "The identity for the token",
-		Required:    false,
-		Processor: func(in string) (interface{}, error) {
-			return in, nil
-		},
-	}
 )
 
 func LabelArg(f string) *Argument {

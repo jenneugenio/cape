@@ -37,7 +37,7 @@ func TestSessions(t *testing.T) {
 		client, err := h.Client()
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := client.EmailLogin(ctx, m.Admin.User.Email, m.Admin.Password)
+		session, err := client.Login(ctx, m.Admin.User.Email, m.Admin.Password)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(session.IdentityID).To(gm.Equal(m.Admin.User.ID))
@@ -54,7 +54,7 @@ func TestSessions(t *testing.T) {
 		email, err := primitives.NewEmail("fake@fake.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := client.EmailLogin(ctx, email, []byte("newpasswordwhodis"))
+		session, err := client.Login(ctx, email, []byte("newpasswordwhodis"))
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(session).To(gm.BeNil())
 
@@ -68,7 +68,7 @@ func TestSessions(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		// fail because credentials inside login won't be right
-		session, err := client.EmailLogin(ctx, m.Admin.User.Email, []byte("idontknowmypassword"))
+		session, err := client.Login(ctx, m.Admin.User.Email, []byte("idontknowmypassword"))
 		gm.Expect(session).To(gm.BeNil())
 
 		gm.Expect(err).ToNot(gm.BeNil())
@@ -81,7 +81,7 @@ func TestSessions(t *testing.T) {
 		client, err := h.Client()
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := client.EmailLogin(ctx, m.Admin.User.Email, m.Admin.Password)
+		session, err := client.Login(ctx, m.Admin.User.Email, m.Admin.Password)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(session).ToNot(gm.BeNil())
 
@@ -100,7 +100,7 @@ func TestSessions(t *testing.T) {
 		client, err := h.Client()
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := client.EmailLogin(ctx, m.Admin.User.Email, m.Admin.Password)
+		session, err := client.Login(ctx, m.Admin.User.Email, m.Admin.Password)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(session.IdentityID).To(gm.Equal(m.Admin.User.ID))

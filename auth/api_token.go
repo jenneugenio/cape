@@ -5,13 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/capeprivacy/cape/coordinator/database"
-
 	"github.com/capeprivacy/cape/primitives"
 
-	"github.com/manifoldco/go-base64"
-
 	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/manifoldco/go-base64"
 )
 
 const (
@@ -37,25 +34,35 @@ func (s Secret) Validate() error {
 // the APIToken will be tied to a token (token_id will replace email)
 // that is tied to an identity (user or service)
 type APIToken struct {
-	TokenID database.ID
+	Email   primitives.Email
 	URL     *primitives.URL
 	Version byte
 	Secret  Secret
 }
 
 // NewAPIToken returns a new api token from email and url
-func NewAPIToken(secret Secret, tokenCredentialID database.ID, u *primitives.URL) (*APIToken, error) {
+func NewAPIToken(email primitives.Email, u *primitives.URL) (*APIToken, error) {
+	secretBytes := make([]byte, secretBytes)
+	_, err := rand.Read(secretBytes)
+	if err != nil {
+		return nil, err
+	}
+
 	return &APIToken{
-		TokenID: tokenCredentialID,
+		Email:   email,
 		URL:     u,
 		Version: tokenVersion,
-		Secret:  secret,
+		Secret:  secretBytes,
 	}, nil
 }
 
 // Validate returns an error if the underlying APIToken has invalid contents in
 // its fields.
 func (a *APIToken) Validate() error {
+	if err := a.Email.Validate(); err != nil {
+		return err
+	}
+
 	if err := a.URL.Validate(); err != nil {
 		return err
 	}
@@ -97,7 +104,7 @@ func (a *APIToken) Marshal() (string, error) {
 
 	val := base64.New(bytes)
 
-	tokenStr := fmt.Sprintf("%s,%s", a.TokenID, val.String())
+	tokenStr := fmt.Sprintf("%s,%s", a.Email, val.String())
 
 	return tokenStr, nil
 }
@@ -109,12 +116,12 @@ func (a *APIToken) Unmarshal(token string) error {
 		return errors.New(BadTokenFormat, "Invalid API Token provided")
 	}
 
-	tokenCredentialID, err := database.DecodeFromString(strs[0])
+	email, err := primitives.NewEmail(strs[0])
 	if err != nil {
 		return err
 	}
 
-	a.TokenID = tokenCredentialID
+	a.Email = email
 
 	val, err := base64.NewFromString(strs[1])
 	if err != nil {
@@ -145,11 +152,4 @@ func ParseAPIToken(in string) (*APIToken, error) {
 	}
 
 	return token, nil
-}
-
-// Random secret will return a random password
-func RandomSecret() (Secret, error) {
-	secret := make([]byte, secretBytes)
-	_, err := rand.Read(secret)
-	return secret, err
 }

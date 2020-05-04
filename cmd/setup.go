@@ -93,7 +93,7 @@ func setupCoordinatorCmd(c *cli.Context) error {
 	}
 
 	// Now, log in our admin!
-	session, err := client.EmailLogin(c.Context, email, []byte(password))
+	session, err := client.Login(c.Context, email, []byte(password))
 	if err != nil {
 		return err
 	}

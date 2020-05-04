@@ -25,7 +25,4 @@ var (
 
 	// NotFoundCause occurs when an entity we were looking for could not be found
 	NotFoundCause = errors.NewCause(errors.BadRequestCategory, "not_found")
-
-	// InvalidParametersCause happens when you pass invalid input
-	InvalidParametersCause = errors.NewCause(errors.BadRequestCategory, "invalid_input_parameters")
 )
