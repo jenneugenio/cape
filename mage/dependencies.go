@@ -18,6 +18,11 @@ func init() {
 		panic(err)
 	}
 
+	kubectl, err := NewKubectl("1.11")
+	if err != nil {
+		panic(err)
+	}
+
 	godep, err := NewGolang("github.com/capeprivacy/cape", "1.14")
 	if err != nil {
 		panic(err)
@@ -38,7 +43,14 @@ func init() {
 		panic(err)
 	}
 
-	kind, err := NewKind(dockerdep, "0.8", "1.11")
+	kind, err := NewKind(dockerdep, kubectl, "0.8")
+	if err != nil {
+		panic(err)
+	}
+
+	helm, err := NewHelm("3.2", map[string]string{
+		"bitnami": "https://charts.bitnami.com/bitnami",
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -69,6 +81,11 @@ func init() {
 	}
 
 	err = Dependencies.Add(registry)
+	if err != nil {
+		panic(err)
+	}
+
+	err = Dependencies.Add(helm)
 	if err != nil {
 		panic(err)
 	}

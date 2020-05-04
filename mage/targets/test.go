@@ -16,6 +16,7 @@ type Test mg.Namespace
 
 // All runs the entire test suite (lint, unit and integration tests)
 func (t Test) All(ctx context.Context) error {
+	// TODO: Add helm lint -- so we lint our helm packs
 	mg.SerialCtxDeps(ctx, t.Lint, t.Integration, Build.Docker)
 	return nil
 }

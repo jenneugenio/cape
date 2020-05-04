@@ -19,6 +19,15 @@ var registry = &mage.Registry{
 	Port: "5000",
 }
 
+var charts = []*mage.Chart{
+	{
+		Name:    "postgres",
+		Chart:   "bitnami/postgresql",
+		Version: "8.9.4",
+		Values:  "mage/config/postgres-values.yaml",
+	},
+}
+
 func init() {
 	err := mage.Tracker.Add(fmt.Sprintf("kind://%s", cluster.Name), mage.CleanKind(cluster))
 	if err != nil {
@@ -36,7 +45,7 @@ type Local mg.Namespace
 // Create creates a local kubernetes cluster, builds the required docker
 // images, and then deploys their subsequent helm packages into the cluster.
 func (l Local) Create(ctx context.Context) error {
-	required := []string{"kind", "docker_registry"}
+	required := []string{"kind", "docker_registry", "helm"}
 	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
 		return d.Check(ctx)
 	})
@@ -66,21 +75,42 @@ func (l Local) Create(ctx context.Context) error {
 		return nil
 	}
 
-	// Need to connecto the docker registry to the kind docker network
+	// Need to connect to the docker registry to the kind docker network
 	return dockerRegistry.Connect(ctx, registry, "kind")
 }
 
 // Deploy builds and deploys cape from your local repository to the local
 // kubernetes cluster. If a cluster is not running one will be created.
 func (l Local) Deploy(ctx context.Context) error {
-	mg.Deps(Local.Create, Build.Docker)
-	return nil
+	mg.SerialCtxDeps(ctx, Local.Create, Build.Docker)
+
+	required := []string{"helm"}
+	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
+		return d.Check(ctx)
+	})
+	if err != nil {
+		return err
+	}
+
+	deps, err := mage.Dependencies.Get(required)
+	if err != nil {
+		return err
+	}
+
+	helm := deps[0].(*mage.Helm)
+	errors := mage.NewErrors()
+
+	for _, chart := range charts {
+		errors.Append(helm.Install(ctx, chart))
+	}
+
+	return errors.Err()
 }
 
 // Status returns the current status of the kubernetes cluster, services, and
 // jobs that are deployed by cape into the local cape cluster.
 func (l Local) Status(ctx context.Context) error {
-	required := []string{"kind", "docker_registry"}
+	required := []string{"kind", "docker_registry", "helm"}
 	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
 		return d.Check(ctx)
 	})
@@ -95,6 +125,7 @@ func (l Local) Status(ctx context.Context) error {
 
 	kind := deps[0].(*mage.Kind)
 	dockerRegistry := deps[1].(*mage.DockerRegistry)
+	helm := deps[2].(*mage.Helm)
 
 	kindState, err := kind.Status(ctx, cluster)
 	if err != nil {
@@ -106,9 +137,31 @@ func (l Local) Status(ctx context.Context) error {
 		return err
 	}
 
-	fmt.Printf("Kind Cluster:\t%s\n", kindState)
-	fmt.Printf("Docker Registry:\t%s\n", registryState)
+	releases, err := helm.List(ctx)
+	if err != nil {
+		return err
+	}
 
+	releaseMap := map[string]*mage.Release{}
+	for _, release := range releases {
+		releaseMap[release.Name] = release
+	}
+
+	fmt.Printf("Kind:\t\t%s\n", kindState)
+	fmt.Printf("Registry:\t%s\n", registryState)
+
+	fmt.Printf("\nHelm Charts:\n")
+	for _, chart := range charts {
+		release, ok := releaseMap[chart.Name]
+		status := "unknown"
+		if ok {
+			status = release.Status
+		}
+
+		fmt.Printf("\t%s: %s\n", chart.Name, status)
+	}
+
+	fmt.Printf("\nRun `kubectl get svc -o wide` to check on the status of the underlying pods for the deployed charts.\n")
 	return nil
 }
 

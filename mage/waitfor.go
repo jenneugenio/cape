@@ -2,6 +2,7 @@ package mage
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
@@ -38,4 +39,24 @@ func WaitFor(ctx context.Context, f Checker, timeout time.Duration) error {
 	case err := <-result:
 		return err
 	}
+}
+
+type ParallelFunc func(context.Context) error
+
+func Parallel(ctx context.Context, funcs []ParallelFunc) error {
+	errors := NewErrors()
+	wg := &sync.WaitGroup{}
+
+	for _, fn := range funcs {
+		item := fn
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			errors.Append(item(ctx))
+		}()
+	}
+
+	wg.Wait()
+
+	return errors.Err()
 }

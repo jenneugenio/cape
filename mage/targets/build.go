@@ -19,6 +19,16 @@ var dockerImages = []*mage.DockerImage{
 		Name: "capeprivacy/cape",
 		Tag:  "latest",
 		File: "dockerfiles/Dockerfile.cape",
+		Args: func(ctx context.Context) (map[string]string, error) {
+			version, err := getVersion(ctx)
+			if err != nil {
+				return nil, err
+			}
+
+			return map[string]string{
+				"VERSION": version.Version(),
+			}, nil
+		},
 	},
 	{
 		Name: "capeprivacy/update",
@@ -139,18 +149,9 @@ func (b Build) Docker(ctx context.Context) error {
 		return err
 	}
 
-	version, err := getVersion(ctx)
-	if err != nil {
-		return err
-	}
-
-	args := map[string]string{
-		"VERSION": version.Version(),
-	}
-
 	docker := deps[0].(*mage.Docker)
 	for _, image := range dockerImages {
-		err := docker.Build(ctx, image.String(), image.File, args)
+		err := docker.Build(ctx, image)
 		if err != nil {
 			return err
 		}

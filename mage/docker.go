@@ -17,6 +17,7 @@ type DockerImage struct {
 	Name string
 	File string
 	Tag  string
+	Args func(context.Context) (map[string]string, error)
 }
 
 func (i *DockerImage) String() string {
@@ -76,9 +77,14 @@ func (d *Docker) Check(_ context.Context) error {
 	return nil
 }
 
-func (d *Docker) Build(_ context.Context, label, dockerfile string, args map[string]string) error {
-	cmd := []string{"build", "-t", label, "-f", dockerfile}
-	if len(args) > 0 {
+func (d *Docker) Build(ctx context.Context, image *DockerImage) error {
+	cmd := []string{"build", "-t", image.String(), "-f", image.File}
+	if image.Args != nil {
+		args, err := image.Args(ctx)
+		if err != nil {
+			return err
+		}
+
 		for key, value := range args {
 			cmd = append(cmd, "--build-arg", fmt.Sprintf("%s=%s", key, value))
 		}

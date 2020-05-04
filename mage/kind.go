@@ -14,12 +14,22 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-var kubectlVersionRegex = regexp.MustCompile(`Client Version: v(([0-9]+\.?)*)`)
 var kindVersionRegex = regexp.MustCompile(`kind v(([0-9+\.?])*)`)
 
+// TODO: Configure kubectl/helm/kind to use a _different_ kubectl config path
+// for local development work, or, have them set the context for each command
+// to be the cluster creatd by kind.
 type Cluster struct {
 	Name       string
 	ConfigFile string
+}
+
+// ContextName returns the name of the kubectl configuration context for the
+// cluster.
+//
+// The kind binary autosets the context when a cluster is created.
+func (c *Cluster) ContextName() string {
+	return fmt.Sprintf("kind-%s", c.Name)
 }
 
 // Kind represents a dependency on KinD (Kubernetes in Docker) which is used to
@@ -29,21 +39,20 @@ type Cluster struct {
 type Kind struct {
 	Version     *semver.Version
 	docker      *Docker
-	k8sVersion  *semver.Version
+	kubectl     *Kubectl
 	cfgTemplate *template.Template
 }
 
-func NewKind(docker *Docker, version string, k8sVersion string) (*Kind, error) {
+func NewKind(docker *Docker, kubectl *Kubectl, version string) (*Kind, error) {
 	if docker == nil {
 		return nil, errors.New("A docker registry must be provided")
 	}
 
-	v, err := semver.NewVersion(version)
-	if err != nil {
-		return nil, err
+	if kubectl == nil {
+		return nil, errors.New("Kubectl must be provided")
 	}
 
-	k8sSemver, err := semver.NewVersion(k8sVersion)
+	v, err := semver.NewVersion(version)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +65,7 @@ func NewKind(docker *Docker, version string, k8sVersion string) (*Kind, error) {
 	return &Kind{
 		Version:     v,
 		docker:      docker,
-		k8sVersion:  k8sSemver,
+		kubectl:     kubectl,
 		cfgTemplate: t,
 	}, nil
 }
@@ -81,26 +90,14 @@ func (k *Kind) Check(ctx context.Context) error {
 		return fmt.Errorf("Your version of kind is out of date, please upgrade to %s", k.Version.String())
 	}
 
-	kubectlOut, err := sh.Output("kubectl", "version", "--short", "--client")
-	if err != nil {
-		return err
-	}
-
-	matches := kubectlVersionRegex.FindStringSubmatch(kubectlOut)
-	if len(matches) != 3 {
-		return fmt.Errorf("Could not parse output of `kubectl version --short --client`")
-	}
-
-	v, err := semver.NewVersion(matches[1])
-	if err != nil {
-		return fmt.Errorf("Could not parse output of `kubectl version --short --client`: %s", err.Error())
-	}
-
-	if v.LessThan(k.k8sVersion) {
-		return fmt.Errorf("Please upgrade your version of kubectl from %s to %s or greater", v.String(), k.k8sVersion.String())
-	}
-
-	return k.docker.Check(ctx)
+	return Parallel(ctx, []ParallelFunc{
+		func(ctx context.Context) error {
+			return k.kubectl.Check(ctx)
+		},
+		func(ctx context.Context) error {
+			return k.docker.Check(ctx)
+		},
+	})
 }
 
 func (k *Kind) Name() string {
