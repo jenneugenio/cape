@@ -61,6 +61,9 @@ rules:
   - target: "tokens:*"
     action: create
     effect: allow
+  - target: "tokens:*"
+    action: read
+    effect: allow
   # Only an admin can remove a source
   - target: "tokens:*"
     action: delete

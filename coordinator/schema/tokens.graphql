@@ -12,6 +12,11 @@ input CreateTokenRequest {
     alg: CredentialsAlgType!
 }
 
+extend type Query {
+    tokens(identity_id: ID!): [ID!]! @isAuthenticated
+}
+
 extend type Mutation {
     createToken(input: CreateTokenRequest!): Token! @isAuthenticated
+    removeToken(id: ID!): ID! @isAuthenticated
 }

@@ -266,11 +266,13 @@ func convertError(err error) error {
 	return errors.New(errors.UnknownCause, strings.TrimPrefix(err.Error(), "graphql: "))
 }
 
+type MeResponse struct {
+	Identity *primitives.IdentityImpl `json:"me"`
+}
+
 // Me returns the identity of the current authenticated session
 func (c *Client) Me(ctx context.Context) (primitives.Identity, error) {
-	var resp struct {
-		Identity *primitives.IdentityImpl `json:"me"`
-	}
+	var resp MeResponse
 
 	err := c.transport.Raw(ctx, `
 		query Me {
@@ -1223,6 +1225,10 @@ func (c *Client) GetIdentities(ctx context.Context, emails []primitives.Email) (
 	return clientIdentitiesToPrimitive(resp.Identities)
 }
 
+type CreateTokenResponse struct {
+	Token primitives.Token `json:"createToken"`
+}
+
 // CreateToken creates a new API token for the provided identity. You can pass nil and it will return a token for you
 func (c *Client) CreateToken(ctx context.Context, identity primitives.Identity) (*auth.APIToken, error) {
 	// If the user provides no identity, we will make a token for the current session user
@@ -1250,7 +1256,7 @@ func (c *Client) CreateToken(ctx context.Context, identity primitives.Identity) 
 		return nil, err
 	}
 
-	tokenCredentials, err := primitives.NewTokenCredentials(identity.GetID(), pCreds)
+	tokenCredentials, err := primitives.NewToken(identity.GetID(), pCreds)
 	if err != nil {
 		return nil, err
 	}
@@ -1261,10 +1267,7 @@ func (c *Client) CreateToken(ctx context.Context, identity primitives.Identity) 
 	variables["salt"] = tokenCredentials.Salt
 	variables["alg"] = tokenCredentials.Alg
 
-	var resp struct {
-		Credentials primitives.Token `json:"createToken"`
-	}
-
+	var resp CreateTokenResponse
 	err = c.transport.Raw(ctx, `
 		mutation CreateToken($identity_id: ID!, $public_key: Base64!, $salt: Base64!, $alg: CredentialsAlgType!) {
 			createToken(input: { identity_id: $identity_id, public_key: $public_key, salt: $salt, alg: $alg }) {
@@ -1276,6 +1279,52 @@ func (c *Client) CreateToken(ctx context.Context, identity primitives.Identity) 
 		return nil, err
 	}
 
-	token, err := auth.NewAPIToken(secret, resp.Credentials.ID, c.transport.URL())
+	token, err := auth.NewAPIToken(secret, resp.Token.ID, c.transport.URL())
 	return token, err
+}
+
+type ListTokensResponse struct {
+	IDs []database.ID `json:"tokens"`
+}
+
+// ListTokens lists all of the auth tokens for the provided identity
+func (c *Client) ListTokens(ctx context.Context, identity primitives.Identity) ([]database.ID, error) {
+	// If the user provides no identity, we will make a token for the current session user
+	if identity == nil {
+		i, err := c.Me(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		identity = i
+	}
+
+	var resp ListTokensResponse
+
+	variables := make(map[string]interface{})
+	variables["identity_id"] = identity.GetID()
+
+	err := c.transport.Raw(ctx, `
+		query Tokens($identity_id: ID!) {
+			tokens(identity_id: $identity_id)
+		}
+    `, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.IDs, nil
+}
+
+// RemoveTokens removes the provided token from the database
+func (c *Client) RemoveToken(ctx context.Context, tokenID database.ID) error {
+	variables := make(map[string]interface{})
+	variables["id"] = tokenID
+
+	return c.transport.Raw(ctx, `
+		mutation RemoveToken($id: ID!) {
+			removeToken(id: $id)
+		}
+    `, variables, nil)
 }

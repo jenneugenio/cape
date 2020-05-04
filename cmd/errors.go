@@ -30,4 +30,8 @@ var (
 
 	// PasswordInURLCause happens when you set a password in a url
 	PasswordInURLCause = errors.NewCause(errors.BadRequestCategory, "password_in_url")
+
+	// NoIdentityCause happens when you try to do something on an identity that you do not have access to
+	// or does not exist
+	NoIdentityCause = errors.NewCause(errors.BadRequestCategory, "identity_not_found")
 )

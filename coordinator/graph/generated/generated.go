@@ -90,6 +90,7 @@ type ComplexityRoot struct {
 		DeleteSession      func(childComplexity int, input model.DeleteSessionRequest) int
 		DetachPolicy       func(childComplexity int, input model.DetachPolicyRequest) int
 		RemoveSource       func(childComplexity int, input model.RemoveSourceRequest) int
+		RemoveToken        func(childComplexity int, id database.ID) int
 		Setup              func(childComplexity int, input model.NewUserRequest) int
 		UnassignRole       func(childComplexity int, input model.AssignRoleRequest) int
 	}
@@ -121,6 +122,7 @@ type ComplexityRoot struct {
 		Source           func(childComplexity int, id database.ID) int
 		SourceByLabel    func(childComplexity int, label primitives.Label) int
 		Sources          func(childComplexity int) int
+		Tokens           func(childComplexity int, identityID database.ID) int
 		User             func(childComplexity int, id database.ID) int
 		Users            func(childComplexity int) int
 	}
@@ -198,6 +200,7 @@ type MutationResolver interface {
 	CreateService(ctx context.Context, input model.CreateServiceRequest) (*primitives.Service, error)
 	DeleteService(ctx context.Context, input model.DeleteServiceRequest) (*string, error)
 	CreateToken(ctx context.Context, input model.CreateTokenRequest) (*primitives.Token, error)
+	RemoveToken(ctx context.Context, id database.ID) (database.ID, error)
 }
 type QueryResolver interface {
 	User(ctx context.Context, id database.ID) (*primitives.User, error)
@@ -220,6 +223,7 @@ type QueryResolver interface {
 	Service(ctx context.Context, id database.ID) (*primitives.Service, error)
 	ServiceByEmail(ctx context.Context, email primitives.Email) (*primitives.Service, error)
 	Services(ctx context.Context) ([]*primitives.Service, error)
+	Tokens(ctx context.Context, identityID database.ID) ([]database.ID, error)
 }
 type ServiceResolver interface {
 	Roles(ctx context.Context, obj *primitives.Service) ([]*primitives.Role, error)
@@ -523,6 +527,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.RemoveSource(childComplexity, args["input"].(model.RemoveSourceRequest)), true
 
+	case "Mutation.removeToken":
+		if e.complexity.Mutation.RemoveToken == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_removeToken_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RemoveToken(childComplexity, args["id"].(database.ID)), true
+
 	case "Mutation.setup":
 		if e.complexity.Mutation.Setup == nil {
 			break
@@ -772,6 +788,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Sources(childComplexity), true
+
+	case "Query.tokens":
+		if e.complexity.Query.Tokens == nil {
+			break
+		}
+
+		args, err := ec.field_Query_tokens_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Tokens(childComplexity, args["identity_id"].(database.ID)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -1399,8 +1427,13 @@ input CreateTokenRequest {
     alg: CredentialsAlgType!
 }
 
+extend type Query {
+    tokens(identity_id: ID!): [ID!]! @isAuthenticated
+}
+
 extend type Mutation {
     createToken(input: CreateTokenRequest!): Token! @isAuthenticated
+    removeToken(id: ID!): ID! @isAuthenticated
 }`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -1647,6 +1680,20 @@ func (ec *executionContext) field_Mutation_removeSource_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_removeToken_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 database.ID
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_setup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1876,6 +1923,20 @@ func (ec *executionContext) field_Query_source_args(ctx context.Context, rawArgs
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_tokens_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 database.ID
+	if tmp, ok := rawArgs["identity_id"]; ok {
+		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["identity_id"] = arg0
 	return args, nil
 }
 
@@ -3438,6 +3499,71 @@ func (ec *executionContext) _Mutation_createToken(ctx context.Context, field gra
 	return ec.marshalNToken2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐToken(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_removeToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_removeToken_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().RemoveToken(rctx, args["id"].(database.ID))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(database.ID); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be github.com/capeprivacy/cape/coordinator/database.ID`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(database.ID)
+	fc.Result = res
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Policy_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4840,6 +4966,71 @@ func (ec *executionContext) _Query_services(ctx context.Context, field graphql.C
 	res := resTmp.([]*primitives.Service)
 	fc.Result = res
 	return ec.marshalOService2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐServiceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_tokens(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_tokens_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Tokens(rctx, args["identity_id"].(database.ID))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]database.ID); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []github.com/capeprivacy/cape/coordinator/database.ID`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]database.ID)
+	fc.Result = res
+	return ec.marshalNID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐIDᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7783,6 +7974,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "removeToken":
+			out.Values[i] = ec._Mutation_removeToken(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8110,6 +8306,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_services(ctx, field)
+				return res
+			})
+		case "tokens":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_tokens(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "__type":
@@ -8893,6 +9103,35 @@ func (ec *executionContext) unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoo
 
 func (ec *executionContext) marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v database.ID) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐIDᚄ(ctx context.Context, v interface{}) ([]database.ID, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]database.ID, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐIDᚄ(ctx context.Context, sel ast.SelectionSet, v []database.ID) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalNIdentity2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐIdentity(ctx context.Context, sel ast.SelectionSet, v primitives.Identity) graphql.Marshaler {

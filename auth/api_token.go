@@ -71,7 +71,7 @@ func (a *APIToken) Validate() error {
 	return nil
 }
 
-// Credentials returns Credentials with the secret stored on
+// Credentials returns Token with the secret stored on
 // the auth token.
 func (a *APIToken) Credentials() (*Credentials, error) {
 	creds, err := NewCredentials(a.Secret, nil)

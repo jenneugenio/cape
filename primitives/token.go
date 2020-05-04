@@ -41,7 +41,7 @@ func (tc *Token) GetCredentials() (*Credentials, error) {
 	return NewCredentials(tc.PublicKey, tc.Salt)
 }
 
-func NewTokenCredentials(identityID database.ID, creds *Credentials) (*Token, error) {
+func NewToken(identityID database.ID, creds *Credentials) (*Token, error) {
 	p, err := database.NewPrimitive(TokenPrimitiveType)
 	if err != nil {
 		return nil, err

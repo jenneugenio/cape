@@ -83,9 +83,15 @@ func (mp *MockProvider) UI(ctx context.Context) ui.UI {
 
 // Client implements Client from the Provider interface
 func (mp *MockProvider) Client(ctx context.Context) (*coordinator.Client, error) {
+	url, err := primitives.NewURL("http://localhost:8080")
+	if err != nil {
+		return nil, err
+	}
+
 	t := &coordinator.MockTransport{
 		Responses: mp.responses,
 		Counter:   0,
+		Endpoint:  url,
 	}
 
 	return coordinator.NewClient(t), nil

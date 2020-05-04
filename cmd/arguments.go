@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -62,10 +63,19 @@ var (
 
 	TokenIdentityArg = &Argument{
 		Name:        "identity",
-		Description: "The identity for the token",
+		Description: "The identity for the owner of the token in the form of an email",
 		Required:    false,
 		Processor: func(in string) (interface{}, error) {
-			return in, nil
+			return primitives.NewEmail(in)
+		},
+	}
+
+	TokenIDArg = &Argument{
+		Name:        "token-id",
+		Description: "The ID for the token",
+		Required:    true,
+		Processor: func(in string) (interface{}, error) {
+			return database.DecodeFromString(in)
 		},
 	}
 )

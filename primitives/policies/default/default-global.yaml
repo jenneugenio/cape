@@ -8,6 +8,9 @@ rules:
   - target: "tokens:*"
     action: delete
     effect: allow
+  - target: "tokens:*"
+    action: read
+    effect: allow
   # Identities can create a session for themselves
   - target: "sessions:*"
     action: create

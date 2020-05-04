@@ -18,7 +18,7 @@ type Credentials struct {
 	Alg        primitives.CredentialsAlgType `json:"alg"`
 }
 
-//Sign signs a message token
+// Sign signs a message token
 func (c *Credentials) Sign(token *base64.Value) (*base64.Value, error) {
 	if token == nil {
 		return nil, errors.New(RequiredTokenCause, "Must provide token to sign")

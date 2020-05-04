@@ -28,7 +28,7 @@ func TestAPIToken(t *testing.T) {
 	pCreds, err := creds.Package()
 	gm.Expect(err).To(gm.BeNil())
 
-	tc, err := primitives.NewTokenCredentials(userID, pCreds)
+	tc, err := primitives.NewToken(userID, pCreds)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("new api token", func(t *testing.T) {
