@@ -157,16 +157,16 @@ func (c *ClientTransport) Login(ctx context.Context, email primitives.Email, pas
 }
 
 func (c *ClientTransport) Logout(ctx context.Context, authToken *base64.Value) error {
-	token := authToken
-	if authToken == nil {
-		token = c.authToken
+	var token *base64.Value
+	if authToken != nil {
+		token = authToken
 	}
 
 	variables := make(map[string]interface{})
 	variables["token"] = token
 
 	return c.Raw(ctx, `
-		mutation DeleteSession($token: Base64!) {
+		mutation DeleteSession($token: Base64) {
 			deleteSession(input: { token: $token })
 		}
 	`, variables, nil)
@@ -185,8 +185,7 @@ type Client struct {
 }
 
 // NewClient returns a new client that connects to the given
-// url and sets the required struct members
-//func NewClient(coordinatorURL *primitives.URL, authToken *base64.Value) *Client {
+// the configured transport
 func NewClient(transport Transport) *Client {
 	return &Client{
 		transport: transport,

@@ -75,7 +75,12 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			return nil, err
 		}
 
-		aSession, err := auth.NewSession(identity, session, policies)
+		roles, err := QueryRoles(ctx, db, identity.GetID())
+		if err != nil {
+			return nil, err
+		}
+
+		aSession, err := auth.NewSession(identity, session, policies, roles)
 		if err != nil {
 			return nil, err
 		}

@@ -43,6 +43,7 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
 	Service() ServiceResolver
+	Source() SourceResolver
 	User() UserResolver
 }
 
@@ -212,6 +213,9 @@ type QueryResolver interface {
 }
 type ServiceResolver interface {
 	Roles(ctx context.Context, obj *primitives.Service) ([]*primitives.Role, error)
+}
+type SourceResolver interface {
+	Credentials(ctx context.Context, obj *primitives.Source) (*primitives.DBURL, error)
 }
 type UserResolver interface {
 	Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error)
@@ -1230,7 +1234,7 @@ input AuthSessionRequest {
 }
 
 input DeleteSessionRequest {
-  token: Base64!
+  token: Base64
 }
 
 input AddSourceRequest {
@@ -5502,13 +5506,13 @@ func (ec *executionContext) _Source_credentials(ctx context.Context, field graph
 		Object:   "Source",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Credentials, nil
+		return ec.resolvers.Source().Credentials(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7063,7 +7067,7 @@ func (ec *executionContext) unmarshalInputDeleteSessionRequest(ctx context.Conte
 		switch k {
 		case "token":
 			var err error
-			it.Token, err = ec.unmarshalNBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, v)
+			it.Token, err = ec.unmarshalOBase642ᚖgithubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7939,25 +7943,34 @@ func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, o
 		case "id":
 			out.Values[i] = ec._Source_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "label":
 			out.Values[i] = ec._Source_label(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "type":
 			out.Values[i] = ec._Source_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "endpoint":
 			out.Values[i] = ec._Source_endpoint(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "credentials":
-			out.Values[i] = ec._Source_credentials(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Source_credentials(ctx, field, obj)
+				return res
+			})
 		case "service_id":
 			out.Values[i] = ec._Source_service_id(ctx, field, obj)
 		default:
@@ -8946,6 +8959,29 @@ func (ec *executionContext) marshalOAuthCredentials2ᚖgithubᚗcomᚋcapeprivac
 		return graphql.Null
 	}
 	return ec._AuthCredentials(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx context.Context, v interface{}) (base64.Value, error) {
+	return primitives.UnmarshalBase64Value(v)
+}
+
+func (ec *executionContext) marshalOBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx context.Context, sel ast.SelectionSet, v base64.Value) graphql.Marshaler {
+	return primitives.MarshalBase64Value(v)
+}
+
+func (ec *executionContext) unmarshalOBase642ᚖgithubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx context.Context, v interface{}) (*base64.Value, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOBase642ᚖgithubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx context.Context, sel ast.SelectionSet, v *base64.Value) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, sel, *v)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

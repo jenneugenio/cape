@@ -49,7 +49,7 @@ func authStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.Str
 		return err
 	}
 
-	session, err := auth.NewSession(identity, &primitives.Session{}, policies)
+	session, err := auth.NewSession(identity, &primitives.Session{}, policies, []*primitives.Role{})
 	if err != nil {
 		return err
 	}

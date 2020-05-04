@@ -12,14 +12,17 @@ type Session struct {
 	Identity primitives.Identity
 	Session  *primitives.Session
 	Policies []*primitives.Policy
+	Roles    []*primitives.Role
 }
 
 // NewSession returns a new auth Session
-func NewSession(identity primitives.Identity, session *primitives.Session, policies []*primitives.Policy) (*Session, error) {
+func NewSession(identity primitives.Identity, session *primitives.Session, policies []*primitives.Policy,
+	roles []*primitives.Role) (*Session, error) {
 	s := &Session{
 		Identity: identity,
 		Session:  session,
 		Policies: policies,
+		Roles:    roles,
 	}
 
 	return s, s.Validate()
@@ -37,6 +40,10 @@ func (s *Session) Validate() error {
 
 	if s.Policies == nil {
 		return errors.New(InvalidInfo, "Policies must not be nil")
+	}
+
+	if s.Roles == nil {
+		return errors.New(InvalidInfo, "Roles must not be nil")
 	}
 
 	return nil
@@ -59,7 +66,7 @@ func (s *Session) Can(action primitives.Action, typ types.Type) error {
 	}
 
 	if len(rules) == 0 {
-		return errors.New(AuthorizationFailure, "No rules match this target (%s) and action (%s)", typ, action)
+		return errors.New(AuthorizationFailure, "You don't have sufficient permissions to perform a %s on %s", action, typ)
 	}
 
 	return nil

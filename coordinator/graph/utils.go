@@ -99,32 +99,6 @@ func getRolesByLabel(ctx context.Context, db database.Querier, labels []primitiv
 	return roles, nil
 }
 
-// getRoles is a helper that returns all of the roles assigned to a given identity.
-func getRoles(ctx context.Context, db *auth.Enforcer, identityID database.ID) ([]*primitives.Role, error) {
-	var assignments []*primitives.Assignment
-	filter := database.NewFilter(database.Where{
-		"identity_id": identityID,
-	}, nil, nil)
-	err := db.Query(ctx, &assignments, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	roleIDs := database.InFromEntities(assignments, func(e interface{}) interface{} {
-		return e.(*primitives.Assignment).RoleID
-	})
-
-	var roles []*primitives.Role
-	err = db.Query(ctx, &roles, database.NewFilter(database.Where{
-		"id": roleIDs,
-	}, nil, nil))
-	if err != nil {
-		return nil, err
-	}
-
-	return roles, nil
-}
-
 // createAssignments is a helper function that makes it easy to assign roles to
 // a given identity.
 func createAssignments(ctx context.Context, db database.Querier,

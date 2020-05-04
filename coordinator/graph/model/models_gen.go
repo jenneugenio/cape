@@ -78,7 +78,7 @@ type DeleteServiceRequest struct {
 }
 
 type DeleteSessionRequest struct {
-	Token base64.Value `json:"token"`
+	Token *base64.Value `json:"token"`
 }
 
 type DetachPolicyRequest struct {

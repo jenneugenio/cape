@@ -119,7 +119,7 @@ func (r *serviceResolver) Roles(ctx context.Context, obj *primitives.Service) ([
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	return getRoles(ctx, enforcer, obj.ID)
+	return fw.QueryRoles(ctx, enforcer, obj.ID)
 }
 
 // Service returns generated.ServiceResolver implementation.

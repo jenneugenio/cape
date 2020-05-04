@@ -90,7 +90,7 @@ input AuthSessionRequest {
 }
 
 input DeleteSessionRequest {
-  token: Base64!
+  token: Base64
 }
 
 input AddSourceRequest {

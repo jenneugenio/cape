@@ -269,13 +269,33 @@ func (r *mutationResolver) DeleteSession(ctx context.Context, input model.Delete
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
+	if input.Token == nil {
+		err := enforcer.Delete(ctx, primitives.SessionType, currSession.Session.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, nil
+	}
+
+	found := false
+	for _, role := range currSession.Roles {
+		if role.Label == primitives.AdminRole {
+			found = true
+		}
+	}
+
+	if !found {
+		return nil, errs.New(auth.AuthorizationFailure, "Unable to delete session")
+	}
+
 	session := &primitives.Session{}
 	err := enforcer.QueryOne(ctx, session, database.NewFilter(database.Where{"token": input.Token.String()}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
 
-	err = enforcer.Delete(ctx, primitives.SessionType, session.ID)
+	err = enforcer.Delete(ctx, primitives.SessionType, currSession.Session.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -387,11 +407,22 @@ func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Ema
 	return identities, nil
 }
 
+func (r *sourceResolver) Credentials(ctx context.Context, obj *primitives.Source) (*primitives.DBURL, error) {
+	session := fw.Session(ctx)
+	identity := session.Identity
+
+	if obj.ServiceID != nil && identity.GetID() == *obj.ServiceID {
+		return obj.Credentials, nil
+	}
+
+	return nil, nil
+}
+
 func (r *userResolver) Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	return getRoles(ctx, enforcer, obj.ID)
+	return fw.QueryRoles(ctx, enforcer, obj.ID)
 }
 
 // Mutation returns generated.MutationResolver implementation.
@@ -400,9 +431,13 @@ func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResol
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// Source returns generated.SourceResolver implementation.
+func (r *Resolver) Source() generated.SourceResolver { return &sourceResolver{r} }
+
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type sourceResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
