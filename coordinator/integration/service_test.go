@@ -8,7 +8,6 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/primitives"
@@ -37,7 +36,7 @@ func TestServices(t *testing.T) {
 		email, err := primitives.NewEmail("service@connector-cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		s, err := createServicePrimitive(email, []byte("randompassword"))
+		s, err := createServicePrimitive(email)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
@@ -55,7 +54,7 @@ func TestServices(t *testing.T) {
 		email, err := primitives.NewEmail("deleted-service@connector-cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		s, err := createServicePrimitive(email, []byte("randompassword"))
+		s, err := createServicePrimitive(email)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
@@ -73,7 +72,7 @@ func TestServices(t *testing.T) {
 		email, err := primitives.NewEmail("service:email@connector-cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		s, err := createServicePrimitive(email, []byte("randompassword"))
+		s, err := createServicePrimitive(email)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
@@ -90,7 +89,7 @@ func TestServices(t *testing.T) {
 		email, err := primitives.NewEmail("fresh-email@bomb.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		s, err := createServicePrimitive(email, []byte("randompassword"))
+		s, err := createServicePrimitive(email)
 		gm.Expect(err).To(gm.BeNil())
 
 		_, err = client.CreateService(ctx, s)
@@ -98,7 +97,7 @@ func TestServices(t *testing.T) {
 
 		email, err = primitives.NewEmail("fresh-email@bomb.com")
 		gm.Expect(err).To(gm.BeNil())
-		s, err = createServicePrimitive(email, []byte("randompassword"))
+		s, err = createServicePrimitive(email)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
@@ -110,16 +109,10 @@ func TestServices(t *testing.T) {
 		email, err := primitives.NewEmail("dc@cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		creds, err := auth.NewCredentials([]byte("randompassword"), nil)
-		gm.Expect(err).To(gm.BeNil())
-
 		url, err := primitives.NewURL("https://cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		pCreds, err := creds.Package()
-		gm.Expect(err).To(gm.BeNil())
-
-		s, err := primitives.NewService(email, primitives.DataConnectorServiceType, url, pCreds)
+		s, err := primitives.NewService(email, primitives.DataConnectorServiceType, url)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
@@ -172,7 +165,7 @@ func TestListServices(t *testing.T) {
 		e, err := primitives.NewEmail(email)
 		gm.Expect(err).To(gm.BeNil())
 
-		s, err := createServicePrimitive(e, []byte("randompassword"))
+		s, err := createServicePrimitive(e)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err := client.CreateService(ctx, s)
@@ -196,23 +189,13 @@ func TestListServices(t *testing.T) {
 	gm.Expect(otherServices).To(gm.ContainElements(services))
 }
 
-func createServicePrimitive(email primitives.Email, secret []byte) (*primitives.Service, error) {
-	creds, err := auth.NewCredentials(secret, nil)
-	if err != nil {
-		return nil, err
-	}
-
+func createServicePrimitive(email primitives.Email) (*primitives.Service, error) {
 	typ, err := primitives.NewServiceType("user")
 	if err != nil {
 		return nil, err
 	}
 
-	pCreds, err := creds.Package()
-	if err != nil {
-		return nil, err
-	}
-
-	service, err := primitives.NewService(email, typ, nil, pCreds)
+	service, err := primitives.NewService(email, typ, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -242,23 +225,20 @@ func TestServiceLogin(t *testing.T) {
 	email, err := primitives.NewEmail("service:service@connector-cape.com")
 	gm.Expect(err).To(gm.BeNil())
 
-	url, err := h.URL()
-	gm.Expect(err).To(gm.BeNil())
-
-	token, err := auth.NewAPIToken(email, url)
-	gm.Expect(err).To(gm.BeNil())
-
-	s, err := createServicePrimitive(email, token.Secret)
+	s, err := createServicePrimitive(email)
 	gm.Expect(err).To(gm.BeNil())
 
 	service, err := client.CreateService(ctx, s)
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(service.Email).To(gm.Equal(email))
 
+	token, err := client.CreateToken(ctx, service)
+	gm.Expect(err).To(gm.BeNil())
+
 	serviceClient, err := h.Client()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = serviceClient.Login(ctx, token.Email, token.Secret)
+	_, err = serviceClient.TokenLogin(ctx, token)
 	gm.Expect(err).To(gm.BeNil())
 
 	sources, err := serviceClient.ListSources(ctx)

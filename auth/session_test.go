@@ -25,7 +25,7 @@ func TestCan(t *testing.T) {
 		user, err := primitives.NewUser("Jerry Berry", email, pCreds)
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{}, []*primitives.Role{})
+		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{}, []*primitives.Role{}, user)
 		gm.Expect(err).To(gm.BeNil())
 
 		err = session.Can(primitives.Create, primitives.UserType)
@@ -52,7 +52,7 @@ func TestCan(t *testing.T) {
 		p, err := primitives.NewPolicy("my-policy", spec)
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{p}, []*primitives.Role{})
+		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{p}, []*primitives.Role{}, user)
 		gm.Expect(err).To(gm.BeNil())
 
 		err = session.Can(primitives.Create, primitives.UserType)
@@ -79,7 +79,7 @@ func TestCan(t *testing.T) {
 		p, err := primitives.NewPolicy("my-policy", spec)
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{p}, []*primitives.Role{})
+		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{p}, []*primitives.Role{}, user)
 		gm.Expect(err).To(gm.BeNil())
 
 		err = session.Can(primitives.Create, primitives.UserType)

@@ -1,0 +1,17 @@
+type Token {
+    id: ID!
+    public_key: Base64!
+    salt: Base64!
+    alg: CredentialsAlgType!
+}
+
+input CreateTokenRequest {
+    identity_id: ID!
+    public_key: Base64!
+    salt: Base64!
+    alg: CredentialsAlgType!
+}
+
+extend type Mutation {
+    createToken(input: CreateTokenRequest!): Token! @isAuthenticated
+}

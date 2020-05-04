@@ -40,6 +40,7 @@ type User implements Identity {
 type Session {
   id: ID!
   identity_id: ID!
+  owner_id: ID!
   expires_at: Time!
   type: TokenType!
   token: Base64!
@@ -82,7 +83,8 @@ input NewUserRequest {
 }
 
 input LoginSessionRequest {
-  email: Email!
+  email: Email
+  token_id: ID
 }
 
 input AuthSessionRequest {

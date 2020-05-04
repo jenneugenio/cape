@@ -9,7 +9,8 @@ import (
 // User represents a user of the system
 type User struct {
 	*IdentityImpl
-	Name Name `json:"name"`
+	Name        Name `json:"name"`
+	Credentials *Credentials
 }
 
 func (u *User) Validate() error {
@@ -45,20 +46,24 @@ func NewUser(name Name, email Email, creds *Credentials) (*User, error) {
 	}
 
 	user := &User{
-		Name: name, // TODO: Figure out what to do about validation
+		Name:        name, // TODO: Figure out what to do about validation
+		Credentials: creds,
 		IdentityImpl: &IdentityImpl{
-			Primitive:   p,
-			Email:       email,
-			Credentials: creds,
+			Primitive: p,
+			Email:     email,
 		},
 	}
 
 	return user, user.Validate()
 }
 
+func (u *User) GetIdentityID() database.ID {
+	return u.ID
+}
+
 // GetCredentials satisfies Identity interface
-func (u *User) GetCredentials() *Credentials {
-	return u.Credentials
+func (u *User) GetCredentials() (*Credentials, error) {
+	return u.Credentials, nil
 }
 
 // GetEmail satisfies the Identity interface

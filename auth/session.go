@@ -9,20 +9,26 @@ import (
 // Session holds information related to authenticating and
 // authorizing the contained identity
 type Session struct {
-	Identity primitives.Identity
-	Session  *primitives.Session
-	Policies []*primitives.Policy
-	Roles    []*primitives.Role
+	Identity           primitives.Identity
+	Session            *primitives.Session
+	Policies           []*primitives.Policy
+	Roles              []*primitives.Role
+	CredentialProvider primitives.CredentialProvider
 }
 
 // NewSession returns a new auth Session
-func NewSession(identity primitives.Identity, session *primitives.Session, policies []*primitives.Policy,
-	roles []*primitives.Role) (*Session, error) {
+func NewSession(
+	identity primitives.Identity,
+	session *primitives.Session,
+	policies []*primitives.Policy,
+	roles []*primitives.Role,
+	cp primitives.CredentialProvider) (*Session, error) {
 	s := &Session{
-		Identity: identity,
-		Session:  session,
-		Policies: policies,
-		Roles:    roles,
+		Identity:           identity,
+		Session:            session,
+		Policies:           policies,
+		Roles:              roles,
+		CredentialProvider: cp,
 	}
 
 	return s, s.Validate()

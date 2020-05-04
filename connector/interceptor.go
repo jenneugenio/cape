@@ -49,12 +49,15 @@ func authStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.Str
 		return err
 	}
 
-	session, err := auth.NewSession(identity, &primitives.Session{}, policies, []*primitives.Role{})
+	// TODO -- We aren't passing a credential provider here, but we don't actually need one
+	// CredentialProvider is used by the coordinator to log a user in, we are using this object for policies
+	session, err := auth.NewSession(identity, &primitives.Session{}, policies, []*primitives.Role{}, nil)
 	if err != nil {
 		return err
 	}
 
 	wStream := grpc_middleware.WrapServerStream(ss)
+
 	wStream.WrappedContext = context.WithValue(wStream.WrappedContext, fw.SessionContextKey, session)
 
 	return handler(srv, wStream)

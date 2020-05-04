@@ -13,7 +13,7 @@ import (
 // NewFakeIdentity returns fake identity data for when an attacker
 // attempts to enumerate over emails to see who has an
 // account with the coordinator
-func NewFakeIdentity(email primitives.Email) (primitives.Identity, error) {
+func NewFakeIdentity(email primitives.Email) (primitives.CredentialProvider, error) {
 	h := sha256.New()
 	_, err := h.Write([]byte(email.String()))
 	if err != nil {

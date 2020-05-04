@@ -66,3 +66,5 @@ models:
     model: github.com/capeprivacy/cape/primitives.EmailType
   PolicySpec:
     model: github.com/capeprivacy/cape/primitives.PolicySpec
+  Token:
+    model: github.com/capeprivacy/cape/primitives.Token

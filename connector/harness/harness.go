@@ -62,19 +62,9 @@ type Harness struct {
 
 // NewHarness returns a new harness that's configured and ready to be setup!
 func NewHarness(cfg *Config) (*Harness, error) {
-	email, err := primitives.NewEmail(ConnectorEmail)
-	if err != nil {
-		return nil, err
-	}
-
-	apiToken, err := auth.NewAPIToken(email, cfg.CoordinatorURL)
-	if err != nil {
-		return nil, err
-	}
-
 	return &Harness{
 		cfg:      cfg,
-		apiToken: apiToken,
+		apiToken: cfg.token,
 	}, nil
 }
 

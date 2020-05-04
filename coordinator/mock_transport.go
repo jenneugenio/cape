@@ -30,8 +30,18 @@ func (m MockTransport) Authenticated() bool {
 	return true
 }
 
-// Login implements Login on the Transport interface
-func (m MockTransport) Login(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
+// URL implements URL on the Transport interface
+func (m MockTransport) URL() *primitives.URL {
+	panic("Not Implemented")
+}
+
+// EmailLogin implements EmailLogin on the Transport interface
+func (m MockTransport) EmailLogin(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
+	panic("Not Implemented")
+}
+
+// TokenLogin implements TokenLogin on the Transport interface
+func (m MockTransport) TokenLogin(ctx context.Context, token *auth.APIToken) (*primitives.Session, error) {
 	panic("Not Implemented")
 }
 

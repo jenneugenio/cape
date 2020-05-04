@@ -6,7 +6,6 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/cmd/ui"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -108,18 +107,11 @@ func init() {
 }
 
 func servicesCreateCmd(c *cli.Context) error {
-	cfgSession := Session(c.Context)
-
 	provider := GetProvider(c.Context)
 	u := provider.UI(c.Context)
 
 	typeStr := c.String("type")
 	endpointStr := c.String("endpoint")
-
-	cluster, err := cfgSession.Cluster()
-	if err != nil {
-		return err
-	}
 
 	typ, err := primitives.NewServiceType(typeStr)
 	if err != nil {
@@ -136,27 +128,8 @@ func servicesCreateCmd(c *cli.Context) error {
 	}
 
 	email := Arguments(c.Context, ServiceIdentifierArg).(primitives.Email)
-	clusterURL, err := cluster.GetURL()
-	if err != nil {
-		return err
-	}
 
-	apiToken, err := auth.NewAPIToken(email, clusterURL)
-	if err != nil {
-		return err
-	}
-
-	creds, err := apiToken.Credentials()
-	if err != nil {
-		return err
-	}
-
-	pCreds, err := creds.Package()
-	if err != nil {
-		return err
-	}
-
-	service, err := primitives.NewService(email, typ, endpoint, pCreds)
+	service, err := primitives.NewService(email, typ, endpoint)
 	if err != nil {
 		return err
 	}
@@ -166,7 +139,12 @@ func servicesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	_, err = client.CreateService(c.Context, service)
+	service, err = client.CreateService(c.Context, service)
+	if err != nil {
+		return err
+	}
+
+	apiToken, err := client.CreateToken(c.Context, service)
 	if err != nil {
 		return err
 	}
