@@ -5,7 +5,7 @@ ENV VERSION=$VERSION
 
 COPY . ./
 
-RUN mage build:binary
+RUN ./bin/mage-binary build:binary
 
 # We copy the built binary into a new alpine container so we can package a
 # container with the smallest footprint possible
