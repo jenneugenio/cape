@@ -8,6 +8,7 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
+	"github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -128,43 +129,7 @@ func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([
 }
 
 func (r *queryResolver) IdentityPolicies(ctx context.Context, identityID database.ID) ([]*primitives.Policy, error) {
-	assignments := []*primitives.Assignment{}
-	assignmentFilter := database.NewFilter(database.Where{"identity_id": identityID.String()}, nil, nil)
-	err := r.Backend.Query(ctx, &assignments, assignmentFilter)
-	if err != nil {
-		return nil, err
-	}
-
-	roleIDs := database.InFromEntities(assignments, func(e interface{}) interface{} {
-		return e.(*primitives.Assignment).RoleID
-	})
-
-	if len(roleIDs) == 0 {
-		return []*primitives.Policy{}, nil
-	}
-
-	attachments := []*primitives.Attachment{}
-	attachmentFilter := database.NewFilter(database.Where{"role_id": roleIDs}, nil, nil)
-	err = r.Backend.Query(ctx, &attachments, attachmentFilter)
-	if err != nil {
-		return nil, err
-	}
-
-	policyIDs := database.InFromEntities(attachments, func(e interface{}) interface{} {
-		return e.(*primitives.Attachment).PolicyID
-	})
-
-	if len(policyIDs) == 0 {
-		return []*primitives.Policy{}, nil
-	}
-
-	policies := []*primitives.Policy{}
-	err = r.Backend.Query(ctx, &policies, database.NewFilter(database.Where{"id": policyIDs}, nil, nil))
-	if err != nil {
-		return nil, err
-	}
-
-	return policies, nil
+	return framework.QueryIdentityPolicies(ctx, r.Backend, identityID)
 }
 
 func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error) {

@@ -262,8 +262,8 @@ func TestAttachments(t *testing.T) {
 		policies, err := client.GetIdentityPolicies(ctx, m.Admin.User.ID)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(len(policies)).To(gm.Equal(1))
-		gm.Expect(policies[0].Label).To(gm.Equal(label))
+		// 3 because of 1 create here plus global and admin default policies
+		gm.Expect(len(policies)).To(gm.Equal(3))
 	})
 
 	t.Run("attach policy twice", func(t *testing.T) {

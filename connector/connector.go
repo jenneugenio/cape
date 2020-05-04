@@ -30,7 +30,7 @@ const connectorKeyFile = "connector/certs/localhost.key"
 type Connector struct {
 	cfg         *Config
 	handler     http.Handler
-	coordinator *Coordinator
+	coordinator Coordinator
 	cache       *sources.Cache
 	logger      *zerolog.Logger
 }

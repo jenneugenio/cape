@@ -5,7 +5,6 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/capeprivacy/cape/auth"
 	pb "github.com/capeprivacy/cape/connector/proto"
 	"github.com/capeprivacy/cape/connector/sources"
 	fw "github.com/capeprivacy/cape/framework"
@@ -16,7 +15,7 @@ import (
 )
 
 type grpcHandler struct {
-	coordinator *Coordinator
+	coordinator Coordinator
 	cache       *sources.Cache
 	logger      *zerolog.Logger
 }
@@ -31,16 +30,8 @@ func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryS
 }
 
 func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_QueryServer) error {
-	credentialProvider := fw.CredentialProvider(server.Context())
-
-	policies, err := g.coordinator.GetIdentityPolicies(server.Context(), credentialProvider.GetID())
-	if err != nil {
-		return err
-	}
-
-	if len(policies) == 0 {
-		return auth.ErrAuthorization
-	}
+	session := fw.Session(server.Context())
+	policies := session.Policies
 
 	dataSource, err := primitives.NewLabel(req.GetDataSource())
 	if err != nil {
@@ -83,6 +74,6 @@ func (g *grpcHandler) Version(context.Context, *pb.VersionRequest) (*pb.VersionR
 	}, nil
 }
 
-func (g *grpcHandler) ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error) {
-	return g.coordinator.ValidateToken(ctx, tokenStr)
+func (g *grpcHandler) GetCoordinator() Coordinator {
+	return g.coordinator
 }

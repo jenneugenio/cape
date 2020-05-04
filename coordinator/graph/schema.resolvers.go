@@ -44,6 +44,11 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest
 		return nil, err
 	}
 
+	err = attachDefaultPolicy(ctx, tx)
+	if err != nil {
+		return nil, err
+	}
+
 	roles, err := getRolesByLabel(ctx, tx, []primitives.Label{
 		primitives.GlobalRole,
 		primitives.AdminRole,
@@ -76,6 +81,17 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest
 }
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRequest) (*primitives.User, error) {
+	session := fw.Session(ctx)
+
+	tx, err := r.Backend.Transaction(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	defer tx.Rollback(ctx) // nolint: errcheck
+
+	enforcer := auth.NewEnforcer(session, tx)
+
 	creds, err := primitives.NewCredentials(&input.PublicKey, &input.Salt)
 	if err != nil {
 		return nil, err
@@ -86,13 +102,6 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRe
 		return nil, err
 	}
 
-	tx, err := r.Backend.Transaction(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	defer tx.Rollback(ctx) // nolint: errcheck
-
 	// We need to get the system roles back from the database so we can
 	// assignment them to this user appropriately.
 	systemRoles, err := getRolesByLabel(ctx, tx, []primitives.Label{
@@ -102,7 +111,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.NewUserRe
 		return nil, err
 	}
 
-	err = tx.Create(ctx, user)
+	err = enforcer.Create(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -227,13 +236,10 @@ func (r *mutationResolver) CreateLoginSession(ctx context.Context, input model.L
 
 func (r *mutationResolver) CreateAuthSession(ctx context.Context, input model.AuthSessionRequest) (*primitives.Session, error) {
 	logger := fw.Logger(ctx)
+	s := fw.Session(ctx)
 
-	session := fw.Session(ctx)
-	credentialProvider := fw.CredentialProvider(ctx)
-	pCreds, err := credentialProvider.GetCredentials()
-	if err != nil {
-		return nil, err
-	}
+	session := s.Session
+	identity := s.Identity
 
 	creds, err := auth.LoadCredentials(pCreds.PublicKey, pCreds.Salt)
 	if err != nil {
@@ -303,8 +309,8 @@ func (r *queryResolver) Users(ctx context.Context) ([]*primitives.User, error) {
 }
 
 func (r *queryResolver) Me(ctx context.Context) (primitives.Identity, error) {
-	identity := fw.Identity(ctx)
-	return identity, nil
+	session := fw.Session(ctx)
+	return session.Identity, nil
 }
 
 func (r *queryResolver) Sources(ctx context.Context) ([]*primitives.Source, error) {

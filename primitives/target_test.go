@@ -72,10 +72,9 @@ func TestEntityWildcard(t *testing.T) {
 
 func TestInternalCollection(t *testing.T) {
 	gm.RegisterTestingT(t)
-	target, err := NewTarget("internal:users.*")
+	target, err := NewTarget("users:*")
 	gm.Expect(err).To(gm.BeNil())
 
-	gm.Expect(target.Type()).To(gm.Equal(Internal))
-	gm.Expect(target.Collection().String()).To(gm.Equal("users"))
-	gm.Expect(target.Entity().String()).To(gm.Equal("*"))
+	gm.Expect(target.Type().String()).To(gm.Equal("users"))
+	gm.Expect(target.Collection().String()).To(gm.Equal("*"))
 }

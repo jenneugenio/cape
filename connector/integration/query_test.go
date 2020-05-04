@@ -81,5 +81,5 @@ func TestQueryDenied(t *testing.T) {
 
 	err = stream.Error()
 	gm.Expect(err).ToNot(gm.BeNil())
-	gm.Expect(err.(*errors.Error).Messages[0]).To(gm.Equal("Access denied"))
+	gm.Expect(err.(*errors.Error).Messages[0]).To(gm.Equal("No policies match the provided query"))
 }

@@ -11,13 +11,32 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
 
-type TestValidator struct{}
+type testCoordinatorProvider struct {
+	coordinator Coordinator
+}
 
-func (t *TestValidator) ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error) {
-	return &primitives.User{}, nil
+func (t *testCoordinatorProvider) GetCoordinator() Coordinator {
+	return t.coordinator
+}
+
+type testCoordinator struct{}
+
+func (t *testCoordinator) ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error) {
+	creds, _ := auth.NewCredentials([]byte("secret-hey"), nil)
+	pCreds, _ := creds.Package()
+	return primitives.NewUser("BOB GEORGE", primitives.Email{Email: "bob@george.com"}, pCreds)
+}
+
+func (t *testCoordinator) GetIdentityPolicies(ctx context.Context, id database.ID) ([]*primitives.Policy, error) {
+	return []*primitives.Policy{}, nil
+}
+
+func (t *testCoordinator) GetSourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error) {
+	return &primitives.Source{}, nil
 }
 
 type TestStream struct {
@@ -60,7 +79,7 @@ func TestInterceptors(t *testing.T) {
 		ctx = metadata.NewIncomingContext(ctx, md)
 
 		info := &grpc.StreamServerInfo{IsServerStream: true}
-		err := authStreamInterceptor(&TestValidator{}, &TestStream{ctx: ctx}, info,
+		err := authStreamInterceptor(&testCoordinatorProvider{&testCoordinator{}}, &TestStream{ctx: ctx}, info,
 			func(srv interface{}, stream grpc.ServerStream) error {
 				wasCalled = true
 				return nil
@@ -75,7 +94,7 @@ func TestInterceptors(t *testing.T) {
 		ctx := context.Background()
 
 		info := &grpc.StreamServerInfo{IsServerStream: true}
-		err := authStreamInterceptor(&TestValidator{}, &TestStream{ctx: ctx}, info,
+		err := authStreamInterceptor(&testCoordinatorProvider{&testCoordinator{}}, &TestStream{ctx: ctx}, info,
 			func(srv interface{}, stream grpc.ServerStream) error {
 				wasCalled = true
 				return nil
@@ -90,7 +109,7 @@ func TestInterceptors(t *testing.T) {
 		ctx := context.Background()
 
 		info := &grpc.StreamServerInfo{IsServerStream: true}
-		err := errorStreamInterceptor(&TestValidator{}, &TestStream{ctx: ctx}, info,
+		err := errorStreamInterceptor(&testCoordinatorProvider{&testCoordinator{}}, &TestStream{ctx: ctx}, info,
 			func(srv interface{}, stream grpc.ServerStream) error {
 				wasCalled = true
 				return auth.ErrorInvalidAuthHeader
@@ -107,7 +126,7 @@ func TestInterceptors(t *testing.T) {
 
 		stream := &TestStream{ctx: ctx}
 		info := &grpc.StreamServerInfo{IsServerStream: true}
-		err := requestIDStreamInterceptor(&TestValidator{}, stream, info,
+		err := requestIDStreamInterceptor(&testCoordinatorProvider{&testCoordinator{}}, stream, info,
 			func(srv interface{}, stream grpc.ServerStream) error {
 				wasCalled = true
 				return nil

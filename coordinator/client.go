@@ -833,15 +833,20 @@ func (c *Client) Setup(ctx context.Context, user *primitives.User) (*primitives.
 		User *primitives.User `json:"setup"`
 	}
 
+	in := &model.NewUserRequest{
+		Name:      user.Name,
+		Email:     user.Email,
+		PublicKey: *user.Credentials.PublicKey,
+		Salt:      *user.Credentials.Salt,
+		Alg:       primitives.EDDSA,
+	}
+
 	variables := make(map[string]interface{})
-	variables["name"] = user.Name
-	variables["email"] = user.Email
-	variables["public_key"] = user.Credentials.PublicKey
-	variables["salt"] = user.Credentials.Salt
+	variables["input"] = in
 
 	err := c.transport.Raw(ctx, `
-		mutation CreateUser($name: Name!, $email: Email!, $public_key: Base64!, $salt: Base64!) {
-			setup(input: { name: $name, email: $email, public_key: $public_key, salt: $salt, alg: "EDDSA"}) {
+		mutation CreateUser($input: NewUserRequest!) {
+			setup(input: $input) {
 				id
 				name
 				email

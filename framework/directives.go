@@ -98,9 +98,17 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			identity = service
 		}
 
-		ctx = context.WithValue(ctx, IdentityContextKey, identity)
-		ctx = context.WithValue(ctx, SessionContextKey, session)
-		ctx = context.WithValue(ctx, CredentialProviderContextKey, credentialProvider)
+		policies, err := QueryIdentityPolicies(ctx, db, identity.GetID())
+		if err != nil {
+			return nil, err
+		}
+
+		aSession, err := auth.NewSession(identity, session, policies)
+		if err != nil {
+			return nil, err
+		}
+
+		ctx = context.WithValue(ctx, SessionContextKey, aSession)
 
 		return next(ctx)
 	}

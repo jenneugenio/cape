@@ -70,7 +70,7 @@ func (ps *PolicySpec) Validate() error {
 			if len(r.Fields) > 0 && len(r.Where) > 0 {
 				return errors.New(InvalidPolicySpecCause, "Fields & Where cannot be specified on the same rule")
 			}
-		} else if r.Target.Type() == Internal {
+		} else {
 			if len(r.Fields) > 0 || len(r.Where) > 0 {
 				return errors.New(InvalidPolicySpecCause, "Fields & Where cannot be specified for a Internal policy type")
 			}

@@ -40,7 +40,7 @@ func TestIdentities(t *testing.T) {
 	users, err := createUsers(ctx, client, 2)
 	gm.Expect(err).To(gm.BeNil())
 
-	emails := []primitives.Email{}
+	var emails []primitives.Email
 	for _, service := range services {
 		emails = append(emails, service.Email)
 	}
@@ -52,7 +52,7 @@ func TestIdentities(t *testing.T) {
 	identities, err := client.GetIdentities(ctx, emails)
 	gm.Expect(err).To(gm.BeNil())
 
-	otherEmails := []primitives.Email{}
+	var otherEmails []primitives.Email
 	for _, identity := range identities {
 		otherEmails = append(otherEmails, identity.GetEmail())
 	}

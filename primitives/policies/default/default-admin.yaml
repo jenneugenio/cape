@@ -1,0 +1,67 @@
+version: 1
+label: default-admin
+rules:
+  # Only admins can create users
+  - target: "users:*"
+    action: create
+    effect: allow
+  # Only an admin can delete a user
+  - target: "users:*"
+    action: delete
+    effect: allow
+  # Only admins can create services
+  - target: "services:*"
+    action: create
+    effect: allow
+  # Only an admin can delete a service
+  - target: "services:*"
+    action: delete
+    effect: allow
+  # Only an admin can create a role
+  - target: "roles:*"
+    action: create
+    effect: allow
+  # Only an admin can delete a role
+  - target: "roles:*"
+    action: delete
+    effect: allow
+  # Only an admin can assign a role to an identity
+  - target: "assignments:*"
+    action: create
+    effect: allow
+  # Only an admin can un-assign a role
+  - target: "assignments:*"
+    action: delete
+    effect: allow
+  # Only an admin can attach a policy to a role
+  - target: "attachments:*"
+    action: create
+    effect: allow
+  # Only an admin can detach a policy from a role
+  - target: "attachments:*"
+    action: delete
+    effect: allow
+  # Only an admin can create a policy
+  - target: "policies:*"
+    action: create
+    effect: allow
+  # Only an admin can delete a policy
+  - target: "policies:*"
+    action: delete
+    effect: allow
+  # Only an admin can create a source
+  - target: "sources:*"
+    action: create
+    effect: allow
+  # Only an admin can remove a source
+  - target: "sources:*"
+    action: delete
+    effect: allow
+  # Only an admin can create a source
+  - target: "tokens:*"
+    action: create
+    effect: allow
+  # Only an admin can remove a source
+  - target: "tokens:*"
+    action: delete
+    effect: allow

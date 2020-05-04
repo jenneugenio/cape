@@ -2,7 +2,7 @@ type Token {
     id: ID!
     public_key: Base64!
     salt: Base64!
-    Alg: CredentialsAlgType!
+    alg: CredentialsAlgType!
 }
 
 input CreateTokenRequest {

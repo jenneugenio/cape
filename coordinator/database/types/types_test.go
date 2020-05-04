@@ -21,16 +21,17 @@ func TestRegister(t *testing.T) {
 
 		Register(testingType, "testing_type", false)
 
-		et := Get("testing_type")
+		et, ok := Get("testing_type")
+		gm.Expect(ok).To(gm.BeTrue())
+
 		gm.Expect(et).To(gm.Equal(testingType))
 		gm.Expect(et.Mutable()).To(gm.Equal(false))
 	})
 
 	t.Run("get fail", func(t *testing.T) {
 		gm.RegisterTestingT(t)
-		gm.Expect(func() {
-			Get("bleh")
-		}).Should(gm.Panic())
+		_, ok := Get("bleh")
+		gm.Expect(ok).To(gm.BeFalse())
 	})
 
 	t.Run("cannot register same byte representation", func(t *testing.T) {
@@ -79,7 +80,8 @@ func TestDecode(t *testing.T) {
 	t.Run("byte decode", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		ty := Get("testing_type")
+		ty, ok := Get("testing_type")
+		gm.Expect(ok).To(gm.BeTrue())
 		gm.Expect(ty).To(gm.Equal(testingType))
 
 		up := ty.Upper()
@@ -96,7 +98,8 @@ func TestDecode(t *testing.T) {
 	t.Run("mutable type", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		v := Get("test_mutable")
+		v, ok := Get("test_mutable")
+		gm.Expect(ok).To(gm.BeTrue())
 		gm.Expect(v.Mutable()).To(gm.BeTrue())
 	})
 }

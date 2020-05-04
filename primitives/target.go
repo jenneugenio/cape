@@ -1,8 +1,10 @@
 package primitives
 
 import (
-	errors "github.com/capeprivacy/cape/partyerrors"
 	"regexp"
+
+	"github.com/capeprivacy/cape/coordinator/database/types"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // Entity is in the form <target>:<collection>.<entity>
@@ -41,9 +43,25 @@ func (e Entity) String() string {
 type TargetType string
 
 const (
-	Records  TargetType = "records"
-	Internal TargetType = "internal"
+	Records TargetType = "records"
 )
+
+func (t TargetType) Validate() error {
+	if t == Records {
+		return nil
+	}
+
+	_, ok := types.Get(t.String())
+	if !ok {
+		return errors.New(InvalidTargetCause, "Type %s is not a valid target must be records or primitive type", t)
+	}
+
+	return nil
+}
+
+func (t TargetType) String() string {
+	return string(t)
+}
 
 // Entity of a policy
 type Target string
@@ -55,14 +73,7 @@ func (t Target) Validate() error {
 		return errors.New(InvalidTargetCause, msg)
 	}
 
-	switch t.Type() {
-	case Records:
-		return nil
-	case Internal:
-		return nil
-	default:
-		return errors.New(InvalidTargetCause, "Target type must be Records or Internal, not %s", t.Type())
-	}
+	return t.Type().Validate()
 }
 
 // Checks if this target and the provided target match. This supports wildcards
