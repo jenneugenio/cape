@@ -16,7 +16,11 @@ type Session struct {
 }
 
 // NewSession returns a new auth Session
-func NewSession(identity primitives.Identity, session *primitives.Session, policies []*primitives.Policy, cp primitives.CredentialProvider) (*Session, error) {
+func NewSession(
+	identity primitives.Identity,
+	session *primitives.Session,
+	policies []*primitives.Policy,
+	cp primitives.CredentialProvider) (*Session, error) {
 	s := &Session{
 		Identity:           identity,
 		Session:            session,
