@@ -43,7 +43,6 @@ type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
 	Service() ServiceResolver
-	Token() TokenResolver
 	User() UserResolver
 }
 
@@ -223,11 +222,6 @@ type QueryResolver interface {
 }
 type ServiceResolver interface {
 	Roles(ctx context.Context, obj *primitives.Service) ([]*primitives.Role, error)
-}
-type TokenResolver interface {
-	PublicKey(ctx context.Context, obj *primitives.Token) (base64.Value, error)
-	Salt(ctx context.Context, obj *primitives.Token) (base64.Value, error)
-	Alg(ctx context.Context, obj *primitives.Token) (primitives.CredentialsAlgType, error)
 }
 type UserResolver interface {
 	Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error)
@@ -968,7 +962,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Source.Type(childComplexity), true
 
-	case "Token.Alg":
+	case "Token.alg":
 		if e.complexity.Token.Alg == nil {
 			break
 		}
@@ -1388,7 +1382,7 @@ scalar ServiceType
     id: ID!
     public_key: Base64!
     salt: Base64!
-    Alg: CredentialsAlgType!
+    alg: CredentialsAlgType!
 }
 
 input CreateTokenRequest {
@@ -5718,13 +5712,13 @@ func (ec *executionContext) _Token_public_key(ctx context.Context, field graphql
 		Object:   "Token",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Token().PublicKey(rctx, obj)
+		return obj.PublicKey, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5736,9 +5730,9 @@ func (ec *executionContext) _Token_public_key(ctx context.Context, field graphql
 		}
 		return graphql.Null
 	}
-	res := resTmp.(base64.Value)
+	res := resTmp.(*base64.Value)
 	fc.Result = res
-	return ec.marshalNBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, field.Selections, res)
+	return ec.marshalNBase642ᚖgithubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Token_salt(ctx context.Context, field graphql.CollectedField, obj *primitives.Token) (ret graphql.Marshaler) {
@@ -5752,13 +5746,13 @@ func (ec *executionContext) _Token_salt(ctx context.Context, field graphql.Colle
 		Object:   "Token",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Token().Salt(rctx, obj)
+		return obj.Salt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5770,12 +5764,12 @@ func (ec *executionContext) _Token_salt(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(base64.Value)
+	res := resTmp.(*base64.Value)
 	fc.Result = res
-	return ec.marshalNBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, field.Selections, res)
+	return ec.marshalNBase642ᚖgithubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Token_Alg(ctx context.Context, field graphql.CollectedField, obj *primitives.Token) (ret graphql.Marshaler) {
+func (ec *executionContext) _Token_alg(ctx context.Context, field graphql.CollectedField, obj *primitives.Token) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5786,13 +5780,13 @@ func (ec *executionContext) _Token_Alg(ctx context.Context, field graphql.Collec
 		Object:   "Token",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Token().Alg(rctx, obj)
+		return obj.Alg, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8275,50 +8269,23 @@ func (ec *executionContext) _Token(ctx context.Context, sel ast.SelectionSet, ob
 		case "id":
 			out.Values[i] = ec._Token_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "public_key":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Token_public_key(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Token_public_key(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "salt":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Token_salt(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "Alg":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Token_Alg(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Token_salt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "alg":
+			out.Values[i] = ec._Token_alg(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

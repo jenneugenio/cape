@@ -2,10 +2,11 @@ package integration
 
 import (
 	"context"
-	"fmt"
-	"github.com/capeprivacy/cape/coordinator/harness"
-	gm "github.com/onsi/gomega"
 	"testing"
+
+	gm "github.com/onsi/gomega"
+
+	"github.com/capeprivacy/cape/coordinator/harness"
 )
 
 func TestTokens(t *testing.T) {
@@ -44,9 +45,7 @@ func TestTokens(t *testing.T) {
 		err = client.Logout(ctx, m.Admin.Token)
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := client.TokenLogin(ctx, token)
+		_, err = client.TokenLogin(ctx, token)
 		gm.Expect(err).To(gm.BeNil())
-
-		fmt.Println("wow", session)
 	})
 }
