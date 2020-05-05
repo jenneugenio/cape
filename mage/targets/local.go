@@ -45,7 +45,7 @@ type Local mg.Namespace
 // Create creates a local kubernetes cluster, builds the required docker
 // images, and then deploys their subsequent helm packages into the cluster.
 func (l Local) Create(ctx context.Context) error {
-	required := []string{"kind", "docker_registry", "helm"}
+	required := []string{"kind", "docker_registry"}
 	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
 		return d.Check(ctx)
 	})
@@ -168,7 +168,7 @@ func (l Local) Status(ctx context.Context) error {
 // Destroy deletes the kubernetes clusters and any managed volumes completely
 // erasing anything related to the local deployment
 func (l Local) Destroy(ctx context.Context) error {
-	required := []string{"kind"}
+	required := []string{"kind", "docker_registry"}
 	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
 		return d.Check(ctx)
 	})
@@ -182,5 +182,10 @@ func (l Local) Destroy(ctx context.Context) error {
 	}
 
 	kind := deps[0].(*mage.Kind)
-	return kind.Destroy(ctx, cluster)
+	dockerRegistry := deps[1].(*mage.DockerRegistry)
+
+	errors := mage.NewErrors()
+	errors.Append(kind.Destroy(ctx, cluster))
+	errors.Append(dockerRegistry.Destroy(ctx, registry))
+	return errors.Err()
 }

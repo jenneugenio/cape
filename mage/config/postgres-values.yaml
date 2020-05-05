@@ -3,3 +3,8 @@
 postgresqlUsername: postgres
 postgresqlPassword: dev
 postgresqlDatabase: cape
+
+# Run postgres as a NodePort service so we can expose it on the Helm Pack 
+service:
+    type: NodePort
+    nodePort: 30542

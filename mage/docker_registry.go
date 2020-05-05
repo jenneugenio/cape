@@ -45,17 +45,7 @@ func (d *DockerRegistry) Clean(_ context.Context) error {
 
 // Status returns whether or not the container is currently running
 func (d *DockerRegistry) Status(ctx context.Context, r *Registry) (Status, error) {
-	nameFilter := fmt.Sprintf("name=%s", r.Name)
-	out, err := sh.Output("docker", "ps", "--filter", nameFilter, "--filter", "status=running", "--format={{.}}")
-	if err != nil {
-		return Unknown, err
-	}
-
-	if len(out) == 0 {
-		return Unknown, nil
-	}
-
-	return Running, nil
+	return d.docker.Status(ctx, r.Name)
 }
 
 // Create starts a docker registry with the given name and port combination.
@@ -63,7 +53,7 @@ func (d *DockerRegistry) Status(ctx context.Context, r *Registry) (Status, error
 //
 // If the given registry is already running it returns an error.
 func (d *DockerRegistry) Create(ctx context.Context, r *Registry) (*NetworkSettings, error) {
-	status, err := d.Status(ctx, r)
+	status, err := d.docker.Status(ctx, r.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +87,7 @@ func (d *DockerRegistry) Create(ctx context.Context, r *Registry) (*NetworkSetti
 
 // Connect attempts to connect the given registry to the specified docker network
 func (d *DockerRegistry) Connect(ctx context.Context, r *Registry, network string) error {
-	return sh.Run("docker", "network", "connect", network, r.Name)
+	return d.docker.Connect(ctx, r.Name, network)
 }
 
 func (d *DockerRegistry) Destroy(ctx context.Context, r *Registry) error {

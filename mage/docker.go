@@ -78,6 +78,10 @@ func (d *Docker) Check(_ context.Context) error {
 }
 
 func (d *Docker) Build(ctx context.Context, image *DockerImage) error {
+	if len(os.Getenv("CAPE_SKIP_DOCKER_BUILD")) > 0 {
+		return nil
+	}
+
 	cmd := []string{"build", "-t", image.String(), "-f", image.File}
 	if image.Args != nil {
 		args, err := image.Args(ctx)
@@ -114,6 +118,24 @@ func (d *Docker) Network(_ context.Context, label string) (*NetworkSettings, err
 	}
 
 	return settings, nil
+}
+
+func (d *Docker) Status(ctx context.Context, name string) (Status, error) {
+	nameFilter := fmt.Sprintf("name=%s", name)
+	out, err := sh.Output("docker", "ps", "--filter", nameFilter, "--filter", "status=running", "--format={{.}}")
+	if err != nil {
+		return Unknown, err
+	}
+
+	if len(out) == 0 {
+		return Unknown, nil
+	}
+
+	return Running, nil
+}
+
+func (d *Docker) Connect(ctx context.Context, name, network string) error {
+	return sh.Run("docker", "network", "connect", network, name)
 }
 
 func (d *Docker) Name() string {

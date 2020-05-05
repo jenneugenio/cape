@@ -27,7 +27,9 @@ type Cluster struct {
 // ContextName returns the name of the kubectl configuration context for the
 // cluster.
 //
-// The kind binary autosets the context when a cluster is created.
+// The kind binary autosets the context when a cluster is created. This name is
+// also the name of the docker container created by kind that contains the
+// entire cluster.
 func (c *Cluster) ContextName() string {
 	return fmt.Sprintf("kind-%s", c.Name)
 }
