@@ -57,14 +57,12 @@ rules:
   - target: "sources:*"
     action: delete
     effect: allow
-  # Only an admin can create a source
   - target: "tokens:*"
     action: create
     effect: allow
   - target: "tokens:*"
     action: read
     effect: allow
-  # Only an admin can remove a source
   - target: "tokens:*"
     action: delete
     effect: allow

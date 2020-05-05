@@ -187,3 +187,15 @@ func loadPolicyFile(file string) (*primitives.Policy, error) {
 
 	return primitives.ParsePolicy(b)
 }
+
+func hasRole(roles []*primitives.Role, label primitives.Label) bool {
+	found := false
+	for _, role := range roles {
+		if role.Label == label {
+			found = true
+			break
+		}
+	}
+
+	return found
+}
