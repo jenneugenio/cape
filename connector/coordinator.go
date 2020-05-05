@@ -14,7 +14,7 @@ import (
 type Coordinator interface {
 	ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error)
 	GetIdentityPolicies(ctx context.Context, id database.ID) ([]*primitives.Policy, error)
-	GetSourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error)
+	GetSourceByLabel(ctx context.Context, label primitives.Label) (*coor.SourceResponse, error)
 }
 
 // Coordinator wraps a coordinator client giving some extra features

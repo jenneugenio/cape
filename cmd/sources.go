@@ -138,10 +138,14 @@ func sourcesList(c *cli.Context) error {
 	u := provider.UI(c.Context)
 
 	if len(sources) > 0 {
-		header := []string{"Name", "Type", "Host"}
+		header := []string{"Name", "Type", "Host", "Data Connector"}
 		body := make([][]string, len(sources))
 		for i, s := range sources {
-			body[i] = []string{s.Label.String(), s.Endpoint.Scheme, s.Endpoint.String()}
+			body[i] = []string{s.Label.String(), s.Endpoint.Scheme, s.Endpoint.String(), ""}
+
+			if s.Service != nil {
+				body[i][3] = s.Service.Email.String()
+			}
 		}
 
 		err = u.Table(header, body)

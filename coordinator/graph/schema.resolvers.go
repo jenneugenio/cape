@@ -445,6 +445,23 @@ func (r *sourceResolver) Credentials(ctx context.Context, obj *primitives.Source
 	return nil, nil
 }
 
+func (r *sourceResolver) Service(ctx context.Context, obj *primitives.Source) (*primitives.Service, error) {
+	session := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(session, r.Backend)
+
+	if obj.ServiceID == nil {
+		return nil, nil
+	}
+
+	service := &primitives.Service{}
+	err := enforcer.Get(ctx, *obj.ServiceID, service)
+	if err != nil {
+		return nil, err
+	}
+
+	return service, nil
+}
+
 func (r *userResolver) Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)

@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/capeprivacy/cape/connector/proto"
+	"github.com/capeprivacy/cape/coordinator"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -48,16 +49,18 @@ func newTestSource(ctx context.Context, cfg *Config, source *primitives.Source) 
 
 type testClient struct{}
 
-func (t *testClient) GetSourceByLabel(ctx context.Context, source primitives.Label) (*primitives.Source, error) {
-	return &primitives.Source{
-		Label: source,
-		Type:  testSourceType,
+func (t *testClient) GetSourceByLabel(ctx context.Context, source primitives.Label) (*coordinator.SourceResponse, error) {
+	return &coordinator.SourceResponse{
+		Source: &primitives.Source{
+			Label: source,
+			Type:  testSourceType,
+		},
 	}, nil
 }
 
 type errClient struct{}
 
-func (e *errClient) GetSourceByLabel(ctx context.Context, source primitives.Label) (*primitives.Source, error) {
+func (e *errClient) GetSourceByLabel(ctx context.Context, source primitives.Label) (*coordinator.SourceResponse, error) {
 	return nil, errors.New(NotFoundCause, "whoops")
 }
 

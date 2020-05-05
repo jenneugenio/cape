@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/capeprivacy/cape/auth"
+	coor "github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -35,8 +36,8 @@ func (t *testCoordinator) GetIdentityPolicies(ctx context.Context, id database.I
 	return []*primitives.Policy{}, nil
 }
 
-func (t *testCoordinator) GetSourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error) {
-	return &primitives.Source{}, nil
+func (t *testCoordinator) GetSourceByLabel(ctx context.Context, label primitives.Label) (*coor.SourceResponse, error) {
+	return &coor.SourceResponse{}, nil
 }
 
 type TestStream struct {

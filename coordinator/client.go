@@ -636,7 +636,10 @@ func (c *Client) ListRoles(ctx context.Context) ([]*primitives.Role, error) {
 // for the URL properties of source (e.g. the Endpoint)
 //
 // We create a custom marshaller that encodes the endpoint as a string
-type SourceResponse primitives.Source
+type SourceResponse struct {
+	*primitives.Source
+	Service *primitives.Service `json:"service"`
+}
 
 // MarshalJSON is the marshaller implementation for SourceResponse
 func (s *SourceResponse) MarshalJSON() ([]byte, error) {
@@ -692,7 +695,7 @@ func (s *SourceResponse) UnmarshalJSON(data []byte) error {
 
 // AddSource adds a new source to the database
 func (c *Client) AddSource(ctx context.Context, label primitives.Label,
-	credentials *primitives.DBURL, serviceID *database.ID) (*primitives.Source, error) {
+	credentials *primitives.DBURL, serviceID *database.ID) (*SourceResponse, error) {
 	var resp struct {
 		Source SourceResponse `json:"addSource"`
 	}
@@ -710,7 +713,10 @@ func (c *Client) AddSource(ctx context.Context, label primitives.Label,
 				type
 				credentials
 				endpoint
-				service_id
+				service {
+					id
+					email
+				}
 			  }
 			}
 	`, variables, &resp)
@@ -718,16 +724,15 @@ func (c *Client) AddSource(ctx context.Context, label primitives.Label,
 		return nil, err
 	}
 
-	source := primitives.Source(resp.Source)
-	return &source, nil
+	return &resp.Source, nil
 }
 
 type ListSourcesResponse struct {
-	Sources []SourceResponse `json:"sources"`
+	Sources []*SourceResponse `json:"sources"`
 }
 
 // ListSources returns all of the data sources in the database that you
-func (c *Client) ListSources(ctx context.Context) ([]*primitives.Source, error) {
+func (c *Client) ListSources(ctx context.Context) ([]*SourceResponse, error) {
 	var resp ListSourcesResponse
 	err := c.transport.Raw(ctx, `
 		query Sources {
@@ -737,7 +742,10 @@ func (c *Client) ListSources(ctx context.Context) ([]*primitives.Source, error) 
 					credentials
 					type
 					endpoint
-					service_id
+					service {
+						id
+						email
+					}
 				}
 			}
 	`, nil, &resp)
@@ -746,13 +754,7 @@ func (c *Client) ListSources(ctx context.Context) ([]*primitives.Source, error) 
 		return nil, err
 	}
 
-	sources := make([]*primitives.Source, len(resp.Sources))
-	for i := 0; i < len(sources); i++ {
-		s := primitives.Source(resp.Sources[i])
-		sources[i] = &s
-	}
-
-	return sources, nil
+	return resp.Sources, nil
 }
 
 func (c *Client) RemoveSource(ctx context.Context, label primitives.Label) error {
@@ -769,7 +771,7 @@ func (c *Client) RemoveSource(ctx context.Context, label primitives.Label) error
 }
 
 // GetSource returns a specific data source
-func (c *Client) GetSource(ctx context.Context, id database.ID) (*primitives.Source, error) {
+func (c *Client) GetSource(ctx context.Context, id database.ID) (*SourceResponse, error) {
 	var resp struct {
 		Source SourceResponse `json:"source"`
 	}
@@ -785,7 +787,10 @@ func (c *Client) GetSource(ctx context.Context, id database.ID) (*primitives.Sou
 					type
 					credentials
 					endpoint
-					service_id
+					service {
+						id
+						email
+					}
 				}
 			}
 	`, variables, &resp)
@@ -793,12 +798,11 @@ func (c *Client) GetSource(ctx context.Context, id database.ID) (*primitives.Sou
 		return nil, err
 	}
 
-	source := primitives.Source(resp.Source)
-	return &source, nil
+	return &resp.Source, nil
 }
 
 // GetSourceByLabel returns a specific data source given its label
-func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error) {
+func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (*SourceResponse, error) {
 	var resp struct {
 		Source SourceResponse `json:"sourceByLabel"`
 	}
@@ -814,7 +818,10 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (
 					type
 					credentials
 					endpoint
-					service_id
+					service {
+						id
+						email
+					}
 				}
 			}
 	`, variables, &resp)
@@ -822,8 +829,7 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (
 		return nil, err
 	}
 
-	source := primitives.Source(resp.Source)
-	return &source, nil
+	return &resp.Source, nil
 }
 
 // Setup calls the setup command to bootstrap cape

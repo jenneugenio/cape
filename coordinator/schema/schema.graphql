@@ -53,7 +53,9 @@ type Source {
   type: SourceType!
   endpoint: DBURL!
   credentials: DBURL
-  service_id: ID
+
+  # if a source has a linked service
+  service: Service
 }
 
 type Assignment {

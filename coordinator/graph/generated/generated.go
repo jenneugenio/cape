@@ -158,7 +158,7 @@ type ComplexityRoot struct {
 		Endpoint    func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Label       func(childComplexity int) int
-		ServiceID   func(childComplexity int) int
+		Service     func(childComplexity int) int
 		Type        func(childComplexity int) int
 	}
 
@@ -226,6 +226,7 @@ type ServiceResolver interface {
 }
 type SourceResolver interface {
 	Credentials(ctx context.Context, obj *primitives.Source) (*primitives.DBURL, error)
+	Service(ctx context.Context, obj *primitives.Source) (*primitives.Service, error)
 }
 type UserResolver interface {
 	Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error)
@@ -952,12 +953,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Source.Label(childComplexity), true
 
-	case "Source.service_id":
-		if e.complexity.Source.ServiceID == nil {
+	case "Source.service":
+		if e.complexity.Source.Service == nil {
 			break
 		}
 
-		return e.complexity.Source.ServiceID(childComplexity), true
+		return e.complexity.Source.Service(childComplexity), true
 
 	case "Source.type":
 		if e.complexity.Source.Type == nil {
@@ -1254,7 +1255,9 @@ type Source {
   type: SourceType!
   endpoint: DBURL!
   credentials: DBURL
-  service_id: ID
+
+  # if a source has a linked service
+  service: Service
 }
 
 type Assignment {
@@ -5712,7 +5715,7 @@ func (ec *executionContext) _Source_credentials(ctx context.Context, field graph
 	return ec.marshalODBURL2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDBURL(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Source_service_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
+func (ec *executionContext) _Source_service(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5723,13 +5726,13 @@ func (ec *executionContext) _Source_service_id(ctx context.Context, field graphq
 		Object:   "Source",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ServiceID, nil
+		return ec.resolvers.Source().Service(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5738,9 +5741,9 @@ func (ec *executionContext) _Source_service_id(ctx context.Context, field graphq
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*database.ID)
+	res := resTmp.(*primitives.Service)
 	fc.Result = res
-	return ec.marshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalOService2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Token_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Token) (ret graphql.Marshaler) {
@@ -8327,8 +8330,17 @@ func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, o
 				res = ec._Source_credentials(ctx, field, obj)
 				return res
 			})
-		case "service_id":
-			out.Values[i] = ec._Source_service_id(ctx, field, obj)
+		case "service":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Source_service(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9679,6 +9691,10 @@ func (ec *executionContext) marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcape
 	return ret
 }
 
+func (ec *executionContext) marshalOService2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx context.Context, sel ast.SelectionSet, v primitives.Service) graphql.Marshaler {
+	return ec._Service(ctx, sel, &v)
+}
+
 func (ec *executionContext) marshalOService2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐServiceᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Service) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -9717,6 +9733,13 @@ func (ec *executionContext) marshalOService2ᚕᚖgithubᚗcomᚋcapeprivacyᚋc
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalOService2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx context.Context, sel ast.SelectionSet, v *primitives.Service) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Service(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

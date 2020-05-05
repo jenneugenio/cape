@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/capeprivacy/cape/coordinator"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -15,7 +16,7 @@ import (
 // This interface exists to make it easy to test the sources package in
 // isolation of other packages.
 type CoordinatorClient interface {
-	GetSourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error)
+	GetSourceByLabel(ctx context.Context, label primitives.Label) (*coordinator.SourceResponse, error)
 }
 
 // Cache is responsible for managing a cache of active sources. Users request a
@@ -84,17 +85,17 @@ func (c *Cache) add(ctx context.Context, label primitives.Label) (Source, error)
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
-	primitive, err := c.client.GetSourceByLabel(ctx, label)
+	source, err := c.client.GetSourceByLabel(ctx, label)
 	if err != nil {
 		return nil, err
 	}
 
-	ctor, err := c.registry.Get(primitive.Type)
+	ctor, err := c.registry.Get(source.Type)
 	if err != nil {
 		return nil, err
 	}
 
-	s, err := ctor(ctx, c.cfg, primitive)
+	s, err := ctor(ctx, c.cfg, source.Source)
 	if err != nil {
 		return nil, err
 	}

@@ -82,8 +82,8 @@ func TestSource(t *testing.T) {
 		gm.Expect(source.Label).To(gm.Equal(l))
 		gm.Expect(source.ID).ToNot(gm.BeNil())
 		gm.Expect(source.Endpoint.String()).To(gm.Equal(endpoint))
-		gm.Expect(source.ServiceID).ToNot(gm.BeNil())
-		gm.Expect(*source.ServiceID).To(gm.Equal(service.ID))
+		gm.Expect(source.Service).ToNot(gm.BeNil())
+		gm.Expect(source.Service.ID).To(gm.Equal(service.ID))
 	})
 
 	t.Run("can't create link to a non-existent data connector", func(t *testing.T) {
