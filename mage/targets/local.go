@@ -45,9 +45,16 @@ type Local mg.Namespace
 // Create creates a local kubernetes cluster, builds the required docker
 // images, and then deploys their subsequent helm packages into the cluster.
 func (l Local) Create(ctx context.Context) error {
-	required := []string{"kind", "docker_registry"}
+	required := []string{"kind", "docker_registry", "helm"}
 	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
 		return d.Check(ctx)
+	})
+	if err != nil {
+		return err
+	}
+
+	err = mage.Dependencies.Run(required, func(d mage.Dependency) error {
+		return d.Setup(ctx)
 	})
 	if err != nil {
 		return err
