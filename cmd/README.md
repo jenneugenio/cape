@@ -32,7 +32,7 @@ func init() {
 
 See `cmd/coordinator.go` to see a full example of our the above would look.
 
-All flags should go in the `cmd/flags.go` file and all errors should go in the `cmd/errors.go` file, and
+All flags should go in the `cmd/flags.go` file, all errors should go in the `cmd/errors.go` file, and
 arguments in `cmd/arguments.go`.
 
 ## Implementing a new command
