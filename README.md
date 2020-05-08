@@ -107,3 +107,42 @@ tilt up --no-browser
 - https://docs.tilt.dev/welcome_to_tilt.html
 - https://docs.tilt.dev/install.html
 - https://docs.tilt.dev/onboarding_checklist.html
+
+## Troubleshooting
+
+Here are some steps to try if you've installed `cape` and you're
+having one of these problems:
+
+### Fedora
+
+#### Docker does not support cgroups v2
+
+Fedora 31 migrated from cgroups v1 to v2, but Docker and Kubernetes
+don't support cgroups v2. Update the kernel to use cgroups v1.
+
+```sh
+sudo dnf install -y grubby && \
+  sudo grubby \
+  --update-kernel=ALL \
+  --args="systemd.unified_cgroup_hierarchy=0"
+```
+
+#### Unable to resolve host from inside the container
+
+This is an
+[issue](https://github.com/kubernetes-sigs/kind/issues/1547) that
+surfaced in Fedora 32 when using kind.
+
+Run `nmcli connection show` in your terminal to get the ethernet
+interface device ID.
+
+```sh
+firewall-cmd --permanent --zone=trusted --add-interface=docker0
+firewall-cmd --get-zone-of-interface=<your eth interface>
+firewall-cmd --zone=<zone from above> --add-masquerade --permanent
+firewall-cmd --reload
+```
+
+Destroy your local environment with `mage local:destroy` and run
+through the setup process once more.
+
