@@ -32,14 +32,14 @@ type SecretBoxCodec struct {
 }
 
 // Encrypt generates a random nonce and DEK which is then used to call
-// secretbox.Seal. The result it appended to the nonce so the nonce can
+// secretbox.Seal. The result is appended to the nonce so the nonce can
 // be used later to decrypt the data. The DEK is then encrypted and the
-// result plus the nonce at appended to the wrapped DEK.
+// result plus the nonce is appended to the wrapped DEK.
 func (s *SecretBoxCodec) Encrypt(ctx context.Context, data *base64.Value) (*base64.Value, error) {
 	var nonce [NonceLength]byte
 	var dek [KeyLength]byte
 
-	// generate some random data for nonce and dek
+	// generate some random data for nonce and the dek
 	_, err := rand.Read(nonce[:])
 	if err != nil {
 		return nil, err
@@ -68,7 +68,7 @@ func (s *SecretBoxCodec) Encrypt(ctx context.Context, data *base64.Value) (*base
 func (s *SecretBoxCodec) Decrypt(ctx context.Context, data *base64.Value) (*base64.Value, error) {
 	encrypted := []byte(*data)
 
-	// separate the wrapped dek form the encrypted payload
+	// separate the wrapped dek from the encrypted payload
 	var wrappedDEK [EncryptedKeyLength]byte
 	copy(wrappedDEK[:], encrypted[:EncryptedKeyLength])
 

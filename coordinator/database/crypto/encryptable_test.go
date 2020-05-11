@@ -11,7 +11,7 @@ import (
 )
 
 type EncryptableImpl struct {
-	NonSecret string `json:"non-secret"`
+	NonSecret string `json:"non_secret"`
 	Secret    string `json:"secret"`
 }
 
