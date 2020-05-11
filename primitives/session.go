@@ -94,3 +94,7 @@ func NewSession(identity CredentialProvider, expiresAt time.Time, typ TokenType,
 
 	return session, session.Validate()
 }
+
+func (s *Session) GetEncryptable() bool {
+	return false
+}

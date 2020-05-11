@@ -5,6 +5,8 @@ import (
 	"net/url"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 )
 
 // PostgresBackend implements the backend interface for a pg database
@@ -74,7 +76,7 @@ func (p *PostgresBackend) URL() *url.URL {
 }
 
 // NewPostgresBackend returns a new postgres backend instance
-func NewPostgresBackend(dbURL *url.URL, name string) (Backend, error) {
+func NewPostgresBackend(codec crypto.EncryptionCodec, dbURL *url.URL, name string) (Backend, error) {
 	cfg, err := pgxpool.ParseConfig(dbURL.String())
 	if err != nil {
 		return nil, err
@@ -87,8 +89,10 @@ func NewPostgresBackend(dbURL *url.URL, name string) (Backend, error) {
 	}
 
 	return &PostgresBackend{
-		postgresQuerier: &postgresQuerier{},
-		dbURL:           dbURL,
-		cfg:             cfg,
+		postgresQuerier: &postgresQuerier{
+			codec: codec,
+		},
+		dbURL: dbURL,
+		cfg:   cfg,
 	}, nil
 }

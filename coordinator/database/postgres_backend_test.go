@@ -7,8 +7,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/database/dbtest"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
@@ -38,8 +40,18 @@ func TestPostgresBackend(t *testing.T) {
 
 	defer testDB.Teardown(ctx) // nolint: errcheck
 
+	kURL, err := crypto.NewBase64KeyURL(nil)
+	gm.Expect(err).To(gm.BeNil())
+
+	kms, err := crypto.LoadKMS(kURL)
+	gm.Expect(err).To(gm.BeNil())
+
+	defer kms.Close()
+
+	codec := crypto.NewSecretBoxCodec(kms)
+
 	t.Run("can create/retrieve an immutable entity", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -54,8 +66,51 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 	})
 
+	t.Run("can create/retrieve an encryptable entity", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB, codec)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		e, err := NewTestEncryptionEntity("boo")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Create(ctx, e)
+		gm.Expect(err).To(gm.BeNil())
+
+		target := &TestEncryptionEntity{}
+		err = db.Get(ctx, e.GetID(), target)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(target.ID).To(gm.Equal(e.ID))
+		gm.Expect(target.Data).To(gm.Equal(e.Data))
+	})
+
+	t.Run("confirm encrypted", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB, codec)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		e, err := NewTestEncryptionEntity("boo")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Create(ctx, e)
+		gm.Expect(err).To(gm.BeNil())
+
+		db.(*PostgresBackend).codec = nil
+
+		target := &TestEncryptionEntity{}
+		err = db.Get(ctx, e.GetID(), target)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(target.ID).To(gm.Equal(e.ID))
+
+		// if encrypted should be in base64 from and be large
+		b, err := base64.NewFromString(target.Data)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(*b)).To(gm.Equal(115))
+	})
+
 	t.Run("can create multiple of same entity", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -76,8 +131,30 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(entities).To(gm.Equal([]TestEntity{*eA, *eB}))
 	})
 
+	t.Run("can query encryptable entities", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB, codec)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		eA, err := NewTestEncryptionEntity("doo")
+		gm.Expect(err).To(gm.BeNil())
+
+		eB, err := NewTestEncryptionEntity("who")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Create(ctx, eA, eB)
+		gm.Expect(err).To(gm.BeNil())
+
+		var entities []*TestEncryptionEntity
+		f := Filter{Where: Where{"id": In{eA.ID.String(), eB.ID.String()}}}
+		err = db.Query(ctx, &entities, f)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(entities).To(gm.Equal([]*TestEncryptionEntity{eA, eB}))
+	})
+
 	t.Run("can't insert same entity twice", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -92,7 +169,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("can delete an entity", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -111,7 +188,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("cannot delete an entity from wrong table", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -129,7 +206,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("can't retrieve an unknown entity", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -142,7 +219,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("can update an entity", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -165,8 +242,32 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(target.GetUpdatedAt().After(previous)).To(gm.BeTrue())
 	})
 
+	t.Run("can update an encryptable entity", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB, codec)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		e, err := NewTestEncryptionEntity("hehehe")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Create(ctx, e)
+		gm.Expect(err).To(gm.BeNil())
+
+		previous := e.GetUpdatedAt()
+
+		e.Data = "hahaha"
+		err = db.Update(ctx, e)
+		gm.Expect(err).To(gm.BeNil())
+
+		target := &TestEncryptionEntity{}
+		err = db.Get(ctx, e.GetID(), target)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(target.Data).To(gm.Equal(e.Data))
+		gm.Expect(target.GetUpdatedAt().After(previous)).To(gm.BeTrue())
+	})
+
 	t.Run("can't update an immutable entity", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -179,7 +280,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("can't update a non-existent entity", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -190,7 +291,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("can run commands in a transaction", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -219,7 +320,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("can rollback", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -248,7 +349,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("rollback after commit causes an error", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -280,7 +381,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("can query a single entity", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -309,7 +410,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("QueryOne returns not found if in is empty", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -319,7 +420,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("QueryOne returns a not-found error if the entity can't be found", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -332,7 +433,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("Query does no-op if in is empty", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -343,7 +444,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("can query using slice of pointers", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -376,7 +477,7 @@ func TestPostgresBackend(t *testing.T) {
 	})
 
 	t.Run("can query multiple entities of the same type", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB)
+		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
 
@@ -431,8 +532,8 @@ func TestPostgresBackend(t *testing.T) {
 	})
 }
 
-func dbConnect(ctx context.Context, t dbtest.TestDatabase) (Backend, error) {
-	db, err := New(t.URL(), "testing")
+func dbConnect(ctx context.Context, t dbtest.TestDatabase, codec crypto.EncryptionCodec) (Backend, error) {
+	db, err := New(codec, t.URL(), "testing")
 	if err != nil {
 		return nil, err
 	}

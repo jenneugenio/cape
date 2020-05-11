@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/jackc/pgconn"
 	pgx "github.com/jackc/pgx/v4"
 
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
@@ -20,7 +22,8 @@ type pgConn interface {
 }
 
 type postgresQuerier struct {
-	conn pgConn
+	conn  pgConn
+	codec crypto.EncryptionCodec
 }
 
 // Create an entity inside the database
@@ -31,6 +34,15 @@ func (q *postgresQuerier) Create(ctx context.Context, entities ...Entity) error 
 
 	t := entities[0].GetType()
 	inserts, values := buildInsert(entities, t)
+
+	// encryption is disabled if no codec set
+	if q.codec != nil && entities[0].GetEncryptable() {
+		v, err := handleEncrypt(ctx, q.codec, entities...)
+		if err != nil {
+			return err
+		}
+		values = v
+	}
 
 	sql := fmt.Sprintf(`INSERT INTO %s (data) VALUES %s`, t.String(), inserts)
 	_, err := q.conn.Exec(ctx, sql, values...)
@@ -65,12 +77,18 @@ func (q *postgresQuerier) Get(ctx context.Context, id ID, e Entity) error {
 	sql := fmt.Sprintf(`SELECT data FROM %s WHERE id = $1 LIMIT 1`, t.String())
 	r := q.conn.QueryRow(ctx, sql, id.String())
 
-	switch err := r.Scan(e); err {
+	var bytes []byte
+	switch err := r.Scan(&bytes); err {
 	case pgx.ErrNoRows:
 		return errors.New(NotFoundCause, "could not find %s: %s", t.String(), id)
-	default:
-		return err
 	}
+
+	if q.codec != nil && e.GetEncryptable() {
+		encryptable := e.(interface{}).(crypto.Encryptable)
+		return handleDecrypt(ctx, q.codec, bytes, encryptable)
+	}
+
+	return json.Unmarshal(bytes, e)
 }
 
 // QueryOne uses a query to return a single entity from the database
@@ -94,12 +112,18 @@ func (q *postgresQuerier) QueryOne(ctx context.Context, e Entity, f Filter) erro
 	sql := fmt.Sprintf(`SELECT data from %s %s`, t.String(), where)
 	r := q.conn.QueryRow(ctx, sql, params...)
 
-	switch err := r.Scan(e); err {
+	var bytes []byte
+	switch err := r.Scan(&bytes); err {
 	case pgx.ErrNoRows:
 		return errors.New(NotFoundCause, "could not find %s", t.String())
-	default:
-		return err
 	}
+
+	if q.codec != nil && e.GetEncryptable() {
+		encryptable := e.(interface{}).(crypto.Encryptable)
+		return handleDecrypt(ctx, q.codec, bytes, encryptable)
+	}
+
+	return json.Unmarshal(bytes, e)
 }
 
 // Query retrieves entities of a single type from the database
@@ -151,9 +175,26 @@ func (q *postgresQuerier) Query(ctx context.Context, arr interface{}, f Filter) 
 	defer rows.Close()
 
 	for i := 0; rows.Next(); i++ {
+		var bytes []byte
+		err = rows.Scan(&bytes)
+		if err != nil {
+			return err
+		}
+
 		// Grow the slice
 		item := getItem(arrValue, i)
-		err = rows.Scan(item)
+
+		if q.codec != nil && item.GetEncryptable() {
+			encryptable := item.(interface{}).(crypto.Encryptable)
+
+			err := handleDecrypt(ctx, q.codec, bytes, encryptable)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
+		err := json.Unmarshal(bytes, item)
 		if err != nil {
 			return err
 		}
@@ -198,8 +239,18 @@ func (q *postgresQuerier) Update(ctx context.Context, e Entity) error {
 		return err
 	}
 
+	var value interface{} = e
+	_, ok := e.(interface{}).(crypto.Encryptable)
+	if q.codec != nil && ok {
+		v, err := handleEncrypt(ctx, q.codec, e)
+		if err != nil {
+			return err
+		}
+		value = v[0]
+	}
+
 	sql := fmt.Sprintf(`UPDATE %s SET data = $1 WHERE id = $2`, t.String())
-	ct, err := q.conn.Exec(ctx, sql, e, e.GetID().String())
+	ct, err := q.conn.Exec(ctx, sql, value, e.GetID().String())
 	if err != nil {
 		return err
 	}
@@ -214,7 +265,7 @@ func (q *postgresQuerier) Update(ctx context.Context, e Entity) error {
 // getItem returns a primitive.Entity from the given slice thats passed as a
 // reflect.Value. We then use this value to determine if/how we should grow the
 // slice.
-func getItem(v reflect.Value, pos int) interface{} {
+func getItem(v reflect.Value, pos int) Entity {
 	if v.Type().Kind() != reflect.Slice {
 		panic("expected a slice")
 	}
@@ -235,7 +286,15 @@ func getItem(v reflect.Value, pos int) interface{} {
 		v.SetLen(num)
 	}
 
-	return v.Index(pos).Addr().Interface()
+	// The underlying data in the array can either
+	// be a pointer to a primitive or just a primitive.
+	// If its a pointer we need to allocate a pointer before
+	// returning the interface
+	if v.Index(pos).Kind() == reflect.Ptr {
+		v.Index(pos).Set(reflect.New(v.Index(pos).Type().Elem()))
+		return v.Index(pos).Interface().(Entity)
+	}
+	return v.Index(pos).Addr().Interface().(Entity)
 }
 
 func EntityTypeFromPtrSlice(arr interface{}) types.Type {
@@ -264,4 +323,33 @@ func EntityTypeFromPtrSlice(arr interface{}) types.Type {
 	}
 
 	return itemType.Interface().(Entity).GetType()
+}
+
+// handleEncrypt requires any caller to make sure that entities are Encryptable.
+// Will panic if not.
+func handleEncrypt(ctx context.Context, codec crypto.EncryptionCodec, entities ...Entity) ([]interface{}, error) {
+	encrypted := make([]interface{}, len(entities))
+	for i, e := range entities {
+		encryptable := e.(interface{}).(crypto.Encryptable)
+		by, err := encryptable.Encrypt(ctx, codec)
+		if err != nil {
+			return nil, err
+		}
+
+		// pgx can understand json input as byte array
+		// or structs with json tags
+		encrypted[i] = by
+	}
+
+	return encrypted, nil
+}
+
+func handleDecrypt(ctx context.Context, codec crypto.EncryptionCodec, input []byte,
+	encryptable crypto.Encryptable) error {
+	err := encryptable.Decrypt(ctx, codec, input)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

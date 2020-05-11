@@ -15,4 +15,5 @@ type Entity interface {
 	GetCreatedAt() time.Time
 	GetUpdatedAt() time.Time
 	SetUpdatedAt(time.Time) error
+	GetEncryptable() bool
 }

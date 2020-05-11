@@ -75,3 +75,7 @@ func NewAttachment(policyID, roleID database.ID) (*Attachment, error) {
 	a.ID = ID
 	return a, a.Validate()
 }
+
+func (a *Attachment) GetEncryptable() bool {
+	return false
+}

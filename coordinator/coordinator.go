@@ -14,6 +14,7 @@ import (
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/graph"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/framework"
@@ -60,7 +61,14 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		return nil, err
 	}
 
-	backend, err := database.New(cfg.DB.Addr.ToURL(), cfg.InstanceID.String())
+	kms, err := crypto.LoadKMS(cfg.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	codec := crypto.NewSecretBoxCodec(kms)
+
+	backend, err := database.New(codec, cfg.DB.Addr.ToURL(), cfg.InstanceID.String())
 	if err != nil {
 		return nil, err
 	}

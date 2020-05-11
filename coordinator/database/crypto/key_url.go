@@ -1,9 +1,12 @@
 package crypto
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"net/url"
 	"strconv"
+
+	"github.com/manifoldco/go-base64"
 
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
@@ -97,4 +100,22 @@ func (d *KeyURL) UnmarshalJSON(b []byte) error {
 
 func (d *KeyURL) Type() KeyURLType {
 	return KeyURLType(d.Scheme)
+}
+
+// NewBase64KeyURL
+func NewBase64KeyURL(key []byte) (*KeyURL, error) {
+	if key == nil {
+		key = make([]byte, KeyLength)
+
+		_, err := rand.Read(key)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(key) != KeyLength {
+		return nil, errors.New(InvalidKeyURLCause, "Key must be %d bytes long", KeyLength)
+	}
+
+	return NewKeyURL("base64key://" + base64.New(key).String())
 }

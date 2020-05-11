@@ -11,6 +11,7 @@ import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/database/dbtest"
 	"github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
@@ -131,6 +132,11 @@ func (h *Harness) Setup(ctx context.Context) error {
 		return cleanup(err)
 	}
 
+	keyURL, err := crypto.NewBase64KeyURL(nil)
+	if err != nil {
+		return cleanup(err)
+	}
+
 	coordinator, err := coordinator.New(&coordinator.Config{
 		DB: &coordinator.DBConfig{
 			Addr: dbURL,
@@ -140,6 +146,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 		Auth: &coordinator.AuthConfig{
 			KeypairPackage: kp.Package(),
 		},
+		Key: keyURL,
 	}, logger)
 	if err != nil {
 		return err

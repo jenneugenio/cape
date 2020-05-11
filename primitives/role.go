@@ -58,3 +58,7 @@ func NewRole(label Label, system bool) (*Role, error) {
 
 	return role, role.Validate()
 }
+
+func (r *Role) GetEncryptable() bool {
+	return false
+}

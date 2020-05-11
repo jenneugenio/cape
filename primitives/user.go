@@ -70,3 +70,7 @@ func (u *User) GetCredentials() (*Credentials, error) {
 func (u *User) GetEmail() Email {
 	return u.Email
 }
+
+func (u *User) GetEncryptable() bool {
+	return false
+}

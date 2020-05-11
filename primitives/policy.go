@@ -79,3 +79,7 @@ func ParsePolicy(data []byte) (*Policy, error) {
 
 	return policy, policy.Validate()
 }
+
+func (p *Policy) GetEncryptable() bool {
+	return false
+}

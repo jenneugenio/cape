@@ -63,3 +63,7 @@ func NewToken(identityID database.ID, creds *Credentials) (*Token, error) {
 	tc.ID = id
 	return tc, tc.Validate()
 }
+
+func (tc *Token) GetEncryptable() bool {
+	return false
+}

@@ -96,3 +96,7 @@ func NewSource(label Label, credentials *DBURL, serviceID *database.ID) (*Source
 
 	return source, source.Validate()
 }
+
+func (s *Source) GetEncryptable() bool {
+	return false
+}

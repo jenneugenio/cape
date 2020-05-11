@@ -6,6 +6,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -18,6 +19,7 @@ type Config struct {
 	InstanceID primitives.Label `json:"instance_id"`
 	Port       int              `json:"port"`
 	Auth       *AuthConfig      `json:"auth"`
+	Key        *crypto.KeyURL   `json:"key"`
 }
 
 // AuthConfig represents the authentication configuration

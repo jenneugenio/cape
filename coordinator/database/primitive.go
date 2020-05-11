@@ -16,6 +16,10 @@ type Primitive struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+func (p *Primitive) GetEncryptable() bool {
+	return false
+}
+
 // GetID satisfies the Entity interface to return an ID
 func (p *Primitive) GetID() ID {
 	return p.ID

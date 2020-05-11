@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
@@ -19,18 +20,18 @@ type Backend interface {
 }
 
 // NewBackendFunc represents a constructor of a Backend implementation
-type NewBackendFunc func(*url.URL, string) (Backend, error)
+type NewBackendFunc func(crypto.EncryptionCodec, *url.URL, string) (Backend, error)
 
 var validDBs = map[string]NewBackendFunc{
 	"postgres": NewPostgresBackend,
 }
 
 // New returns a new backend for the given application name
-func New(dbURL *url.URL, appName string) (Backend, error) {
+func New(codec crypto.EncryptionCodec, dbURL *url.URL, appName string) (Backend, error) {
 	ctor, ok := validDBs[dbURL.Scheme]
 	if !ok {
 		return nil, errors.New(NotImplementedCause, "database not supported")
 	}
 
-	return ctor(dbURL, appName)
+	return ctor(codec, dbURL, appName)
 }

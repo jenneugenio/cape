@@ -74,3 +74,7 @@ func (s *Service) Validate() error {
 func (s *Service) GetEmail() Email {
 	return s.Email
 }
+
+func (s *Service) GetEncryptable() bool {
+	return false
+}

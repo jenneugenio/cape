@@ -14,7 +14,7 @@ func TestBackend(t *testing.T) {
 		u, err := url.Parse("fakedb://fake.db")
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = New(u, "test")
+		_, err = New(nil, u, "test")
 		gm.Expect(errors.FromCause(err, NotImplementedCause)).To(gm.BeTrue())
 	})
 
@@ -22,7 +22,7 @@ func TestBackend(t *testing.T) {
 		u, err := url.Parse("postgres://fake.db")
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = New(u, "test")
+		_, err = New(nil, u, "test")
 		gm.Expect(err).To(gm.BeNil())
 	})
 }

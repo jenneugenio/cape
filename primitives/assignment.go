@@ -75,3 +75,7 @@ func NewAssignment(identityID, roleID database.ID) (*Assignment, error) {
 	a.ID = ID
 	return a, a.Validate()
 }
+
+func (a *Assignment) GetEncryptable() bool {
+	return false
+}
