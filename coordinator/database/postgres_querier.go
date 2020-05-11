@@ -22,7 +22,9 @@ type pgConn interface {
 }
 
 type postgresQuerier struct {
-	conn  pgConn
+	conn pgConn
+
+	// codec can be nil. A nil codec means no encryption will be performed
 	codec crypto.EncryptionCodec
 }
 

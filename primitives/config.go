@@ -42,3 +42,7 @@ func NewConfig() (*Config, error) {
 
 	return cfg, cfg.Validate()
 }
+
+func (c *Config) GetEncryptable() bool {
+	return false
+}
