@@ -9,11 +9,13 @@ import (
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
+	"github.com/manifoldco/go-base64"
 )
 
 func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest) (*primitives.User, error) {
@@ -62,7 +64,17 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest
 		return nil, err
 	}
 
-	config, err := primitives.NewConfig()
+	encryptionKey, err := crypto.NewBase64KeyURL(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	encryptedKey, err := crypto.Encrypt(r.RootKey, []byte(encryptionKey.String()))
+	if err != nil {
+		return nil, err
+	}
+
+	config, err := primitives.NewConfig(base64.New(encryptedKey))
 	if err != nil {
 		return nil, err
 	}
@@ -76,6 +88,16 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest
 	if err != nil {
 		return nil, err
 	}
+
+	// if setup has been run we create and add the codec here
+	kms, err := crypto.LoadKMS(encryptionKey)
+	if err != nil {
+		return nil, err
+	}
+
+	codec := crypto.NewSecretBoxCodec(kms)
+
+	r.Backend.SetEncryptionCodec(codec)
 
 	return user, nil
 }

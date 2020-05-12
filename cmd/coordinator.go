@@ -92,16 +92,6 @@ func startCoordinatorCmd(c *cli.Context) error {
 		return err
 	}
 
-	encryptionKey, err := crypto.NewBase64KeyURL(nil)
-	if err != nil {
-		return err
-	}
-
-	encryptedKey, err := crypto.Encrypt(rootKey, []byte(encryptionKey.String()))
-	if err != nil {
-		return err
-	}
-
 	cfg := &coordinator.Config{
 		DB: &coordinator.DBConfig{
 			Addr: dbURL,
@@ -109,10 +99,9 @@ func startCoordinatorCmd(c *cli.Context) error {
 		Auth: &coordinator.AuthConfig{
 			KeypairPackage: keypair.Package(),
 		},
-		InstanceID:    instanceID,
-		Port:          port,
-		RootKey:       base64.New(rootKey[:]),
-		EncryptionKey: base64.New(encryptedKey),
+		InstanceID: instanceID,
+		Port:       port,
+		RootKey:    base64.New(rootKey[:]),
 	}
 
 	ctrl, err := coordinator.New(cfg, logger)

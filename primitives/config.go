@@ -1,6 +1,8 @@
 package primitives
 
 import (
+	"github.com/manifoldco/go-base64"
+
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
@@ -9,6 +11,14 @@ import (
 type Config struct {
 	*database.Primitive
 	Setup bool `json:"setup"`
+
+	// EncryptionKey is used to encrypt data in the system.
+	// Specifically we're using envelope encryption which
+	// can be read more about here
+	// https://cloud.google.com/kms/docs/envelope-encryption.
+	// Here it is encrypted and will be decrypted by the
+	// root key.
+	EncryptionKey *base64.Value `json:"encryption_key"`
 }
 
 func (c *Config) Validate() error {
@@ -29,15 +39,16 @@ func (c *Config) GetType() types.Type {
 }
 
 // NewConfig returns a new Config primitive
-func NewConfig() (*Config, error) {
+func NewConfig(encryptionKey *base64.Value) (*Config, error) {
 	p, err := database.NewPrimitive(ConfigType)
 	if err != nil {
 		return nil, err
 	}
 
 	cfg := &Config{
-		Primitive: p,
-		Setup:     true,
+		Primitive:     p,
+		Setup:         true,
+		EncryptionKey: encryptionKey,
 	}
 
 	return cfg, cfg.Validate()

@@ -37,8 +37,10 @@ func (q *postgresQuerier) Create(ctx context.Context, entities ...Entity) error 
 	t := entities[0].GetType()
 	inserts, values := buildInsert(entities, t)
 
-	// encryption is disabled if no codec set
-	if q.codec != nil && entities[0].GetEncryptable() {
+	if q.codec == nil && entities[0].GetEncryptable() {
+		return errors.New(NoEncryptionCodec,
+			"No encryption codec was found but encountered encrytable primitives %s", entities[0].GetType())
+	} else if entities[0].GetEncryptable() {
 		v, err := handleEncrypt(ctx, q.codec, entities...)
 		if err != nil {
 			return err
@@ -80,12 +82,20 @@ func (q *postgresQuerier) Get(ctx context.Context, id ID, e Entity) error {
 	r := q.conn.QueryRow(ctx, sql, id.String())
 
 	var bytes []byte
-	switch err := r.Scan(&bytes); err {
-	case pgx.ErrNoRows:
-		return errors.New(NotFoundCause, "could not find %s: %s", t.String(), id)
+	err = r.Scan(&bytes)
+	if err != nil {
+		switch err {
+		case pgx.ErrNoRows:
+			return errors.New(NotFoundCause, "could not find %s: %s", t.String(), id)
+		default:
+			return err
+		}
 	}
 
-	if q.codec != nil && e.GetEncryptable() {
+	if q.codec == nil && e.GetEncryptable() {
+		return errors.New(NoEncryptionCodec,
+			"No encryption codec was found but encountered encrytable primitives %s", e.GetType())
+	} else if e.GetEncryptable() {
 		encryptable := e.(interface{}).(crypto.Encryptable)
 		return handleDecrypt(ctx, q.codec, bytes, encryptable)
 	}
@@ -115,12 +125,20 @@ func (q *postgresQuerier) QueryOne(ctx context.Context, e Entity, f Filter) erro
 	r := q.conn.QueryRow(ctx, sql, params...)
 
 	var bytes []byte
-	switch err := r.Scan(&bytes); err {
-	case pgx.ErrNoRows:
-		return errors.New(NotFoundCause, "could not find %s", t.String())
+	err = r.Scan(&bytes)
+	if err != nil {
+		switch err {
+		case pgx.ErrNoRows:
+			return errors.New(NotFoundCause, "could not find %s", t.String())
+		default:
+			return err
+		}
 	}
 
-	if q.codec != nil && e.GetEncryptable() {
+	if q.codec == nil && e.GetEncryptable() {
+		return errors.New(NoEncryptionCodec,
+			"No encryption codec was found but encountered encrytable primitives %s", e.GetType())
+	} else if e.GetEncryptable() {
 		encryptable := e.(interface{}).(crypto.Encryptable)
 		return handleDecrypt(ctx, q.codec, bytes, encryptable)
 	}
@@ -186,7 +204,10 @@ func (q *postgresQuerier) Query(ctx context.Context, arr interface{}, f Filter) 
 		// Grow the slice
 		item := getItem(arrValue, i)
 
-		if q.codec != nil && item.GetEncryptable() {
+		if q.codec == nil && e.GetEncryptable() {
+			return errors.New(NoEncryptionCodec,
+				"No encryption codec was found but encountered encrytable primitives %s", e.GetType())
+		} else if e.GetEncryptable() {
 			encryptable := item.(interface{}).(crypto.Encryptable)
 
 			err := handleDecrypt(ctx, q.codec, bytes, encryptable)
@@ -242,8 +263,10 @@ func (q *postgresQuerier) Update(ctx context.Context, e Entity) error {
 	}
 
 	var value interface{} = e
-	_, ok := e.(interface{}).(crypto.Encryptable)
-	if q.codec != nil && ok {
+	if q.codec == nil && e.GetEncryptable() {
+		return errors.New(NoEncryptionCodec,
+			"No encryption codec was found but encountered encrytable primitives %s", e.GetType())
+	} else if e.GetEncryptable() {
 		v, err := handleEncrypt(ctx, q.codec, e)
 		if err != nil {
 			return err

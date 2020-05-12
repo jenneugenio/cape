@@ -7,7 +7,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
@@ -84,7 +83,7 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(target.Data).To(gm.Equal(e.Data))
 	})
 
-	t.Run("confirm encrypted", func(t *testing.T) {
+	t.Run("error if not encrypted", func(t *testing.T) {
 		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
 		defer db.Close()
@@ -92,21 +91,10 @@ func TestPostgresBackend(t *testing.T) {
 		e, err := NewTestEncryptionEntity("boo")
 		gm.Expect(err).To(gm.BeNil())
 
-		err = db.Create(ctx, e)
-		gm.Expect(err).To(gm.BeNil())
-
 		db.(*PostgresBackend).codec = nil
 
-		target := &TestEncryptionEntity{}
-		err = db.Get(ctx, e.GetID(), target)
-		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(target.ID).To(gm.Equal(e.ID))
-
-		// if encrypted should be in base64 from and be large
-		b, err := base64.NewFromString(target.Data)
-		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(len(*b)).To(gm.Equal(115))
+		err = db.Create(ctx, e)
+		gm.Expect(err).ToNot(gm.BeNil())
 	})
 
 	t.Run("can create multiple of same entity", func(t *testing.T) {
@@ -533,10 +521,12 @@ func TestPostgresBackend(t *testing.T) {
 }
 
 func dbConnect(ctx context.Context, t dbtest.TestDatabase, codec crypto.EncryptionCodec) (Backend, error) {
-	db, err := New(codec, t.URL(), "testing")
+	db, err := New(t.URL(), "testing")
 	if err != nil {
 		return nil, err
 	}
+
+	db.SetEncryptionCodec(codec)
 
 	err = db.Open(ctx)
 	if err != nil {

@@ -138,16 +138,6 @@ func (h *Harness) Setup(ctx context.Context) error {
 		return err
 	}
 
-	encryptionKey, err := crypto.NewBase64KeyURL(nil)
-	if err != nil {
-		return err
-	}
-
-	encryptedKey, err := crypto.Encrypt(rootKey, []byte(encryptionKey.String()))
-	if err != nil {
-		return err
-	}
-
 	coordinator, err := coordinator.New(&coordinator.Config{
 		DB: &coordinator.DBConfig{
 			Addr: dbURL,
@@ -157,8 +147,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 		Auth: &coordinator.AuthConfig{
 			KeypairPackage: kp.Package(),
 		},
-		RootKey:       base64.New(rootKey[:]),
-		EncryptionKey: base64.New(encryptedKey),
+		RootKey: base64.New(rootKey[:]),
 	}, logger)
 	if err != nil {
 		return err

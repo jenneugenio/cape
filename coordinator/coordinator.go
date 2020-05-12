@@ -20,6 +20,7 @@ import (
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // Coordinator is the central brain of Cape.  It keeps track of system
@@ -37,6 +38,31 @@ func (c *Coordinator) Setup(ctx context.Context) (http.Handler, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	cfg, err := getDatabaseConfig(ctx, c.backend)
+	if err != nil {
+		// if setup hasn't been run yet
+		if errors.CausedBy(err, database.NotFoundCause) {
+			return c.handler, nil
+		}
+
+		return nil, err
+	}
+
+	// if setup has been run we create and add the codec here
+	encryptionKey, err := decryptEncryptionKey(c.cfg.RootKey, cfg.EncryptionKey)
+	if err != nil {
+		return nil, err
+	}
+
+	kms, err := crypto.LoadKMS(encryptionKey)
+	if err != nil {
+		return nil, err
+	}
+
+	codec := crypto.NewSecretBoxCodec(kms)
+
+	c.backend.SetEncryptionCodec(codec)
 
 	return c.handler, nil
 }
@@ -62,16 +88,7 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		return nil, err
 	}
 
-	encryptionKey, err := decryptEncryptionKey(cfg.RootKey, cfg.EncryptionKey)
-
-	kms, err := crypto.LoadKMS(encryptionKey)
-	if err != nil {
-		return nil, err
-	}
-
-	codec := crypto.NewSecretBoxCodec(kms)
-
-	backend, err := database.New(codec, cfg.DB.Addr.ToURL(), cfg.InstanceID.String())
+	backend, err := database.New(cfg.DB.Addr.ToURL(), cfg.InstanceID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -86,9 +103,13 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		return nil, err
 	}
 
+	var rootKey [32]byte
+	copy(rootKey[:], *cfg.RootKey)
+
 	config := generated.Config{Resolvers: &graph.Resolver{
 		Backend:        backend,
 		TokenAuthority: tokenAuth,
+		RootKey:        rootKey,
 	}}
 
 	config.Directives.IsAuthenticated = framework.IsAuthenticatedDirective(backend, tokenAuth)
@@ -130,4 +151,13 @@ func decryptEncryptionKey(rootKey *base64.Value,
 	}
 
 	return crypto.NewKeyURL(string(decrypted))
+}
+
+func getDatabaseConfig(ctx context.Context, db database.Backend) (*primitives.Config, error) {
+	cfg := &primitives.Config{}
+
+	// Querying for true is weird but no easy way to query the config right now, also
+	// it gets the job done.
+	err := db.QueryOne(ctx, cfg, database.NewFilter(database.Where{"setup": "true"}, nil, nil))
+	return cfg, err
 }

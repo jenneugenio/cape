@@ -24,14 +24,6 @@ type Config struct {
 	// be stored in a separate config file in a secret or
 	// other secure location.
 	RootKey *base64.Value `json:"root_key"`
-
-	// EncryptionKey is used to encrypt data in the system.
-	// Specifically we're using envelope encryption which
-	// can be read more about here
-	// https://cloud.google.com/kms/docs/envelope-encryption.
-	// Here it is encrypted and will be decrypted by the
-	// root key.
-	EncryptionKey *base64.Value `json:"encryption_key"`
 }
 
 // AuthConfig represents the authentication configuration

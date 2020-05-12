@@ -35,6 +35,8 @@ var (
 	// InvalidVersionCause occurs when an invalid version was provided for a primitive
 	InvalidVersionCause = errors.NewCause(errors.BadRequestCategory, "invalid_version")
 
+	NoEncryptionCodec = errors.NewCause(errors.InternalServerErrorCategory, "no_encryption_codec")
+
 	// ErrEmptyIn happens when a Filter is provided that has an In with zero
 	// values.
 	ErrEmptyIn = errors.New(NotFoundCause, "Cannot pull back entities with an empty 'in' statement")

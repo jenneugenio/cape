@@ -75,8 +75,12 @@ func (p *PostgresBackend) URL() *url.URL {
 	return c
 }
 
+func (p *PostgresBackend) SetEncryptionCodec(codec crypto.EncryptionCodec) {
+	p.codec = codec
+}
+
 // NewPostgresBackend returns a new postgres backend instance
-func NewPostgresBackend(codec crypto.EncryptionCodec, dbURL *url.URL, name string) (Backend, error) {
+func NewPostgresBackend(dbURL *url.URL, name string) (Backend, error) {
 	cfg, err := pgxpool.ParseConfig(dbURL.String())
 	if err != nil {
 		return nil, err
@@ -89,10 +93,8 @@ func NewPostgresBackend(codec crypto.EncryptionCodec, dbURL *url.URL, name strin
 	}
 
 	return &PostgresBackend{
-		postgresQuerier: &postgresQuerier{
-			codec: codec,
-		},
-		dbURL: dbURL,
-		cfg:   cfg,
+		postgresQuerier: &postgresQuerier{},
+		dbURL:           dbURL,
+		cfg:             cfg,
 	}, nil
 }

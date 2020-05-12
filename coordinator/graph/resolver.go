@@ -11,4 +11,5 @@ import (
 type Resolver struct {
 	Backend        database.Backend
 	TokenAuthority *auth.TokenAuthority
+	RootKey        [32]byte
 }
