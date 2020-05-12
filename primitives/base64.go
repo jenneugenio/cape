@@ -21,6 +21,7 @@ func UnmarshalBase64Value(v interface{}) (base64.Value, error) {
 	switch v := v.(type) {
 	case string:
 		b, err := base64.NewFromString(v)
+		fmt.Println("DOESN'T WORK BISH", b, err, v)
 		if err != nil {
 			return nil, err
 		}

@@ -113,6 +113,7 @@ func Logger(loggerType, logLevel, instanceID string) (*zerolog.Logger, error) {
 
 	logger := zerolog.New(out)
 	logger = logger.With().Str("instance_id", instanceID).Timestamp().Logger()
+	logger = logger.With().Stack().Logger()
 	logger = logger.Level(level)
 
 	return &logger, nil

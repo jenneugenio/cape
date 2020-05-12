@@ -240,24 +240,65 @@ func TestListSources(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	dbURL, err := primitives.NewDBURL("postgres://postgres:dev@my.cool.website.com:5432/mydb")
-	gm.Expect(err).To(gm.BeNil())
+	t.Run("List sources", func(t *testing.T) {
 
-	l1, err := primitives.NewLabel("my-transactions")
-	gm.Expect(err).To(gm.BeNil())
+		dbURL, err := primitives.NewDBURL("postgres://postgres:dev@my.cool.website.com:5432/mydb")
+		gm.Expect(err).To(gm.BeNil())
 
-	l2, err := primitives.NewLabel("my-other-transactions")
-	gm.Expect(err).To(gm.BeNil())
+		l1, err := primitives.NewLabel("my-transactions")
+		gm.Expect(err).To(gm.BeNil())
 
-	source1, err := client.AddSource(ctx, l1, dbURL, nil)
-	gm.Expect(err).To(gm.BeNil())
+		l2, err := primitives.NewLabel("my-other-transactions")
+		gm.Expect(err).To(gm.BeNil())
 
-	source2, err := client.AddSource(ctx, l2, dbURL, nil)
-	gm.Expect(err).To(gm.BeNil())
+		source1, err := client.AddSource(ctx, l1, dbURL, nil)
+		gm.Expect(err).To(gm.BeNil())
 
-	sources, err := client.ListSources(ctx)
-	gm.Expect(err).To(gm.BeNil())
+		source2, err := client.AddSource(ctx, l2, dbURL, nil)
+		gm.Expect(err).To(gm.BeNil())
 
-	gm.Expect(len(sources)).To(gm.Equal(2))
-	gm.Expect(sources).To(gm.ContainElements(source1, source2))
+		sources, err := client.ListSources(ctx)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(sources)).To(gm.Equal(2))
+		gm.Expect(sources).To(gm.ContainElements(source1, source2))
+	})
+
+	t.Run("List sources after token login", func(t *testing.T) {
+		emailStr := "service:connector-cool@connector.com"
+		email, err := primitives.NewEmail(emailStr)
+		gm.Expect(err).To(gm.BeNil())
+
+		serviceURL, err := primitives.NewURL("https://localhost:8081")
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, serviceURL)
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err = client.CreateService(ctx, service)
+		gm.Expect(err).To(gm.BeNil())
+
+		dbURL, err := primitives.NewDBURL("postgres://postgres:dev@my.cool.website.com:5432/mydb")
+		gm.Expect(err).To(gm.BeNil())
+
+		l1, err := primitives.NewLabel("my-transactions")
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = client.AddSource(ctx, l1, dbURL, &service.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		token, err := client.CreateToken(ctx, m.Admin.User)
+		gm.Expect(err).To(gm.BeNil())
+
+		err = client.Logout(ctx, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = client.TokenLogin(ctx, token)
+		gm.Expect(err).To(gm.BeNil())
+
+		sources, err := client.ListSources(ctx)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(sources).ToNot(gm.BeNil())
+	})
 }

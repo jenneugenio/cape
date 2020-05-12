@@ -9,6 +9,7 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad
+	github.com/bgentry/que-go v1.0.1
 	github.com/bombsimon/wsl/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/fatih/color v1.9.0 // indirect
@@ -27,6 +28,7 @@ require (
 	github.com/jackc/pgconn v1.3.2
 	github.com/jackc/pgproto3/v2 v2.0.1
 	github.com/jackc/pgtype v1.2.0
+	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jackc/pgx/v4 v4.4.1
 	github.com/jackc/tern v1.9.1
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
@@ -57,7 +59,7 @@ require (
 	github.com/vektah/gqlparser/v2 v2.0.1
 	go.opencensus.io v0.22.2 // indirect
 	go.uber.org/multierr v1.1.0
-	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	google.golang.org/grpc v1.28.1

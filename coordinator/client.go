@@ -2,17 +2,19 @@ package coordinator
 
 import (
 	"context"
-	errors "github.com/capeprivacy/cape/partyerrors"
+	"encoding/json"
+	"fmt"
+	"net"
+	"strings"
+
 	"github.com/manifoldco/go-base64"
+
+	errors "github.com/capeprivacy/cape/partyerrors"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	"github.com/capeprivacy/cape/primitives"
-
-	"encoding/json"
-	"net"
-	"strings"
 
 	"github.com/machinebox/graphql"
 )
@@ -36,6 +38,7 @@ func NewTransport(coordinatorURL *primitives.URL, authToken *base64.Value) Trans
 	}
 
 	client := graphql.NewClient(coordinatorURL.String() + "/v1/query")
+	//client.Log = func(s string) { fmt.Println("CLIENT TRANSPORT: ", s) }
 	return &ClientTransport{
 		client:    client,
 		authToken: authToken,
@@ -644,56 +647,56 @@ type SourceResponse struct {
 }
 
 // MarshalJSON is the marshaller implementation for SourceResponse
-func (s *SourceResponse) MarshalJSON() ([]byte, error) {
-	// We need another alias here as we are overwriting the Endpoint field of SourceResponse, which is a URL
-	// If we embedded SourceResponse directly on the struct below, we would get an infinite loop trying to marshal
-	// this object.  The type alias drops the Marshal & Unmarshal functions from "this" object.
-	type SourceAlias SourceResponse
-	return json.Marshal(&struct {
-		Endpoint    string `json:"endpoint"`
-		Credentials string `json:"credentials"`
-		*SourceAlias
-	}{
-		Endpoint:    s.Endpoint.String(),
-		Credentials: s.Credentials.String(),
-		SourceAlias: (*SourceAlias)(s),
-	})
-}
-
-// UnmarshalJSON is the marshaller implementation for SourceResponse
-func (s *SourceResponse) UnmarshalJSON(data []byte) error {
-	// See MarshalJSON for an explanation of this weird type alias
-	type SourceAlias SourceResponse
-	aux := &struct {
-		Endpoint    string `json:"endpoint"`
-		Credentials string `json:"credentials"`
-		*SourceAlias
-	}{
-		SourceAlias: (*SourceAlias)(s),
-	}
-
-	err := json.Unmarshal(data, &aux)
-	if err != nil {
-		return err
-	}
-
-	e, err := primitives.NewDBURL(aux.Endpoint)
-	if err != nil {
-		return err
-	}
-
-	if aux.Credentials != "" {
-		c, err := primitives.NewDBURL(aux.Credentials)
-		if err != nil {
-			return err
-		}
-
-		s.Credentials = c
-	}
-
-	s.Endpoint = e
-	return nil
-}
+//func (s *SourceResponse) MarshalJSON() ([]byte, error) {
+//	// We need another alias here as we are overwriting the Endpoint field of SourceResponse, which is a URL
+//	// If we embedded SourceResponse directly on the struct below, we would get an infinite loop trying to marshal
+//	// this object.  The type alias drops the Marshal & Unmarshal functions from "this" object.
+//	type SourceAlias SourceResponse
+//	return json.Marshal(&struct {
+//		Endpoint    string `json:"endpoint"`
+//		Credentials string `json:"credentials"`
+//		*SourceAlias
+//	}{
+//		Endpoint:    s.Endpoint.String(),
+//		Credentials: s.Credentials.String(),
+//		SourceAlias: (*SourceAlias)(s),
+//	})
+//}
+//
+//// UnmarshalJSON is the marshaller implementation for SourceResponse
+//func (s *SourceResponse) UnmarshalJSON(data []byte) error {
+//	// See MarshalJSON for an explanation of this weird type alias
+//	type SourceAlias SourceResponse
+//	aux := &struct {
+//		Endpoint    string `json:"endpoint"`
+//		Credentials string `json:"credentials"`
+//		*SourceAlias
+//	}{
+//		SourceAlias: (*SourceAlias)(s),
+//	}
+//
+//	err := json.Unmarshal(data, &aux)
+//	if err != nil {
+//		return err
+//	}
+//
+//	e, err := primitives.NewDBURL(aux.Endpoint)
+//	if err != nil {
+//		return err
+//	}
+//
+//	if aux.Credentials != "" {
+//		c, err := primitives.NewDBURL(aux.Credentials)
+//		if err != nil {
+//			return err
+//		}
+//
+//		s.Credentials = c
+//	}
+//
+//	s.Endpoint = e
+//	return nil
+//}
 
 // AddSource adds a new source to the database
 func (c *Client) AddSource(ctx context.Context, label primitives.Label,
@@ -747,6 +750,7 @@ func (c *Client) ListSources(ctx context.Context) ([]*SourceResponse, error) {
 					service {
 						id
 						email
+						endpoint
 					}
 				}
 			}
@@ -812,6 +816,7 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (
 	variables := make(map[string]interface{})
 	variables["label"] = label
 
+	fmt.Println("no transport??", c.transport)
 	err := c.transport.Raw(ctx, `
 		query Sources($label: Label!) {
 				sourceByLabel(label: $label) {

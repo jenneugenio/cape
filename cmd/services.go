@@ -208,7 +208,7 @@ func servicesRemoveCmd(c *cli.Context) error {
 		return err
 	}
 
-	return u.Template("The service {{ . | bold }} has been deleted.", email.String())
+	return u.Template("The service {{ . | bold }} has been deleted.\n", email.String())
 }
 
 func servicesListCmd(c *cli.Context) error {

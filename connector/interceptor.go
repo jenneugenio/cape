@@ -72,6 +72,8 @@ func returnGRPCError(err error) error {
 		return nil
 	}
 
+	fmt.Println("woah crazy error!", err)
+
 	pErr, ok := err.(*errors.Error)
 	if !ok {
 		pErr = errors.New(errors.UnknownCause, err.Error())

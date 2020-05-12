@@ -39,6 +39,22 @@ type Query interface {
 	Raw() (string, []interface{})
 }
 
+type SchemaQuery struct {
+	Target primitives.Label
+}
+
+func (s *SchemaQuery) Source() primitives.Label {
+	return s.Target
+}
+
+func (s *SchemaQuery) Collection() string {
+	return s.Target.String()
+}
+
+func (s *SchemaQuery) Raw() (string, []interface{}) {
+	panic("not implemented")
+}
+
 // Source is an interface that any data source provider must
 type Source interface {
 	Label() primitives.Label

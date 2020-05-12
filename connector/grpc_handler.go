@@ -2,7 +2,7 @@ package connector
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/rs/zerolog"
 
 	pb "github.com/capeprivacy/cape/connector/proto"
@@ -20,6 +20,7 @@ type grpcHandler struct {
 	logger      *zerolog.Logger
 }
 
+// Query implementation of the DataConnectorClient interface (see data_connector.pb.go)
 func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryServer) error {
 	err := g.handleQuery(req, server)
 	if err != nil {
@@ -74,6 +75,42 @@ func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_
 	}
 
 	return source.Query(context.Background(), server, query, req.GetLimit(), req.GetOffset())
+}
+
+// Schema implementation of the DataConnectorClient interface (see data_connector.pb.go)
+func (g *grpcHandler) Schema(ctx context.Context, req *pb.SchemaRequest) (*pb.SchemaResponse, error) {
+	dataSource, err := primitives.NewLabel(req.GetDataSource())
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("I am getting", dataSource)
+	source, err := g.cache.Get(ctx, dataSource)
+	if err != nil {
+		return nil, err
+	}
+
+	target, err := primitives.NewLabel(req.DataSource)
+	if err != nil {
+		return nil, err
+	}
+	sq := &sources.SchemaQuery{Target: target}
+
+	// This is using a new context because if its using the grpc context and
+	// if the grpc connection is closed grpc cancels that context. This
+	// causes pgx to ungracefully close the connection to postgres which
+	// was causing a problems with k8s port forwarding causing our tests
+	// to break.
+	schema, err := source.Schema(context.Background(), sq)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.SchemaResponse{
+		Schema: []*pb.Schema{
+			schema,
+		},
+	}, nil
 }
 
 func (g *grpcHandler) Version(context.Context, *pb.VersionRequest) (*pb.VersionResponse, error) {

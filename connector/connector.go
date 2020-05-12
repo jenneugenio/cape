@@ -87,12 +87,18 @@ func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 		logger:      logger,
 	}
 
-	grpcServer := grpc.NewServer(grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+	unaryInterceptor := grpc.UnaryInterceptor(
+		coordinator.AuthInterceptor,
+	)
+
+	streamInterceptor := grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 		errorStreamInterceptor,
 		authStreamInterceptor,
 		requestIDStreamInterceptor,
 		grpc_zerolog.StreamServerInterceptor(logger, grpc_zerolog.WithCodes(handleCodes)),
-	)))
+	))
+
+	grpcServer := grpc.NewServer(unaryInterceptor, streamInterceptor)
 
 	pb.RegisterDataConnectorServer(grpcServer, hndler)
 
