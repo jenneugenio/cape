@@ -8,6 +8,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/NYTimes/gziphandler"
 	"github.com/justinas/alice"
+	"github.com/manifoldco/go-base64"
 	"github.com/manifoldco/healthz"
 	"github.com/rs/cors"
 	"github.com/rs/zerolog"
@@ -61,7 +62,9 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		return nil, err
 	}
 
-	kms, err := crypto.LoadKMS(cfg.EncryptionKey)
+	encryptionKey, err := decryptEncryptionKey(cfg.RootKey, cfg.EncryptionKey)
+
+	kms, err := crypto.LoadKMS(encryptionKey)
 	if err != nil {
 		return nil, err
 	}
@@ -113,4 +116,18 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		backend: backend,
 		logger:  logger,
 	}, nil
+}
+
+func decryptEncryptionKey(rootKey *base64.Value,
+	encryptionKey *base64.Value) (*crypto.KeyURL, error) {
+	var key [32]byte
+
+	copy(key[:], *rootKey)
+
+	decrypted, err := crypto.Decrypt(key, *encryptionKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return crypto.NewKeyURL(string(decrypted))
 }

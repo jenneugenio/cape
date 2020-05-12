@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"github.com/manifoldco/go-base64"
 	"github.com/rs/zerolog"
 
 	"github.com/capeprivacy/cape/auth"
@@ -132,9 +133,19 @@ func (h *Harness) Setup(ctx context.Context) error {
 		return cleanup(err)
 	}
 
-	keyURL, err := crypto.NewBase64KeyURL(nil)
+	rootKey, err := crypto.GenerateKey()
 	if err != nil {
-		return cleanup(err)
+		return err
+	}
+
+	encryptionKey, err := crypto.NewBase64KeyURL(nil)
+	if err != nil {
+		return err
+	}
+
+	encryptedKey, err := crypto.Encrypt(rootKey, []byte(encryptionKey.String()))
+	if err != nil {
+		return err
 	}
 
 	coordinator, err := coordinator.New(&coordinator.Config{
@@ -146,7 +157,8 @@ func (h *Harness) Setup(ctx context.Context) error {
 		Auth: &coordinator.AuthConfig{
 			KeypairPackage: kp.Package(),
 		},
-		EncryptionKey: keyURL,
+		RootKey:       base64.New(rootKey[:]),
+		EncryptionKey: base64.New(encryptedKey),
 	}, logger)
 	if err != nil {
 		return err

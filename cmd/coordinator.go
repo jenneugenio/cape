@@ -1,9 +1,11 @@
 package main
 
 import (
+	"github.com/manifoldco/go-base64"
+	"github.com/urfave/cli/v2"
+
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator"
@@ -82,12 +84,22 @@ func startCoordinatorCmd(c *cli.Context) error {
 	// environment and configuration workflow.
 	keypair, err := auth.NewKeypair()
 	if err != nil {
-		return nil
+		return err
 	}
 
-	key, err := crypto.NewBase64KeyURL(nil)
+	rootKey, err := crypto.GenerateKey()
 	if err != nil {
-		return nil
+		return err
+	}
+
+	encryptionKey, err := crypto.NewBase64KeyURL(nil)
+	if err != nil {
+		return err
+	}
+
+	encryptedKey, err := crypto.Encrypt(rootKey, []byte(encryptionKey.String()))
+	if err != nil {
+		return err
 	}
 
 	cfg := &coordinator.Config{
@@ -99,7 +111,8 @@ func startCoordinatorCmd(c *cli.Context) error {
 		},
 		InstanceID:    instanceID,
 		Port:          port,
-		EncryptionKey: key,
+		RootKey:       base64.New(rootKey[:]),
+		EncryptionKey: base64.New(encryptedKey),
 	}
 
 	ctrl, err := coordinator.New(cfg, logger)

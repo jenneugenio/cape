@@ -48,25 +48,12 @@ type LocalKMS struct {
 // Encrypts the data encryption key (dek) returning the encrypted bytes. The
 // result is appended to the nonce.
 func (l *LocalKMS) Encrypt(ctx context.Context, dek []byte) ([]byte, error) {
-	var nonce [NonceLength]byte
-	_, err := rand.Read(nonce[:])
-	if err != nil {
-		return nil, err
-	}
-
-	return secretbox.Seal(nonce[:], dek, &nonce, &l.key), nil
+	return Encrypt(l.key, dek)
 }
 
 // Decrypt a wrapped dek and return it
 func (l *LocalKMS) Decrypt(ctx context.Context, wrappedDEK []byte) ([]byte, error) {
-	var decryptNonce [NonceLength]byte
-	copy(decryptNonce[:], wrappedDEK[:NonceLength])
-
-	decrypted, ok := secretbox.Open(nil, wrappedDEK[NonceLength:], &decryptNonce, &l.key)
-	if !ok {
-		return nil, errors.New(KMSDecryptCause, "KMS is unable to decrypt dek")
-	}
-	return decrypted, nil
+	return Decrypt(l.key, wrappedDEK)
 }
 
 func (l *LocalKMS) Open(ctx context.Context) error {
@@ -84,4 +71,35 @@ func LoadKMS(url *KeyURL) (KMS, error) {
 	default:
 		return nil, errors.New(InvalidKeyURLCause, "Could not find url type %s for loading KMS", url.Type())
 	}
+}
+
+func GenerateKey() ([KeyLength]byte, error) {
+	var key [32]byte
+
+	_, err := rand.Read(key[:])
+	if err != nil {
+		return [32]byte{}, err
+	}
+	return key, nil
+}
+
+func Encrypt(key [KeyLength]byte, data []byte) ([]byte, error) {
+	var nonce [NonceLength]byte
+	_, err := rand.Read(nonce[:])
+	if err != nil {
+		return nil, err
+	}
+
+	return secretbox.Seal(nonce[:], data, &nonce, &key), nil
+}
+
+func Decrypt(key [KeyLength]byte, encrypted []byte) ([]byte, error) {
+	var decryptNonce [NonceLength]byte
+	copy(decryptNonce[:], encrypted[:NonceLength])
+
+	decrypted, ok := secretbox.Open(nil, encrypted[NonceLength:], &decryptNonce, &key)
+	if !ok {
+		return nil, errors.New(KMSDecryptCause, "Unable to decrypt data")
+	}
+	return decrypted, nil
 }
