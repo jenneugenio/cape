@@ -1,7 +1,13 @@
 package primitives
 
 import (
+	"context"
+	"encoding/json"
+
+	"github.com/manifoldco/go-base64"
+
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
@@ -23,6 +29,11 @@ type Source struct {
 	// ServiceID can be nil as it's not set when a data connector has not been
 	// linked with the service.
 	ServiceID *database.ID `json:"service_id"`
+}
+
+type encryptedSource struct {
+	*Source
+	Credentials *base64.Value `json:"credentials"`
 }
 
 // GetType returns the type for this entity
@@ -58,6 +69,47 @@ func (s *Source) Validate() error {
 		}
 	}
 
+	return nil
+}
+
+// Encrypt implements the Encryptable interface
+func (s *Source) Encrypt(ctx context.Context, codec crypto.EncryptionCodec) ([]byte, error) {
+	data, err := codec.Encrypt(ctx, base64.New([]byte(s.Credentials.String())))
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(encryptedSource{
+		Source:      s,
+		Credentials: data,
+	})
+}
+
+// Decrypt implements the Encryptable interface
+func (s *Source) Decrypt(ctx context.Context, codec crypto.EncryptionCodec, data []byte) error {
+	in := &encryptedSource{}
+	err := json.Unmarshal(data, in)
+	if err != nil {
+		return err
+	}
+
+	unencrypted, err := codec.Decrypt(ctx, in.Credentials)
+	if err != nil {
+		return err
+	}
+
+	s.Primitive = in.Primitive
+	s.Label = in.Label
+	s.Type = in.Type
+	s.Endpoint = in.Endpoint
+	s.ServiceID = in.ServiceID
+
+	u, err := NewDBURL(string(*unencrypted))
+	if err != nil {
+		return err
+	}
+
+	s.Credentials = u
 	return nil
 }
 
@@ -98,5 +150,5 @@ func NewSource(label Label, credentials *DBURL, serviceID *database.ID) (*Source
 }
 
 func (s *Source) GetEncryptable() bool {
-	return false
+	return true
 }

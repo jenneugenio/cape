@@ -19,7 +19,12 @@ type Config struct {
 	InstanceID primitives.Label `json:"instance_id"`
 	Port       int              `json:"port"`
 	Auth       *AuthConfig      `json:"auth"`
-	Key        *crypto.KeyURL   `json:"key"`
+
+	// EncryptionKey is used to encrypt data in the system.
+	// Specifically we're using envelope encryption which
+	// can be read more about here
+	// https://cloud.google.com/kms/docs/envelope-encryption
+	EncryptionKey *crypto.KeyURL `json:"encryption_key"`
 }
 
 // AuthConfig represents the authentication configuration

@@ -146,7 +146,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 		Auth: &coordinator.AuthConfig{
 			KeypairPackage: kp.Package(),
 		},
-		Key: keyURL,
+		EncryptionKey: keyURL,
 	}, logger)
 	if err != nil {
 		return err

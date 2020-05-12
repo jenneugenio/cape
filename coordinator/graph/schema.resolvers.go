@@ -213,17 +213,20 @@ func (r *mutationResolver) CreateLoginSession(ctx context.Context, input model.L
 		}
 	}
 
-	token, expiresIn, err := r.TokenAuthority.Generate(primitives.Login)
+	session, err := primitives.NewSession(provider, primitives.Login)
+	if err != nil {
+		logger.Info().Err(err).Msgf("Could not authenticate type %s with identity %s. Failed to create session", t, identifier)
+		return nil, auth.ErrAuthentication
+	}
+
+	token, expiresAt, err := r.TokenAuthority.Generate(primitives.Login, session.ID)
 	if err != nil {
 		logger.Info().Err(err).Msgf("Could not authenticate type %s with identity %s. Failed to generate auth token", t, identifier)
 		return nil, auth.ErrAuthentication
 	}
 
-	session, err := primitives.NewSession(provider, expiresIn, primitives.Login, token)
-	if err != nil {
-		logger.Info().Err(err).Msgf("Could not authenticate type %s with identity %s. Failed to create session", t, identifier)
-		return nil, auth.ErrAuthentication
-	}
+	// must set the token explicitly
+	session.SetToken(token, expiresAt)
 
 	if isFakeIdentity {
 		// fake data doesn't need to be put in database so
@@ -268,19 +271,21 @@ func (r *mutationResolver) CreateAuthSession(ctx context.Context, input model.Au
 		return nil, auth.ErrAuthentication
 	}
 
-	token, expiresIn, err := r.TokenAuthority.Generate(primitives.Authenticated)
+	authSession, err := primitives.NewSession(credentialProvider, primitives.Authenticated)
+	if err != nil {
+		msg := fmt.Sprintf("Could not authenticate identity %s. Failed to create session", credentialProvider.GetIdentityID())
+		logger.Info().Err(err).Msg(msg)
+		return nil, auth.ErrAuthentication
+	}
+
+	token, expiresAt, err := r.TokenAuthority.Generate(primitives.Authenticated, authSession.ID)
 	if err != nil {
 		msg := fmt.Sprintf("Could not authenticate identity %s. Failed to generate auth token", credentialProvider.GetIdentityID())
 		logger.Info().Err(err).Msg(msg)
 		return nil, auth.ErrAuthentication
 	}
 
-	authSession, err := primitives.NewSession(credentialProvider, expiresIn, primitives.Authenticated, token)
-	if err != nil {
-		msg := fmt.Sprintf("Could not authenticate identity %s. Failed to create session", credentialProvider.GetIdentityID())
-		logger.Info().Err(err).Msg(msg)
-		return nil, auth.ErrAuthentication
-	}
+	authSession.SetToken(token, expiresAt)
 
 	err = enforcer.Create(ctx, authSession)
 	if err != nil {
@@ -316,13 +321,12 @@ func (r *mutationResolver) DeleteSession(ctx context.Context, input model.Delete
 		return nil, errs.New(auth.AuthorizationFailure, "Unable to delete session")
 	}
 
-	session := &primitives.Session{}
-	err := enforcer.QueryOne(ctx, session, database.NewFilter(database.Where{"token": input.Token.String()}, nil, nil))
+	id, err := r.TokenAuthority.Verify(input.Token)
 	if err != nil {
 		return nil, err
 	}
 
-	err = enforcer.Delete(ctx, primitives.SessionType, currSession.Session.ID)
+	err = enforcer.Delete(ctx, primitives.SessionType, id)
 	if err != nil {
 		return nil, err
 	}

@@ -1,12 +1,14 @@
 package primitives
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
@@ -85,5 +87,31 @@ func TestNewSource(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(source).To(gm.Equal(out))
+	})
+
+	t.Run("test encrypt decrypt", func(t *testing.T) {
+		source, err := NewSource("heyo", u, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		key, err := crypto.NewBase64KeyURL(nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		kms, err := crypto.LoadKMS(key)
+		gm.Expect(err).To(gm.BeNil())
+
+		defer kms.Close()
+
+		codec := crypto.NewSecretBoxCodec(kms)
+		gm.Expect(err).To(gm.BeNil())
+
+		ctx := context.Background()
+		by, err := source.Encrypt(ctx, codec)
+		gm.Expect(err).To(gm.BeNil())
+
+		newSource := &Source{}
+		err = newSource.Decrypt(ctx, codec, by)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(newSource).To(gm.Equal(source))
 	})
 }

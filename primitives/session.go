@@ -1,9 +1,12 @@
 package primitives
 
 import (
+	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
 
@@ -30,6 +33,11 @@ type Session struct {
 	Credentials *AuthCredentials `json:"credentials"`
 }
 
+type encryptedSession struct {
+	*Session
+	Token *base64.Value `json:"token"`
+}
+
 func (s *Session) Validate() error {
 	if err := s.Primitive.Validate(); err != nil {
 		return errors.Wrap(InvalidSessionCause, err)
@@ -37,14 +45,6 @@ func (s *Session) Validate() error {
 
 	if err := s.IdentityID.Validate(); err != nil {
 		return errors.Wrap(InvalidSessionCause, err)
-	}
-
-	if time.Now().UTC().After(s.ExpiresAt) {
-		return errors.New(InvalidSessionCause, "Session expires at must be after now")
-	}
-
-	if s.Token == nil {
-		return errors.New(InvalidSessionCause, "Session token must not be nil")
 	}
 
 	return nil
@@ -56,8 +56,7 @@ func (s *Session) GetType() types.Type {
 }
 
 // NewSession returns a new Session struct
-func NewSession(identity CredentialProvider, expiresAt time.Time, typ TokenType,
-	token *base64.Value) (*Session, error) {
+func NewSession(identity CredentialProvider, typ TokenType) (*Session, error) {
 	p, err := database.NewPrimitive(SessionType)
 	if err != nil {
 		return nil, err
@@ -67,9 +66,7 @@ func NewSession(identity CredentialProvider, expiresAt time.Time, typ TokenType,
 		Primitive:  p,
 		IdentityID: identity.GetIdentityID(),
 		OwnerID:    identity.GetID(),
-		ExpiresAt:  expiresAt,
 		Type:       typ,
-		Token:      token,
 
 		Credentials: nil,
 	}
@@ -95,6 +92,48 @@ func NewSession(identity CredentialProvider, expiresAt time.Time, typ TokenType,
 	return session, session.Validate()
 }
 
+// Encrypt implements the Encryptable interface
+func (s *Session) Encrypt(ctx context.Context, codec crypto.EncryptionCodec) ([]byte, error) {
+	data, err := codec.Encrypt(ctx, s.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(encryptedSession{
+		Session: s,
+		Token:   data,
+	})
+}
+
+// Decrypt implements the Encryptable interface
+func (s *Session) Decrypt(ctx context.Context, codec crypto.EncryptionCodec, data []byte) error {
+	in := &encryptedSession{}
+	err := json.Unmarshal(data, in)
+	if err != nil {
+		return err
+	}
+
+	unencrypted, err := codec.Decrypt(ctx, in.Token)
+	if err != nil {
+		return err
+	}
+
+	s.Primitive = in.Primitive
+	s.IdentityID = in.IdentityID
+	s.OwnerID = in.OwnerID
+	s.ExpiresAt = in.ExpiresAt
+	s.Type = in.Type
+	s.Credentials = in.Credentials
+
+	s.Token = unencrypted
+	return nil
+}
+
+func (s *Session) SetToken(token *base64.Value, expiresAt time.Time) {
+	s.Token = token
+	s.ExpiresAt = expiresAt
+}
+
 func (s *Session) GetEncryptable() bool {
-	return false
+	return true
 }

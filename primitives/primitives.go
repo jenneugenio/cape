@@ -46,7 +46,7 @@ func init() {
 	types.Register(PolicyType, "policies", true)
 	types.Register(AttachmentType, "attachments", false)
 	types.Register(AssignmentType, "assignments", false)
-	types.Register(SessionType, "sessions", false)
+	types.Register(SessionType, "sessions", true)
 	types.Register(SourcePrimitiveType, "sources", true)
 	types.Register(ConfigType, "config", true)
 }

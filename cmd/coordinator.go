@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/urfave/cli/v2"
 
@@ -84,6 +85,11 @@ func startCoordinatorCmd(c *cli.Context) error {
 		return nil
 	}
 
+	key, err := crypto.NewBase64KeyURL(nil)
+	if err != nil {
+		return nil
+	}
+
 	cfg := &coordinator.Config{
 		DB: &coordinator.DBConfig{
 			Addr: dbURL,
@@ -91,8 +97,9 @@ func startCoordinatorCmd(c *cli.Context) error {
 		Auth: &coordinator.AuthConfig{
 			KeypairPackage: keypair.Package(),
 		},
-		InstanceID: instanceID,
-		Port:       port,
+		InstanceID:    instanceID,
+		Port:          port,
+		EncryptionKey: key,
 	}
 
 	ctrl, err := coordinator.New(cfg, logger)

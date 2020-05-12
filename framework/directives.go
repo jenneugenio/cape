@@ -27,7 +27,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			return nil, auth.ErrAuthentication
 		}
 
-		err := tokenAuthority.Verify(token)
+		id, err := tokenAuthority.Verify(token)
 		if err != nil {
 			msg := "Could not authenticate. Unable to verify auth token"
 			logger.Info().Err(err).Msg(msg)
@@ -35,7 +35,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 		}
 
 		session := &primitives.Session{}
-		err = db.QueryOne(ctx, session, database.NewFilter(database.Where{"token": token.String()}, nil, nil))
+		err = db.Get(ctx, id, session)
 		if err != nil {
 			msg := "Could not authenticate. Unable to find session"
 			logger.Info().Err(err).Msg(msg)

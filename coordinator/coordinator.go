@@ -61,7 +61,7 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		return nil, err
 	}
 
-	kms, err := crypto.LoadKMS(cfg.Key)
+	kms, err := crypto.LoadKMS(cfg.EncryptionKey)
 	if err != nil {
 		return nil, err
 	}

@@ -4,11 +4,11 @@ import (
 	"crypto/ed25519"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/manifoldco/go-base64"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 
+	"github.com/capeprivacy/cape/coordinator/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -36,23 +36,29 @@ func NewTokenAuthority(keypair *Keypair, serviceEmail string) (*TokenAuthority, 
 	}, nil
 }
 
-// Verify verifies that a JWT token was signed by the correct private key
-func (t *TokenAuthority) Verify(signedToken *base64.Value) error {
+// Verify verifies that a JWT token was signed by the correct private key. Returns
+// the session ID contained inside of the token.
+func (t *TokenAuthority) Verify(signedToken *base64.Value) (database.ID, error) {
 	tok, err := jwt.ParseSigned(string(*signedToken))
 	if err != nil {
-		return err
+		return database.EmptyID, err
 	}
 
 	claims := jwt.Claims{}
 	err = tok.Claims(t.PublicKey(), &claims)
 	if err != nil {
-		return err
+		return database.EmptyID, err
 	}
 
-	return claims.Validate(jwt.Expected{
+	err = claims.Validate(jwt.Expected{
 		Issuer: t.serviceEmail,
 		Time:   time.Now().UTC(), // time used to compare expiry and not before
 	})
+	if err != nil {
+		return database.EmptyID, err
+	}
+
+	return database.DecodeFromString(claims.ID)
 }
 
 // PublicKey returns a copy of the ed25519 PublicKey
@@ -62,11 +68,11 @@ func (t *TokenAuthority) PublicKey() ed25519.PublicKey {
 
 // Generate generates a JWT with 4 claims:
 // - Expiry: time the JWT expires recommend 5 minutes for login sessions
-//              and 24 hours for general authenticated sessions
+//           and 24 hours for general authenticated sessions
 // - IssuedAt: time the JWT was issued
 // - NotBefore: the JWT will not be accepted before this time has passed
 // - Issuer: the service email of the issuing coordinator
-func (t *TokenAuthority) Generate(tokenType primitives.TokenType) (*base64.Value, time.Time, error) {
+func (t *TokenAuthority) Generate(tokenType primitives.TokenType, sessionID database.ID) (*base64.Value, time.Time, error) {
 	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.EdDSA, Key: t.keypair.privateKey},
 		(&jose.SignerOptions{}).WithType("JWT"))
 	if err != nil {
@@ -86,13 +92,8 @@ func (t *TokenAuthority) Generate(tokenType primitives.TokenType) (*base64.Value
 			"Invalid token type must be login or authenticated")
 	}
 
-	u, err := uuid.NewV4()
-	if err != nil {
-		return nil, time.Time{}, err
-	}
-
 	cl := jwt.Claims{
-		Subject:   u.String(),
+		ID:        sessionID.String(),
 		Issuer:    t.serviceEmail,
 		IssuedAt:  jwt.NewNumericDate(now),
 		NotBefore: jwt.NewNumericDate(now),
