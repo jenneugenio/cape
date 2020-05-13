@@ -14,7 +14,7 @@ import (
 // Coordinator.
 type Config struct {
 	Version    int              `json:"version"`
-	DB         *DBConfig        `json:"db"`
+	DB         *DBConfig        `json:"db" envconfig:"DB_URL"`
 	InstanceID primitives.Label `json:"instance_id"`
 	Port       int              `json:"port"`
 
@@ -24,9 +24,22 @@ type Config struct {
 	RootKey *base64.Value `json:"root_key"`
 }
 
-//  DBConfig represent the database configuration
+// DBConfig represent the database configuration
 type DBConfig struct {
 	Addr *primitives.DBURL `json:"addr"`
+}
+
+// Decode implements envconfig.Decoder for decoding
+// environment variables
+func (db *DBConfig) Decode(value string) error {
+	addr, err := primitives.NewDBURL(value)
+	if err != nil {
+		return err
+	}
+
+	db.Addr = addr
+
+	return nil
 }
 
 // Validate returns an error if the DBConfig is invalid
@@ -61,6 +74,14 @@ func (c *Config) Validate() error {
 
 	if err := c.DB.Validate(); err != nil {
 		return err
+	}
+
+	if c.RootKey == nil {
+		return errors.New(InvalidConfigCause, "Missing root key")
+	}
+
+	if len(*c.RootKey) != 32 {
+		return errors.New(InvalidConfigCause, "Root key must be 32 bytes long not %d", len(*c.RootKey))
 	}
 
 	return nil

@@ -31,6 +31,7 @@ require (
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 	github.com/justinas/alice v1.2.0
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/leekchan/gtf v0.0.0-20190214083521-5fba33c5b00b
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/machinebox/graphql v0.2.2

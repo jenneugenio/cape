@@ -1,0 +1,3 @@
+version: 1
+instance_id: coordinator-ultimate
+port: 8080
