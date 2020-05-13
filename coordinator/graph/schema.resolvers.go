@@ -15,7 +15,6 @@ import (
 	fw "github.com/capeprivacy/cape/framework"
 	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
-	"github.com/manifoldco/go-base64"
 )
 
 func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest) (*primitives.User, error) {
@@ -64,22 +63,7 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest
 		return nil, err
 	}
 
-	encryptionKey, err := crypto.NewBase64KeyURL(nil)
-	if err != nil {
-		return nil, err
-	}
-
-	encryptedKey, err := crypto.Encrypt(r.RootKey, []byte(encryptionKey.String()))
-	if err != nil {
-		return nil, err
-	}
-
-	config, err := primitives.NewConfig(base64.New(encryptedKey))
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.Create(ctx, config)
+	encryptionKey, kp, err := createConfig(ctx, tx, r)
 	if err != nil {
 		return nil, err
 	}
@@ -95,9 +79,8 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.NewUserRequest
 		return nil, err
 	}
 
-	codec := crypto.NewSecretBoxCodec(kms)
-
-	r.Backend.SetEncryptionCodec(codec)
+	r.Backend.SetEncryptionCodec(crypto.NewSecretBoxCodec(kms))
+	r.TokenAuthority.SetKeyPair(kp)
 
 	return user, nil
 }

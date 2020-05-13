@@ -107,3 +107,7 @@ func (t *TokenAuthority) Generate(tokenType primitives.TokenType, sessionID data
 
 	return base64.New([]byte(signedToken)), expiresIn, nil
 }
+
+func (t *TokenAuthority) SetKeyPair(keypair *Keypair) {
+	t.keypair = keypair
+}

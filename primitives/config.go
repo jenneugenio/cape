@@ -19,6 +19,8 @@ type Config struct {
 	// Here it is encrypted and will be decrypted by the
 	// root key.
 	EncryptionKey *base64.Value `json:"encryption_key"`
+
+	Auth *base64.Value `json:"auth"`
 }
 
 func (c *Config) Validate() error {
@@ -39,7 +41,7 @@ func (c *Config) GetType() types.Type {
 }
 
 // NewConfig returns a new Config primitive
-func NewConfig(encryptionKey *base64.Value) (*Config, error) {
+func NewConfig(encryptionKey *base64.Value, auth *base64.Value) (*Config, error) {
 	p, err := database.NewPrimitive(ConfigType)
 	if err != nil {
 		return nil, err
@@ -49,6 +51,7 @@ func NewConfig(encryptionKey *base64.Value) (*Config, error) {
 		Primitive:     p,
 		Setup:         true,
 		EncryptionKey: encryptionKey,
+		Auth:          auth,
 	}
 
 	return cfg, cfg.Validate()

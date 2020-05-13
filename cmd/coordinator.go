@@ -7,7 +7,6 @@ import (
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	errors "github.com/capeprivacy/cape/partyerrors"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/logging"
@@ -82,11 +81,6 @@ func startCoordinatorCmd(c *cli.Context) error {
 	// TODO: Finish integrating loading config from a file and enabling
 	// overwriting of flags. This includes figuring out the local development
 	// environment and configuration workflow.
-	keypair, err := auth.NewKeypair()
-	if err != nil {
-		return err
-	}
-
 	rootKey, err := crypto.GenerateKey()
 	if err != nil {
 		return err
@@ -95,9 +89,6 @@ func startCoordinatorCmd(c *cli.Context) error {
 	cfg := &coordinator.Config{
 		DB: &coordinator.DBConfig{
 			Addr: dbURL,
-		},
-		Auth: &coordinator.AuthConfig{
-			KeypairPackage: keypair.Package(),
 		},
 		InstanceID: instanceID,
 		Port:       port,

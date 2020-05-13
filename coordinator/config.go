@@ -6,7 +6,6 @@ import (
 	"github.com/manifoldco/go-base64"
 	"sigs.k8s.io/yaml"
 
-	"github.com/capeprivacy/cape/auth"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -18,27 +17,11 @@ type Config struct {
 	DB         *DBConfig        `json:"db"`
 	InstanceID primitives.Label `json:"instance_id"`
 	Port       int              `json:"port"`
-	Auth       *AuthConfig      `json:"auth"`
 
 	// RootKey is used to encrypted EncryptionKey and should
 	// be stored in a separate config file in a secret or
 	// other secure location.
 	RootKey *base64.Value `json:"root_key"`
-}
-
-// AuthConfig represents the authentication configuration
-type AuthConfig struct {
-	auth.KeypairPackage
-}
-
-// Validate returns an error if the auth config is invalid
-func (a *AuthConfig) Validate() error {
-	return a.KeypairPackage.Validate()
-}
-
-// Unpackage returns a Keypair for the given AuthConfig
-func (a *AuthConfig) Unpackge() (*auth.Keypair, error) {
-	return a.KeypairPackage.Unpackage()
 }
 
 //  DBConfig represent the database configuration

@@ -9,7 +9,6 @@ import (
 	"github.com/manifoldco/go-base64"
 	"github.com/rs/zerolog"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
@@ -128,11 +127,6 @@ func (h *Harness) Setup(ctx context.Context) error {
 		return cleanup(err)
 	}
 
-	kp, err := auth.NewKeypair()
-	if err != nil {
-		return cleanup(err)
-	}
-
 	rootKey, err := crypto.GenerateKey()
 	if err != nil {
 		return err
@@ -144,10 +138,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 		},
 		InstanceID: "cape",
 		Port:       1, // This port is ignored!
-		Auth: &coordinator.AuthConfig{
-			KeypairPackage: kp.Package(),
-		},
-		RootKey: base64.New(rootKey[:]),
+		RootKey:    base64.New(rootKey[:]),
 	}, logger)
 	if err != nil {
 		return err

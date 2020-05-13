@@ -2,12 +2,15 @@ package graph
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
 
+	"github.com/manifoldco/go-base64"
 	"github.com/markbates/pkger"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -198,4 +201,42 @@ func hasRole(roles []*primitives.Role, label primitives.Label) bool {
 	}
 
 	return found
+}
+
+func createConfig(ctx context.Context, db database.Querier, resolver *mutationResolver) (*crypto.KeyURL, *auth.Keypair, error) {
+	encryptionKey, err := crypto.NewBase64KeyURL(nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	encryptedKey, err := crypto.Encrypt(resolver.RootKey, []byte(encryptionKey.String()))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	keypair, err := auth.NewKeypair()
+	if err != nil {
+		return nil, nil, err
+	}
+	by, err := json.Marshal(keypair)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	encryptedAuth, err := crypto.Encrypt(resolver.RootKey, by)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	config, err := primitives.NewConfig(base64.New(encryptedKey), base64.New(encryptedAuth))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = db.Create(ctx, config)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return encryptionKey, keypair, nil
 }

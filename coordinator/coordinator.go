@@ -2,6 +2,7 @@ package coordinator
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -30,6 +31,8 @@ type Coordinator struct {
 	backend database.Backend
 	handler http.Handler
 	logger  *zerolog.Logger
+
+	tokenAuth *auth.TokenAuthority
 }
 
 // Setup the coordinator so it's ready to be served!
@@ -49,22 +52,13 @@ func (c *Coordinator) Setup(ctx context.Context) (http.Handler, error) {
 		return nil, err
 	}
 
-	// if setup has been run we create and add the codec here
-	encryptionKey, err := decryptEncryptionKey(c.cfg.RootKey, cfg.EncryptionKey)
+	err = c.setBackendCodec(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	kms, err := crypto.LoadKMS(encryptionKey)
-	if err != nil {
-		return nil, err
-	}
-
-	codec := crypto.NewSecretBoxCodec(kms)
-
-	c.backend.SetEncryptionCodec(codec)
-
-	return c.handler, nil
+	err = c.setTokenAuthKeyPair(cfg, c.cfg.RootKey)
+	return c.handler, err
 }
 
 // Teardown the coordinator taking it back to it's start state!
@@ -76,6 +70,47 @@ func (c *Coordinator) Teardown(ctx context.Context) error {
 // TLS right now so not needed!
 func (c *Coordinator) CertFiles() (certFile string, keyFile string) {
 	return
+}
+
+func (c *Coordinator) setBackendCodec(cfg *primitives.Config) error {
+	// if setup has been run we create and add the codec here
+	encryptionKey, err := decryptBase64s(c.cfg.RootKey, cfg.EncryptionKey)
+	if err != nil {
+		return err
+	}
+
+	keyURL, err := crypto.NewKeyURL(string(encryptionKey))
+	if err != nil {
+		return err
+	}
+
+	kms, err := crypto.LoadKMS(keyURL)
+	if err != nil {
+		return err
+	}
+
+	codec := crypto.NewSecretBoxCodec(kms)
+
+	c.backend.SetEncryptionCodec(codec)
+
+	return nil
+}
+
+func (c *Coordinator) setTokenAuthKeyPair(cfg *primitives.Config, rootKey *base64.Value) error {
+	unencrypted, err := decryptBase64s(rootKey, cfg.Auth)
+	if err != nil {
+		return err
+	}
+
+	kp := &auth.Keypair{}
+	err = json.Unmarshal(unencrypted, kp)
+	if err != nil {
+		return err
+	}
+
+	c.tokenAuth.SetKeyPair(kp)
+
+	return nil
 }
 
 // New validates the input and returns a constructed Coordinator
@@ -93,27 +128,23 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		return nil, err
 	}
 
-	keypair, err := cfg.Auth.Unpackage()
-	if err != nil {
-		return nil, err
-	}
-
-	tokenAuth, err := auth.NewTokenAuthority(keypair, cfg.InstanceID.String())
-	if err != nil {
-		return nil, err
-	}
-
 	var rootKey [32]byte
 	copy(rootKey[:], *cfg.RootKey)
 
-	config := generated.Config{Resolvers: &graph.Resolver{
+	tokenAuth, err := auth.NewTokenAuthority(nil, cfg.InstanceID.String())
+	if err != nil {
+		return nil, err
+	}
+
+	config := &generated.Config{Resolvers: &graph.Resolver{
 		Backend:        backend,
 		TokenAuthority: tokenAuth,
 		RootKey:        rootKey,
 	}}
 
 	config.Directives.IsAuthenticated = framework.IsAuthenticatedDirective(backend, tokenAuth)
-	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(config))
+
+	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(*config))
 	gqlHandler.SetErrorPresenter(errorPresenter)
 
 	root := http.NewServeMux()
@@ -132,25 +163,25 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 	).Then(health)
 
 	return &Coordinator{
-		cfg:     cfg,
-		handler: chain,
-		backend: backend,
-		logger:  logger,
+		cfg:       cfg,
+		handler:   chain,
+		backend:   backend,
+		logger:    logger,
+		tokenAuth: tokenAuth,
 	}, nil
 }
 
-func decryptEncryptionKey(rootKey *base64.Value,
-	encryptionKey *base64.Value) (*crypto.KeyURL, error) {
+func decryptBase64s(rootKey *base64.Value, data *base64.Value) ([]byte, error) {
 	var key [32]byte
 
 	copy(key[:], *rootKey)
 
-	decrypted, err := crypto.Decrypt(key, *encryptionKey)
+	decrypted, err := crypto.Decrypt(key, *data)
 	if err != nil {
 		return nil, err
 	}
 
-	return crypto.NewKeyURL(string(decrypted))
+	return decrypted, nil
 }
 
 func getDatabaseConfig(ctx context.Context, db database.Backend) (*primitives.Config, error) {
