@@ -33,4 +33,6 @@ var (
 	NoIdentityCause = errors.NewCause(errors.BadRequestCategory, "identity_not_found")
 
 	InvalidPortCause = errors.NewCause(errors.BadRequestCategory, "invalid_port")
+
+	CreateFileCause = errors.NewCause(errors.BadRequestCategory, "create_file")
 )

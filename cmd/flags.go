@@ -204,3 +204,18 @@ func configFileOutFlag() cli.Flag {
 		EnvVars: []string{"CAPE_CONFIG_OUTPUT"},
 	}
 }
+
+func formatFlag() cli.Flag {
+	var options []string
+	for _, str := range FormatTypes() {
+		options = append(options, str)
+	}
+
+	str := "The format of the configuration file (options: %s)"
+	usage := fmt.Sprintf(str, strings.Join(options, ", "))
+	return &cli.StringFlag{
+		Name:    "format",
+		Usage:   usage,
+		EnvVars: []string{"CAPE_CONFIG_FORMAT"},
+	}
+}
