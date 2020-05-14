@@ -15,7 +15,7 @@ import (
 type Config struct {
 	Version    int              `json:"version"`
 	DB         *DBConfig        `json:"db" envconfig:"DB_URL"`
-	InstanceID primitives.Label `json:"instance_id"`
+	InstanceID primitives.Label `json:"instance_id,omitempty"`
 	Port       int              `json:"port"`
 
 	// RootKey is used to encrypted EncryptionKey and should
@@ -62,10 +62,6 @@ func (c *Config) GetInstanceID() primitives.Label {
 func (c *Config) Validate() error {
 	if c.Port > 65535 || c.Port < 1 {
 		return errors.New(InvalidConfigCause, "Port must be between 1-65335")
-	}
-
-	if err := c.InstanceID.Validate(); err != nil {
-		return err
 	}
 
 	if c.DB == nil {

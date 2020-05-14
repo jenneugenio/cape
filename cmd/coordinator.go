@@ -189,8 +189,7 @@ func configureCoordinatorCmd(c *cli.Context) error {
 		DB: &coordinator.DBConfig{
 			Addr: dbURL,
 		},
-		InstanceID: "coordinator",
-		RootKey:    base64.New(key[:]),
+		RootKey: base64.New(key[:]),
 	}
 
 	provider := GetProvider(c.Context)

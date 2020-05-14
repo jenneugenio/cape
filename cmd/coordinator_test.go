@@ -47,7 +47,6 @@ func TestCoordinatorConfiguration(t *testing.T) {
 		gm.Expect(cfg.Version).To(gm.Equal(1))
 		gm.Expect(len(*cfg.RootKey)).To(gm.Equal(32))
 		gm.Expect(cfg.DB.Addr.String()).To(gm.Equal(url))
-		gm.Expect(cfg.InstanceID.String()).To(gm.Equal("coordinator"))
 	})
 
 	t.Run("Can generate a config map", func(t *testing.T) {
@@ -78,7 +77,6 @@ func TestCoordinatorConfiguration(t *testing.T) {
 		gm.Expect(cfg.Version).To(gm.Equal(1))
 		gm.Expect(len(*cfg.RootKey)).To(gm.Equal(32))
 		gm.Expect(cfg.DB.Addr.String()).To(gm.Equal(url))
-		gm.Expect(cfg.InstanceID.String()).To(gm.Equal("coordinator"))
 	})
 
 	t.Run("Can generate a config map", func(t *testing.T) {
@@ -113,6 +111,5 @@ func TestCoordinatorConfiguration(t *testing.T) {
 		gm.Expect(cfg.Version).To(gm.Equal(1))
 		gm.Expect(len(*cfg.RootKey)).To(gm.Equal(32))
 		gm.Expect(cfg.DB.Addr.String()).To(gm.Equal(url))
-		gm.Expect(cfg.InstanceID.String()).To(gm.Equal("coordinator"))
 	})
 }
