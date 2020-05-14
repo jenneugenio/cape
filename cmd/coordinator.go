@@ -1,9 +1,13 @@
 package main
 
 import (
+	stdbase64 "encoding/base64"
+	"html/template"
 	"io/ioutil"
+	"os"
 	"strconv"
 
+	"github.com/Masterminds/sprig"
 	"github.com/manifoldco/go-base64"
 	"github.com/urfave/cli/v2"
 	"sigs.k8s.io/yaml"
@@ -19,6 +23,11 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
+var typeRegistry = map[FormatType]string{
+	K8Secret:    K8Secret.String(),
+	K8ConfigMap: K8ConfigMap.String(),
+}
+
 func init() {
 	startCmd := &Command{
 		Usage: "Start an instance of the Cape coordinator",
@@ -29,6 +38,7 @@ func init() {
 				loggingTypeFlag(),
 				loggingLevelFlag(),
 				configFilesFlag(),
+				instanceIDFlag(),
 			},
 		},
 	}
@@ -57,6 +67,7 @@ func init() {
 			Flags: []cli.Flag{
 				configFileOutFlag(),
 				portFlag("port", 0),
+				formatFlag(),
 			},
 		},
 	}
@@ -178,17 +189,31 @@ func configureCoordinatorCmd(c *cli.Context) error {
 		DB: &coordinator.DBConfig{
 			Addr: dbURL,
 		},
-		InstanceID: "coordinator",
-		RootKey:    base64.New(key[:]),
+		RootKey: base64.New(key[:]),
+	}
+
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
+
+	format := c.String("format")
+	if format != "" {
+		err := handleK8sFormat(cfg, format, out)
+		if err != nil {
+			return err
+		}
+
+		err = u.Notify(ui.Warn, "%s contains sensitive information ensure to keep it safe and secret.", out)
+		if err != nil {
+			return err
+		}
+
+		return u.Template("Cape coordinator configuration generated. Run `kubectl apply -f {{ . }}` to continue.", out)
 	}
 
 	err = cfg.Write(out)
 	if err != nil {
 		return err
 	}
-
-	provider := GetProvider(c.Context)
-	u := provider.UI(c.Context)
 
 	err = u.Notify(ui.Warn, "%s contains sensitive information ensure to keep it safe and secret.", out)
 	if err != nil {
@@ -198,10 +223,58 @@ func configureCoordinatorCmd(c *cli.Context) error {
 	return u.Template("Cape coordinator configuration generated. Run `cape coordinator start --file {{ . }}` to continue.", out)
 }
 
+func handleK8sFormat(cfg *coordinator.Config, format string, out string) error {
+	f, err := os.Create(out)
+	if err != nil {
+		return errors.New(CreateFileCause, "Unable to create file %s", out)
+	}
+	defer f.Close()
+
+	by, err := yaml.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+
+	switch FormatType(format) {
+	case K8ConfigMap:
+		tpl, err := template.New("template").Funcs(sprig.FuncMap()).Parse(configMapTemplate)
+		if err != nil {
+			return err
+		}
+
+		err = tpl.Execute(f, string(by))
+		if err != nil {
+			return err
+		}
+	case K8Secret:
+		tpl, err := template.New("template").Funcs(sprig.FuncMap()).Parse(secretTemplate)
+		if err != nil {
+			return err
+		}
+
+		encoded := stdbase64.StdEncoding.EncodeToString(by)
+		err = tpl.Execute(f, encoded)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func startCoordinatorCmd(c *cli.Context) error {
 	cfg, err := getConfig(c)
 	if err != nil {
 		return err
+	}
+
+	instanceID, err := getInstanceID(c, "coordinator")
+	if err != nil {
+		return err
+	}
+
+	if cfg.InstanceID == "" {
+		cfg.InstanceID = instanceID
 	}
 
 	err = envconfig.Process("cape", cfg)
@@ -237,4 +310,20 @@ func startCoordinatorCmd(c *cli.Context) error {
 	defer watcher.Stop()
 
 	return server.Start(c.Context)
+}
+
+type FormatType string
+
+func (f FormatType) String() string {
+	return string(f)
+}
+
+const (
+	K8Secret    FormatType = "secret"
+	K8ConfigMap FormatType = "config-map"
+)
+
+// FormatTypes returns a map of a type to string representation
+func FormatTypes() map[FormatType]string {
+	return typeRegistry
 }

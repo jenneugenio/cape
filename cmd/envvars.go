@@ -31,21 +31,18 @@ var (
 			return primitives.NewPassword(in)
 		},
 	}
-	capeDBURL = &EnvVar{
-		Name:        "CAPE_DB_URL",
-		Required:    true,
-		Description: "The URL for the database.",
-		Processor: func(in string) (interface{}, error) {
-			return primitives.NewDBURL(in)
-		},
-	}
 
-	capeDBURLNotRequired = &EnvVar{
+	capeDBURL            = DBURLEnvVar(true)
+	capeDBURLNotRequired = DBURLEnvVar(false)
+)
+
+func DBURLEnvVar(required bool) *EnvVar {
+	return &EnvVar{
 		Name:        "CAPE_DB_URL",
-		Required:    false,
+		Required:    required,
 		Description: "The URL for the database.",
 		Processor: func(in string) (interface{}, error) {
 			return primitives.NewDBURL(in)
 		},
 	}
-)
+}

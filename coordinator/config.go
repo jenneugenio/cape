@@ -15,7 +15,7 @@ import (
 type Config struct {
 	Version    int              `json:"version"`
 	DB         *DBConfig        `json:"db" envconfig:"DB_URL"`
-	InstanceID primitives.Label `json:"instance_id"`
+	InstanceID primitives.Label `json:"instance_id,omitempty"`
 	Port       int              `json:"port"`
 
 	// RootKey is used to encrypted EncryptionKey and should
