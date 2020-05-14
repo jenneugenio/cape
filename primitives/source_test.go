@@ -90,7 +90,10 @@ func TestNewSource(t *testing.T) {
 	})
 
 	t.Run("test encrypt decrypt", func(t *testing.T) {
-		source, err := NewSource("heyo", u, nil)
+		serviceID, err := database.GenerateID(ServicePrimitiveType)
+		gm.Expect(err).To(gm.BeNil())
+
+		source, err := NewSource("heyo", u, &serviceID)
 		gm.Expect(err).To(gm.BeNil())
 
 		key, err := crypto.NewBase64KeyURL(nil)
