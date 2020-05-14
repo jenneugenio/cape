@@ -186,11 +186,21 @@ func offsetFlag() cli.Flag {
 	}
 }
 
-func configFileFlag() cli.Flag {
+func configFilesFlag() cli.Flag {
 	return &cli.StringSliceFlag{
 		Name:    "file",
 		Aliases: []string{"f"},
 		Usage:   "Configuration file locations. Multiple files can be passed where the previous file is overridden by the next.",
 		EnvVars: []string{"CAPE_COORDINATOR_CONFIG"},
+	}
+}
+
+func configFileOutFlag() cli.Flag {
+	return &cli.StringFlag{
+		Name:    "out",
+		Aliases: []string{"o"},
+		Usage:   "Where to output the config file",
+		Value:   "config.yaml",
+		EnvVars: []string{"CAPE_CONFIG_OUTPUT"},
 	}
 }
