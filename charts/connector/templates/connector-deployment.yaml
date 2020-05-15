@@ -24,12 +24,12 @@ spec:
           command: ["cape"]
           args: ["connector", "start"]
           ports:
-            - containerPort: 8081
+            - containerPort: {{ .Values.port }}
           env:
             - name: CAPE_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: connector-secret
+                  name: {{ .Values.token_secret }}
                   key: token
       {{ if (.Values.dockerSecret)}}
       imagePullSecrets:

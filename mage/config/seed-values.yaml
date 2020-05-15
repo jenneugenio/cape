@@ -1,0 +1,6 @@
+image:
+  repository: localhost:5000/capeprivacy/customer_seed
+  tag: latest
+
+db:
+  url: postgres://postgres:dev@postgres-postgresql:5432/postgres

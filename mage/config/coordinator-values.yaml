@@ -1,11 +1,15 @@
 image:
   coordinator_repository: localhost:5000/capeprivacy/cape
   update_repository: localhost:5000/capeprivacy/update
-  seed_repository: localhost:5000/capeprivacy/customer_seed
   tag: latest
 
 db:
   url: postgres://postgres:dev@postgres-postgresql:5432/cape
 
-seed_db:
-  url: postgres://postgres:dev@postgres-postgresql:5432/postgres
+# used for the config file the coordinator takes
+config:
+  db:
+    addr: postgres://postgres:dev@postgres-postgresql:5432/cape
+  port: 8080
+  root_key: ul0b9qQONZDn4kLNgULl3WJOZEhBqDjT1YK-kgceFUU
+  version: 1

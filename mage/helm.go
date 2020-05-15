@@ -14,6 +14,7 @@ type Chart struct {
 	Chart   string
 	Version string // Version of the chart
 	Values  string
+	Atomic  bool
 }
 
 type Helm struct {
@@ -111,6 +112,10 @@ func (h *Helm) Install(ctx context.Context, c *Chart) error {
 		"--dependency-update",
 		"--version",
 		c.Version,
+	}
+
+	if c.Atomic {
+		args = append(args, "--atomic")
 	}
 
 	if c.Values != "" {

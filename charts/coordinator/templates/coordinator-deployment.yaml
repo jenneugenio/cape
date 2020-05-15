@@ -24,7 +24,7 @@ spec:
           args: ["coordinator", "start", "--file", "/etc/coordinator/coordinator-config.yaml"]
           name: coordinator
           ports:
-            - containerPort: 8080
+            - containerPort: {{ .Values.port }}
           volumeMounts:
             - name: config
               mountPath: "/etc/coordinator"

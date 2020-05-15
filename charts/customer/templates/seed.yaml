@@ -6,18 +6,10 @@ spec:
   template:
     spec:
       containers:
-        - image: "{{ .Values.image.seed }}:{{ .Values.image.tag }}"
-          imagePullPolicy: Always
-          name: updater
-          env:
-            {{ if (.Values.db.passwordSecret )}}
-            - name: "CAPE_DB_PASSWORD"
-              valueFrom:
-                secretKeyRef:
-                  name: db-secret
-                  key: password
-            {{ end }}
-            - name: "CAPE_DB_URL"
-              value: "{{ .Values.db.url }}"
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: Always
+        name: seeder
+        env:
+          - name: "CAPE_DB_URL"
+            value: "{{ .Values.db.url }}"
       restartPolicy: Never
-status: {}

@@ -26,18 +26,28 @@ var charts = []*mage.Chart{
 		Chart:   "bitnami/postgresql",
 		Version: "8.9.4",
 		Values:  "mage/config/postgres-values.yaml",
+		Atomic:  true,
+	},
+	{
+		Name:    "seed",
+		Chart:   "charts/customer",
+		Version: "0.0.1",
+		Values:  "mage/config/seed-values.yaml",
+		Atomic:  true,
 	},
 	{
 		Name:    "coordinator",
 		Chart:   "charts/coordinator",
 		Version: "0.0.1",
 		Values:  "mage/config/coordinator-values.yaml",
+		Atomic:  true,
 	},
 	{
 		Name:    "connector",
 		Chart:   "charts/connector",
 		Version: "0.0.1",
 		Values:  "mage/config/connector-values.yaml",
+		Atomic:  false,
 	},
 }
 

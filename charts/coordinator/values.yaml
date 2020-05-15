@@ -5,3 +5,6 @@ image:
 
 db:
   url: postgres://postgres:dev@postgres-postgresql:5432/postgres
+
+# port to run the coordinator on
+port: 8080
