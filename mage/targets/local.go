@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/magefile/mage/mg"
+	"github.com/magefile/mage/sh"
 
 	"github.com/capeprivacy/cape/mage"
 )
@@ -25,6 +26,18 @@ var charts = []*mage.Chart{
 		Chart:   "bitnami/postgresql",
 		Version: "8.9.4",
 		Values:  "mage/config/postgres-values.yaml",
+	},
+	{
+		Name:    "coordinator",
+		Chart:   "charts/coordinator",
+		Version: "0.0.1",
+		Values:  "mage/config/coordinator-values.yaml",
+	},
+	{
+		Name:    "connector",
+		Chart:   "charts/connector",
+		Version: "0.0.1",
+		Values:  "mage/config/connector-values.yaml",
 	},
 }
 
@@ -86,10 +99,31 @@ func (l Local) Create(ctx context.Context) error {
 	return dockerRegistry.Connect(ctx, registry, "kind")
 }
 
+func (l Local) Push(ctx context.Context) error {
+	mg.SerialCtxDeps(ctx, Build.Docker)
+
+	for _, image := range dockerImages {
+		newTag := "localhost:5000/" + image.String()
+		tagCmd := []string{"tag", image.String(), newTag}
+		err := sh.RunV("docker", tagCmd...)
+		if err != nil {
+			return err
+		}
+
+		pushCmd := []string{"push", newTag}
+		err = sh.RunV("docker", pushCmd...)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Deploy builds and deploys cape from your local repository to the local
 // kubernetes cluster. If a cluster is not running one will be created.
 func (l Local) Deploy(ctx context.Context) error {
-	mg.SerialCtxDeps(ctx, Local.Create, Build.Docker)
+	mg.SerialCtxDeps(ctx, Local.Create, Local.Push)
 
 	required := []string{"helm"}
 	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {

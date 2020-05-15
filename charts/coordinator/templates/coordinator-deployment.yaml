@@ -6,9 +6,6 @@ metadata:
     service: coordinator
 spec:
   replicas: 1
-  strategy:
-    rollingUpdate:
-    type: Recreate
   selector:
     matchLabels:
       service: coordinator
@@ -21,25 +18,22 @@ spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       containers:
-      - image: "{{ .Values.image.coordinator_repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: Always
-        command: ["cape"]
-        args: ["coordinator", "start"]
-        name: coordinator
-        env:
-          {{ if (.Values.db.passwordSecret )}}
-          - name: "CAPE_DB_PASSWORD"
-            valueFrom:
-              secretKeyRef:
-                name: db-secret
-                key: password
-          {{ end }}
-          - name: "CAPE_DB_URL"
-            value: "{{ .Values.db.url }}"
-        ports:
-        - containerPort: 8081
+        - image: "{{ .Values.image.coordinator_repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: Always
+          command: ["cape"]
+          args: ["coordinator", "start", "--file", "/etc/coordinator/coordinator-config.yaml"]
+          name: coordinator
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: config
+              mountPath: "/etc/coordinator"
+              readOnly: true
       {{ if (.Values.dockerSecret)}}
       imagePullSecrets:
-      - name: {{ .Values.dockerSecret }}
+        - name: {{ .Values.dockerSecret }}
       {{ end }}
-status: {}
+      volumes:
+        - name: config
+          configMap:
+            name: coordinator-config-map

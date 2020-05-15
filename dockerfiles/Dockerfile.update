@@ -2,4 +2,4 @@ FROM capeprivacy/cape:latest
 
 COPY coordinator/migrations ./coordinator/migrations
 
-CMD ["./bin/cape", "update"]
+ENTRYPOINT ["cape", "update"]

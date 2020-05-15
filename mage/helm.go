@@ -109,7 +109,6 @@ func (h *Helm) Install(ctx context.Context, c *Chart) error {
 	args := []string{
 		"install",
 		"--dependency-update",
-		"--atomic",
 		"--version",
 		c.Version,
 	}

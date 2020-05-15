@@ -6,9 +6,6 @@ metadata:
     service: connector
 spec:
   replicas: 1
-  strategy:
-    rollingUpdate:
-    type: Recreate
   selector:
     matchLabels:
       service: connector
@@ -21,15 +18,21 @@ spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       containers:
-      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: Always
-        name: connector
-        command: ["cape"]
-        args: ["connector", "start"]
-        ports:
-        - containerPort: 8080
+        - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: Always
+          name: connector
+          command: ["cape"]
+          args: ["connector", "start"]
+          ports:
+            - containerPort: 8081
+          env:
+            - name: CAPE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: connector-secret
+                  key: token
       {{ if (.Values.dockerSecret)}}
       imagePullSecrets:
-      - name: {{ .Values.dockerSecret }}
+        - name: {{ .Values.dockerSecret }}
       {{ end }}
 status: {}

@@ -176,9 +176,7 @@ func createAttachment(ctx context.Context, db database.Querier, policyID databas
 }
 
 func loadPolicyFile(file string) (*primitives.Policy, error) {
-	dir := pkger.Dir("/primitives/policies/default")
-
-	f, err := dir.Open(file)
+	f, err := pkger.Open("github.com/capeprivacy/cape:/primitives/policies/default/" + file)
 	if err != nil {
 		return nil, err
 	}

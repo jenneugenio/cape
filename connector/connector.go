@@ -25,8 +25,9 @@ import (
 const connectorCertFile = "connector/certs/localhost.crt"
 const connectorKeyFile = "connector/certs/localhost.key"
 
-// Connector is the central brain of Cape.  It keeps track of system
-// users, policy, etc
+// Connector connects with data sources and allows
+// access to them based on policy received from the
+// coordinator
 type Connector struct {
 	cfg         *Config
 	handler     http.Handler

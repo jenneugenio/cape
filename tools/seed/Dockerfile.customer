@@ -2,6 +2,6 @@ FROM capeprivacy/cape:latest
 
 WORKDIR /root/
 
-COPY tools/seed migrations
+COPY tools/seed coordinator/migrations
 
-CMD ["./bin/cape", "update"]
+ENTRYPOINT ["cape", "update"]

@@ -21,6 +21,8 @@ import (
 	"github.com/capeprivacy/cape/logging"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
+
+	_ "github.com/capeprivacy/cape"
 )
 
 var typeRegistry = map[FormatType]string{
