@@ -13,3 +13,5 @@ config:
   port: 8080
   root_key: ul0b9qQONZDn4kLNgULl3WJOZEhBqDjT1YK-kgceFUU
   version: 1
+
+port: 8080
