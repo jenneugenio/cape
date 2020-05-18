@@ -1,9 +1,0 @@
-image:
-  repository: localhost:5000/capeprivacy/cape
-  tag: latest
-
-port: 8081
-
-# the secret containing the token the connector uses
-# to authenticate with the coordinator
-token_secret: connector-secret

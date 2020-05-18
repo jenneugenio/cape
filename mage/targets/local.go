@@ -109,6 +109,7 @@ func (l Local) Create(ctx context.Context) error {
 	return dockerRegistry.Connect(ctx, registry, "kind")
 }
 
+// Push builds and pushes new docker containers
 func (l Local) Push(ctx context.Context) error {
 	mg.SerialCtxDeps(ctx, Build.Docker)
 

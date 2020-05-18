@@ -1,25 +1,5 @@
 # Cape
 
-TODO
-
-## Components
-
-### CLI
-
-TODO
-
-### Coordinator
-
-TODO
-
-### Data Connector
-
-TODO
-
-## Getting Started
-
-TODO
-
 ## Development
 
 In the following section we describe how to setup your environment so you can
@@ -78,35 +58,74 @@ We're using [GitHub Actions](https://github.com/features/actions) to automate
 our continus integration and delivery suite which invokes `mage test:ci` to
 determine the state of the build.
 
-### Tilt
+### Local Deployment
 
-[Tilt](tilt.dev) can be used to test everything locally including Kubernetes deployment and application features. Getting started is fairly easy. On MacOS, we recommend using Docker for Desktop which comes with a Kubernetes installion. You must enable it though which can be done by following [this](https://docs.docker.com/docker-for-mac/#kubernetes) documentation. If Kubernetes is having trouble starting you may need to reset factory defaults for Docker for Desktop.
+We're using [kind](https://kind.sigs.k8s.io/) for deploying Cape into kubernetes locally.
 
-Install tilt with:
-
-```
-curl -fsSL https://raw.githubusercontent.com/windmilleng/tilt/master/scripts/install.sh | bash
-```
-
-Which can then be run with:
+To get started you need to first startup kind, build the docker images and deploy the
+helm charts to get the coordinator, the connector and the database running. This can be done with the
+following `mage` command:
 
 ```
-tilt up
+$ mage local:deploy
 ```
 
-By default, `tilt` starts a webserver which can be reached from your browser. Here you can manage tilt and watch the logs of its actions. There is a similar thing launched on CLI so if you want to launch without browser you can run:
+You should see something like:
 
 ```
-tilt up --no-browser
+NAME: coordinator
+LAST DEPLOYED: Fri May 15 16:23:30 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NAME: connector
+LAST DEPLOYED: Fri May 15 16:23:36 2020
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
 ```
 
-`tilt` detects changes on the source code and automatically rebuilds the docker containers and relaunches the services and deployments so once you've run `tilt up` you shouldn't have to bring it down until you're done testing.
+to know it has completed successfully.
 
-**Resources**
+Once that command is done running there are a few more commands to get everything set up.
 
-- https://docs.tilt.dev/welcome_to_tilt.html
-- https://docs.tilt.dev/install.html
-- https://docs.tilt.dev/onboarding_checklist.html
+First, run setup to create an admin account, create the default roles and the default policies.
+
+```
+$ cape setup local http://localhost:8080
+```
+
+Next, create a service which can be used as the data connector. The connector won't actually be
+running until you complete this step has it requires the kubernetes secret inserted in the last command.
+
+```
+$ cape services create --type data-connector --endpoint https://localhost:8081 service:dc@my-cape.com
+$ export CAPE_TOKEN=<TOKEN PRINTED OUT FROM THE LAST COMMAND>
+$ kubectl create secret generic connector-secret --from-literal=token=$CAPE_TOKEN
+```
+
+Create a data source and point it to some test data located in the local cluster. This needs to be
+explicitly linked with the data connector created above.
+
+```
+$ cape sources add --link service:dc@my-cape.com transactions postgres://postgres:dev@postgres-postgresql:5432/postgres
+```
+
+Create a policy so that the data is actually accessible. By default, access to data in the Cape is
+blocked unless there is a policy saying you can access it.
+
+```
+$ cape policies attach --from-file examples/allow-specific-fields.yaml allow-specific-fields global
+```
+
+Try to pull the data! If this command succeds you should be good to continue experimenting and testing
+the system.
+
+```
+$ cape pull transactions "SELECT * FROM transactions"
+```
 
 ## Troubleshooting
 
