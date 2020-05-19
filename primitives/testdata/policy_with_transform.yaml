@@ -1,0 +1,12 @@
+label: identity-card-number
+rules:
+- action: read
+  effect: allow
+  fields:
+    - card_number
+  target: records:creditcards.transactions
+  sudo: true
+  transformations:
+    - field: card_number
+      function: identity
+version: 1

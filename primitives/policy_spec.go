@@ -9,6 +9,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/transformations"
 	"github.com/mitchellh/mapstructure"
 )
 
@@ -22,33 +23,74 @@ type Where map[string]string
 type Operation string
 
 const (
-	Eq  Operation = "="
+	// Eq is the equality operator
+	Eq Operation = "="
+
+	// Neq is the not equal operator
 	Neq Operation = "!="
 )
 
+// RuleType is the type of a rule
 type RuleType int
 
 const (
+	// FieldRule is a rule that contains a field clause it cannot
+	// be specified if a where clause is specified
 	FieldRule RuleType = iota
+
+	// WhereRule is a rule that contains a where clause it cannot
+	// be specified if a field clause is specified
 	WhereRule
 )
 
+// Rule represents the rules that make up a policy
+type Rule struct {
+	Target          Target            `json:"target"`
+	Action          Action            `json:"action"`
+	Effect          Effect            `json:"effect"`
+	Fields          []Field           `json:"fields,omitempty"`
+	Where           []Where           `json:"where,omitempty"`
+	Transformations []*Transformation `json:"transformations,omitempty"`
+	Sudo            bool              `json:"sudo"`
+}
+
+// Validate validates that the rule arguments are valid
+func (r *Rule) Validate() error {
+	err := r.Target.Validate()
+	if err != nil {
+		return errors.Wrap(InvalidPolicySpecCause, err)
+	}
+
+	if r.Target.Type() == Records {
+		if len(r.Fields) > 0 && len(r.Where) > 0 {
+			return errors.New(InvalidPolicySpecCause, "Fields & Where cannot be specified on the same rule")
+		}
+	} else if len(r.Fields) > 0 || len(r.Where) > 0 {
+		return errors.New(InvalidPolicySpecCause, "Fields & Where cannot be specified for a "+
+			"non records policy type %s", r.Target.Type())
+	}
+
+	if r.Effect == Deny && len(r.Transformations) > 0 {
+		return errors.New(InvalidPolicySpecCause, "Deny rules cannot have transformations")
+	}
+
+	for _, transform := range r.Transformations {
+		err := transform.Validate()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Type returns the type of a rule
 func (r *Rule) Type() RuleType {
 	if len(r.Fields) > 0 {
 		return FieldRule
 	}
 
 	return WhereRule
-}
-
-// Rule represents the rules that make up a policy
-type Rule struct {
-	Target Target  `json:"target"`
-	Action Action  `json:"action"`
-	Effect Effect  `json:"effect"`
-	Fields []Field `json:"fields,omitempty"`
-	Where  []Where `json:"where,omitempty"`
-	Sudo   bool    `json:"sudo"`
 }
 
 // PolicySpec defines the policy (e.g. the yaml file)
@@ -61,19 +103,9 @@ type PolicySpec struct {
 // Validate that the policy spec is valid
 func (ps *PolicySpec) Validate() error {
 	for _, r := range ps.Rules {
-		err := r.Target.Validate()
+		err := r.Validate()
 		if err != nil {
-			return errors.Wrap(InvalidPolicySpecCause, err)
-		}
-
-		if r.Target.Type() == Records {
-			if len(r.Fields) > 0 && len(r.Where) > 0 {
-				return errors.New(InvalidPolicySpecCause, "Fields & Where cannot be specified on the same rule")
-			}
-		} else {
-			if len(r.Fields) > 0 || len(r.Where) > 0 {
-				return errors.New(InvalidPolicySpecCause, "Fields & Where cannot be specified for a Internal policy type")
-			}
+			return err
 		}
 	}
 
@@ -118,4 +150,23 @@ func ParsePolicySpec(data []byte) (*PolicySpec, error) {
 	}
 
 	return &ps, ps.Validate()
+}
+
+// Transformation represents a transform in the policy spec
+type Transformation struct {
+	Field    Field                `json:"field"`
+	Function Label                `json:"function"`
+	Args     transformations.Args `json:"args"`
+}
+
+// Validate that the policy spec is valids
+func (t *Transformation) Validate() error {
+	ctor := transformations.Get(t.Function.String())
+
+	transform, err := ctor(t.Field.String())
+	if err != nil {
+		return err
+	}
+
+	return transform.Validate(t.Args)
 }

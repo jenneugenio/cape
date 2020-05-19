@@ -14,4 +14,8 @@ var (
 
 	// MissingIdentityID occurs when the identity id isn't on the request
 	MissingIdentityID = errors.NewCause(errors.BadRequestCategory, "missing_identity_id")
+
+	// FieldNotFound occurs when the data connector is trying to find information on
+	// field for a given schema and cannot.
+	FieldNotFound = errors.NewCause(errors.BadRequestCategory, "field_not_found")
 )

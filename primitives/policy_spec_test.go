@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	gm "github.com/onsi/gomega"
-
-	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func loadPolicy(file string) ([]byte, error) {
@@ -91,61 +89,110 @@ func TestPolicySpecRuleSudo(t *testing.T) {
 	})
 }
 
+func TestRuleWithTransformations(t *testing.T) {
+	gm.RegisterTestingT(t)
+	data, err := loadPolicy("policy_with_transform.yaml")
+	gm.Expect(err).To(gm.BeNil())
+
+	spec, err := ParsePolicySpec(data)
+	gm.Expect(err).To(gm.BeNil())
+
+	transformations := spec.Rules[0].Transformations
+	gm.Expect(len(transformations)).To(gm.Equal(1))
+
+	gm.Expect(transformations[0].Args).To(gm.BeNil())
+
+	gm.Expect(transformations[0].Field.String()).To(gm.Equal("card_number"))
+	gm.Expect(transformations[0].Function.String()).To(gm.Equal("identity"))
+}
+
 func TestPolicySpecValidation(t *testing.T) {
 	gm.RegisterTestingT(t)
-	t.Run("cannot specify a where & fields clause in the same rule for records", func(t *testing.T) {
-		gm.RegisterTestingT(t)
-		spec := &PolicySpec{
-			Version: PolicyVersion(1),
-			Label:   "protect-ssn",
-			Rules: []*Rule{
-				{
-					Target: "records:creditcards.transactions",
-					Action: Read,
-					Effect: Deny,
-					Fields: []Field{"card_number"},
-					Where: []Where{
-						{"partner": "visa"},
-					},
-					Sudo: false,
-				},
-			},
-		}
 
-		err := spec.Validate()
-		gm.Expect(err).ToNot(gm.BeNil())
-		gm.Expect(err.Error()).To(gm.Equal("invalid_policy_spec: Fields & Where cannot be specified on the same rule"))
-	})
-
-	t.Run("cannot specify a where or fields clause for internal policies", func(t *testing.T) {
-		gm.RegisterTestingT(t)
-		spec := &PolicySpec{
-			Version: PolicyVersion(1),
-			Label:   "protect-users",
-			Rules: []*Rule{
-				{
-					Target: "internal:users.*",
-					Action: Read,
-					Effect: Deny,
-					Fields: []Field{"FIELD"},
-					Where: []Where{
-						{"HEY": "HELLO"},
+	var tests = []struct {
+		name   string
+		spec   *PolicySpec
+		errStr string
+	}{
+		{
+			name: "cannot specify a where & fields clause in the same rule for records",
+			spec: &PolicySpec{
+				Version: PolicyVersion(1),
+				Label:   "protect-ssn",
+				Rules: []*Rule{
+					{
+						Target: "records:creditcards.transactions",
+						Action: Read,
+						Effect: Deny,
+						Fields: []Field{"card_number"},
+						Where: []Where{
+							{"partner": "visa"},
+						},
+						Sudo: false,
 					},
 				},
 			},
-		}
+			errStr: "invalid_policy_spec: Fields & Where cannot be specified on the same rule",
+		},
+		{
+			name: "cannot specify a where or fields clause for entity policies",
+			spec: &PolicySpec{
+				Version: PolicyVersion(1),
+				Label:   "protect-users",
+				Rules: []*Rule{
+					{
+						Target: "users:*",
+						Action: Read,
+						Effect: Deny,
+						Fields: []Field{"FIELD"},
+						Where: []Where{
+							{"HEY": "HELLO"},
+						},
+					},
+				},
+			},
+			errStr: "invalid_policy_spec: Fields & Where cannot be specified for a non records policy type users",
+		},
+		{
+			name: "cannot specify deny rule with transform",
+			spec: &PolicySpec{
+				Version: PolicyVersion(1),
+				Label:   "protect-ssn",
+				Rules: []*Rule{
+					{
+						Target: "records:creditcards.transactions",
+						Action: Read,
+						Effect: Deny,
+						Fields: []Field{"card_number"},
+						Transformations: []*Transformation{
+							{
+								Field:    "card_number",
+								Function: "identity",
+								Args:     nil,
+							},
+						},
+					},
+				},
+			},
+			errStr: "invalid_policy_spec: Deny rules cannot have transformations",
+		},
+	}
 
-		err := spec.Validate()
-		gm.Expect(err).ToNot(gm.BeNil())
-		gm.Expect(errors.CausedBy(err, InvalidPolicySpecCause)).To(gm.BeTrue())
-	})
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := test.spec.Validate()
+			gm.Expect(err).ToNot(gm.BeNil())
+			fmt.Println(err.Error())
+			gm.Expect(err.Error()).To(gm.Equal(test.errStr))
+		})
+	}
 }
 
 func TestPolicySpecGQL(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	t.Run("Test GQL Marshal", func(t *testing.T) {
-		data, err := loadPolicy("policy_with_sudo.yaml")
+		data, err := loadPolicy("policy_with_transform.yaml")
 		gm.Expect(err).To(gm.BeNil())
 
 		spec, err := ParsePolicySpec(data)
@@ -161,7 +208,7 @@ func TestPolicySpecGQL(t *testing.T) {
 	})
 
 	t.Run("Test GQL Unmarshal", func(t *testing.T) {
-		data, err := loadPolicy("policy_with_sudo.yaml")
+		data, err := loadPolicy("policy_with_transform.yaml")
 		gm.Expect(err).To(gm.BeNil())
 
 		spec, err := ParsePolicySpec(data)

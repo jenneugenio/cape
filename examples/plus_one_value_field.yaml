@@ -1,0 +1,9 @@
+label: plus-one-value-field
+rules:
+- target: records:creditcards.transactions
+  action: read
+  effect: allow
+  transformations:
+    - field: value
+      function: plusOne
+version: 1

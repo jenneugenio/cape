@@ -64,6 +64,15 @@ func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_
 		return err
 	}
 
+	transforms := evaluator.Transforms()
+	if len(transforms) > 0 {
+		transformStream, err := NewTransformStream(server, schema, transforms)
+		if err != nil {
+			return err
+		}
+		return source.Query(context.Background(), transformStream, query, req.GetLimit(), req.GetOffset())
+	}
+
 	return source.Query(context.Background(), server, query, req.GetLimit(), req.GetOffset())
 }
 

@@ -17,6 +17,8 @@ type Evaluator struct {
 	denyFieldRules  []*primitives.Rule
 	allowWhereRules []*primitives.Rule
 	denyWhereRules  []*primitives.Rule
+
+	transforms []*primitives.Transformation
 }
 
 // difference returns the elements in `a` that aren't in `b`.
@@ -215,6 +217,11 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 	return e.q, nil
 }
 
+// Transforms returns all the transforms contained in the policies
+func (e *Evaluator) Transforms() []*primitives.Transformation {
+	return e.transforms
+}
+
 func (e *Evaluator) checkDeniedWheres() bool {
 	// This checks to see if there is a condition in the submitted query
 	// that has been disallowed. If one is found it denies the whole query.
@@ -244,9 +251,12 @@ func NewEvaluator(q *query.Query, s *proto.Schema, policies ...*primitives.Polic
 	var denyFieldRules []*primitives.Rule
 	var allowWhereRules []*primitives.Rule
 	var denyWhereRules []*primitives.Rule
+	var transforms []*primitives.Transformation
 
 	for _, p := range policies {
 		for _, r := range p.Spec.Rules {
+			transforms = append(transforms, r.Transformations...)
+
 			if r.Type() == primitives.FieldRule && r.Target.Entity().String() == q.Entity() && r.Effect == primitives.Allow {
 				allowFieldRules = append(allowFieldRules, r)
 			}
@@ -270,6 +280,7 @@ func NewEvaluator(q *query.Query, s *proto.Schema, policies ...*primitives.Polic
 		denyFieldRules:  denyFieldRules,
 		allowWhereRules: allowWhereRules,
 		denyWhereRules:  denyWhereRules,
+		transforms:      transforms,
 		s:               s,
 		q:               q,
 	}
