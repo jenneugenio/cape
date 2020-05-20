@@ -2,7 +2,6 @@ package connector
 
 import (
 	"context"
-	"fmt"
 	"github.com/rs/zerolog"
 
 	pb "github.com/capeprivacy/cape/connector/proto"
@@ -84,7 +83,6 @@ func (g *grpcHandler) Schema(ctx context.Context, req *pb.SchemaRequest) (*pb.Sc
 		return nil, err
 	}
 
-	fmt.Println("I am getting", dataSource)
 	source, err := g.cache.Get(ctx, dataSource)
 	if err != nil {
 		return nil, err

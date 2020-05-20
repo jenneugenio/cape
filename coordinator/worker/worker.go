@@ -6,23 +6,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/url"
-	"os"
 	"time"
 
 	"github.com/bgentry/que-go"
 	"github.com/jackc/pgx"
 
-	"github.com/capeprivacy/cape/auth"
 	conn "github.com/capeprivacy/cape/connector/client"
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
-
-// 2016eqv7z7xtw6v3008v2emc58,AfJKP0IK8IMlZwHpXCEbgnlodHRwOi8vbG9jYWxob3N0OjgwODA
-// Todo -- should we just use the coordinator API??
 
 type SchemaJobArgs struct {
 	Source *coordinator.SourceResponse
@@ -31,7 +25,7 @@ type SchemaJobArgs struct {
 type Worker struct {
 	pool    *pgx.ConnPool
 	backend database.Backend
-	token   *auth.APIToken
+	config    *Config
 
 	// Loaded late
 	workers     *que.WorkerPool
@@ -127,17 +121,9 @@ func (w *Worker) GetSources(j *que.Job) error {
 }
 
 func (w *Worker) Login(ctx context.Context) error {
-	transport := coordinator.NewTransport(w.token.URL, nil)
+	transport := coordinator.NewTransport(w.config.Token.URL, nil)
 	w.coordClient = coordinator.NewClient(transport)
-
-	// TODO -- why isn't token login working?
-	session, err := w.coordClient.TokenLogin(ctx, w.token)
-	//e, err := primitives.NewEmail("ben@cape.com")
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//session, err := w.coordClient.EmailLogin(ctx, e, []byte("superfly11"))
+	session, err := w.coordClient.TokenLogin(ctx, w.config.Token)
 	if err != nil {
 		return err
 	}
@@ -189,27 +175,13 @@ func (w *Worker) poll() {
 	}
 }
 
-func NewWorker() (*Worker, error) {
-	dbStr := os.Getenv("CAPE_DB_URL")
-	if dbStr == "" {
-		return nil, errors.New(MissingEnvCause, "Missing CAPE_DB_URL environment variable")
-	}
-
-	tokenStr := os.Getenv("CAPE_TOKEN")
-	if tokenStr == "" {
-		return nil, errors.New(MissingEnvCause, "Missing CAPE_TOKEN environment variable")
-	}
-
-	token, err := auth.ParseAPIToken(tokenStr)
+func NewWorker(config *Config) (*Worker, error) {
+	err := config.Validate()
 	if err != nil {
 		return nil, err
 	}
 
-	u, err := url.Parse(dbStr)
-	if err != nil {
-		return nil, err
-	}
-
+	u := config.DatabaseURL.ToURL()
 	pgxcfg, err := pgx.ParseURI(u.String())
 	if err != nil {
 		return nil, err
@@ -231,6 +203,6 @@ func NewWorker() (*Worker, error) {
 	return &Worker{
 		pool:    pgxpool,
 		backend: backend,
-		token:   token,
+		config: config,
 	}, nil
 }
