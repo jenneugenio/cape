@@ -5,7 +5,7 @@ import (
 	"github.com/capeprivacy/cape/coordinator/database/types"
 )
 
-// Schema is the data schema for a data source
+// QuerySchema is the data schema for a data source
 // It is linked with a source via the source label, the schema is currently stored
 // TODO -- make this comment relevant
 // as a json blob. Since gql doesn't support maps, we may not be able to store this as jsonb???

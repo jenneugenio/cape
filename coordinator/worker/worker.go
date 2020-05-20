@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"time"
 
@@ -68,16 +67,16 @@ func (w *Worker) GetSchema(j *que.Job) error {
 		return err
 	}
 
-	schema := sr.GetSchema()
+	schemas := sr.GetSchemas()
 	schemaBlob := map[string]interface{}{}
 
-	for _, s := range schema {
+	for _, s := range schemas {
 		table := map[string]interface{}{}
 		for _, field := range s.Fields {
 			table[field.Name] = field.Field.String()
 		}
 
-		schemaBlob[s.DataSource] = table
+		schemaBlob[s.Target] = table
 	}
 
 	err = w.coordClient.ReportSchema(ctx, sja.Source.Label, schemaBlob)
@@ -85,7 +84,6 @@ func (w *Worker) GetSchema(j *que.Job) error {
 		return err
 	}
 
-	fmt.Println("Reported schema for source", sja.Source.Label)
 	return nil
 }
 
@@ -94,7 +92,6 @@ func (w *Worker) GetSchema(j *que.Job) error {
 func (w *Worker) GetSources(j *que.Job) error {
 	ctx := context.Background()
 	sources, err := w.coordClient.ListSources(ctx)
-	fmt.Println("any sources??", len(sources))
 	if err != nil {
 		return err
 	}

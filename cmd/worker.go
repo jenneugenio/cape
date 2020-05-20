@@ -36,7 +36,7 @@ func init() {
 
 func startWorkerCmd(c *cli.Context) error {
 	token := EnvVariables(c.Context, capeTokenVar).(*auth.APIToken)
-	dbURL := EnvVariables(c.Context, capeTokenVar).(*primitives.DBURL)
+	dbURL := EnvVariables(c.Context, capeDBURL).(*primitives.DBURL)
 
 	config, err := worker.NewConfig(token, dbURL)
 	if err != nil {

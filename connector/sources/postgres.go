@@ -65,9 +65,77 @@ func (p *PostgresSource) Type() primitives.SourceType {
 	return primitives.PostgresType
 }
 
-// Schema returns the schema for the given Query. This schema can be used to
+func (p *PostgresSource) SourceSchema(ctx context.Context) ([]*proto.Schema, error) {
+	rows, err := p.pool.Query(ctx, "select table_name, column_name, data_type, character_maximum_length from " +
+		"information_schema.columns where table_name in " +
+		"(select table_name from information_schema.tables where table_schema = $1) order by table_name", "public")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var schemas []*proto.Schema
+	var fields []*proto.FieldInfo
+	var atTable string
+	idx := -1
+
+	for rows.Next() {
+		var tableName string
+		var columnName string
+		var dataType string
+
+		// maxLength is a pointer because it can be null
+		var maxLength *int64
+		err := rows.Scan(&tableName, &columnName, &dataType, &maxLength)
+		if err != nil {
+			return nil, err
+		}
+
+		if tableName != atTable {
+			atTable = tableName
+			idx++
+
+			fields = []*proto.FieldInfo{}
+			schema := &proto.Schema{
+				Type: proto.RecordType_DOCUMENT,
+				DataSource: p.source.Label.String(),
+				Target: tableName,
+			}
+
+			schemas = append(schemas, schema)
+		}
+
+		f, err := DataTypeToProtoField(p.Type(), dataType)
+		if err != nil {
+			return nil, err
+		}
+
+		size := f.Size
+		if maxLength != nil {
+			size = *maxLength
+		}
+
+		field := &proto.FieldInfo{
+			Field: f.Field,
+			Size:  size,
+			Name:  columnName,
+		}
+
+		fields = append(fields, field)
+		schemas[idx].Fields = fields
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return schemas, nil
+}
+
+// QuerySchema returns the schema for the given Query. This schema can be used to
 // issue a query or used to rewrite the query.
-func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, error) {
+func (p *PostgresSource) QuerySchema(ctx context.Context, q Query) (*proto.Schema, error) {
 	if q.Source() != p.source.Label {
 		return nil, ErrWrongSource
 	}
@@ -77,7 +145,6 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 		Target:     q.Collection(),
 		Type:       proto.RecordType_DOCUMENT,
 	}
-	var fields []*proto.FieldInfo
 
 	// See comment in Query below about why this is using its own context
 	rows, err := p.pool.Query(ctx, "SELECT column_name, data_type, character_maximum_length FROM "+
@@ -87,13 +154,14 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 	}
 	defer rows.Close()
 
+	var fields []*proto.FieldInfo
 	for rows.Next() {
 		var columnName string
 		var dataType string
 
 		// maxLength is a pointer because it can be null
 		var maxLength *int64
-		err = rows.Scan(&columnName, &dataType, &maxLength)
+		err := rows.Scan(&columnName, &dataType, &maxLength)
 		if err != nil {
 			return nil, err
 		}
@@ -116,13 +184,13 @@ func (p *PostgresSource) Schema(ctx context.Context, q Query) (*proto.Schema, er
 
 		fields = append(fields, field)
 	}
+
 	err = rows.Err()
 	if err != nil {
 		return nil, err
 	}
 
 	schema.Fields = fields
-
 	return schema, nil
 }
 

@@ -53,7 +53,7 @@ func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_
 	// causes pgx to ungracefully close the connection to postgres which
 	// was causing a problems with k8s port forwarding causing our tests
 	// to break.
-	schema, err := source.Schema(context.Background(), query)
+	schema, err := source.QuerySchema(context.Background(), query)
 	if err != nil {
 		return err
 	}
@@ -76,7 +76,7 @@ func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_
 	return source.Query(context.Background(), server, query, req.GetLimit(), req.GetOffset())
 }
 
-// Schema implementation of the DataConnectorClient interface (see data_connector.pb.go)
+// QuerySchema implementation of the DataConnectorClient interface (see data_connector.pb.go)
 func (g *grpcHandler) Schema(ctx context.Context, req *pb.SchemaRequest) (*pb.SchemaResponse, error) {
 	dataSource, err := primitives.NewLabel(req.GetDataSource())
 	if err != nil {
@@ -88,26 +88,18 @@ func (g *grpcHandler) Schema(ctx context.Context, req *pb.SchemaRequest) (*pb.Sc
 		return nil, err
 	}
 
-	target, err := primitives.NewLabel(req.DataSource)
-	if err != nil {
-		return nil, err
-	}
-	sq := &sources.SchemaQuery{Target: target}
-
 	// This is using a new context because if its using the grpc context and
 	// if the grpc connection is closed grpc cancels that context. This
 	// causes pgx to ungracefully close the connection to postgres which
 	// was causing a problems with k8s port forwarding causing our tests
 	// to break.
-	schema, err := source.Schema(context.Background(), sq)
+	schemas, err := source.SourceSchema(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
 	return &pb.SchemaResponse{
-		Schema: []*pb.Schema{
-			schema,
-		},
+		Schemas: schemas,
 	}, nil
 }
 

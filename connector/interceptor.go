@@ -3,7 +3,6 @@ package connector
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/gofrs/uuid"
 	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 
@@ -123,8 +122,6 @@ func returnGRPCError(err error) error {
 	if err == nil {
 		return nil
 	}
-
-	fmt.Println("woah crazy error!", err)
 
 	pErr, ok := err.(*errors.Error)
 	if !ok {

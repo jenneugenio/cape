@@ -3,7 +3,6 @@ package coordinator
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net"
 	"strings"
 
@@ -38,7 +37,6 @@ func NewTransport(coordinatorURL *primitives.URL, authToken *base64.Value) Trans
 	}
 
 	client := graphql.NewClient(coordinatorURL.String() + "/v1/query")
-	//client.Log = func(s string) { fmt.Println("CLIENT TRANSPORT: ", s) }
 	return &ClientTransport{
 		client:    client,
 		authToken: authToken,
@@ -816,7 +814,6 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (
 	variables := make(map[string]interface{})
 	variables["label"] = label
 
-	fmt.Println("no transport??", c.transport)
 	err := c.transport.Raw(ctx, `
 		query Sources($label: Label!) {
 				sourceByLabel(label: $label) {

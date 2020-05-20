@@ -48,19 +48,18 @@ message Field {
 // Schema contains information
 message Schema {
   string data_source = 1; // label of data source data is being returned from
-  string target = 2; // the target used to select the collection that we’re returning records from
+  string target = 2; // the target of the schema (e.g. a postgres table)
   RecordType type = 3;
   repeated FieldInfo fields = 4;
 }
 
 message SchemaRequest {
   string data_source = 1;
-  // TODO -- should we be able to get a specific table?
 }
 
 // Returned when you request database schema
 message SchemaResponse {
-  repeated Schema schema = 1;
+  repeated Schema schemas = 1;
 }
 
 // FieldInfo represents all information about a field including its type, the number of bits or bytes, and the fields name.

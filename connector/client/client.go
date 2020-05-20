@@ -3,8 +3,6 @@ package client
 import (
 	"context"
 	"crypto/x509"
-	"fmt"
-
 	"github.com/manifoldco/go-base64"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -26,7 +24,6 @@ func NewClient(connectorURL *primitives.URL, authToken *base64.Value, certPool *
 	creds := credentials.NewClientTLSFromCert(certPool, "")
 
 	// strip https from url, dial expects the protocol not be specified
-	fmt.Println("connectorURL", connectorURL, connectorURL.String()[8:])
 	conn, err := grpc.Dial(connectorURL.String()[8:], grpc.WithBlock(),
 		grpc.WithTransportCredentials(creds),
 		grpc.WithStreamInterceptor(authClientStreamInterceptor(authToken)),
