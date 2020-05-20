@@ -36,6 +36,9 @@ var (
 
 	// ConfigType represents the config object for cape
 	ConfigType types.Type = 0x009
+
+	// SchemaPrimitiveType represents the schema for a data source (as stored in cape)
+	SchemaPrimitiveType types.Type = 0x010
 )
 
 func init() {
@@ -49,4 +52,5 @@ func init() {
 	types.Register(SessionType, "sessions", true)
 	types.Register(SourcePrimitiveType, "sources", true)
 	types.Register(ConfigType, "config", true)
+	types.Register(SchemaPrimitiveType, "source_schema", true)
 }

@@ -91,6 +91,7 @@ type ComplexityRoot struct {
 		DetachPolicy       func(childComplexity int, input model.DetachPolicyRequest) int
 		RemoveSource       func(childComplexity int, input model.RemoveSourceRequest) int
 		RemoveToken        func(childComplexity int, id database.ID) int
+		ReportSchema       func(childComplexity int, input model.ReportSchemaRequest) int
 		Setup              func(childComplexity int, input model.NewUserRequest) int
 		UnassignRole       func(childComplexity int, input model.AssignRoleRequest) int
 	}
@@ -189,6 +190,7 @@ type MutationResolver interface {
 	CreateLoginSession(ctx context.Context, input model.LoginSessionRequest) (*primitives.Session, error)
 	CreateAuthSession(ctx context.Context, input model.AuthSessionRequest) (*primitives.Session, error)
 	DeleteSession(ctx context.Context, input model.DeleteSessionRequest) (*string, error)
+	ReportSchema(ctx context.Context, input model.ReportSchemaRequest) (*string, error)
 	CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*primitives.Policy, error)
 	DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error)
 	AttachPolicy(ctx context.Context, input model.AttachPolicyRequest) (*model.Attachment, error)
@@ -538,6 +540,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.RemoveToken(childComplexity, args["id"].(database.ID)), true
+
+	case "Mutation.reportSchema":
+		if e.complexity.Mutation.ReportSchema == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_reportSchema_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ReportSchema(childComplexity, args["input"].(model.ReportSchemaRequest)), true
 
 	case "Mutation.setup":
 		if e.complexity.Mutation.Setup == nil {
@@ -1337,6 +1351,12 @@ input RemoveSourceRequest {
   label: Label!
 }
 
+input ReportSchemaRequest {
+  source_label: Label!
+  # Todo -- there is no map type
+  source_schema: String!
+}
+
 # ------------------------------------------------------------------
 # END INPUTS
 # ------------------------------------------------------------------
@@ -1364,6 +1384,9 @@ type Mutation {
   createLoginSession(input: LoginSessionRequest!): Session!
   createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
   deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
+
+  # todo -- needs appropriate auth (should be worker only)
+  reportSchema(input: ReportSchemaRequest!): String
 }
 
 # Scalar definitions
@@ -1691,6 +1714,20 @@ func (ec *executionContext) field_Mutation_removeToken_args(ctx context.Context,
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_reportSchema_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.ReportSchemaRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNReportSchemaRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐReportSchemaRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -2786,6 +2823,44 @@ func (ec *executionContext) _Mutation_deleteSession(ctx context.Context, field g
 			return data, nil
 		}
 		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_reportSchema(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_reportSchema_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ReportSchema(rctx, args["input"].(model.ReportSchemaRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7737,6 +7812,30 @@ func (ec *executionContext) unmarshalInputRemoveSourceRequest(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputReportSchemaRequest(ctx context.Context, obj interface{}) (model.ReportSchemaRequest, error) {
+	var it model.ReportSchemaRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "source_label":
+			var err error
+			it.SourceLabel, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "source_schema":
+			var err error
+			it.SourceSchema, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -7934,6 +8033,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "deleteSession":
 			out.Values[i] = ec._Mutation_deleteSession(ctx, field)
+		case "reportSchema":
+			out.Values[i] = ec._Mutation_reportSchema(ctx, field)
 		case "createPolicy":
 			out.Values[i] = ec._Mutation_createPolicy(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -9213,6 +9314,10 @@ func (ec *executionContext) marshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋc
 
 func (ec *executionContext) unmarshalNRemoveSourceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRemoveSourceRequest(ctx context.Context, v interface{}) (model.RemoveSourceRequest, error) {
 	return ec.unmarshalInputRemoveSourceRequest(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNReportSchemaRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐReportSchemaRequest(ctx context.Context, v interface{}) (model.ReportSchemaRequest, error) {
+	return ec.unmarshalInputReportSchemaRequest(ctx, v)
 }
 
 func (ec *executionContext) marshalNRole2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx context.Context, sel ast.SelectionSet, v primitives.Role) graphql.Marshaler {

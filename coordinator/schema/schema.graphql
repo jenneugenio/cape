@@ -107,6 +107,12 @@ input RemoveSourceRequest {
   label: Label!
 }
 
+input ReportSchemaRequest {
+  source_label: Label!
+  # Todo -- there is no map type
+  source_schema: String!
+}
+
 # ------------------------------------------------------------------
 # END INPUTS
 # ------------------------------------------------------------------
@@ -134,6 +140,9 @@ type Mutation {
   createLoginSession(input: LoginSessionRequest!): Session!
   createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
   deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
+
+  # todo -- needs appropriate auth (should be worker only)
+  reportSchema(input: ReportSchemaRequest!): String
 }
 
 # Scalar definitions

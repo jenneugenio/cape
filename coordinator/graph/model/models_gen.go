@@ -110,3 +110,8 @@ type PolicyInput struct {
 type RemoveSourceRequest struct {
 	Label primitives.Label `json:"label"`
 }
+
+type ReportSchemaRequest struct {
+	SourceLabel  primitives.Label `json:"source_label"`
+	SourceSchema string           `json:"source_schema"`
+}

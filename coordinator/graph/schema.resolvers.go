@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/capeprivacy/cape/auth"
@@ -337,6 +338,23 @@ func (r *mutationResolver) DeleteSession(ctx context.Context, input model.Delete
 	}
 
 	return nil, nil
+}
+
+func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportSchemaRequest) (*string, error) {
+	var schemaBlob map[string]interface{}
+	err := json.Unmarshal([]byte(input.SourceSchema), &schemaBlob)
+	if err != nil {
+		return nil, err
+	}
+
+	schema, err := primitives.NewSchema(input.SourceLabel, schemaBlob)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO -- add backend (needs policy)
+	err = r.Backend.Create(ctx, schema)
+	return nil, err
 }
 
 func (r *queryResolver) User(ctx context.Context, id database.ID) (*primitives.User, error) {
