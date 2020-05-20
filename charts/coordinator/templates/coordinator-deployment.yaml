@@ -21,7 +21,8 @@ spec:
         - image: "{{ .Values.image.coordinator_repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: Always
           command: ["cape"]
-          args: ["coordinator", "start", "--file", "/etc/coordinator/coordinator-config.yaml"]
+          args: ["coordinator", "start", "--file", "/etc/coordinator/coordinator-config.yaml",
+                 "--instance-id", "{{ .Values.instance_id }}"]
           name: coordinator
           ports:
             - containerPort: {{ .Values.port }}

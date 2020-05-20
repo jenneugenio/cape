@@ -78,7 +78,7 @@ func NewCredentials(secret []byte, salt *base64.Value) (*Credentials, error) {
 	}
 
 	return &Credentials{
-		privateKey: keypair.privateKey,
+		privateKey: keypair.PrivateKey,
 		PublicKey:  base64.New(keypair.PublicKey),
 		Salt:       base64.New(keypair.salt),
 		Alg:        keypair.Alg,

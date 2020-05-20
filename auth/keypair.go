@@ -34,13 +34,13 @@ const (
 type Keypair struct {
 	secret     []byte
 	salt       []byte
-	privateKey ed25519.PrivateKey
+	PrivateKey ed25519.PrivateKey `json:"private_key"`
 
-	PublicKey ed25519.PublicKey
-	Alg       primitives.CredentialsAlgType
+	PublicKey ed25519.PublicKey             `json:"public_key"`
+	Alg       primitives.CredentialsAlgType `json:"alg"`
 }
 
-// Keypair Package represents a packaged keypair that can be shared outside of
+// KeypairPackage represents a packaged keypair that can be shared outside of
 // the Auth package.
 type KeypairPackage struct {
 	Secret *base64.Value                 `json:"secret"`
@@ -118,7 +118,7 @@ func DeriveKeypair(secret []byte, salt []byte) (*Keypair, error) {
 	return &Keypair{
 		secret:     secret,
 		salt:       salt,
-		privateKey: sk,
+		PrivateKey: sk,
 		PublicKey:  pk,
 		Alg:        primitives.EDDSA,
 	}, nil

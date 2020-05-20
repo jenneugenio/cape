@@ -15,3 +15,4 @@ config:
   version: 1
 
 port: 8080
+instance_id: local

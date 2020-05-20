@@ -73,7 +73,7 @@ func (t *TokenAuthority) PublicKey() ed25519.PublicKey {
 // - NotBefore: the JWT will not be accepted before this time has passed
 // - Issuer: the service email of the issuing coordinator
 func (t *TokenAuthority) Generate(tokenType primitives.TokenType, sessionID database.ID) (*base64.Value, time.Time, error) {
-	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.EdDSA, Key: t.keypair.privateKey},
+	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.EdDSA, Key: t.keypair.PrivateKey},
 		(&jose.SignerOptions{}).WithType("JWT"))
 	if err != nil {
 		return nil, time.Time{}, err
