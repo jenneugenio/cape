@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
 	"github.com/gofrs/uuid"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+
 	spb "github.com/golang/protobuf/ptypes/struct"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -21,50 +21,102 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
-type CoordinatorProvider interface {
-	GetCoordinator() Coordinator
+// Interceptor contains several interceptor methods that can be used in steam/unary chains
+type Interceptor struct {
+	provider CoordinatorProvider
 }
 
-func authStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	c := srv.(CoordinatorProvider)
-	md, ok := metadata.FromIncomingContext(ss.Context())
-	if !ok {
-		return auth.ErrorInvalidAuthHeader
-	}
-
-	authToken, ok := md["authorization"]
-	if !ok {
-		return auth.ErrorInvalidAuthHeader
-	}
-
-	coordinator := c.GetCoordinator()
-
-	identity, err := coordinator.ValidateToken(ss.Context(), authToken[0])
+func (i *Interceptor) AuthUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	session, err := i.authIntercept(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	policies, err := coordinator.GetIdentityPolicies(ss.Context(), identity.GetID())
-	if err != nil {
-		return err
-	}
+	ctx = context.WithValue(ctx, fw.SessionContextKey, session)
+	return handler(ctx, req)
+}
 
-	// TODO -- We aren't passing a credential provider here, but we don't actually need one
-	// CredentialProvider is used by the coordinator to log a user in, we are using this object for policies
-	session, err := auth.NewSession(identity, &primitives.Session{}, policies, []*primitives.Role{}, nil)
+func (i *Interceptor) AuthStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	session, err := i.authIntercept(ss.Context())
 	if err != nil {
 		return err
 	}
 
 	wStream := grpc_middleware.WrapServerStream(ss)
-
 	wStream.WrappedContext = context.WithValue(wStream.WrappedContext, fw.SessionContextKey, session)
 
 	return handler(srv, wStream)
 }
 
-func errorStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+func (i *Interceptor) ErrorUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	resp, err := handler(ctx, req)
+	err = returnGRPCError(err)
+
+	return resp, err
+}
+
+func (i *Interceptor) ErrorStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	return returnGRPCError(handler(srv, ss))
+}
+
+func (i *Interceptor) RequestIDUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	id, tags, err := i.requestIDIntercept()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx = context.WithValue(ctx, fw.RequestIDContextKey, id)
+	ctx = grpc_ctxtags.SetInContext(ctx, tags)
+
+	return handler(ctx, req)
+}
+
+func (i *Interceptor) RequestIDStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	id, tags, err := i.requestIDIntercept()
+	if err != nil {
+		return err
+	}
+
+	wStream := grpc_middleware.WrapServerStream(ss)
+	wStream.WrappedContext = context.WithValue(wStream.Context(), fw.RequestIDContextKey, id)
+	md := metadata.Pairs("X-Request-ID", id.String())
+
+	// tags gets scooped up by the logger interceptor
+	wStream.WrappedContext = grpc_ctxtags.SetInContext(wStream.Context(), tags)
+	err = wStream.SendHeader(md)
+	if err != nil {
+		return err
+	}
+
+	return handler(srv, wStream)
+}
+
+
+func (i *Interceptor) authIntercept(ctx context.Context) (*auth.Session, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, auth.ErrorInvalidAuthHeader
+	}
+
+	authToken, ok := md["authorization"]
+	if !ok {
+		return nil, auth.ErrorInvalidAuthHeader
+	}
+
+	coordinator := i.provider.GetCoordinator()
+	identity, err := coordinator.ValidateToken(ctx, authToken[0])
+	if err != nil {
+		return nil, auth.ErrorInvalidAuthHeader
+	}
+
+	policies, err := coordinator.GetIdentityPolicies(ctx, identity.GetID())
+	if err != nil {
+		return nil, auth.ErrorInvalidAuthHeader
+	}
+
+	// TODO -- We aren't passing a credential provider here, but we don't actually need one
+	// CredentialProvider is used by the coordinator to log a user in, we are using this object for policies
+	return auth.NewSession(identity, &primitives.Session{}, policies, []*primitives.Role{}, nil)
 }
 
 func returnGRPCError(err error) error {
@@ -101,27 +153,14 @@ func returnGRPCError(err error) error {
 	return st.Err()
 }
 
-func requestIDStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+func (i *Interceptor) requestIDIntercept() (*uuid.UUID, grpc_ctxtags.Tags, error) {
 	id, err := uuid.NewV4()
 	if err != nil {
-		panic(fmt.Sprintf("Could not generate a v4 uuid: %s", err))
+		return nil, nil, err
 	}
 
-	wStream := grpc_middleware.WrapServerStream(ss)
-
-	wStream.WrappedContext = context.WithValue(wStream.Context(), fw.RequestIDContextKey, id)
-
-	md := metadata.Pairs("X-Request-ID", id.String())
-
-	// this then gets scooped up by the logger interceptor
 	tags := grpc_ctxtags.NewTags()
 	tags.Set("request_id", id.String())
-	wStream.WrappedContext = grpc_ctxtags.SetInContext(wStream.Context(), tags)
 
-	err = wStream.SendHeader(md)
-	if err != nil {
-		return err
-	}
-
-	return handler(srv, wStream)
+	return &id, tags, nil
 }

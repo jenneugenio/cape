@@ -87,19 +87,27 @@ func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 		logger:      logger,
 	}
 
+	interceptor := Interceptor{
+		provider: hndler,
+	}
+
 	unaryInterceptor := grpc.UnaryInterceptor(
-		coordinator.AuthInterceptor,
+		grpc_middleware.ChainUnaryServer(
+			interceptor.ErrorUnaryInterceptor,
+			interceptor.AuthUnaryInterceptor,
+			interceptor.RequestIDUnaryInterceptor,
+			grpc_zerolog.UnaryServerInterceptor(logger, grpc_zerolog.WithCodes(handleCodes)),
+		),
 	)
 
 	streamInterceptor := grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-		errorStreamInterceptor,
-		authStreamInterceptor,
-		requestIDStreamInterceptor,
+		interceptor.ErrorStreamInterceptor,
+		interceptor.AuthStreamInterceptor,
+		interceptor.RequestIDStreamInterceptor,
 		grpc_zerolog.StreamServerInterceptor(logger, grpc_zerolog.WithCodes(handleCodes)),
 	))
 
 	grpcServer := grpc.NewServer(unaryInterceptor, streamInterceptor)
-
 	pb.RegisterDataConnectorServer(grpcServer, hndler)
 
 	root := http.NewServeMux()

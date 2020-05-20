@@ -2,10 +2,6 @@ package connector
 
 import (
 	"context"
-	fw "github.com/capeprivacy/cape/framework"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
-
 	"github.com/rs/zerolog"
 
 	"github.com/capeprivacy/cape/auth"
@@ -14,13 +10,14 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
+type CoordinatorProvider interface {
+	GetCoordinator() Coordinator
+}
+
 type Coordinator interface {
 	ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error)
 	GetIdentityPolicies(ctx context.Context, id database.ID) ([]*primitives.Policy, error)
 	GetSourceByLabel(ctx context.Context, label primitives.Label) (*coor.SourceResponse, error)
-
-	// TODO -- Don't think this belongs on this interface
-	AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error)
 }
 
 // Coordinator wraps a coordinator client giving some extra features
@@ -82,34 +79,4 @@ func (c *coordinator) authenticateClient(ctx context.Context) error {
 	return nil
 }
 
-func (c *coordinator) AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return nil, auth.ErrorInvalidAuthHeader
-	}
 
-	authToken, ok := md["authorization"]
-	if !ok {
-		return nil, auth.ErrorInvalidAuthHeader
-	}
-
-	identity, err := c.ValidateToken(ctx, authToken[0])
-	if err != nil {
-		return nil, auth.ErrorInvalidAuthHeader
-	}
-
-	policies, err := c.GetIdentityPolicies(ctx, identity.GetID())
-	if err != nil {
-		return nil, auth.ErrorInvalidAuthHeader
-	}
-
-	// TODO -- We aren't passing a credential provider here, but we don't actually need one
-	// CredentialProvider is used by the coordinator to log a user in, we are using this object for policies
-	session, err := auth.NewSession(identity, &primitives.Session{}, policies, []*primitives.Role{}, nil)
-	if err != nil {
-		return nil, auth.ErrorInvalidAuthHeader
-	}
-
-	ctx = context.WithValue(ctx, fw.SessionContextKey, session)
-	return handler(ctx, req)
-}
