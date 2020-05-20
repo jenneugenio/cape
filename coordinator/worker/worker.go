@@ -69,11 +69,29 @@ func (w *Worker) GetSchema(j *que.Job) error {
 		return err
 	}
 
-	_, err = connClient.Schema(ctx, sja.Source.Label)
+	sr, err := connClient.Schema(ctx, sja.Source.Label)
 	if err != nil {
 		return err
 	}
 
+	schema := sr.GetSchema()
+	schemaBlob := map[string]interface{}{}
+
+	for _, s := range schema {
+		table := map[string]interface{}{}
+		for _, field := range s.Fields {
+			table[field.Name] = field.Field.String()
+		}
+
+		schemaBlob[s.DataSource] = table
+	}
+
+	err = w.coordClient.ReportSchema(ctx, sja.Source.Label, schemaBlob)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Reported schema for source", sja.Source.Label)
 	return nil
 }
 
