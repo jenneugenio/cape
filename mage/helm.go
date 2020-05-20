@@ -108,8 +108,8 @@ func (h *Helm) Deploy(ctx context.Context, c *Chart) error {
 
 func (h *Helm) Install(ctx context.Context, c *Chart) error {
 	args := []string{
-		"install",
-		"--dependency-update",
+		"upgrade",
+		"--install",
 		"--version",
 		c.Version,
 	}

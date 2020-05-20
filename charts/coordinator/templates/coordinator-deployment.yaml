@@ -6,6 +6,8 @@ metadata:
     service: coordinator
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       service: coordinator
@@ -14,6 +16,11 @@ spec:
       creationTimestamp: null
       labels:
         service: coordinator
+      # used for local development to always upgrade the
+      # deployment when running helm upgrade
+      # TODO revist for production deployments
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
     spec:
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
