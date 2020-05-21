@@ -39,6 +39,10 @@ func NewTokenAuthority(keypair *Keypair, serviceEmail string) (*TokenAuthority, 
 // Verify verifies that a JWT token was signed by the correct private key. Returns
 // the session ID contained inside of the token.
 func (t *TokenAuthority) Verify(signedToken *base64.Value) (database.ID, error) {
+	if t.keypair == nil {
+		return database.EmptyID, errors.New(MissingKeyPair, "Missing key pair cannot verify token")
+	}
+
 	tok, err := jwt.ParseSigned(string(*signedToken))
 	if err != nil {
 		return database.EmptyID, err
@@ -73,6 +77,10 @@ func (t *TokenAuthority) PublicKey() ed25519.PublicKey {
 // - NotBefore: the JWT will not be accepted before this time has passed
 // - Issuer: the service email of the issuing coordinator
 func (t *TokenAuthority) Generate(tokenType primitives.TokenType, sessionID database.ID) (*base64.Value, time.Time, error) {
+	if t.keypair == nil {
+		return nil, time.Time{}, errors.New(MissingKeyPair, "Missing key pair cannot generate token")
+	}
+
 	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.EdDSA, Key: t.keypair.PrivateKey},
 		(&jose.SignerOptions{}).WithType("JWT"))
 	if err != nil {
