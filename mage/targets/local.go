@@ -220,6 +220,28 @@ func (l Local) Status(ctx context.Context) error {
 // Destroy deletes the kubernetes clusters and any managed volumes completely
 // erasing anything related to the local deployment
 func (l Local) Destroy(ctx context.Context) error {
+	required := []string{"kind"}
+	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
+		return d.Check(ctx)
+	})
+	if err != nil {
+		return err
+	}
+
+	deps, err := mage.Dependencies.Get(required)
+	if err != nil {
+		return err
+	}
+
+	kind := deps[0].(*mage.Kind)
+
+	errors := mage.NewErrors()
+	errors.Append(kind.Destroy(ctx, cluster))
+	return errors.Err()
+}
+
+// DestroyAll destroys everything in destroy (i.e. kind) plus the docker registry
+func (l Local) DestroyAll(ctx context.Context) error {
 	required := []string{"kind", "docker_registry"}
 	err := mage.Dependencies.Run(required, func(d mage.Dependency) error {
 		return d.Check(ctx)
