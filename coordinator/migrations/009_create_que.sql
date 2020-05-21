@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS que_jobs
   CONSTRAINT que_jobs_pkey PRIMARY KEY (queue, priority, run_at, job_id)
 );
 
-COMMENT ON TABLE que_jobs IS '3';
 COMMIT;
 
 ---- create above / drop below ----

@@ -644,58 +644,6 @@ type SourceResponse struct {
 	Service *primitives.Service `json:"service"`
 }
 
-// MarshalJSON is the marshaller implementation for SourceResponse
-//func (s *SourceResponse) MarshalJSON() ([]byte, error) {
-//	// We need another alias here as we are overwriting the Endpoint field of SourceResponse, which is a URL
-//	// If we embedded SourceResponse directly on the struct below, we would get an infinite loop trying to marshal
-//	// this object.  The type alias drops the Marshal & Unmarshal functions from "this" object.
-//	type SourceAlias SourceResponse
-//	return json.Marshal(&struct {
-//		Endpoint    string `json:"endpoint"`
-//		Credentials string `json:"credentials"`
-//		*SourceAlias
-//	}{
-//		Endpoint:    s.Endpoint.String(),
-//		Credentials: s.Credentials.String(),
-//		SourceAlias: (*SourceAlias)(s),
-//	})
-//}
-//
-//// UnmarshalJSON is the marshaller implementation for SourceResponse
-//func (s *SourceResponse) UnmarshalJSON(data []byte) error {
-//	// See MarshalJSON for an explanation of this weird type alias
-//	type SourceAlias SourceResponse
-//	aux := &struct {
-//		Endpoint    string `json:"endpoint"`
-//		Credentials string `json:"credentials"`
-//		*SourceAlias
-//	}{
-//		SourceAlias: (*SourceAlias)(s),
-//	}
-//
-//	err := json.Unmarshal(data, &aux)
-//	if err != nil {
-//		return err
-//	}
-//
-//	e, err := primitives.NewDBURL(aux.Endpoint)
-//	if err != nil {
-//		return err
-//	}
-//
-//	if aux.Credentials != "" {
-//		c, err := primitives.NewDBURL(aux.Credentials)
-//		if err != nil {
-//			return err
-//		}
-//
-//		s.Credentials = c
-//	}
-//
-//	s.Endpoint = e
-//	return nil
-//}
-
 // AddSource adds a new source to the database
 func (c *Client) AddSource(ctx context.Context, label primitives.Label,
 	credentials *primitives.DBURL, serviceID *database.ID) (*SourceResponse, error) {
