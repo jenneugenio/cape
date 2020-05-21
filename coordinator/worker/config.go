@@ -27,7 +27,7 @@ func (c *Config) Validate() error {
 
 func NewConfig(token *auth.APIToken, dbURL *primitives.DBURL) (*Config, error) {
 	c := &Config{
-		Token: token,
+		Token:       token,
 		DatabaseURL: dbURL,
 	}
 

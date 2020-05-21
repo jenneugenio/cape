@@ -11,8 +11,8 @@ import (
 // as a json blob. Since gql doesn't support maps, we may not be able to store this as jsonb???
 type Schema struct {
 	*database.Primitive
-	SourceID database.ID `json:"source_id"`
-	Schema map[string]interface{} `json:"source_schema"`
+	SourceID database.ID            `json:"source_id"`
+	Schema   map[string]interface{} `json:"source_schema"`
 }
 
 func (s *Schema) GetType() types.Type {
@@ -33,8 +33,8 @@ func NewSchema(sourceID database.ID, schema map[string]interface{}) (*Schema, er
 
 	s := &Schema{
 		Primitive: p,
-		SourceID: sourceID,
-		Schema: schema,
+		SourceID:  sourceID,
+		Schema:    schema,
 	}
 
 	return s, s.Validate()

@@ -10,8 +10,10 @@ import (
 func authClientStreamInterceptor(authToken *base64.Value) grpc.StreamClientInterceptor { // nolint: deadcode,unused
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn,
 		method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-		creds := tokenAccess{token: authToken}
-		opts = append(opts, grpc.PerRPCCredentials(creds))
+		if authToken != nil {
+			creds := tokenAccess{token: authToken}
+			opts = append(opts, grpc.PerRPCCredentials(creds))
+		}
 
 		return streamer(ctx, desc, cc, method, opts...)
 	}
@@ -20,8 +22,10 @@ func authClientStreamInterceptor(authToken *base64.Value) grpc.StreamClientInter
 func authClientUnaryInterceptor(authToken *base64.Value) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn,
 		invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		creds := tokenAccess{token: authToken}
-		opts = append(opts, grpc.PerRPCCredentials(creds))
+		if authToken != nil {
+			creds := tokenAccess{token: authToken}
+			opts = append(opts, grpc.PerRPCCredentials(creds))
+		}
 
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}

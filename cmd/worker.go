@@ -7,13 +7,12 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-
 func init() {
 	startCmd := &Command{
-		Usage: "Start an instance of the cape worker",
+		Usage:     "Start an instance of the cape worker",
 		Variables: []*EnvVar{capeTokenVar, capeDBURL},
 		Command: &cli.Command{
-			Name: "start",
+			Name:   "start",
 			Action: startWorkerCmd,
 			Flags: []cli.Flag{
 				instanceIDFlag(),
@@ -26,7 +25,7 @@ func init() {
 	workerCmd := &Command{
 		Usage: "Commands for managing the Cape worker",
 		Command: &cli.Command{
-			Name: "worker",
+			Name:        "worker",
 			Subcommands: []*cli.Command{startCmd.Package()},
 		},
 	}
@@ -44,5 +43,9 @@ func startWorkerCmd(c *cli.Context) error {
 	}
 
 	w, err := worker.NewWorker(config)
+	if err != nil {
+		return err
+	}
+
 	return w.Start()
 }

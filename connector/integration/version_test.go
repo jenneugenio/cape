@@ -19,7 +19,7 @@ func TestVersion(t *testing.T) {
 
 	defer s.Teardown(ctx)
 
-	client, err := s.ConnHarness.Client(nil)
+	client, err := s.ConnHarness.Client(s.Manager.Admin.Token)
 	gm.Expect(err).To(gm.BeNil())
 
 	defer client.Close()

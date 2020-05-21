@@ -80,7 +80,8 @@ func TestInterceptors(t *testing.T) {
 		ctx = metadata.NewIncomingContext(ctx, md)
 
 		info := &grpc.StreamServerInfo{IsServerStream: true}
-		err := authStreamInterceptor(&testCoordinatorProvider{&testCoordinator{}}, &TestStream{ctx: ctx}, info,
+		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		err := interceptor.AuthStreamInterceptor(interceptor.provider, &TestStream{ctx: ctx}, info,
 			func(srv interface{}, stream grpc.ServerStream) error {
 				wasCalled = true
 				return nil
@@ -95,7 +96,8 @@ func TestInterceptors(t *testing.T) {
 		ctx := context.Background()
 
 		info := &grpc.StreamServerInfo{IsServerStream: true}
-		err := authStreamInterceptor(&testCoordinatorProvider{&testCoordinator{}}, &TestStream{ctx: ctx}, info,
+		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		err := interceptor.AuthStreamInterceptor(interceptor.provider, &TestStream{ctx: ctx}, info,
 			func(srv interface{}, stream grpc.ServerStream) error {
 				wasCalled = true
 				return nil
@@ -110,7 +112,8 @@ func TestInterceptors(t *testing.T) {
 		ctx := context.Background()
 
 		info := &grpc.StreamServerInfo{IsServerStream: true}
-		err := errorStreamInterceptor(&testCoordinatorProvider{&testCoordinator{}}, &TestStream{ctx: ctx}, info,
+		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		err := interceptor.ErrorStreamInterceptor(interceptor.provider, &TestStream{ctx: ctx}, info,
 			func(srv interface{}, stream grpc.ServerStream) error {
 				wasCalled = true
 				return auth.ErrorInvalidAuthHeader
@@ -127,7 +130,8 @@ func TestInterceptors(t *testing.T) {
 
 		stream := &TestStream{ctx: ctx}
 		info := &grpc.StreamServerInfo{IsServerStream: true}
-		err := requestIDStreamInterceptor(&testCoordinatorProvider{&testCoordinator{}}, stream, info,
+		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		err := interceptor.RequestIDStreamInterceptor(interceptor.provider, stream, info,
 			func(srv interface{}, stream grpc.ServerStream) error {
 				wasCalled = true
 				return nil

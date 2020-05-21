@@ -281,7 +281,7 @@ func TestListSources(t *testing.T) {
 		dbURL, err := primitives.NewDBURL("postgres://postgres:dev@my.cool.website.com:5432/mydb")
 		gm.Expect(err).To(gm.BeNil())
 
-		l1, err := primitives.NewLabel("my-transactions")
+		l1, err := primitives.NewLabel("my-cool-transactions")
 		gm.Expect(err).To(gm.BeNil())
 
 		_, err = client.AddSource(ctx, l1, dbURL, &service.ID)

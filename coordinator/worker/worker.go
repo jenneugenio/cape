@@ -24,12 +24,11 @@ type SchemaJobArgs struct {
 type Worker struct {
 	pool    *pgx.ConnPool
 	backend database.Backend
-	config    *Config
+	config  *Config
 
 	// Loaded late
 	workers     *que.WorkerPool
 	qc          *que.Client
-	connClient  *conn.Client
 	coordClient *coordinator.Client
 	session     *primitives.Session
 }
@@ -200,6 +199,6 @@ func NewWorker(config *Config) (*Worker, error) {
 	return &Worker{
 		pool:    pgxpool,
 		backend: backend,
-		config: config,
+		config:  config,
 	}, nil
 }

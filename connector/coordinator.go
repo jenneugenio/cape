@@ -78,5 +78,3 @@ func (c *coordinator) authenticateClient(ctx context.Context) error {
 
 	return nil
 }
-
-

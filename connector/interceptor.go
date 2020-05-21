@@ -25,7 +25,8 @@ type Interceptor struct {
 	provider CoordinatorProvider
 }
 
-func (i *Interceptor) AuthUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (i *Interceptor) AuthUnaryInterceptor(ctx context.Context, req interface{},
+	info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	session, err := i.authIntercept(ctx)
 	if err != nil {
 		return nil, err
@@ -35,7 +36,8 @@ func (i *Interceptor) AuthUnaryInterceptor(ctx context.Context, req interface{},
 	return handler(ctx, req)
 }
 
-func (i *Interceptor) AuthStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+func (i *Interceptor) AuthStreamInterceptor(srv interface{}, ss grpc.ServerStream,
+	info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	session, err := i.authIntercept(ss.Context())
 	if err != nil {
 		return err
@@ -47,18 +49,21 @@ func (i *Interceptor) AuthStreamInterceptor(srv interface{}, ss grpc.ServerStrea
 	return handler(srv, wStream)
 }
 
-func (i *Interceptor) ErrorUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (i *Interceptor) ErrorUnaryInterceptor(ctx context.Context, req interface{},
+	info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	resp, err := handler(ctx, req)
 	err = returnGRPCError(err)
 
 	return resp, err
 }
 
-func (i *Interceptor) ErrorStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+func (i *Interceptor) ErrorStreamInterceptor(srv interface{}, ss grpc.ServerStream,
+	info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	return returnGRPCError(handler(srv, ss))
 }
 
-func (i *Interceptor) RequestIDUnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (i *Interceptor) RequestIDUnaryInterceptor(ctx context.Context, req interface{},
+	info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	id, tags, err := i.requestIDIntercept()
 	if err != nil {
 		return nil, err
@@ -70,7 +75,8 @@ func (i *Interceptor) RequestIDUnaryInterceptor(ctx context.Context, req interfa
 	return handler(ctx, req)
 }
 
-func (i *Interceptor) RequestIDStreamInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+func (i *Interceptor) RequestIDStreamInterceptor(srv interface{}, ss grpc.ServerStream,
+	info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	id, tags, err := i.requestIDIntercept()
 	if err != nil {
 		return err
@@ -89,7 +95,6 @@ func (i *Interceptor) RequestIDStreamInterceptor(srv interface{}, ss grpc.Server
 
 	return handler(srv, wStream)
 }
-
 
 func (i *Interceptor) authIntercept(ctx context.Context) (*auth.Session, error) {
 	md, ok := metadata.FromIncomingContext(ctx)

@@ -66,8 +66,8 @@ func (p *PostgresSource) Type() primitives.SourceType {
 }
 
 func (p *PostgresSource) SourceSchema(ctx context.Context) ([]*proto.Schema, error) {
-	rows, err := p.pool.Query(ctx, "select table_name, column_name, data_type, character_maximum_length from " +
-		"information_schema.columns where table_name in " +
+	rows, err := p.pool.Query(ctx, "select table_name, column_name, data_type, character_maximum_length from "+
+		"information_schema.columns where table_name in "+
 		"(select table_name from information_schema.tables where table_schema = $1) order by table_name", "public")
 	if err != nil {
 		return nil, err
@@ -97,9 +97,9 @@ func (p *PostgresSource) SourceSchema(ctx context.Context) ([]*proto.Schema, err
 
 			fields = []*proto.FieldInfo{}
 			schema := &proto.Schema{
-				Type: proto.RecordType_DOCUMENT,
+				Type:       proto.RecordType_DOCUMENT,
 				DataSource: p.source.Label.String(),
-				Target: tableName,
+				Target:     tableName,
 			}
 
 			schemas = append(schemas, schema)
