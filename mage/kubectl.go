@@ -26,6 +26,10 @@ func NewKubectl(required string) (*Kubectl, error) {
 	}, nil
 }
 
+func MustKubectl(required string) *Kubectl {
+	return &Kubectl{Version: semver.MustParse(required)}
+}
+
 func (k *Kubectl) Check(_ context.Context) error {
 	out, err := sh.Output("kubectl", "version", "--short", "--client")
 	if err != nil {

@@ -72,6 +72,14 @@ func NewKind(docker *Docker, kubectl *Kubectl, version string) (*Kind, error) {
 	}, nil
 }
 
+func MustKind(docker *Docker, kubectl *Kubectl, version string) *Kind {
+	k, err := NewKind(docker, kubectl, version)
+	if err != nil {
+		panic(err)
+	}
+	return k
+}
+
 func (k *Kind) Check(ctx context.Context) error {
 	kindOut, err := sh.Output("kind", "version")
 	if err != nil {

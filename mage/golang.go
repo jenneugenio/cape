@@ -36,6 +36,15 @@ func NewGolang(rootPkg string, required string) (*Golang, error) {
 	}, nil
 }
 
+func MustGolang(rootPkg string, required string) *Golang {
+	return &Golang{
+		Version: semver.MustParse(required),
+		RootPkg: rootPkg,
+		Mod:     &GoMod{},
+		Tools:   &GoTools{},
+	}
+}
+
 // Name returns the internal "name" for the dependency
 func (g *Golang) Name() string {
 	return "go"

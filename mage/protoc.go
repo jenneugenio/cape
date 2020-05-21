@@ -35,6 +35,16 @@ func NewProtoc(required, cfgFile, protoFile, outputFile string) (*Protoc, error)
 	}, nil
 }
 
+// MustProtoc returns a struct for managing and working with Protoc locally and panics on any error
+func MustProtoc(required, cfgFile, protoFile, outputFile string) *Protoc {
+	return &Protoc{
+		Version:    semver.MustParse(required),
+		Configfile: cfgFile,
+		Protofile:  protoFile,
+		Outputfile: outputFile,
+	}
+}
+
 // Check returns an error if Protoc isn't available or the version is incorrect
 func (p *Protoc) Check(_ context.Context) error {
 	out, err := sh.Output("protoc", "--version")

@@ -34,6 +34,13 @@ func NewHelm(required string, repositories map[string]string) (*Helm, error) {
 	}, nil
 }
 
+func MustHelm(required string, repositories map[string]string) *Helm {
+	return &Helm{
+		Version:      semver.MustParse(required),
+		Repositories: repositories,
+	}
+}
+
 func (h *Helm) Name() string {
 	return "helm"
 }

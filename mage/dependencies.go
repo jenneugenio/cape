@@ -13,81 +13,22 @@ var Dependencies = deps{}
 // each magefile command invocation. That way, it's less hard coding, easier to
 // test!
 func init() {
-	gitdep, err := NewGit("2.0")
-	if err != nil {
-		panic(err)
+	dockerdep := MustDocker("18.0")
+
+	depVersions := []Dependency{
+		MustGit("2.0"),
+		dockerdep,
+		MustKind(dockerdep, MustKubectl("1.11"), "0.8"),
+		MustDockerRegistry(dockerdep),
+		MustGolang("github.com/capeprivacy/cape", "1.14"),
+		MustProtoc("3.11.0", "connector/proto/proto.go", "connector/proto/data_connector.proto", "connector/proto/data_connector.pb.go"),
+		MustHelm("3.2", map[string]string{
+			"bitnami": "https://charts.bitnami.com/bitnami",
+		}),
 	}
 
-	kubectl, err := NewKubectl("1.11")
-	if err != nil {
-		panic(err)
-	}
-
-	godep, err := NewGolang("github.com/capeprivacy/cape", "1.14")
-	if err != nil {
-		panic(err)
-	}
-
-	dockerdep, err := NewDocker("18.0")
-	if err != nil {
-		panic(err)
-	}
-
-	protoc, err := NewProtoc("3.11.0", "connector/proto/proto.go", "connector/proto/data_connector.proto", "connector/proto/data_connector.pb.go")
-	if err != nil {
-		panic(err)
-	}
-
-	registry, err := NewDockerRegistry(dockerdep)
-	if err != nil {
-		panic(err)
-	}
-
-	kind, err := NewKind(dockerdep, kubectl, "0.8")
-	if err != nil {
-		panic(err)
-	}
-
-	helm, err := NewHelm("3.2", map[string]string{
-		"bitnami": "https://charts.bitnami.com/bitnami",
-	})
-	if err != nil {
-		panic(err)
-	}
-
-	err = Dependencies.Add(godep)
-	if err != nil {
-		panic(err)
-	}
-
-	err = Dependencies.Add(dockerdep)
-	if err != nil {
-		panic(err)
-	}
-
-	err = Dependencies.Add(protoc)
-	if err != nil {
-		panic(err)
-	}
-
-	err = Dependencies.Add(gitdep)
-	if err != nil {
-		panic(err)
-	}
-
-	err = Dependencies.Add(kind)
-	if err != nil {
-		panic(err)
-	}
-
-	err = Dependencies.Add(registry)
-	if err != nil {
-		panic(err)
-	}
-
-	err = Dependencies.Add(helm)
-	if err != nil {
-		panic(err)
+	for _, d := range depVersions {
+		Dependencies.MustAdd(d)
 	}
 }
 
@@ -167,4 +108,10 @@ func (d deps) Add(dep Dependency) error {
 
 	d[dep.Name()] = dep
 	return nil
+}
+
+func (d deps) MustAdd(dep Dependency) {
+	if err := d.Add(dep); err != nil {
+		panic(err)
+	}
 }

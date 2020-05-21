@@ -27,6 +27,10 @@ func NewDockerRegistry(docker *Docker) (*DockerRegistry, error) {
 	return &DockerRegistry{docker: docker}, nil
 }
 
+func MustDockerRegistry(docker *Docker) *DockerRegistry {
+	return &DockerRegistry{docker: docker}
+}
+
 func (d *DockerRegistry) Name() string {
 	return "docker_registry"
 }

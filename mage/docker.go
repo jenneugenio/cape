@@ -40,6 +40,10 @@ func NewDocker(required string) (*Docker, error) {
 	}, nil
 }
 
+func MustDocker(required string) *Docker {
+	return &Docker{Version: semver.MustParse(required)}
+}
+
 // Check returns an error if Docker isn't available or the version is incorrect
 func (d *Docker) Check(_ context.Context) error {
 	if len(os.Getenv("SKIP_DOCKER_CHECK")) > 0 {

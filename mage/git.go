@@ -26,6 +26,10 @@ func NewGit(required string) (*Git, error) {
 	}, nil
 }
 
+func MustGit(required string) *Git {
+	return &Git{Version: semver.MustParse(required)}
+}
+
 func (g *Git) Name() string {
 	return "git"
 }
