@@ -122,3 +122,8 @@ type SetupRequest struct {
 	Email    primitives.Email    `json:"email"`
 	Password primitives.Password `json:"password"`
 }
+
+type UpdateSourceRequest struct {
+	SourceLabel primitives.Label `json:"source_label"`
+	ServiceID   *database.ID     `json:"service_id"`
+}

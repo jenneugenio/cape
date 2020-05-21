@@ -215,6 +215,53 @@ func (r *mutationResolver) AddSource(ctx context.Context, input model.AddSourceR
 	return source, nil
 }
 
+func (r *mutationResolver) UpdateSource(ctx context.Context, input model.UpdateSourceRequest) (*primitives.Source, error) {
+	session := fw.Session(ctx)
+
+	tx, err := r.Backend.Transaction(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx) // nolint: errcheck
+
+	enforcer := auth.NewEnforcer(session, tx)
+
+	source := &primitives.Source{}
+	err = enforcer.QueryOne(ctx, source, database.NewFilter(database.Where{"label": input.SourceLabel}, nil, nil))
+	if err != nil {
+		return nil, err
+	}
+
+	if input.ServiceID != nil {
+		service := &primitives.Service{}
+		err := enforcer.Get(ctx, *input.ServiceID, service)
+		if err != nil {
+			return nil, err
+		}
+
+		if service.Type != primitives.DataConnectorServiceType {
+			return nil, errs.New(MustBeDataConnector, "Linking service to data source must be a data connector")
+		}
+	}
+
+	source.ServiceID = input.ServiceID
+	err = enforcer.Update(ctx, source)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if source == nil {
+		panic("why is source nil")
+	}
+
+	return source, nil
+}
+
 func (r *mutationResolver) RemoveSource(ctx context.Context, input model.RemoveSourceRequest) (*string, error) {
 	session := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(session, r.Backend)

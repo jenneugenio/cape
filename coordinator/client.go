@@ -585,6 +585,37 @@ func (c *Client) AddSource(ctx context.Context, label primitives.Label,
 	return &resp.Source, nil
 }
 
+func (c *Client) UpdateSource(ctx context.Context, label primitives.Label, serviceID *database.ID) (*SourceResponse, error) {
+	var resp struct {
+		Source SourceResponse `json:"updateSource"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["source_label"] = label
+	variables["service_id"] = serviceID
+
+	err := c.transport.Raw(ctx, `
+		mutation UpdateSource($source_label: Label!, $service_id: ID) {
+			updateSource(input: { source_label: $source_label, service_id: $service_id }) {
+				id
+				label
+				type
+				credentials
+				endpoint
+				service {
+					id
+					email
+				}
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Source, nil
+}
+
 type ListSourcesResponse struct {
 	Sources []*SourceResponse `json:"sources"`
 }

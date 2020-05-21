@@ -86,6 +86,55 @@ func TestSource(t *testing.T) {
 		gm.Expect(source.Service.ID).To(gm.Equal(service.ID))
 	})
 
+	t.Run("change the link to an existing source", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		l, err := primitives.NewLabel("new-transactions")
+		gm.Expect(err).To(gm.BeNil())
+
+		source, err := client.AddSource(ctx, l, dbURL, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(source.Label).To(gm.Equal(l))
+		gm.Expect(source.ID).ToNot(gm.BeNil())
+		gm.Expect(source.Type).To(gm.Equal(primitives.PostgresType))
+		gm.Expect(source.Endpoint.String()).To(gm.Equal(endpoint))
+		gm.Expect(source.ServiceID).To(gm.BeNil())
+		gm.Expect(source.Credentials).To(gm.BeNil())
+
+		emailStr := "service:another@connector.com"
+		email, err := primitives.NewEmail(emailStr)
+		gm.Expect(err).To(gm.BeNil())
+
+		serviceURL, err := primitives.NewURL("https://localhost:8081")
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, serviceURL)
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err = client.CreateService(ctx, service)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(service.ID).ToNot(gm.BeNil())
+
+		linkedSource, err := client.UpdateSource(ctx, source.Label, &service.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(linkedSource.Label).To(gm.Equal(l))
+		gm.Expect(linkedSource.ID).ToNot(gm.BeNil())
+		gm.Expect(linkedSource.Type).To(gm.Equal(primitives.PostgresType))
+		gm.Expect(linkedSource.Endpoint.String()).To(gm.Equal(endpoint))
+		gm.Expect(linkedSource.Service.ID).To(gm.Equal(service.ID))
+
+		linkedSource, err = client.GetSource(ctx, source.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(linkedSource.Label).To(gm.Equal(l))
+		gm.Expect(linkedSource.ID).ToNot(gm.BeNil())
+		gm.Expect(linkedSource.Type).To(gm.Equal(primitives.PostgresType))
+		gm.Expect(linkedSource.Endpoint.String()).To(gm.Equal(endpoint))
+		gm.Expect(linkedSource.Service.ID).To(gm.Equal(service.ID))
+	})
+
 	t.Run("can't create link to a non-existent data connector", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
