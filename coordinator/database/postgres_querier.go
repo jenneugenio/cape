@@ -115,7 +115,7 @@ func (q *postgresQuerier) QueryOne(ctx context.Context, e Entity, f Filter) erro
 	where, params, err := buildFilter(f)
 	if err != nil {
 		if err == ErrEmptyIn {
-			return errors.New(NotFoundCause, "could not find %s", t.String())
+			return errors.New(NotFoundCause, "could not find %s entity with filter %s", t.String(), f.Where)
 		}
 
 		return err
@@ -129,7 +129,7 @@ func (q *postgresQuerier) QueryOne(ctx context.Context, e Entity, f Filter) erro
 	if err != nil {
 		switch err {
 		case pgx.ErrNoRows:
-			return errors.New(NotFoundCause, "could not find %s", t.String())
+			return errors.New(NotFoundCause, "could not find %s entity with filter %s", t.String(), f.Where)
 		default:
 			return err
 		}

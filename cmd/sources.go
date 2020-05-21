@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/coordinator/database"
@@ -42,7 +44,7 @@ func init() {
 		Command: &cli.Command{
 			Name:   "remove",
 			Action: handleSessionOverrides(sourcesRemove),
-			Flags:  []cli.Flag{clusterFlag()},
+			Flags:  []cli.Flag{clusterFlag(), yesFlag()},
 		},
 	}
 
@@ -106,20 +108,28 @@ func sourcesAdd(c *cli.Context) error {
 }
 
 func sourcesRemove(c *cli.Context) error {
+	skipConfirm := c.Bool("yes")
 	provider := GetProvider(c.Context)
 	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
+	u := provider.UI(c.Context)
 
 	label := Arguments(c.Context, SourceLabelArg).(primitives.Label)
+
+	if !skipConfirm {
+		err := u.Confirm(fmt.Sprintf("Do you really want to delete the source %s", label))
+		if err != nil {
+			return err
+		}
+	}
 
 	err = client.RemoveSource(c.Context, label)
 	if err != nil {
 		return err
 	}
 
-	u := provider.UI(c.Context)
 	return u.Template("Removed source {{ . | bold }} from Cape\n", label.String())
 }
 
