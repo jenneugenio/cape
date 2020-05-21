@@ -1352,7 +1352,7 @@ input RemoveSourceRequest {
 }
 
 input ReportSchemaRequest {
-  source_label: Label!
+  source_id: ID!
   # Todo -- there is no map type
   source_schema: String!
 }
@@ -7818,9 +7818,9 @@ func (ec *executionContext) unmarshalInputReportSchemaRequest(ctx context.Contex
 
 	for k, v := range asMap {
 		switch k {
-		case "source_label":
+		case "source_id":
 			var err error
-			it.SourceLabel, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			it.SourceID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
 			if err != nil {
 				return it, err
 			}

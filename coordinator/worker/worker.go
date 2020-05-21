@@ -79,7 +79,7 @@ func (w *Worker) GetSchema(j *que.Job) error {
 		schemaBlob[s.Target] = table
 	}
 
-	err = w.coordClient.ReportSchema(ctx, sja.Source.Label, schemaBlob)
+	err = w.coordClient.ReportSchema(ctx, sja.Source.ID, schemaBlob)
 	if err != nil {
 		return err
 	}

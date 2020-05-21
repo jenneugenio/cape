@@ -30,13 +30,13 @@ func TestSchema(t *testing.T) {
 	dbURL, err := primitives.NewDBURL("postgres://postgres:dev@my.cool.website:5432/mydb")
 	gm.Expect(err).To(gm.BeNil())
 
+	l, err := primitives.NewLabel("my-transactions")
+	gm.Expect(err).To(gm.BeNil())
+
+	source, err := client.AddSource(ctx, l, dbURL, nil)
+	gm.Expect(err).To(gm.BeNil())
+
 	t.Run("create a new source", func(t *testing.T) {
-		l, err := primitives.NewLabel("my-transactions")
-		gm.Expect(err).To(gm.BeNil())
-
-		source, err := client.AddSource(ctx, l, dbURL, nil)
-		gm.Expect(err).To(gm.BeNil())
-
 		blob := map[string]interface{}{
 			"my-transactions": map[string]interface{}{
 				"col-1": "int",
@@ -45,7 +45,33 @@ func TestSchema(t *testing.T) {
 			},
 		}
 
-		err = client.ReportSchema(ctx, source.Label, blob)
+		err = client.ReportSchema(ctx, source.ID, blob)
+		gm.Expect(err).To(gm.BeNil())
+	})
+
+	t.Run("can update a source", func(t *testing.T) {
+		blob := map[string]interface{}{
+			"my-transactions": map[string]interface{}{
+				"col-1": "int",
+				"col-2": "int",
+				"col-3": "string",
+			},
+		}
+
+		err = client.ReportSchema(ctx, source.ID, blob)
+		gm.Expect(err).To(gm.BeNil())
+
+		// schema changed!
+		blob = map[string]interface{}{
+			"my-transactions": map[string]interface{}{
+				"col-1": "int",
+				"col-2": "int",
+				"col-3": "string",
+				"col-4": "string",
+			},
+		}
+
+		err = client.ReportSchema(ctx, source.ID, blob)
 		gm.Expect(err).To(gm.BeNil())
 	})
 }

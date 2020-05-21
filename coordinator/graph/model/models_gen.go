@@ -112,6 +112,6 @@ type RemoveSourceRequest struct {
 }
 
 type ReportSchemaRequest struct {
-	SourceLabel  primitives.Label `json:"source_label"`
-	SourceSchema string           `json:"source_schema"`
+	SourceID     database.ID `json:"source_id"`
+	SourceSchema string      `json:"source_schema"`
 }

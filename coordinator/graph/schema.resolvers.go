@@ -346,14 +346,26 @@ func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportS
 	if err != nil {
 		return nil, err
 	}
+	// TODO -- add enforcer (needs policy)
 
-	schema, err := primitives.NewSchema(input.SourceLabel, schemaBlob)
-	if err != nil {
+	var schema primitives.Schema
+	err = r.Backend.QueryOne(ctx, &schema, database.NewFilter(database.Where{"source_id": input.SourceID}, nil, nil))
+	if err != nil && errs.FromCause(err, database.NotFoundCause) {
+		// if not found, create it
+		s, err := primitives.NewSchema(input.SourceID, schemaBlob)
+		if err != nil {
+			return nil, err
+		}
+
+		err = r.Backend.Create(ctx, s)
+		return nil, err
+	} else if err != nil {
 		return nil, err
 	}
 
-	// TODO -- add backend (needs policy)
-	err = r.Backend.Create(ctx, schema)
+	// otherwise we found a schema, update it!
+	schema.Schema = schemaBlob
+	err = r.Backend.Update(ctx, &schema)
 	return nil, err
 }
 

@@ -1331,19 +1331,19 @@ func (c *Client) RemoveToken(ctx context.Context, tokenID database.ID) error {
     `, variables, nil)
 }
 
-func (c *Client) ReportSchema(ctx context.Context, sourceLabel primitives.Label, sourceSchema map[string]interface{}) error {
+func (c *Client) ReportSchema(ctx context.Context, sourceID database.ID, sourceSchema map[string]interface{}) error {
 	schemaBlob, err := json.Marshal(sourceSchema)
 	if err != nil {
 		return err
 	}
 
 	variables := make(map[string]interface{})
-	variables["source_label"] = sourceLabel
+	variables["source_id"] = sourceID
 	variables["source_schema"] = string(schemaBlob)
 
 	return c.transport.Raw(ctx, `
-		mutation ReportSchema($source_label: Label!, $source_schema: String!) {
-			reportSchema(input: { source_label: $source_label, source_schema: $source_schema })
+		mutation ReportSchema($source_id: ID!, $source_schema: String!) {
+			reportSchema(input: { source_id: $source_id, source_schema: $source_schema })
 		}
     `, variables, nil)
 }

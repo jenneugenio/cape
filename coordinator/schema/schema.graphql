@@ -108,7 +108,7 @@ input RemoveSourceRequest {
 }
 
 input ReportSchemaRequest {
-  source_label: Label!
+  source_id: ID!
   # Todo -- there is no map type
   source_schema: String!
 }

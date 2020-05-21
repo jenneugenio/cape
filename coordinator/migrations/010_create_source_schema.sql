@@ -2,15 +2,16 @@ BEGIN;
 CREATE TABLE source_schema
 (
     id char(29) primary key not null,
-    -- source_id char(29) references source(id) on delete cascade not null,
+    source_id char(29) unique references sources(id) on delete cascade not null,
     data jsonb not null,
 
+    CONSTRAINT attachments_policy_id_check CHECK (data::jsonb#>>'{source_id}' = source_id),
     CONSTRAINT source_schema_id_check CHECK(data::jsonb#>>'{id}' = id)
 );
 
 CREATE TRIGGER source_schema_hoist_tgr
   BEFORE INSERT ON source_schema
-  FOR EACH ROW EXECUTE PROCEDURE hoist_values('id');
+  FOR EACH ROW EXECUTE PROCEDURE hoist_values('id', 'source_id');
 
 COMMIT;
 

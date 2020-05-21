@@ -11,7 +11,7 @@ import (
 // as a json blob. Since gql doesn't support maps, we may not be able to store this as jsonb???
 type Schema struct {
 	*database.Primitive
-	SourceLabel  Label `json:"source_label"`
+	SourceID database.ID `json:"source_id"`
 	Schema map[string]interface{} `json:"source_schema"`
 }
 
@@ -20,12 +20,12 @@ func (s *Schema) GetType() types.Type {
 }
 
 func (s *Schema) Validate() error {
-	return s.SourceLabel.Validate()
+	return s.SourceID.Validate()
 }
 
 // TODO -- does this need to be encryptable?
 
-func NewSchema(sourceLabel Label, schema map[string]interface{}) (*Schema, error) {
+func NewSchema(sourceID database.ID, schema map[string]interface{}) (*Schema, error) {
 	p, err := database.NewPrimitive(SchemaPrimitiveType)
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func NewSchema(sourceLabel Label, schema map[string]interface{}) (*Schema, error
 
 	s := &Schema{
 		Primitive: p,
-		SourceLabel: sourceLabel,
+		SourceID: sourceID,
 		Schema: schema,
 	}
 
