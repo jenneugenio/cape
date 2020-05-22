@@ -5,14 +5,14 @@ import (
 	"github.com/capeprivacy/cape/coordinator/database/types"
 )
 
+type SchemaBlob map[string]interface{}
+
 // QuerySchema is the data schema for a data source
-// It is linked with a source via the source label, the schema is currently stored
-// TODO -- make this comment relevant
-// as a json blob. Since gql doesn't support maps, we may not be able to store this as jsonb???
+// It is linked with a source via the source label, the schema is currently stored as a json blob.
 type Schema struct {
 	*database.Primitive
-	SourceID database.ID            `json:"source_id"`
-	Schema   map[string]interface{} `json:"source_schema"`
+	SourceID database.ID `json:"source_id"`
+	Schema   SchemaBlob  `json:"source_schema"`
 }
 
 func (s *Schema) GetType() types.Type {
@@ -22,8 +22,6 @@ func (s *Schema) GetType() types.Type {
 func (s *Schema) Validate() error {
 	return s.SourceID.Validate()
 }
-
-// TODO -- does this need to be encryptable?
 
 func NewSchema(sourceID database.ID, schema map[string]interface{}) (*Schema, error) {
 	p, err := database.NewPrimitive(SchemaPrimitiveType)
