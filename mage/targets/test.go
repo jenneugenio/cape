@@ -65,6 +65,12 @@ func (t Test) Integration(ctx context.Context) error {
 		file = "./..."
 	}
 
+	args := []string{"test", "-v", file, "-tags=integration"}
+	coverage := os.Getenv("CAPE_DO_COVERAGE")
+	if coverage != "" {
+		args = append(args, "-coverprofile=coverage.txt", "-covermode=atomic")
+	}
+
 	env := mage.Env{
 		"CAPE_DB_URL":             "postgres://postgres:dev@localhost:5432/postgres?sslmode=disable",
 		"CAPE_DB_MIGRATIONS":      filepath.Join(wd, "coordinator/migrations"),
@@ -73,7 +79,7 @@ func (t Test) Integration(ctx context.Context) error {
 	}
 	env.Source()
 
-	_, err = sh.Exec(env, os.Stdout, os.Stderr, "go", "test", "-v", file, "-tags=integration")
+	_, err = sh.Exec(env, os.Stdout, os.Stderr, "go", args...)
 	return err
 }
 

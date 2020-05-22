@@ -41,3 +41,9 @@ jobs:
 
         go run bootstrap.go -v bootstrap
         mage -v test:ci
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1.0.7
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: coverage.txt
+        flags: unittests
