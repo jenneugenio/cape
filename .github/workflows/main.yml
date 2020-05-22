@@ -38,6 +38,7 @@ jobs:
         export SKIP_DOCKER_CHECK=1
         export PATH=$PATH:$HOME/go/bin
         export CAPE_DB_URL=postgres://postgres:dev@localhost:${{ job.services.postgres.ports[5432] }}/postgres?sslmode=disable
+        export CAPE_DO_COVERAGE=1
 
         go run bootstrap.go -v bootstrap
         mage -v test:ci
