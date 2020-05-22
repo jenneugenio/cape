@@ -357,15 +357,11 @@ func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportS
 			return nil, err
 		}
 
-		err = r.Backend.Create(ctx, s)
-		return nil, err
-	} else if err != nil {
-		return nil, err
+		schema = *s
 	}
 
-	// otherwise we found a schema, update it!
 	schema.Schema = schemaBlob
-	err = r.Backend.Update(ctx, &schema)
+	err = r.Backend.Upsert(ctx, &schema)
 	return nil, err
 }
 

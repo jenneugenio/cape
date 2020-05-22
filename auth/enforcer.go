@@ -83,6 +83,27 @@ func (e *Enforcer) Delete(ctx context.Context, typ types.Type, id database.ID) e
 	return nil
 }
 
+// Upsert calls down to the underlying db function as long as the contained policies
+// can update AND create the given entity
+func (e *Enforcer) Upsert(ctx context.Context, entity database.Entity) error {
+	err := e.session.Can(primitives.Update, entity.GetType())
+	if err != nil {
+		return err
+	}
+
+	err = e.session.Can(primitives.Create, entity.GetType())
+	if err != nil {
+		return err
+	}
+
+	err = e.db.Upsert(ctx, entity)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Update calls down to the underlying db function as long as the contained policies
 // can update the given entity
 func (e *Enforcer) Update(ctx context.Context, entity database.Entity) error {

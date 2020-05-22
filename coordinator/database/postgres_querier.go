@@ -250,8 +250,13 @@ func (q *postgresQuerier) Delete(ctx context.Context, typ types.Type, id ID) err
 	return nil
 }
 
-// Update an entity inside the database
-func (q *postgresQuerier) Update(ctx context.Context, e Entity) error {
+type updateMode string
+const (
+	Update updateMode = "UPDATE"
+	Upsert updateMode = "UPSERT"
+)
+
+func (q *postgresQuerier) update(ctx context.Context, e Entity, mode updateMode) error {
 	t := e.GetType()
 	if !t.Mutable() {
 		panic("Cannot update an immutable entity")
@@ -274,7 +279,7 @@ func (q *postgresQuerier) Update(ctx context.Context, e Entity) error {
 		value = v[0]
 	}
 
-	sql := fmt.Sprintf(`UPDATE %s SET data = $1 WHERE id = $2`, t.String())
+	sql := fmt.Sprintf(`%s %s SET data = $1 WHERE id = $2`, mode, t.String())
 	ct, err := q.conn.Exec(ctx, sql, value, e.GetID().String())
 	if err != nil {
 		return err
@@ -285,6 +290,16 @@ func (q *postgresQuerier) Update(ctx context.Context, e Entity) error {
 	}
 
 	return nil
+}
+
+// Upsert (update if it exists, insert if not) an entity inside the database
+func (q *postgresQuerier) Upsert(ctx context.Context, e Entity) error {
+	return q.update(ctx, e, Upsert)
+}
+
+// Update an entity inside the database
+func (q *postgresQuerier) Update(ctx context.Context, e Entity) error {
+	return q.update(ctx, e, Update)
 }
 
 // getItem returns a primitive.Entity from the given slice thats passed as a

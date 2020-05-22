@@ -11,6 +11,12 @@ func init() {
 	startCmd := &Command{
 		Usage:     "Start an instance of the cape worker",
 		Variables: []*EnvVar{capeTokenVar, capeDBURL},
+		Examples: []*Example{
+			{
+				Example:     "cape worker start",
+				Description: "starts a cape worker",
+			},
+		},
 		Command: &cli.Command{
 			Name:   "start",
 			Action: startWorkerCmd,
