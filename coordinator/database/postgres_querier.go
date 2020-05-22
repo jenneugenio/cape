@@ -251,6 +251,7 @@ func (q *postgresQuerier) Delete(ctx context.Context, typ types.Type, id ID) err
 }
 
 type updateMode string
+
 const (
 	Update updateMode = "UPDATE"
 	Upsert updateMode = "UPSERT"
