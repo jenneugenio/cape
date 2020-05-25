@@ -3,8 +3,9 @@ package auth
 import (
 	"regexp"
 
-	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/manifoldco/go-base64"
+
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // ErrorInvalidAuthHeader is an invalid auth header error

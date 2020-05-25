@@ -42,6 +42,9 @@ func NewCoordinator(token *auth.APIToken, logger *zerolog.Logger) Coordinator {
 // has a valid session.
 func (c *coordinator) ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error) {
 	// make sure the connector is actually authenticated before continuing
+	//
+	// XXX: This only ensures the connector is authenticated _IF_ you call
+	// ValidateToken
 	err := c.authenticateClient(ctx)
 	if err != nil {
 		return nil, err

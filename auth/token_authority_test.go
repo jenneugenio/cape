@@ -24,7 +24,7 @@ func TestTokenAuthority(t *testing.T) {
 		id, err := database.GenerateID(primitives.SessionType)
 		gm.Expect(err).To(gm.BeNil())
 
-		sig, expiresIn, err := tokenAuth.Generate(primitives.Login, id)
+		sig, expiresIn, err := tokenAuth.Generate(id)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(sig).ToNot(gm.BeNil())
 		gm.Expect(expiresIn).To(gm.BeTemporally(">", time.Now().UTC()))
@@ -37,7 +37,7 @@ func TestTokenAuthority(t *testing.T) {
 		id, err := database.GenerateID(primitives.SessionType)
 		gm.Expect(err).To(gm.BeNil())
 
-		sig, expiresIn, err := tokenAuth.Generate(primitives.Login, id)
+		sig, expiresIn, err := tokenAuth.Generate(id)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(sig).ToNot(gm.BeNil())
 		gm.Expect(expiresIn).To(gm.BeTemporally(">", time.Now().UTC()))
@@ -54,7 +54,7 @@ func TestTokenAuthority(t *testing.T) {
 		id, err := database.GenerateID(primitives.SessionType)
 		gm.Expect(err).To(gm.BeNil())
 
-		sig, expiresIn, err := tokenAuth.Generate(primitives.Login, id)
+		sig, expiresIn, err := tokenAuth.Generate(id)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(sig).ToNot(gm.BeNil())
 		gm.Expect(expiresIn).To(gm.BeTemporally(">", time.Now().UTC()))
@@ -84,7 +84,7 @@ func TestTokenAuthority(t *testing.T) {
 		id, err := database.GenerateID(primitives.SessionType)
 		gm.Expect(err).To(gm.BeNil())
 
-		sig, expiresIn, err := tokenAuth.Generate(primitives.Login, id)
+		sig, expiresIn, err := tokenAuth.Generate(id)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(sig).ToNot(gm.BeNil())
 		gm.Expect(expiresIn).To(gm.BeTemporally(">", time.Now().UTC()))

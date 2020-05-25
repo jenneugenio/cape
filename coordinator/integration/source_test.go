@@ -200,7 +200,7 @@ func TestSource(t *testing.T) {
 		service, err = client.CreateService(ctx, service)
 		gm.Expect(err).To(gm.BeNil())
 
-		token, err := client.CreateToken(ctx, service)
+		apiToken, _, err := client.CreateToken(ctx, service)
 		gm.Expect(err).To(gm.BeNil())
 
 		source, err := client.AddSource(ctx, l, dbURL, &service.ID)
@@ -211,7 +211,7 @@ func TestSource(t *testing.T) {
 		transport := coordinator.NewTransport(u, nil)
 		serviceClient := coordinator.NewClient(transport)
 
-		_, err = serviceClient.TokenLogin(ctx, token)
+		_, err = serviceClient.TokenLogin(ctx, apiToken)
 		gm.Expect(err).To(gm.BeNil())
 
 		source, err = serviceClient.GetSource(ctx, source.ID)
@@ -287,13 +287,13 @@ func TestListSources(t *testing.T) {
 		_, err = client.AddSource(ctx, l1, dbURL, &service.ID)
 		gm.Expect(err).To(gm.BeNil())
 
-		token, err := client.CreateToken(ctx, m.Admin.User)
+		apiToken, _, err := client.CreateToken(ctx, m.Admin.User)
 		gm.Expect(err).To(gm.BeNil())
 
 		err = client.Logout(ctx, nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.TokenLogin(ctx, token)
+		_, err = client.TokenLogin(ctx, apiToken)
 		gm.Expect(err).To(gm.BeNil())
 
 		sources, err := client.ListSources(ctx)

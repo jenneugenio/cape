@@ -16,22 +16,21 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
-func queryEmailProvider(ctx context.Context, db database.Querier, email primitives.Email) (primitives.CredentialProvider, error) {
-	filter := database.NewFilter(database.Where{"email": email.String()}, nil, nil)
-
-	user := &primitives.User{}
-	err := db.QueryOne(ctx, user, filter)
-
-	return user, err
-}
-
-func queryTokenProvider(ctx context.Context, db database.Querier, tokenID database.ID) (primitives.CredentialProvider, error) {
-	filter := database.NewFilter(database.Where{"id": tokenID.String()}, nil, nil)
+func getCredentialProvider(ctx context.Context, q database.Querier, input model.SessionRequest) (primitives.CredentialProvider, error) {
+	if input.Email != nil {
+		filter := database.NewFilter(database.Where{"email": input.Email.String()}, nil, nil)
+		user := &primitives.User{}
+		err := q.QueryOne(ctx, user, filter)
+		return user, err
+	}
 
 	token := &primitives.Token{}
-	err := db.QueryOne(ctx, token, filter)
+	err := q.Get(ctx, *input.TokenID, token)
+	if err != nil {
+		return nil, err
+	}
 
-	return token, err
+	return token, nil
 }
 
 // buildAttachment takes a primitives attachment and builds at graphql
@@ -201,40 +200,36 @@ func hasRole(roles []*primitives.Role, label primitives.Label) bool {
 	return found
 }
 
-func createConfig(ctx context.Context, db database.Querier, resolver *mutationResolver) (*crypto.KeyURL, *auth.Keypair, error) {
+func createConfig(rootKey [32]byte) (*primitives.Config, *crypto.KeyURL, *auth.Keypair, error) {
 	encryptionKey, err := crypto.NewBase64KeyURL(nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	encryptedKey, err := crypto.Encrypt(resolver.RootKey, []byte(encryptionKey.String()))
+	encryptedKey, err := crypto.Encrypt(rootKey, []byte(encryptionKey.String()))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	keypair, err := auth.NewKeypair()
 	if err != nil {
-		return nil, nil, err
-	}
-	by, err := json.Marshal(keypair)
-	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	encryptedAuth, err := crypto.Encrypt(resolver.RootKey, by)
+	by, err := json.Marshal(keypair.Package())
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
+	}
+
+	encryptedAuth, err := crypto.Encrypt(rootKey, by)
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
 	config, err := primitives.NewConfig(base64.New(encryptedKey), base64.New(encryptedAuth))
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	err = db.Create(ctx, config)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return encryptionKey, keypair, nil
+	return config, encryptionKey, keypair, nil
 }

@@ -25,12 +25,28 @@ func (t *testCoordinatorProvider) GetCoordinator() Coordinator {
 	return t.coordinator
 }
 
-type testCoordinator struct{}
+type testCoordinator struct {
+	cf *auth.CredentialFactory
+}
+
+func newTestCoordinator() (*testCoordinator, error) {
+	cf, err := auth.NewCredentialFactory(primitives.SHA256)
+	if err != nil {
+		return nil, err
+	}
+
+	return &testCoordinator{
+		cf: cf,
+	}, nil
+}
 
 func (t *testCoordinator) ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error) {
-	creds, _ := auth.NewCredentials([]byte("secret-hey"), nil)
-	pCreds, _ := creds.Package()
-	return primitives.NewUser("BOB GEORGE", primitives.Email{Email: "bob@george.com"}, pCreds)
+	creds, err := t.cf.Generate("hellosignmeup")
+	if err != nil {
+		return nil, err
+	}
+
+	return primitives.NewUser("BOB GEORGE", primitives.Email{Email: "bob@george.com"}, creds)
 }
 
 func (t *testCoordinator) GetIdentityPolicies(ctx context.Context, id database.ID) ([]*primitives.Policy, error) {
@@ -72,7 +88,12 @@ func (t *TestStream) RecvMsg(m interface{}) error {
 func TestInterceptors(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	t.Run("test auth stream", func(t *testing.T) {
+	tc, err := newTestCoordinator()
+	gm.Expect(err).To(gm.BeNil())
+
+	cp := &testCoordinatorProvider{coordinator: tc}
+
+	t.Run("test auth", func(t *testing.T) {
 		wasCalled := false
 
 		ctx := context.Background()
@@ -80,7 +101,7 @@ func TestInterceptors(t *testing.T) {
 		ctx = metadata.NewIncomingContext(ctx, md)
 
 		info := &grpc.StreamServerInfo{IsServerStream: true}
-		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		interceptor := Interceptor{cp}
 		err := interceptor.AuthStreamInterceptor(interceptor.provider, &TestStream{ctx: ctx}, info,
 			func(srv interface{}, stream grpc.ServerStream) error {
 				wasCalled = true
@@ -98,7 +119,7 @@ func TestInterceptors(t *testing.T) {
 		md := metadata.Pairs("authorization", "Bearer: acooltoken")
 		ctx = metadata.NewIncomingContext(ctx, md)
 
-		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		interceptor := Interceptor{cp}
 		f := func(ctx context.Context, req interface{}) (interface{}, error) {
 			wasCalled = true
 			return nil, nil
@@ -115,7 +136,7 @@ func TestInterceptors(t *testing.T) {
 		ctx := context.Background()
 
 		info := &grpc.StreamServerInfo{IsServerStream: true}
-		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		interceptor := Interceptor{cp}
 		err := interceptor.AuthStreamInterceptor(interceptor.provider, &TestStream{ctx: ctx}, info,
 			func(srv interface{}, stream grpc.ServerStream) error {
 				wasCalled = true
@@ -131,7 +152,7 @@ func TestInterceptors(t *testing.T) {
 
 		ctx := context.Background()
 
-		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		interceptor := Interceptor{cp}
 		f := func(ctx context.Context, req interface{}) (interface{}, error) {
 			wasCalled = true
 			return nil, nil
@@ -148,7 +169,7 @@ func TestInterceptors(t *testing.T) {
 		ctx := context.Background()
 
 		info := &grpc.StreamServerInfo{IsServerStream: true}
-		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		interceptor := Interceptor{cp}
 		err := interceptor.ErrorStreamInterceptor(interceptor.provider, &TestStream{ctx: ctx}, info,
 			func(srv interface{}, stream grpc.ServerStream) error {
 				wasCalled = true
@@ -164,7 +185,7 @@ func TestInterceptors(t *testing.T) {
 		wasCalled := false
 
 		ctx := context.Background()
-		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		interceptor := Interceptor{cp}
 		f := func(ctx context.Context, req interface{}) (interface{}, error) {
 			wasCalled = true
 			return nil, auth.ErrorInvalidAuthHeader
@@ -185,7 +206,7 @@ func TestInterceptors(t *testing.T) {
 
 		stream := &TestStream{ctx: ctx}
 		info := &grpc.StreamServerInfo{IsServerStream: true}
-		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		interceptor := Interceptor{cp}
 		err := interceptor.RequestIDStreamInterceptor(interceptor.provider, stream, info,
 			func(srv interface{}, stream grpc.ServerStream) error {
 				wasCalled = true
@@ -207,7 +228,7 @@ func TestInterceptors(t *testing.T) {
 		var tag interface{}
 
 		ctx := context.Background()
-		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		interceptor := Interceptor{cp}
 		f := func(ctx context.Context, req interface{}) (interface{}, error) {
 			wasCalled = true
 			tag = ctx.Value(fw.RequestIDContextKey)

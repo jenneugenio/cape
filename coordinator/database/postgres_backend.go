@@ -61,7 +61,8 @@ func (p *PostgresBackend) Transaction(ctx context.Context) (Transaction, error) 
 	// interface while `tx` is a straight pgx.Tx type
 	return &PostgresTransaction{
 		postgresQuerier: &postgresQuerier{
-			conn: pgtx,
+			conn:  pgtx,
+			codec: p.codec,
 		},
 		tx: pgtx,
 	}, nil

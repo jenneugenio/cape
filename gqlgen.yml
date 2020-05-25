@@ -46,8 +46,6 @@ models:
     model: github.com/capeprivacy/cape/primitives.CredentialsAlgType
   SourceType:
     model: github.com/capeprivacy/cape/primitives.SourceType
-  TokenType:
-    model: github.com/capeprivacy/cape/primitives.TokenType
   ServiceType:
     model: github.com/capeprivacy/cape/primitives.ServiceType
   AuthCredentials:
@@ -68,3 +66,5 @@ models:
     model: github.com/capeprivacy/cape/primitives.PolicySpec
   Token:
     model: github.com/capeprivacy/cape/primitives.Token
+  Password:
+    model: github.com/capeprivacy/cape/primitives.Password

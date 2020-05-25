@@ -119,7 +119,7 @@ func createTokenCmd(c *cli.Context) error {
 		return err
 	}
 
-	token, err := client.CreateToken(c.Context, identity)
+	apiToken, _, err := client.CreateToken(c.Context, identity)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func createTokenCmd(c *cli.Context) error {
 		return err
 	}
 
-	tokenStr, err := token.Marshal()
+	tokenStr, err := apiToken.Marshal()
 	if err != nil {
 		return err
 	}

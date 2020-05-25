@@ -35,9 +35,16 @@ var (
 	// AuthorizationFailure is caused by authorization not being given
 	AuthorizationFailure = errors.NewCause(errors.UnauthorizedCategory, "authorization_failure")
 
+	// MismatchingCredentials is caused when the provided secret does not match
+	MismatchingCredentials = errors.NewCause(errors.BadRequestCategory, "mismatching_credentials")
+	ErrBadCredentials      = errors.New(MismatchingCredentials, "The credentials you provided do not match.")
+
 	// ErrAuthentication is the error wrapping the AuthenticationFailure cause
 	ErrAuthentication = errors.New(AuthenticationFailure, "Failed to authenticate")
 
 	// ErrAuthorization is the error wrapping the AuthorizationFailure cause
 	ErrAuthorization = errors.New(AuthorizationFailure, "Access denied")
+
+	// ProducerNotFound occurs when the given algorithm does not exist
+	ProducerNotFound = errors.NewCause(errors.NotFoundCategory, "producer_not_found")
 )

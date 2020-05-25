@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/capeprivacy/cape/auth"
+
+	"github.com/urfave/cli/v2"
+
 	"github.com/capeprivacy/cape/cmd/config"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
-	"github.com/urfave/cli/v2"
 )
 
 func init() {
@@ -66,41 +67,27 @@ func setupCoordinatorCmd(c *cli.Context) error {
 		return err
 	}
 
-	creds, err := auth.NewCredentials(password.Bytes(), nil)
-	if err != nil {
-		return err
-	}
-
-	pCreds, err := creds.Package()
-	if err != nil {
-		return err
-	}
-
-	user, err := primitives.NewUser(name, email, pCreds)
-	if err != nil {
-		return err
-	}
-
 	provider := GetProvider(c.Context)
 	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
 
-	_, err = client.Setup(c.Context, user)
+	_, err = client.Setup(c.Context, name, email, password)
 	if err != nil {
 		return err
 	}
 
 	// Now, log in our admin!
-	session, err := client.EmailLogin(c.Context, email, []byte(password))
+	session, err := client.EmailLogin(c.Context, email, password)
 	if err != nil {
 		return err
 	}
 
 	// Now that we're logged in, update the token on our cluster
-	cluster.AuthToken = session.Token.String()
+	cluster.SetToken(session.Token)
 
+	// Set the just setup cluster to the current cluster
 	err = cfg.Use(label)
 	if err != nil {
 		return err

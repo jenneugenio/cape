@@ -1,7 +1,13 @@
 package primitives
 
 import (
+	"context"
+	"encoding/json"
+
+	"github.com/manifoldco/go-base64"
+
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
@@ -9,8 +15,15 @@ import (
 // User represents a user of the system
 type User struct {
 	*IdentityImpl
-	Name        Name `json:"name"`
-	Credentials *Credentials
+	Name Name `json:"name"`
+
+	// We never want to send Credentials over the wire!
+	Credentials *Credentials `json:"credentials" gqlgen:"-"`
+}
+
+type encryptedUser struct {
+	*User
+	Credentials *base64.Value `json:"credentials"`
 }
 
 func (u *User) Validate() error {
@@ -71,6 +84,76 @@ func (u *User) GetEmail() Email {
 	return u.Email
 }
 
+func (u *User) Encrypt(ctx context.Context, codec crypto.EncryptionCodec) ([]byte, error) {
+	creds, err := json.Marshal(u.Credentials)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := codec.Encrypt(ctx, base64.New(creds))
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(encryptedUser{
+		User:        u,
+		Credentials: data,
+	})
+}
+
+func (u *User) Decrypt(ctx context.Context, codec crypto.EncryptionCodec, data []byte) error {
+	in := &encryptedUser{}
+	err := json.Unmarshal(data, in)
+	if err != nil {
+		return err
+	}
+
+	unencrypted, err := codec.Decrypt(ctx, in.Credentials)
+	if err != nil {
+		return err
+	}
+
+	creds := &Credentials{}
+	err = json.Unmarshal([]byte(*unencrypted), creds)
+	if err != nil {
+		return err
+	}
+
+	u.IdentityImpl = in.IdentityImpl
+	u.Name = in.Name
+
+	u.Credentials = creds
+	return nil
+}
+
 func (u *User) GetEncryptable() bool {
-	return false
+	return true
+}
+
+// GenerateUser returns an instantiated user for use in unit testing
+//
+// This function _should only ever_ be used inside of a test.
+func GenerateUser(name, email string) (Password, *User, error) {
+	password, err := GeneratePassword()
+	if err != nil {
+		return EmptyPassword, nil, err
+	}
+
+	n, err := NewName(name)
+	if err != nil {
+		return EmptyPassword, nil, err
+	}
+
+	e, err := NewEmail(email)
+	if err != nil {
+		return EmptyPassword, nil, err
+	}
+
+	c, err := GenerateCredentials()
+	if err != nil {
+		return EmptyPassword, nil, err
+	}
+
+	user, err := NewUser(n, e, c)
+	return password, user, err
 }

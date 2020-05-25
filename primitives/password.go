@@ -1,6 +1,10 @@
 package primitives
 
 import (
+	"crypto/rand"
+
+	"github.com/manifoldco/go-base64"
+
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
@@ -9,6 +13,11 @@ const MinPasswordLength = 8
 
 // MaxPasswordLength represents the maximum length of a Cape password
 const MaxPasswordLength = 32
+
+// PasswordByteLength represents the number of bytes used to generate a Cape password
+const PasswordByteLength = 16
+
+var EmptyPassword = Password("")
 
 // Password represents a password used by a user to log into a cape account.
 //
@@ -45,4 +54,16 @@ func (p Password) Bytes() []byte {
 func NewPassword(input string) (Password, error) {
 	p := Password(input)
 	return p, p.Validate()
+}
+
+// GeneratePassword returns a new password using random data sourced from a
+// cryptographically strong pseudorandom source.
+func GeneratePassword() (Password, error) {
+	bytes := make([]byte, PasswordByteLength)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return Password(""), err
+	}
+
+	return Password(base64.New(bytes).String()), nil
 }

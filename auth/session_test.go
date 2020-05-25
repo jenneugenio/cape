@@ -12,17 +12,20 @@ import (
 func TestCan(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	creds, err := NewCredentials([]byte("jerryberrybuddyboy"), nil)
+	factory, err := NewCredentialFactory(primitives.SHA256)
 	gm.Expect(err).To(gm.BeNil())
 
 	email, err := primitives.NewEmail("jerry@jerry.berry")
 	gm.Expect(err).To(gm.BeNil())
 
-	pCreds, err := creds.Package()
+	password, err := primitives.GeneratePassword()
+	gm.Expect(err).To(gm.BeNil())
+
+	creds, err := factory.Generate(password)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("denied no rules", func(t *testing.T) {
-		user, err := primitives.NewUser("Jerry Berry", email, pCreds)
+		user, err := primitives.NewUser("Jerry Berry", email, creds)
 		gm.Expect(err).To(gm.BeNil())
 
 		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{}, []*primitives.Role{}, user)
@@ -34,7 +37,7 @@ func TestCan(t *testing.T) {
 	})
 
 	t.Run("denied deny rule exists", func(t *testing.T) {
-		user, err := primitives.NewUser("Jerry Berry", email, pCreds)
+		user, err := primitives.NewUser("Jerry Berry", email, creds)
 		gm.Expect(err).To(gm.BeNil())
 
 		spec := &primitives.PolicySpec{
@@ -61,7 +64,7 @@ func TestCan(t *testing.T) {
 	})
 
 	t.Run("allowed rules", func(t *testing.T) {
-		user, err := primitives.NewUser("Jerry Berry", email, pCreds)
+		user, err := primitives.NewUser("Jerry Berry", email, creds)
 		gm.Expect(err).To(gm.BeNil())
 
 		spec := &primitives.PolicySpec{

@@ -4,7 +4,11 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
+
+	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestKeypair(t *testing.T) {
@@ -40,5 +44,120 @@ func TestKeypair(t *testing.T) {
 		new, err := in.Unpackage()
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(new).To(gm.Equal(kp))
+	})
+
+	t.Run("derivekeypair", func(t *testing.T) {
+		kp, err := NewKeypair()
+		gm.Expect(err).To(gm.BeNil())
+
+		tests := []struct {
+			name   string
+			secret []byte
+			salt   []byte
+			cause  *errors.Cause
+		}{
+			{
+				name:   "valid",
+				secret: kp.secret,
+				salt:   kp.salt,
+			},
+			{
+				name:   "bad secret length",
+				secret: kp.secret[:3],
+				salt:   kp.salt,
+				cause:  &BadSecretLength,
+			},
+			{
+				name:   "bad salt length",
+				secret: kp.secret,
+				salt:   kp.salt[:3],
+				cause:  &BadSaltLength,
+			},
+		}
+
+		for _, tc := range tests {
+			t.Run(tc.name, func(t *testing.T) {
+				kp, err := DeriveKeypair(tc.secret, tc.salt)
+				if tc.cause != nil {
+					gm.Expect(errors.FromCause(err, *tc.cause)).To(gm.BeTrue())
+					gm.Expect(kp).To(gm.BeNil())
+					return
+				}
+
+				gm.Expect(len(kp.salt)).To(gm.Equal(primitives.SaltLength))
+				gm.Expect(len(kp.secret)).To(gm.Equal(SecretLength))
+				gm.Expect(len(kp.PrivateKey)).To(gm.Equal(64))
+				gm.Expect(len(kp.PublicKey)).To(gm.Equal(32))
+				gm.Expect(kp.Alg).To(gm.Equal(primitives.EDDSA))
+			})
+		}
+	})
+
+	t.Run("keypair package validation", func(t *testing.T) {
+		kp, err := NewKeypair()
+		gm.Expect(err).To(gm.BeNil())
+
+		tests := []struct {
+			name   string
+			secret []byte
+			salt   []byte
+			alg    primitives.CredentialsAlgType
+			cause  *errors.Cause
+		}{
+			{
+				name:   "valid keypair",
+				secret: kp.secret,
+				salt:   kp.salt,
+				alg:    kp.Alg,
+			},
+			{
+				name:   "missing salt",
+				secret: kp.secret,
+				alg:    kp.Alg,
+				cause:  &BadSaltLength,
+			},
+			{
+				name:  "missing secret",
+				salt:  kp.salt,
+				alg:   kp.Alg,
+				cause: &BadSecretLength,
+			},
+			{
+				name:   "wrong salt length",
+				salt:   kp.salt[:4],
+				secret: kp.secret,
+				alg:    kp.Alg,
+				cause:  &BadSaltLength,
+			},
+			{
+				name:   "wrong secret length",
+				salt:   kp.salt,
+				secret: kp.secret[:2],
+				alg:    kp.Alg,
+				cause:  &BadSecretLength,
+			},
+			{
+				name:   "wrong alg",
+				salt:   kp.salt,
+				secret: kp.secret,
+				alg:    primitives.SHA256,
+				cause:  &BadAlgType,
+			},
+		}
+
+		for _, tc := range tests {
+			t.Run(tc.name, func(t *testing.T) {
+				pkg := &KeypairPackage{
+					Secret: base64.New(tc.secret),
+					Salt:   base64.New(tc.salt),
+					Alg:    tc.alg,
+				}
+
+				err := pkg.Validate()
+				if tc.cause != nil {
+					gm.Expect(errors.FromCause(err, *tc.cause)).To(gm.BeTrue())
+				}
+			})
+		}
 	})
 }

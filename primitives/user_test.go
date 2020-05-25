@@ -1,38 +1,61 @@
 package primitives
 
 import (
-	"crypto/ed25519"
+	"context"
 	"testing"
 
-	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func TestUser(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	pub, _, _ := ed25519.GenerateKey(nil)
-	pkey := base64.New(pub)
-	salt := base64.New([]byte("SALTSALTSALTSALT"))
+	name, err := NewName("my-name")
+	gm.Expect(err).To(gm.BeNil())
 
-	creds, err := NewCredentials(pkey, salt)
+	creds, err := GenerateCredentials()
 	gm.Expect(err).To(gm.BeNil())
 
 	email, err := NewEmail("email@email.com")
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("new user", func(t *testing.T) {
-		name := Name("my-name")
 		user, err := NewUser(name, email, creds)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(user.Email).To(gm.Equal(email))
 		gm.Expect(user.Name).To(gm.Equal(name))
-		gm.Expect(user.Credentials.Alg).To(gm.Equal(EDDSA))
-		gm.Expect(user.Credentials.Salt).To(gm.Equal(salt))
-		gm.Expect(user.Credentials.PublicKey).To(gm.Equal(pkey))
+		gm.Expect(user.Credentials.Alg).To(gm.Equal(SHA256))
+		gm.Expect(user.Credentials.Salt).To(gm.Equal(creds.Salt))
+		gm.Expect(user.Credentials.Secret).To(gm.Equal(creds.Secret))
+	})
+
+	t.Run("test encrypt & decrypt", func(t *testing.T) {
+		user, err := NewUser(name, email, creds)
+		gm.Expect(err).To(gm.BeNil())
+
+		key, err := crypto.NewBase64KeyURL(nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		kms, err := crypto.LoadKMS(key)
+		gm.Expect(err).To(gm.BeNil())
+
+		defer kms.Close()
+
+		codec := crypto.NewSecretBoxCodec(kms)
+		ctx := context.Background()
+
+		out, err := user.Encrypt(ctx, codec)
+		gm.Expect(err).To(gm.BeNil())
+
+		newUser := &User{}
+		err = newUser.Decrypt(ctx, codec, out)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(newUser.Validate()).To(gm.BeNil())
+		gm.Expect(newUser).To(gm.Equal(user))
 	})
 
 	badEmail := Email{

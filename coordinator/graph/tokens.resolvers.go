@@ -14,7 +14,8 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
-func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTokenRequest) (*primitives.Token, error) {
+func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTokenRequest) (*model.CreateTokenResponse, error) {
+	logger := fw.Logger(ctx)
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -42,22 +43,33 @@ func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTo
 		return nil, errs.New(auth.AuthorizationFailure, "Can only create a token for yourself")
 	}
 
-	creds, err := primitives.NewCredentials(&input.PublicKey, &input.Salt)
+	password, err := primitives.GeneratePassword()
 	if err != nil {
+		return nil, err
+	}
+
+	creds, err := r.CredentialFactory.Generate(password)
+	if err != nil {
+		logger.Info().Err(err).Msg("Could not generate credentials")
 		return nil, err
 	}
 
 	token, err := primitives.NewToken(input.IdentityID, creds)
 	if err != nil {
+		logger.Info().Err(err).Msg("Could not create token")
 		return nil, err
 	}
 
 	err = enforcer.Create(ctx, token)
 	if err != nil {
+		logger.Info().Err(err).Msg("Could not insert token into database")
 		return nil, err
 	}
 
-	return token, nil
+	return &model.CreateTokenResponse{
+		Secret: password,
+		Token:  token,
+	}, nil
 }
 
 func (r *mutationResolver) RemoveToken(ctx context.Context, id database.ID) (database.ID, error) {

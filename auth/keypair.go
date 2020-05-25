@@ -24,20 +24,19 @@ const (
 	SeedSize = 32
 )
 
-// Keypair represents a ed25519 Private and Public Keypair. This struct is used
-// by our TokenAuthority and Credentials struct to derive and package up
-// Keypairs.
+// Keypair represents a ed25519 Private and Public Keypair. This struct is
+// used by our TokenAuthority.
 //
-// It is a wrapper around ed25519 and implements functionality for packaging up
-// and rederiving keypairs. This is particularly useful for creating and
+// It is a wrapper around ed25519 and implements functionality for packaging
+// up and rederiving keypairs. This is particularly useful for creating and
 // recreating Token Authorities.
 type Keypair struct {
 	secret     []byte
 	salt       []byte
-	PrivateKey ed25519.PrivateKey `json:"private_key"`
+	PrivateKey ed25519.PrivateKey `json:"-"`
 
-	PublicKey ed25519.PublicKey             `json:"public_key"`
-	Alg       primitives.CredentialsAlgType `json:"alg"`
+	PublicKey ed25519.PublicKey             `json:"-"`
+	Alg       primitives.CredentialsAlgType `json:"-"`
 }
 
 // KeypairPackage represents a packaged keypair that can be shared outside of
@@ -91,10 +90,11 @@ func (k *Keypair) Package() KeypairPackage {
 	}
 }
 
-// DeriveKeypair returns a new keypair for
+// DeriveKeypair deterministically dervies a keypair using the provided secret
+// & salt
 func DeriveKeypair(secret []byte, salt []byte) (*Keypair, error) {
 	if len(salt) != primitives.SaltLength {
-		return nil, errors.New(BadSaltLength, "Salt must be at least %d bytes long, saw %d",
+		return nil, errors.New(BadSaltLength, "Salt must be at %d bytes long, saw %d",
 			primitives.SaltLength, len(salt))
 	}
 
@@ -135,18 +135,6 @@ func NewKeypair() (*Keypair, error) {
 	}
 
 	_, err = rand.Read(salt)
-	if err != nil {
-		return nil, err
-	}
-
-	return DeriveKeypair(secret, salt)
-}
-
-// NewKeypairWithSecret returns a keypair generated from the provided secret
-// and a generated salt!
-func NewKeypairWithSecret(secret []byte) (*Keypair, error) {
-	salt := make([]byte, primitives.SaltLength)
-	_, err := rand.Read(salt)
 	if err != nil {
 		return nil, err
 	}

@@ -20,7 +20,9 @@ type Config struct {
 	// root key.
 	EncryptionKey *base64.Value `json:"encryption_key"`
 
-	Auth *base64.Value `json:"auth"`
+	// AuthKeypair is encrypted using the root key, similar, to how the
+	// EncryptionKey is encrypted.
+	AuthKeypair *base64.Value `json:"auth_keypair"`
 }
 
 func (c *Config) Validate() error {
@@ -32,6 +34,14 @@ func (c *Config) Validate() error {
 		return errors.New(InvalidConfigCause, "Config setup must be true")
 	}
 
+	if c.EncryptionKey == nil {
+		return errors.New(InvalidConfigCause, "An encryption key must be set")
+	}
+
+	if c.AuthKeypair == nil {
+		return errors.New(InvalidConfigCause, "An auth keypair must be set")
+	}
+
 	return nil
 }
 
@@ -41,7 +51,7 @@ func (c *Config) GetType() types.Type {
 }
 
 // NewConfig returns a new Config primitive
-func NewConfig(encryptionKey *base64.Value, auth *base64.Value) (*Config, error) {
+func NewConfig(encryptionKey *base64.Value, authKeypair *base64.Value) (*Config, error) {
 	p, err := database.NewPrimitive(ConfigType)
 	if err != nil {
 		return nil, err
@@ -51,12 +61,15 @@ func NewConfig(encryptionKey *base64.Value, auth *base64.Value) (*Config, error)
 		Primitive:     p,
 		Setup:         true,
 		EncryptionKey: encryptionKey,
-		Auth:          auth,
+		AuthKeypair:   authKeypair,
 	}
 
 	return cfg, cfg.Validate()
 }
 
+// GetEncryptable completes the crypto.Encryptable interface. While Config
+// stores encrypted values _it does not_ actually get encrypted itself due to
+// the race condition of the "encryption key" being stored.
 func (c *Config) GetEncryptable() bool {
 	return false
 }

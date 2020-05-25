@@ -9,7 +9,6 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/primitives"
@@ -97,12 +96,7 @@ func createUsers(ctx context.Context, client *coordinator.Client, numUsers int) 
 			return nil, err
 		}
 
-		user, err := createUserPrimitive(name, email, []byte("randompassword"))
-		if err != nil {
-			return nil, err
-		}
-
-		_, err = client.CreateUser(ctx, user)
+		user, _, err := client.CreateUser(ctx, name, email)
 		if err != nil {
 			return nil, err
 		}
@@ -111,23 +105,4 @@ func createUsers(ctx context.Context, client *coordinator.Client, numUsers int) 
 	}
 
 	return users, nil
-}
-
-func createUserPrimitive(name primitives.Name, email primitives.Email, secret []byte) (*primitives.User, error) {
-	creds, err := auth.NewCredentials(secret, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	pCreds, err := creds.Package()
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := primitives.NewUser(name, email, pCreds)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
 }

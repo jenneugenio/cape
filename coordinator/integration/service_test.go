@@ -232,13 +232,13 @@ func TestServiceLogin(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(service.Email).To(gm.Equal(email))
 
-	token, err := client.CreateToken(ctx, service)
+	apiToken, _, err := client.CreateToken(ctx, service)
 	gm.Expect(err).To(gm.BeNil())
 
 	serviceClient, err := h.Client()
 	gm.Expect(err).To(gm.BeNil())
 
-	_, err = serviceClient.TokenLogin(ctx, token)
+	_, err = serviceClient.TokenLogin(ctx, apiToken)
 	gm.Expect(err).To(gm.BeNil())
 
 	sources, err := serviceClient.ListSources(ctx)

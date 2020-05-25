@@ -20,7 +20,7 @@ const AdminPassword = "iamtheadmin"
 type User struct {
 	Client   *coordinator.Client
 	User     *primitives.User
-	Password []byte
+	Password primitives.Password
 	Token    *base64.Value
 }
 
@@ -56,8 +56,7 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 		return nil, err
 	}
 
-	pw := []byte(AdminPassword)
-	creds, err := auth.NewCredentials(pw, nil)
+	password, err := primitives.NewPassword(AdminPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -67,17 +66,12 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 		return nil, err
 	}
 
-	pCreds, err := creds.Package()
+	name, err := primitives.NewName(AdminName)
 	if err != nil {
 		return nil, err
 	}
 
-	u, err := primitives.NewUser(AdminName, email, pCreds)
-	if err != nil {
-		return nil, err
-	}
-
-	u, err = client.Setup(ctx, u)
+	u, err := client.Setup(ctx, name, email, password)
 	if err != nil {
 		return nil, err
 	}
@@ -85,10 +79,10 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 	user := &User{
 		Client:   client,
 		User:     u,
-		Password: pw,
+		Password: password,
 	}
 
-	session, err := client.EmailLogin(ctx, email, pw)
+	session, err := client.EmailLogin(ctx, email, password)
 	if err != nil {
 		return nil, err
 	}
@@ -131,14 +125,14 @@ func (m *Manager) CreateService(ctx context.Context, email string, serviceURL *p
 		return err
 	}
 
-	token, err := m.Admin.Client.CreateToken(ctx, service)
+	apiToken, _, err := m.Admin.Client.CreateToken(ctx, service)
 	if err != nil {
 		return err
 	}
 
 	m.Connector = &Service{
 		ID:    service.ID,
-		Token: token,
+		Token: apiToken,
 	}
 
 	return nil

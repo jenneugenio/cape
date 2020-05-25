@@ -11,13 +11,11 @@ import (
 )
 
 // IsAuthenticatedFn is a type alias for the function signaute of the directive
-type IsAuthenticatedFn func(context.Context, interface{},
-	graphql.Resolver, primitives.TokenType) (interface{}, error)
+type IsAuthenticatedFn func(context.Context, interface{}, graphql.Resolver) (interface{}, error)
 
 // IsAuthenticatedDirective checks to make sure a query is authenticated
 func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAuthority) IsAuthenticatedFn {
-	return func(ctx context.Context, obj interface{},
-		next graphql.Resolver, typeArg primitives.TokenType) (interface{}, error) {
+	return func(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
 		logger := Logger(ctx)
 		token := AuthToken(ctx)
 

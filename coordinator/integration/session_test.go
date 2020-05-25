@@ -41,7 +41,6 @@ func TestSessions(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(session.IdentityID).To(gm.Equal(m.Admin.User.ID))
-		gm.Expect(session.Type).To(gm.Equal(primitives.Authenticated))
 		gm.Expect(session.Token).ToNot(gm.BeNil())
 	})
 
@@ -54,7 +53,10 @@ func TestSessions(t *testing.T) {
 		email, err := primitives.NewEmail("fake@fake.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := client.EmailLogin(ctx, email, []byte("newpasswordwhodis"))
+		password, err := primitives.NewPassword("newpasswordwhodis")
+		gm.Expect(err).To(gm.BeNil())
+
+		session, err := client.EmailLogin(ctx, email, password)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(session).To(gm.BeNil())
 
@@ -67,8 +69,11 @@ func TestSessions(t *testing.T) {
 		client, err := h.Client()
 		gm.Expect(err).To(gm.BeNil())
 
+		password, err := primitives.NewPassword("idontknowmypassword")
+		gm.Expect(err).To(gm.BeNil())
+
 		// fail because credentials inside login won't be right
-		session, err := client.EmailLogin(ctx, m.Admin.User.Email, []byte("idontknowmypassword"))
+		session, err := client.EmailLogin(ctx, m.Admin.User.Email, password)
 		gm.Expect(session).To(gm.BeNil())
 
 		gm.Expect(err).ToNot(gm.BeNil())
@@ -104,13 +109,20 @@ func TestSessions(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(session.IdentityID).To(gm.Equal(m.Admin.User.ID))
-		gm.Expect(session.Type).To(gm.Equal(primitives.Authenticated))
 		gm.Expect(session.Token).ToNot(gm.BeNil())
 
 		identity, err := client.Me(ctx)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(identity.GetID()).To(gm.Equal(session.IdentityID))
 		gm.Expect(identity.GetEmail()).To(gm.Equal(m.Admin.User.Email))
+
+		// Credentials should never be leaked from the server
+		provider, ok := identity.(primitives.CredentialProvider)
+		gm.Expect(ok).To(gm.BeTrue())
+
+		creds, err := provider.GetCredentials()
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(creds).To(gm.BeNil())
 	})
 
 	t.Run("non-auth'd user cannot retrieve their identity", func(t *testing.T) {

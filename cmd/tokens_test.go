@@ -1,10 +1,8 @@
 package main
 
 import (
-	"crypto/ed25519"
 	"testing"
 
-	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/cmd/ui"
@@ -16,16 +14,10 @@ import (
 func TestCreateToken(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	pub, _, _ := ed25519.GenerateKey(nil)
-	pkey := base64.New(pub)
-	salt := base64.New([]byte("SALTSALTSALTSALT"))
-	creds, err := primitives.NewCredentials(pkey, salt)
+	password, user, err := primitives.GenerateUser("bob", "bob@bob.bob")
 	gm.Expect(err).To(gm.BeNil())
 
-	email, err := primitives.NewEmail("bob@bob.bob")
-	gm.Expect(err).To(gm.BeNil())
-
-	user, err := primitives.NewUser("Bob", email, creds)
+	creds, err := primitives.GenerateCredentials()
 	gm.Expect(err).To(gm.BeNil())
 
 	me := coordinator.MeResponse{Identity: &primitives.IdentityImpl{
@@ -42,7 +34,10 @@ func TestCreateToken(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		resp := coordinator.CreateTokenResponse{
-			Token: *token,
+			Response: &coordinator.CreateTokenMutation{
+				Secret: password,
+				Token:  token,
+			},
 		}
 
 		app, u := NewHarness([]interface{}{me, resp})

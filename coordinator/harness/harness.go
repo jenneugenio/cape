@@ -136,9 +136,10 @@ func (h *Harness) Setup(ctx context.Context) error {
 		DB: &coordinator.DBConfig{
 			Addr: dbURL,
 		},
-		InstanceID: "cape",
-		Port:       1, // This port is ignored!
-		RootKey:    base64.New(rootKey[:]),
+		InstanceID:            "cape",
+		Port:                  1, // This port is ignored!
+		RootKey:               base64.New(rootKey[:]),
+		CredentialProducerAlg: primitives.SHA256,
 	}, logger)
 	if err != nil {
 		return err

@@ -22,6 +22,14 @@ type Config struct {
 	// be stored in a separate config file in a secret or
 	// other secure location.
 	RootKey *base64.Value `json:"root_key"`
+
+	// The kdf algorithm is not externally configurable (e.g. not available on
+	// the configuration file) as it's only required to be configurable for
+	// testing.
+	//
+	// In future when we support more than one production algorithm we can
+	// expose this feature to customers.
+	CredentialProducerAlg primitives.CredentialsAlgType `json:"-"`
 }
 
 // DBConfig represent the database configuration

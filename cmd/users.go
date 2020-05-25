@@ -1,13 +1,10 @@
 package main
 
 import (
-	"crypto/rand"
 	"fmt"
 
-	"github.com/manifoldco/go-base64"
 	"github.com/urfave/cli/v2"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -57,34 +54,12 @@ func usersCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	secretBytes := make([]byte, auth.GeneratedSecretByteLength)
-	_, err = rand.Read(secretBytes)
-	if err != nil {
-		return err
-	}
-
-	password := base64.New(secretBytes).String()
-	creds, err := auth.NewCredentials([]byte(password), nil)
-	if err != nil {
-		return err
-	}
-
-	pCreds, err := creds.Package()
-	if err != nil {
-		return err
-	}
-
-	user, err := primitives.NewUser(name, email, pCreds)
-	if err != nil {
-		return err
-	}
-
 	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
 
-	_, err = client.CreateUser(c.Context, user)
+	_, password, err := client.CreateUser(c.Context, name, email)
 	if err != nil {
 		return err
 	}

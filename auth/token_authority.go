@@ -10,15 +10,11 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 var (
-	// LoginTokenDuration how long login tokens last
-	LoginTokenDuration = time.Minute * 5
-
-	// AuthTokenDuration how long auth tokens last
-	AuthTokenDuration = time.Hour * 24
+	// TokenDuration how long auth tokens last
+	TokenDuration = time.Hour * 24
 )
 
 // TokenAuthority is the authority over token, it generates
@@ -76,7 +72,7 @@ func (t *TokenAuthority) PublicKey() ed25519.PublicKey {
 // - IssuedAt: time the JWT was issued
 // - NotBefore: the JWT will not be accepted before this time has passed
 // - Issuer: the service email of the issuing coordinator
-func (t *TokenAuthority) Generate(tokenType primitives.TokenType, sessionID database.ID) (*base64.Value, time.Time, error) {
+func (t *TokenAuthority) Generate(sessionID database.ID) (*base64.Value, time.Time, error) {
 	if t.keypair == nil {
 		return nil, time.Time{}, errors.New(MissingKeyPair, "Missing key pair cannot generate token")
 	}
@@ -88,18 +84,7 @@ func (t *TokenAuthority) Generate(tokenType primitives.TokenType, sessionID data
 	}
 
 	now := time.Now().UTC()
-
-	var expiresIn time.Time
-	switch tokenType {
-	case primitives.Login:
-		expiresIn = now.Add(LoginTokenDuration)
-	case primitives.Authenticated:
-		expiresIn = now.Add(AuthTokenDuration)
-	default:
-		return nil, time.Time{}, errors.New(primitives.InvalidTokenType,
-			"Invalid token type must be login or authenticated")
-	}
-
+	expiresIn := now.Add(TokenDuration)
 	cl := jwt.Claims{
 		ID:        sessionID.String(),
 		Issuer:    t.serviceEmail,

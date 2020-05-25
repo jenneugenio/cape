@@ -5,20 +5,13 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/manifoldco/go-base64"
+
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
-
-	"github.com/manifoldco/go-base64"
 )
-
-// AuthCredentials represents the credentials the
-// client will use to properly sign their challenge
-type AuthCredentials struct {
-	Salt *base64.Value
-	Alg  CredentialsAlgType
-}
 
 // Session holds all the session data required to authenticate API
 // calls with the server
@@ -27,10 +20,7 @@ type Session struct {
 	IdentityID database.ID   `json:"identity_id"`
 	OwnerID    database.ID   `json:"owner_id"`
 	ExpiresAt  time.Time     `json:"expires_at"`
-	Type       TokenType     `json:"type"`
 	Token      *base64.Value `json:"token"`
-
-	Credentials *AuthCredentials `json:"credentials"`
 }
 
 type encryptedSession struct {
@@ -56,7 +46,7 @@ func (s *Session) GetType() types.Type {
 }
 
 // NewSession returns a new Session struct
-func NewSession(identity CredentialProvider, typ TokenType) (*Session, error) {
+func NewSession(identity CredentialProvider) (*Session, error) {
 	p, err := database.NewPrimitive(SessionType)
 	if err != nil {
 		return nil, err
@@ -66,21 +56,6 @@ func NewSession(identity CredentialProvider, typ TokenType) (*Session, error) {
 		Primitive:  p,
 		IdentityID: identity.GetIdentityID(),
 		OwnerID:    identity.GetID(),
-		Type:       typ,
-
-		Credentials: nil,
-	}
-
-	if typ == Login {
-		creds, err := identity.GetCredentials()
-		if err != nil {
-			return nil, err
-		}
-
-		session.Credentials = &AuthCredentials{
-			Salt: creds.Salt,
-			Alg:  creds.Alg,
-		}
 	}
 
 	id, err := database.DeriveID(session)
@@ -122,8 +97,6 @@ func (s *Session) Decrypt(ctx context.Context, codec crypto.EncryptionCodec, dat
 	s.IdentityID = in.IdentityID
 	s.OwnerID = in.OwnerID
 	s.ExpiresAt = in.ExpiresAt
-	s.Type = in.Type
-	s.Credentials = in.Credentials
 
 	s.Token = unencrypted
 	return nil

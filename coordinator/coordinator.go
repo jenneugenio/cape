@@ -32,7 +32,8 @@ type Coordinator struct {
 	handler http.Handler
 	logger  *zerolog.Logger
 
-	tokenAuth *auth.TokenAuthority
+	tokenAuth         *auth.TokenAuthority
+	credentialFactory *auth.CredentialFactory
 }
 
 // Setup the coordinator so it's ready to be served!
@@ -97,13 +98,18 @@ func (c *Coordinator) setBackendCodec(cfg *primitives.Config) error {
 }
 
 func (c *Coordinator) setTokenAuthKeyPair(cfg *primitives.Config, rootKey *base64.Value) error {
-	unencrypted, err := decryptBase64s(rootKey, cfg.Auth)
+	unencrypted, err := decryptBase64s(rootKey, cfg.AuthKeypair)
 	if err != nil {
 		return err
 	}
 
-	kp := &auth.Keypair{}
-	err = json.Unmarshal(unencrypted, kp)
+	pkg := &auth.KeypairPackage{}
+	err = json.Unmarshal(unencrypted, pkg)
+	if err != nil {
+		return err
+	}
+
+	kp, err := pkg.Unpackage()
 	if err != nil {
 		return err
 	}
@@ -113,7 +119,11 @@ func (c *Coordinator) setTokenAuthKeyPair(cfg *primitives.Config, rootKey *base6
 	return nil
 }
 
-// New validates the input and returns a constructed Coordinator
+// New validates the input and returns a constructed Coordinator.
+//
+// If the mode is set to Testing then the Coordinator will use the SHA256
+// algorithm for hashing passwords. This mode should only be used within the
+// context of unit & integration tests.
 func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 	if cfg == nil {
 		return nil, errors.New(InvalidConfigCause, "Config must be provided")
@@ -136,10 +146,21 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		return nil, err
 	}
 
+	alg := primitives.Argon2ID
+	if cfg.CredentialProducerAlg != primitives.UnknownAlg {
+		alg = cfg.CredentialProducerAlg
+	}
+
+	credentialFactory, err := auth.NewCredentialFactory(alg)
+	if err != nil {
+		return nil, err
+	}
+
 	config := &generated.Config{Resolvers: &graph.Resolver{
-		Backend:        backend,
-		TokenAuthority: tokenAuth,
-		RootKey:        rootKey,
+		Backend:           backend,
+		TokenAuthority:    tokenAuth,
+		RootKey:           rootKey,
+		CredentialFactory: credentialFactory,
 	}}
 
 	config.Directives.IsAuthenticated = framework.IsAuthenticatedDirective(backend, tokenAuth)
@@ -163,11 +184,12 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 	).Then(health)
 
 	return &Coordinator{
-		cfg:       cfg,
-		handler:   chain,
-		backend:   backend,
-		logger:    logger,
-		tokenAuth: tokenAuth,
+		cfg:               cfg,
+		handler:           chain,
+		backend:           backend,
+		logger:            logger,
+		tokenAuth:         tokenAuth,
+		credentialFactory: credentialFactory,
 	}, nil
 }
 

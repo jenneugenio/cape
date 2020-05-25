@@ -1,10 +1,8 @@
 package primitives
 
 import (
-	"crypto/ed25519"
 	"testing"
 
-	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/database"
@@ -14,14 +12,7 @@ import (
 func TestAssignment(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	pub, _, _ := ed25519.GenerateKey(nil)
-	creds, err := NewCredentials(base64.New(pub), base64.New([]byte("SALTSALTSALTSALT")))
-	gm.Expect(err).To(gm.BeNil())
-
-	email, err := NewEmail("email@email.com")
-	gm.Expect(err).To(gm.BeNil())
-
-	user, err := NewUser(Name("name"), email, creds)
+	_, user, err := GenerateUser("name", "email@email.com")
 	gm.Expect(err).To(gm.BeNil())
 
 	role, err := NewRole(Label("role"), false)

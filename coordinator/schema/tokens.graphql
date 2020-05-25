@@ -1,22 +1,22 @@
 type Token {
     id: ID!
-    public_key: Base64!
-    salt: Base64!
-    alg: CredentialsAlgType!
+    identity_id: ID!
+}
+
+type CreateTokenResponse {
+    secret: Password!
+    token: Token!
 }
 
 input CreateTokenRequest {
     identity_id: ID!
-    public_key: Base64!
-    salt: Base64!
-    alg: CredentialsAlgType!
 }
 
 extend type Query {
-    tokens(identity_id: ID!): [ID!]! @isAuthenticated
+    tokens(identity_id: ID!): [ID!]! @isAuthenticated()
 }
 
 extend type Mutation {
-    createToken(input: CreateTokenRequest!): Token! @isAuthenticated
-    removeToken(id: ID!): ID! @isAuthenticated
+    createToken(input: CreateTokenRequest!): CreateTokenResponse! @isAuthenticated()
+    removeToken(id: ID!): ID! @isAuthenticated()
 }

@@ -8,7 +8,6 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/primitives"
@@ -92,16 +91,7 @@ func TestRoles(t *testing.T) {
 		name, err := primitives.NewName("Jye Jdfjkf")
 		gm.Expect(err).To(gm.BeNil())
 
-		creds, err := auth.NewCredentials([]byte("randompassword"), nil)
-		gm.Expect(err).To(gm.BeNil())
-
-		pCreds, err := creds.Package()
-		gm.Expect(err).To(gm.BeNil())
-
-		user, err := primitives.NewUser(name, email, pCreds)
-		gm.Expect(err).To(gm.BeNil())
-
-		user, err = client.CreateUser(ctx, user)
+		user, _, err := client.CreateUser(ctx, name, email)
 		gm.Expect(err).To(gm.BeNil())
 
 		role, err := client.CreateRole(ctx, label, []database.ID{m.Admin.User.ID, user.ID})

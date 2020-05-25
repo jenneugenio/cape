@@ -9,7 +9,6 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -29,30 +28,37 @@ func TestSetup(t *testing.T) {
 
 	defer h.Teardown(ctx) // nolint: errcheck
 
+	password, err := primitives.NewPassword("jerryberrybuddyboy")
+	gm.Expect(err).To(gm.BeNil())
+
+	name, err := primitives.NewName("ben")
+	gm.Expect(err).To(gm.BeNil())
+
+	email, err := primitives.NewEmail("ben@capeprivacy.com")
+	gm.Expect(err).To(gm.BeNil())
+
+	t.Run("cannot login prior to setup", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		client, err := h.Client()
+		gm.Expect(err).To(gm.BeNil())
+
+		_, err = client.EmailLogin(ctx, email, password)
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Failed to authenticate"))
+	})
+
 	t.Run("Setup cape", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
 		client, err := h.Client()
 		gm.Expect(err).To(gm.BeNil())
 
-		password := []byte("jerryberrybuddyboy")
-		creds, err := auth.NewCredentials(password, nil)
+		admin, err := client.Setup(ctx, name, email, password)
 		gm.Expect(err).To(gm.BeNil())
 
-		email, err := primitives.NewEmail("ben@capeprivacy.com")
-		gm.Expect(err).To(gm.BeNil())
-
-		pCreds, err := creds.Package()
-		gm.Expect(err).To(gm.BeNil())
-
-		user, err := primitives.NewUser("ben", email, pCreds)
-		gm.Expect(err).To(gm.BeNil())
-
-		admin, err := client.Setup(ctx, user)
-		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(admin.Name).To(gm.Equal(user.Name))
-		gm.Expect(admin.Email).To(gm.Equal(user.Email))
+		gm.Expect(admin.Name).To(gm.Equal(name))
+		gm.Expect(admin.Email).To(gm.Equal(email))
 
 		_, err = client.EmailLogin(ctx, admin.Email, password)
 		gm.Expect(err).To(gm.BeNil())
@@ -89,19 +95,7 @@ func TestSetup(t *testing.T) {
 		client, err := h.Client()
 		gm.Expect(err).To(gm.BeNil())
 
-		creds, err := auth.NewCredentials([]byte("jerryberrybuddyboy"), nil)
-		gm.Expect(err).To(gm.BeNil())
-
-		email, err := primitives.NewEmail("ben@capeprivacy.com")
-		gm.Expect(err).To(gm.BeNil())
-
-		pCreds, err := creds.Package()
-		gm.Expect(err).To(gm.BeNil())
-
-		user, err := primitives.NewUser("ben", email, pCreds)
-		gm.Expect(err).To(gm.BeNil())
-
-		_, err = client.Setup(ctx, user)
+		_, err = client.Setup(ctx, name, email, password)
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 
@@ -111,19 +105,16 @@ func TestSetup(t *testing.T) {
 		client, err := h.Client()
 		gm.Expect(err).To(gm.BeNil())
 
-		creds, err := auth.NewCredentials([]byte("berryjerrybuddyboy"), nil)
+		password, err := primitives.NewPassword("jerryberrybuddythey")
+		gm.Expect(err).To(gm.BeNil())
+
+		name, err := primitives.NewName("justin")
 		gm.Expect(err).To(gm.BeNil())
 
 		email, err := primitives.NewEmail("justin@capeprivacy.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		pCreds, err := creds.Package()
-		gm.Expect(err).To(gm.BeNil())
-
-		user, err := primitives.NewUser("justin", email, pCreds)
-		gm.Expect(err).To(gm.BeNil())
-
-		_, err = client.Setup(ctx, user)
+		_, err = client.Setup(ctx, name, email, password)
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 }

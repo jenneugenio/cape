@@ -1,17 +1,14 @@
 package auth
 
 import (
-	"crypto/rand"
 	"fmt"
 	"strings"
 
-	"github.com/capeprivacy/cape/coordinator/database"
-
-	"github.com/capeprivacy/cape/primitives"
-
 	"github.com/manifoldco/go-base64"
 
+	"github.com/capeprivacy/cape/coordinator/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 const (
@@ -29,6 +26,25 @@ func (s Secret) Validate() error {
 	}
 
 	return nil
+}
+
+func (s Secret) String() string {
+	return string(s)
+}
+
+func (s Secret) Password() primitives.Password {
+	return primitives.Password(base64.New(s).String())
+}
+
+func FromPassword(password primitives.Password) (Secret, error) {
+	value, err := base64.NewFromString(password.String())
+	if err != nil {
+		return Secret([]byte{}), err
+	}
+
+	s := Secret([]byte(*value))
+
+	return s, s.Validate()
 }
 
 // APIToken represents a token that is used by a service or user
@@ -69,17 +85,6 @@ func (a *APIToken) Validate() error {
 	}
 
 	return nil
-}
-
-// Credentials returns Token with the secret stored on
-// the auth token.
-func (a *APIToken) Credentials() (*Credentials, error) {
-	creds, err := NewCredentials(a.Secret, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return creds, nil
 }
 
 // Marshal marshals the api token into a string.
@@ -145,11 +150,4 @@ func ParseAPIToken(in string) (*APIToken, error) {
 	}
 
 	return token, nil
-}
-
-// Random secret will return a random password
-func RandomSecret() (Secret, error) {
-	secret := make([]byte, secretBytes)
-	_, err := rand.Read(secret)
-	return secret, err
 }

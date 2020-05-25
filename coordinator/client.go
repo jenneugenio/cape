@@ -44,102 +44,6 @@ func NewTransport(coordinatorURL *primitives.URL, authToken *base64.Value) Trans
 	}
 }
 
-// createTokenLoginSession runs a CreateTokenLoginSession mutation that creates a
-// login session and returns it
-func (c *ClientTransport) createTokenLoginSession(ctx context.Context, token *auth.APIToken) (*primitives.Session, error) {
-	var resp struct {
-		Session primitives.Session `json:"createLoginSession"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["token_id"] = token.TokenID
-
-	err := c.Raw(ctx, `
-		mutation CreateLoginSession($token_id: ID!) {
-			createLoginSession(input: { token_id: $token_id }) {
-				id
-				identity_id
-				expires_at
-				type
-				token
-				credentials {
-					salt
-					alg
-				}
-			}
-		}
-	`, variables, &resp)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Session, nil
-}
-
-// createEmailLoginSession runs a CreateLoginSession mutation that creates a
-// login session and returns it
-func (c *ClientTransport) createEmailLoginSession(ctx context.Context, email primitives.Email) (*primitives.Session, error) {
-	var resp struct {
-		Session primitives.Session `json:"createLoginSession"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["email"] = email
-
-	err := c.Raw(ctx, `
-		mutation CreateLoginSession($email: Email!) {
-			createLoginSession(input: { email: $email }) {
-				id
-				identity_id
-				expires_at
-				type
-				token
-				credentials {
-					salt
-					alg
-				}
-			}
-		}
-	`, variables, &resp)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Session, nil
-}
-
-// createAuthSession creates a authenticated session which can then be used
-// for all other graphql queries. Replaces the old session set on the client
-// and returns it
-func (c *ClientTransport) createAuthSession(ctx context.Context, sig *base64.Value) (*primitives.Session, error) {
-	var resp struct {
-		Session primitives.Session `json:"createAuthSession"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["signature"] = sig
-
-	err := c.Raw(ctx, `
-		mutation CreateAuthSession($signature: Base64!) {
-			createAuthSession(input: { signature: $signature }) {
-				id
-				identity_id
-				expires_at
-				type
-				token
-			}
-		}
-	`, variables, &resp)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Session, nil
-}
-
 func (c *ClientTransport) URL() *primitives.URL {
 	return c.url
 }
@@ -168,62 +72,62 @@ func (c *ClientTransport) Raw(ctx context.Context, query string, variables map[s
 	return nil
 }
 
-// TokenLogin starts step 1 of the login flow using an API token
+// TokenLogin enables a user or service to login using an APIToken
 func (c *ClientTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*primitives.Session, error) {
-	session, err := c.createTokenLoginSession(ctx, apiToken)
+	var resp struct {
+		Session primitives.Session `json:"createSession"`
+	}
+
+	variables := map[string]interface{}{
+		"token_id": apiToken.TokenID,
+		"secret":   apiToken.Secret.Password(),
+	}
+
+	err := c.Raw(ctx, `
+		mutation CreateSession($token_id: ID, $secret: Password!) {
+			createSession(input: { token_id: $token_id, secret: $secret }) {
+				id
+				identity_id
+				expires_at
+				token
+			}
+		}
+	`, variables, &resp)
 	if err != nil {
 		return nil, err
 	}
 
-	c.authToken = session.Token
-
-	creds, err := auth.NewCredentials(apiToken.Secret, session.Credentials.Salt)
-	if err != nil {
-		return nil, err
-	}
-
-	sig, err := creds.Sign(c.authToken)
-	if err != nil {
-		return nil, err
-	}
-
-	session, err = c.createAuthSession(ctx, sig)
-	if err != nil {
-		return nil, err
-	}
-
-	c.authToken = session.Token
-
-	return session, nil
+	c.authToken = resp.Session.Token
+	return &resp.Session, nil
 }
 
 // EmailLogin starts step 1 of the login flow using an email & password
-func (c *ClientTransport) EmailLogin(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
-	session, err := c.createEmailLoginSession(ctx, email)
+func (c *ClientTransport) EmailLogin(ctx context.Context, email primitives.Email, password primitives.Password) (*primitives.Session, error) {
+	var resp struct {
+		Session primitives.Session `json:"createSession"`
+	}
+
+	variables := map[string]interface{}{
+		"email":  email,
+		"secret": password,
+	}
+
+	err := c.Raw(ctx, `
+		mutation CreateSession($email: Email, $secret: Password!) {
+			createSession(input: { email: $email, secret: $secret }) {
+				id
+				identity_id
+				expires_at
+				token
+			}
+		}
+	`, variables, &resp)
 	if err != nil {
 		return nil, err
 	}
 
-	c.authToken = session.Token
-
-	creds, err := auth.NewCredentials(password, session.Credentials.Salt)
-	if err != nil {
-		return nil, err
-	}
-
-	sig, err := creds.Sign(c.authToken)
-	if err != nil {
-		return nil, err
-	}
-
-	session, err = c.createAuthSession(ctx, sig)
-	if err != nil {
-		return nil, err
-	}
-
-	c.authToken = session.Token
-
-	return session, nil
+	c.authToken = resp.Session.Token
+	return &resp.Session, nil
 }
 
 // Logout of the active session
@@ -327,33 +231,36 @@ func (c *Client) GetUser(ctx context.Context, id database.ID) (*UserResponse, er
 }
 
 // CreateUser creates a user and returns it
-func (c *Client) CreateUser(ctx context.Context, user *primitives.User) (*primitives.User, error) {
+func (c *Client) CreateUser(ctx context.Context, name primitives.Name, email primitives.Email) (*primitives.User, primitives.Password, error) {
 	var resp struct {
-		User primitives.User `json:"createUser"`
+		Response struct {
+			Password primitives.Password `json:"password"`
+			User     *primitives.User    `json:"user"`
+		} `json:"createUser"`
 	}
 
 	variables := make(map[string]interface{})
-	variables["name"] = user.Name
-	variables["email"] = user.Email
-	variables["public_key"] = user.Credentials.PublicKey
-	variables["salt"] = user.Credentials.Salt
-	variables["alg"] = "EDDSA"
+	variables["name"] = name
+	variables["email"] = email
 
 	err := c.transport.Raw(ctx, `
-		mutation CreateUser ($name: Name!, $email: Email!, $public_key: Base64!, $salt: Base64!, $alg: CredentialsAlgType!) {
-			createUser(input: { name: $name, email: $email, public_key: $public_key, salt: $salt, alg: $alg}) {
-				id
-				name
-				email
+		mutation CreateUser ($name: Name!, $email: Email!) {
+			createUser(input: { name: $name, email: $email }) {
+				password
+				user {
+					id
+					name
+					email
+				}
 			}
 		}
 	`, variables, &resp)
 
 	if err != nil {
-		return nil, err
+		return nil, primitives.Password(""), err
 	}
 
-	return &resp.User, nil
+	return resp.Response.User, resp.Response.Password, nil
 }
 
 func (c *Client) Authenticated() bool {
@@ -361,7 +268,7 @@ func (c *Client) Authenticated() bool {
 }
 
 // EmailLogin calls the CreateLoginSession and CreateAuthSession mutations
-func (c *Client) EmailLogin(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
+func (c *Client) EmailLogin(ctx context.Context, email primitives.Email, password primitives.Password) (*primitives.Session, error) {
 	return c.transport.EmailLogin(ctx, email, password)
 }
 
@@ -785,24 +692,22 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (
 }
 
 // Setup calls the setup command to bootstrap cape
-func (c *Client) Setup(ctx context.Context, user *primitives.User) (*primitives.User, error) {
+func (c *Client) Setup(ctx context.Context, name primitives.Name, email primitives.Email, password primitives.Password) (*primitives.User, error) {
 	var resp struct {
 		User *primitives.User `json:"setup"`
 	}
 
-	in := &model.NewUserRequest{
-		Name:      user.Name,
-		Email:     user.Email,
-		PublicKey: *user.Credentials.PublicKey,
-		Salt:      *user.Credentials.Salt,
-		Alg:       primitives.EDDSA,
+	in := &model.SetupRequest{
+		Name:     name,
+		Email:    email,
+		Password: password,
 	}
 
 	variables := make(map[string]interface{})
 	variables["input"] = in
 
 	err := c.transport.Raw(ctx, `
-		mutation CreateUser($input: NewUserRequest!) {
+		mutation CreateUser($input: SetupRequest!) {
 			setup(input: $input) {
 				id
 				name
@@ -1175,62 +1080,52 @@ func (c *Client) GetIdentities(ctx context.Context, emails []primitives.Email) (
 	return clientIdentitiesToPrimitive(resp.Identities)
 }
 
+type CreateTokenMutation struct {
+	Secret primitives.Password `json:"secret"`
+	Token  *primitives.Token   `json:"token"`
+}
+
 type CreateTokenResponse struct {
-	Token primitives.Token `json:"createToken"`
+	Response *CreateTokenMutation `json:"createToken"`
 }
 
 // CreateToken creates a new API token for the provided identity. You can pass nil and it will return a token for you
-func (c *Client) CreateToken(ctx context.Context, identity primitives.Identity) (*auth.APIToken, error) {
+func (c *Client) CreateToken(ctx context.Context, identity primitives.Identity) (*auth.APIToken, *primitives.Token, error) {
 	// If the user provides no identity, we will make a token for the current session user
 	if identity == nil {
 		i, err := c.Me(ctx)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		identity = i
 	}
 
-	secret, err := auth.RandomSecret()
-	if err != nil {
-		return nil, err
-	}
-
-	creds, err := auth.NewCredentials(secret, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	pCreds, err := creds.Package()
-	if err != nil {
-		return nil, err
-	}
-
-	tokenCredentials, err := primitives.NewToken(identity.GetID(), pCreds)
-	if err != nil {
-		return nil, err
-	}
-
 	variables := make(map[string]interface{})
-	variables["identity_id"] = tokenCredentials.IdentityID
-	variables["public_key"] = tokenCredentials.PublicKey
-	variables["salt"] = tokenCredentials.Salt
-	variables["alg"] = tokenCredentials.Alg
+	variables["identity_id"] = identity.GetID().String()
 
-	var resp CreateTokenResponse
-	err = c.transport.Raw(ctx, `
-		mutation CreateToken($identity_id: ID!, $public_key: Base64!, $salt: Base64!, $alg: CredentialsAlgType!) {
-			createToken(input: { identity_id: $identity_id, public_key: $public_key, salt: $salt, alg: $alg }) {
-				id
+	resp := &CreateTokenResponse{}
+	err := c.transport.Raw(ctx, `
+		mutation CreateToken($identity_id: ID!) {
+			createToken(input: { identity_id: $identity_id }) {
+				secret
+				token {
+					id
+				}
 			}
         }
-    `, variables, &resp)
+    `, variables, resp)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	token, err := auth.NewAPIToken(secret, resp.Token.ID, c.transport.URL())
-	return token, err
+	secret, err := auth.FromPassword(resp.Response.Secret)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	token, err := auth.NewAPIToken(secret, resp.Response.Token.ID, c.transport.URL())
+	return token, resp.Response.Token, err
 }
 
 type ListTokensResponse struct {

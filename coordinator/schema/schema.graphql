@@ -1,13 +1,8 @@
 # isAuthenticated depends on having access to an auth token and checks that the
 # auth token is valid and appends the related user and session to the request context.
-# Most graphql queries and mutation should be annotated with this except for createLoginSession
+# Most graphql queries and mutation should be annotated with this except for createSession
 # and other exceptions as needed
-directive @isAuthenticated(type: TokenType! = AUTHENTICATED) on FIELD_DEFINITION
-
-type AuthCredentials {
-  salt: Base64!
-  alg: CredentialsAlgType!
-}
+directive @isAuthenticated on FIELD_DEFINITION
 
 # ------------------------------------------------------------------
 # BEGIN INTERFACES
@@ -37,14 +32,17 @@ type User implements Identity {
   roles: [Role!]
 }
 
+type CreateUserResponse {
+  password: Password!
+  user: User!
+}
+
 type Session {
   id: ID!
   identity_id: ID!
   owner_id: ID!
   expires_at: Time!
-  type: TokenType!
   token: Base64!
-  credentials: AuthCredentials
 }
 
 type Source {
@@ -76,21 +74,21 @@ type Assignment {
 # These are used as inputs to mutations
 # ------------------------------------------------------------------
 
-input NewUserRequest {
+input SetupRequest {
   name: Name!
   email: Email!
-  public_key: Base64!
-  salt: Base64!
-  alg: CredentialsAlgType!
+  password: Password!
 }
 
-input LoginSessionRequest {
+input CreateUserRequest {
+  name: Name!
+  email: Email!
+}
+
+input SessionRequest {
   email: Email
   token_id: ID
-}
-
-input AuthSessionRequest {
-  signature: Base64!
+  secret: Password!
 }
 
 input DeleteSessionRequest {
@@ -130,14 +128,13 @@ type Query {
 }
 
 type Mutation {
-  setup(input: NewUserRequest!): User!
+  setup(input: SetupRequest!): User!
 
-  createUser(input: NewUserRequest!): User! @isAuthenticated()
+  createUser(input: CreateUserRequest!): CreateUserResponse! @isAuthenticated()
   addSource(input: AddSourceRequest!): Source! @isAuthenticated()
   removeSource(input: RemoveSourceRequest!): String @isAuthenticated()
 
-  createLoginSession(input: LoginSessionRequest!): Session!
-  createAuthSession(input: AuthSessionRequest!): Session! @isAuthenticated(type: LOGIN)
+  createSession(input: SessionRequest!): Session!
   deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
 
   # todo -- needs appropriate auth (should be worker only)
@@ -149,7 +146,6 @@ type Mutation {
 scalar Time
 scalar Base64
 scalar CredentialsAlgType
-scalar TokenType
 scalar URL
 scalar DBURL
 scalar Name
@@ -157,3 +153,4 @@ scalar Label
 scalar EmailType
 scalar Email
 scalar SourceType
+scalar Password

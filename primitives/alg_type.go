@@ -12,8 +12,22 @@ import (
 type CredentialsAlgType string
 
 var (
-	// EDDSA algorithm type
-	EDDSA CredentialsAlgType = "EDDSA"
+	// UnknownAlg represents the empty state of the CredentialsAlgType
+	UnknownAlg CredentialsAlgType = ""
+
+	// EDDSA is used for generating asymmetric keypairs for signing tokens and
+	// other items within the cape ecosystem.
+	EDDSA CredentialsAlgType = "eddsa"
+
+	// Argon2ID exists for production usage, it's the most recent winner of the
+	// Password Hashing Competition and is tuned inside of the auth package.
+	Argon2ID CredentialsAlgType = "argon2id"
+
+	// SHA256 only exists for internal testing, it should never be used in any
+	// production scenario.
+	//
+	// SHA256 is used as a password hashing algorithm
+	SHA256 CredentialsAlgType = "sha256"
 )
 
 // String returns the string represented by the enum value
@@ -24,6 +38,10 @@ func (c *CredentialsAlgType) String() string {
 // Validate checks to see if the service type is valid
 func (c *CredentialsAlgType) Validate() error {
 	switch *c {
+	case Argon2ID:
+		return nil
+	case SHA256:
+		return nil
 	case EDDSA:
 		return nil
 	default:

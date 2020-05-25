@@ -42,10 +42,6 @@ type Attachment struct {
 	Policy    *primitives.Policy `json:"policy"`
 }
 
-type AuthSessionRequest struct {
-	Signature base64.Value `json:"signature"`
-}
-
 type CreatePolicyRequest struct {
 	Label primitives.Label      `json:"label"`
 	Spec  primitives.PolicySpec `json:"spec"`
@@ -63,10 +59,22 @@ type CreateServiceRequest struct {
 }
 
 type CreateTokenRequest struct {
-	IdentityID database.ID                   `json:"identity_id"`
-	PublicKey  base64.Value                  `json:"public_key"`
-	Salt       base64.Value                  `json:"salt"`
-	Alg        primitives.CredentialsAlgType `json:"alg"`
+	IdentityID database.ID `json:"identity_id"`
+}
+
+type CreateTokenResponse struct {
+	Secret primitives.Password `json:"secret"`
+	Token  *primitives.Token   `json:"token"`
+}
+
+type CreateUserRequest struct {
+	Name  primitives.Name  `json:"name"`
+	Email primitives.Email `json:"email"`
+}
+
+type CreateUserResponse struct {
+	Password primitives.Password `json:"password"`
+	User     *primitives.User    `json:"user"`
 }
 
 type DeletePolicyRequest struct {
@@ -90,19 +98,6 @@ type DetachPolicyRequest struct {
 	RoleID   database.ID `json:"role_id"`
 }
 
-type LoginSessionRequest struct {
-	Email   *primitives.Email `json:"email"`
-	TokenID *database.ID      `json:"token_id"`
-}
-
-type NewUserRequest struct {
-	Name      primitives.Name               `json:"name"`
-	Email     primitives.Email              `json:"email"`
-	PublicKey base64.Value                  `json:"public_key"`
-	Salt      base64.Value                  `json:"salt"`
-	Alg       primitives.CredentialsAlgType `json:"alg"`
-}
-
 type PolicyInput struct {
 	Label primitives.Label `json:"label"`
 }
@@ -114,4 +109,16 @@ type RemoveSourceRequest struct {
 type ReportSchemaRequest struct {
 	SourceID     database.ID `json:"source_id"`
 	SourceSchema string      `json:"source_schema"`
+}
+
+type SessionRequest struct {
+	Email   *primitives.Email   `json:"email"`
+	TokenID *database.ID        `json:"token_id"`
+	Secret  primitives.Password `json:"secret"`
+}
+
+type SetupRequest struct {
+	Name     primitives.Name     `json:"name"`
+	Email    primitives.Email    `json:"email"`
+	Password primitives.Password `json:"password"`
 }

@@ -144,7 +144,7 @@ func servicesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	apiToken, err := client.CreateToken(c.Context, service)
+	apiToken, _, err := client.CreateToken(c.Context, service)
 	if err != nil {
 		return err
 	}

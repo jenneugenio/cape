@@ -41,7 +41,7 @@ func (m *MockTransport) URL() *primitives.URL {
 }
 
 // EmailLogin implements EmailLogin on the Transport interface
-func (m *MockTransport) EmailLogin(ctx context.Context, email primitives.Email, password auth.Secret) (*primitives.Session, error) {
+func (m *MockTransport) EmailLogin(ctx context.Context, email primitives.Email, password primitives.Password) (*primitives.Session, error) {
 	panic("Not Implemented")
 }
 
