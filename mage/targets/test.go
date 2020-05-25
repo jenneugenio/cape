@@ -60,12 +60,20 @@ func (t Test) Integration(ctx context.Context) error {
 		return err
 	}
 
+	args := []string{"test"}
+
+	if _, quiet := os.LookupEnv("CAPE_TEST_QUIET"); !quiet {
+		args = append(args, "-v")
+	}
+
 	file := os.Getenv("CAPE_TEST_FILE")
 	if file == "" {
 		file = "./..."
 	}
+	args = append(args, file)
 
-	args := []string{"test", "-v", file, "-tags=integration"}
+	args = append(args, "-tags=integration")
+
 	coverage := os.Getenv("CAPE_DO_COVERAGE")
 	if coverage != "" {
 		args = append(args, "-coverprofile=coverage.txt", "-covermode=atomic")
