@@ -37,11 +37,11 @@ func TestSchema(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("create a new source", func(t *testing.T) {
-		blob := map[string]interface{}{
-			"my-transactions": map[string]interface{}{
-				"col-1": "int",
-				"col-2": "int",
-				"col-3": "string",
+		blob := primitives.SchemaBlob{
+			"my-transactions": {
+				"col-1": "INT",
+				"col-2": "INT",
+				"col-3": "TEXT",
 			},
 		}
 
@@ -50,11 +50,11 @@ func TestSchema(t *testing.T) {
 	})
 
 	t.Run("can update a source", func(t *testing.T) {
-		blob := map[string]interface{}{
-			"my-transactions": map[string]interface{}{
-				"col-1": "int",
-				"col-2": "int",
-				"col-3": "string",
+		blob := primitives.SchemaBlob{
+			"my-transactions": {
+				"col-1": "INT",
+				"col-2": "INT",
+				"col-3": "TEXT",
 			},
 		}
 
@@ -62,16 +62,27 @@ func TestSchema(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		// schema changed!
-		blob = map[string]interface{}{
-			"my-transactions": map[string]interface{}{
-				"col-1": "int",
-				"col-2": "int",
-				"col-3": "string",
-				"col-4": "string",
+		blob = primitives.SchemaBlob{
+			"my-transactions": {
+				"col-1": "INT",
+				"col-2": "INT",
+				"col-3": "TEXT",
+				"col-4": "TEXT",
 			},
 		}
 
 		err = client.ReportSchema(ctx, source.ID, blob)
 		gm.Expect(err).To(gm.BeNil())
+	})
+
+	t.Run("Cannot report invalid column types", func(t *testing.T) {
+		blob := primitives.SchemaBlob{
+			"my-transactions": {
+				"col-1": "thiskindofdatatypeisprobablynotfoundinmostdatabases",
+			},
+		}
+
+		err = client.ReportSchema(ctx, source.ID, blob)
+		gm.Expect(err).ToNot(gm.BeNil())
 	})
 }

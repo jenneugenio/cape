@@ -64,10 +64,10 @@ func (w *Worker) GetSchema(j *que.Job) error {
 	}
 
 	schemas := sr.GetSchemas()
-	schemaBlob := map[string]interface{}{}
+	schemaBlob := primitives.SchemaBlob{}
 
 	for _, s := range schemas {
-		table := map[string]interface{}{}
+		table := map[string]string{}
 		for _, field := range s.Fields {
 			table[field.Name] = field.Field.String()
 		}

@@ -29,4 +29,5 @@ var (
 	InvalidTokenCause       = errors.NewCause(errors.BadRequestCategory, "invalid_token")
 	InvalidCredentialsCause = errors.NewCause(errors.BadRequestCategory, "invalid_credentials")
 	InvalidUserCause        = errors.NewCause(errors.BadRequestCategory, "invalid_user")
+	UnsupportedSchemaCause  = errors.NewCause(errors.BadRequestCategory, "invalid_schema")
 )

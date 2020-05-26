@@ -1279,7 +1279,7 @@ func (c *Client) RemoveToken(ctx context.Context, tokenID database.ID) error {
     `, variables, nil)
 }
 
-func (c *Client) ReportSchema(ctx context.Context, sourceID database.ID, sourceSchema map[string]interface{}) error {
+func (c *Client) ReportSchema(ctx context.Context, sourceID database.ID, sourceSchema primitives.SchemaBlob) error {
 	schemaBlob, err := json.Marshal(sourceSchema)
 	if err != nil {
 		return err

@@ -1,13 +1,24 @@
 package primitives
 
 import (
+	"github.com/capeprivacy/cape/connector/proto"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/types"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
-type SchemaBlob map[string]interface{}
+type SchemaBlob map[string]map[string]string
 
 func (s SchemaBlob) Validate() error {
+	for _, tableName := range s {
+		for _, v := range tableName {
+			_, ok := proto.FieldType_value[v]
+			if !ok {
+				return errors.New(UnsupportedSchemaCause, "Column type %s is unsupported", v)
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -32,7 +43,7 @@ func (s *Schema) Validate() error {
 	return s.Schema.Validate()
 }
 
-func NewSchema(sourceID database.ID, schema map[string]interface{}) (*Schema, error) {
+func NewSchema(sourceID database.ID, schema SchemaBlob) (*Schema, error) {
 	p, err := database.NewPrimitive(SchemaPrimitiveType)
 	if err != nil {
 		return nil, err

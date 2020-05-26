@@ -341,11 +341,17 @@ func (r *mutationResolver) DeleteSession(ctx context.Context, input model.Delete
 }
 
 func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportSchemaRequest) (*string, error) {
-	var schemaBlob map[string]interface{}
+	var schemaBlob primitives.SchemaBlob
 	err := json.Unmarshal([]byte(input.SourceSchema), &schemaBlob)
 	if err != nil {
 		return nil, err
 	}
+
+	err = schemaBlob.Validate()
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO -- add enforcer (needs policy)
 
 	var schema primitives.Schema
