@@ -186,50 +186,6 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 	}, nil
 }
 
-func (r *mutationResolver) AddSource(ctx context.Context, input model.AddSourceRequest) (*primitives.Source, error) {
-	session := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(session, r.Backend)
-
-	if input.ServiceID != nil {
-		service := &primitives.Service{}
-		err := enforcer.Get(ctx, *input.ServiceID, service)
-		if err != nil {
-			return nil, err
-		}
-
-		if service.Type != primitives.DataConnectorServiceType {
-			return nil, errs.New(MustBeDataConnector, "Linking service to data source must be a data connector")
-		}
-	}
-
-	source, err := primitives.NewSource(input.Label, &input.Credentials, input.ServiceID)
-	if err != nil {
-		return nil, err
-	}
-
-	err = enforcer.Create(ctx, source)
-	if err != nil {
-		return nil, err
-	}
-
-	return source, nil
-}
-
-func (r *mutationResolver) RemoveSource(ctx context.Context, input model.RemoveSourceRequest) (*string, error) {
-	session := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(session, r.Backend)
-
-	source := primitives.Source{}
-	filter := database.Filter{Where: database.Where{"label": input.Label}}
-	err := enforcer.QueryOne(ctx, &source, filter)
-	if err != nil {
-		return nil, err
-	}
-
-	err = enforcer.Delete(ctx, primitives.SourcePrimitiveType, source.ID)
-	return nil, err
-}
-
 func (r *mutationResolver) CreateSession(ctx context.Context, input model.SessionRequest) (*primitives.Session, error) {
 	logger := fw.Logger(ctx)
 
@@ -382,45 +338,6 @@ func (r *queryResolver) Me(ctx context.Context) (primitives.Identity, error) {
 	return session.Identity, nil
 }
 
-func (r *queryResolver) Sources(ctx context.Context) ([]*primitives.Source, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	var sources []*primitives.Source
-	err := enforcer.Query(ctx, &sources, database.NewEmptyFilter())
-	if err != nil {
-		return nil, err
-	}
-
-	return sources, nil
-}
-
-func (r *queryResolver) Source(ctx context.Context, id database.ID) (*primitives.Source, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	source := &primitives.Source{}
-	err := enforcer.Get(ctx, id, source)
-	if err != nil {
-		return nil, err
-	}
-
-	return source, nil
-}
-
-func (r *queryResolver) SourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	source := &primitives.Source{}
-	err := enforcer.QueryOne(ctx, source, database.NewFilter(database.Where{"label": label.String()}, nil, nil))
-	if err != nil {
-		return nil, err
-	}
-
-	return source, nil
-}
-
 func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Email) ([]primitives.Identity, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
@@ -464,34 +381,6 @@ func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Ema
 	return identities, nil
 }
 
-func (r *sourceResolver) Credentials(ctx context.Context, obj *primitives.Source) (*primitives.DBURL, error) {
-	session := fw.Session(ctx)
-	identity := session.Identity
-
-	if obj.ServiceID != nil && identity.GetID() == *obj.ServiceID {
-		return obj.Credentials, nil
-	}
-
-	return nil, nil
-}
-
-func (r *sourceResolver) Service(ctx context.Context, obj *primitives.Source) (*primitives.Service, error) {
-	session := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(session, r.Backend)
-
-	if obj.ServiceID == nil {
-		return nil, nil
-	}
-
-	service := &primitives.Service{}
-	err := enforcer.Get(ctx, *obj.ServiceID, service)
-	if err != nil {
-		return nil, err
-	}
-
-	return service, nil
-}
-
 func (r *userResolver) Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
@@ -505,13 +394,9 @@ func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResol
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-// Source returns generated.SourceResolver implementation.
-func (r *Resolver) Source() generated.SourceResolver { return &sourceResolver{r} }
-
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-type sourceResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

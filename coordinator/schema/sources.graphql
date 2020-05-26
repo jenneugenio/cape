@@ -1,0 +1,31 @@
+type Source {
+    id: ID!
+    label: Label!
+    type: SourceType!
+    endpoint: DBURL!
+    credentials: DBURL
+
+    # if a source has a linked service
+    service: Service
+}
+
+input AddSourceRequest {
+    label: Label!
+    credentials: DBURL!
+    service_id: ID
+}
+
+input RemoveSourceRequest {
+    label: Label!
+}
+
+extend type Query {
+    sources: [Source!]! @isAuthenticated
+    source(id: ID!): Source! @isAuthenticated
+    sourceByLabel(label: Label!): Source! @isAuthenticated
+}
+
+extend type Mutation {
+    addSource(input: AddSourceRequest!): Source! @isAuthenticated
+    removeSource(input: RemoveSourceRequest!): String @isAuthenticated
+}
