@@ -68,7 +68,8 @@ func TestPostgresSource(t *testing.T) {
 		defer source.Close(ctx) // nolint: errcheck
 
 		query := &testQuery{}
-		schema, err := source.QuerySchema(ctx, query)
+		schemas, err := source.Schema(ctx, primitives.Collection(query.Collection()))
+		schema := schemas[0]
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(schema).ToNot(gm.BeNil())
 

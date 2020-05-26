@@ -65,10 +65,21 @@ func (p *PostgresSource) Type() primitives.SourceType {
 	return primitives.PostgresType
 }
 
-func (p *PostgresSource) SourceSchema(ctx context.Context) ([]*proto.Schema, error) {
-	rows, err := p.pool.Query(ctx, "select table_name, column_name, data_type, character_maximum_length from "+
-		"information_schema.columns where table_name in "+
-		"(select table_name from information_schema.tables where table_schema = $1) order by table_name", "public")
+func (p *PostgresSource) Schema(ctx context.Context, collection primitives.Collection) ([]*proto.Schema, error) {
+	sql := "select table_name, column_name, data_type, character_maximum_length from " +
+		"information_schema.columns where table_name "
+	args := collection.String()
+
+	switch collection {
+	case primitives.Collection(primitives.Star):
+		sql += "in (select table_name from information_schema.tables where table_schema = $1) order by table_name"
+		args = "public"
+	default:
+		sql += "= $1"
+		// args already set
+	}
+
+	rows, err := p.pool.Query(ctx, sql, args)
 	if err != nil {
 		return nil, err
 	}
@@ -131,67 +142,6 @@ func (p *PostgresSource) SourceSchema(ctx context.Context) ([]*proto.Schema, err
 	}
 
 	return schemas, nil
-}
-
-// QuerySchema returns the schema for the given Query. This schema can be used to
-// issue a query or used to rewrite the query.
-func (p *PostgresSource) QuerySchema(ctx context.Context, q Query) (*proto.Schema, error) {
-	if q.Source() != p.source.Label {
-		return nil, ErrWrongSource
-	}
-
-	schema := &proto.Schema{
-		DataSource: p.source.Label.String(),
-		Target:     q.Collection(),
-		Type:       proto.RecordType_DOCUMENT,
-	}
-
-	// See comment in Query below about why this is using its own context
-	rows, err := p.pool.Query(ctx, "SELECT column_name, data_type, character_maximum_length FROM "+
-		"information_schema.columns WHERE table_name = $1", q.Collection())
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var fields []*proto.FieldInfo
-	for rows.Next() {
-		var columnName string
-		var dataType string
-
-		// maxLength is a pointer because it can be null
-		var maxLength *int64
-		err := rows.Scan(&columnName, &dataType, &maxLength)
-		if err != nil {
-			return nil, err
-		}
-
-		f, err := DataTypeToProtoField(p.Type(), dataType)
-		if err != nil {
-			return nil, err
-		}
-
-		size := f.Size
-		if maxLength != nil {
-			size = *maxLength
-		}
-
-		field := &proto.FieldInfo{
-			Field: f.Field,
-			Size:  size,
-			Name:  columnName,
-		}
-
-		fields = append(fields, field)
-	}
-
-	err = rows.Err()
-	if err != nil {
-		return nil, err
-	}
-
-	schema.Fields = fields
-	return schema, nil
 }
 
 // Query issues the given query against the targeted collection from the query.

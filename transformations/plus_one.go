@@ -1,8 +1,6 @@
 package transformations
 
 import (
-	"fmt"
-
 	"github.com/capeprivacy/cape/connector/proto"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
@@ -13,7 +11,6 @@ type plusOne struct {
 
 func (p *plusOne) Transform(input *proto.Field) (*proto.Field, error) {
 	output := &proto.Field{}
-	fmt.Println("HEY", input)
 	switch t := input.GetValue().(type) {
 	case *proto.Field_Double:
 		res := t.Double + 1

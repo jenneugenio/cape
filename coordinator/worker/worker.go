@@ -42,10 +42,7 @@ func (w *Worker) GetSchema(j *que.Job) error {
 	}
 
 	service := sja.Source.Service
-
-	// make a connector client
-	// TODO -- fix duh
-	cert, err := ioutil.ReadFile("/Users/ben/code/cape/connector/certs/localhost.crt")
+	cert, err := ioutil.ReadFile("connector/certs/localhost.crt")
 	if err != nil {
 		return err
 	}

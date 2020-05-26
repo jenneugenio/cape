@@ -30,11 +30,8 @@ func (t *testSource) Label() primitives.Label {
 func (t *testSource) Type() primitives.SourceType {
 	return testSourceType
 }
-func (t *testSource) SourceSchema(_ context.Context) ([]*proto.Schema, error) {
+func (t *testSource) Schema(_ context.Context, _ primitives.Collection) ([]*proto.Schema, error) {
 	return []*proto.Schema{{}}, nil
-}
-func (t *testSource) QuerySchema(_ context.Context, _ Query) (*proto.Schema, error) {
-	return &proto.Schema{}, nil
 }
 func (t *testSource) Query(_ context.Context, _ Stream, _ Query, _ int64, _ int64) error {
 	return nil

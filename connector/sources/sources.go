@@ -60,11 +60,8 @@ type Source interface {
 	Label() primitives.Label
 	Type() primitives.SourceType
 
-	// SourceSchema returns the schema for this entire datasource
-	SourceSchema(context.Context) ([]*proto.Schema, error)
-
-	// QuerySchema returns the schema for the collection targeted by the given query
-	QuerySchema(context.Context, Query) (*proto.Schema, error)
+	// Schema returns the schema for the provided collection (all if null)
+	Schema(context.Context, primitives.Collection) ([]*proto.Schema, error)
 
 	// Query begins responding to the given query and sending results to the
 	// client.

@@ -1353,7 +1353,6 @@ input RemoveSourceRequest {
 
 input ReportSchemaRequest {
   source_id: ID!
-  # Todo -- there is no map type
   source_schema: String!
 }
 
@@ -1386,7 +1385,7 @@ type Mutation {
   deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
 
   # todo -- needs appropriate auth (should be worker only)
-  reportSchema(input: ReportSchemaRequest!): String
+  reportSchema(input: ReportSchemaRequest!): String @isAuthenticated
 }
 
 # Scalar definitions
@@ -2859,8 +2858,32 @@ func (ec *executionContext) _Mutation_reportSchema(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ReportSchema(rctx, args["input"].(model.ReportSchemaRequest))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ReportSchema(rctx, args["input"].(model.ReportSchemaRequest))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			typeArg, err := ec.unmarshalNTokenType2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐTokenType(ctx, "AUTHENTICATED")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0, typeArg)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)

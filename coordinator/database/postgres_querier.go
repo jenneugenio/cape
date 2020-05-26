@@ -280,8 +280,18 @@ func (q *postgresQuerier) update(ctx context.Context, e Entity, mode updateMode)
 		value = v[0]
 	}
 
-	sql := fmt.Sprintf(`%s %s SET data = $1 WHERE id = $2`, mode, t.String())
-	ct, err := q.conn.Exec(ctx, sql, value, e.GetID().String())
+	var ct pgconn.CommandTag
+	switch mode {
+	case Update:
+		sql := fmt.Sprintf(`UPDATE %s SET data = $1 WHERE id = $2`, t.String())
+		ct, err = q.conn.Exec(ctx, sql, value, e.GetID().String())
+	case Upsert:
+		sql := fmt.Sprintf(
+			`INSERT INTO %s (data) VALUES ($1) ON CONFLICT (id) DO UPDATE SET data = $1`,
+			t.String())
+		ct, err = q.conn.Exec(ctx, sql, value)
+	}
+
 	if err != nil {
 		return err
 	}

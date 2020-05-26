@@ -7,7 +7,7 @@ import (
 
 type SchemaBlob map[string]interface{}
 
-// QuerySchema is the data schema for a data source
+// Schema is the data schema for a data source
 // It is linked with a source via the source label, the schema is currently stored as a json blob.
 type Schema struct {
 	*database.Primitive

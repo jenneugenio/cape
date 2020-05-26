@@ -53,12 +53,13 @@ func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_
 	// causes pgx to ungracefully close the connection to postgres which
 	// was causing a problems with k8s port forwarding causing our tests
 	// to break.
-	schema, err := source.QuerySchema(context.Background(), query)
+	collection := primitives.Collection(query.Collection())
+	schema, err := source.Schema(context.Background(), collection)
 	if err != nil {
 		return err
 	}
 
-	evaluator := policy.NewEvaluator(query, schema, policies...)
+	evaluator := policy.NewEvaluator(query, schema[0], policies...)
 	query, err = evaluator.Evaluate()
 	if err != nil {
 		return err
@@ -66,7 +67,7 @@ func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_
 
 	transforms := evaluator.Transforms()
 	if len(transforms) > 0 {
-		transformStream, err := NewTransformStream(server, schema, transforms)
+		transformStream, err := NewTransformStream(server, schema[0], transforms)
 		if err != nil {
 			return err
 		}
@@ -88,7 +89,7 @@ func (g *grpcHandler) Schema(ctx context.Context, req *pb.SchemaRequest) (*pb.Sc
 		return nil, err
 	}
 
-	schemas, err := source.SourceSchema(context.Background())
+	schemas, err := source.Schema(context.Background(), primitives.Collection(primitives.Star))
 	if err != nil {
 		return nil, err
 	}
