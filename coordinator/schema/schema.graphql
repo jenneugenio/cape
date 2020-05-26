@@ -109,7 +109,6 @@ input RemoveSourceRequest {
 
 input ReportSchemaRequest {
   source_id: ID!
-  # Todo -- there is no map type
   source_schema: String!
 }
 
@@ -142,7 +141,7 @@ type Mutation {
   deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
 
   # todo -- needs appropriate auth (should be worker only)
-  reportSchema(input: ReportSchemaRequest!): String
+  reportSchema(input: ReportSchemaRequest!): String @isAuthenticated
 }
 
 # Scalar definitions
