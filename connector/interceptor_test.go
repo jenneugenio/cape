@@ -2,6 +2,7 @@ package connector
 
 import (
 	"context"
+	fw "github.com/capeprivacy/cape/framework"
 	"testing"
 
 	"github.com/gofrs/uuid"
@@ -71,11 +72,10 @@ func (t *TestStream) RecvMsg(m interface{}) error {
 func TestInterceptors(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	t.Run("test auth", func(t *testing.T) {
+	t.Run("test auth stream", func(t *testing.T) {
 		wasCalled := false
 
 		ctx := context.Background()
-
 		md := metadata.Pairs("authorization", "Bearer: acooltoken")
 		ctx = metadata.NewIncomingContext(ctx, md)
 
@@ -91,7 +91,26 @@ func TestInterceptors(t *testing.T) {
 		gm.Expect(wasCalled).To(gm.BeTrue())
 	})
 
-	t.Run("test missing auth header", func(t *testing.T) {
+	t.Run("test auth unary", func(t *testing.T) {
+		wasCalled := false
+
+		ctx := context.Background()
+		md := metadata.Pairs("authorization", "Bearer: acooltoken")
+		ctx = metadata.NewIncomingContext(ctx, md)
+
+		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		f := func(ctx context.Context, req interface{}) (interface{}, error) {
+			wasCalled = true
+			return nil, nil
+		}
+
+		var req interface{}
+		_, err := interceptor.AuthUnaryInterceptor(ctx, req, nil, f)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(wasCalled).To(gm.BeTrue())
+	})
+
+	t.Run("test missing auth header stream", func(t *testing.T) {
 		wasCalled := false
 		ctx := context.Background()
 
@@ -107,7 +126,24 @@ func TestInterceptors(t *testing.T) {
 		gm.Expect(wasCalled).To(gm.BeFalse())
 	})
 
-	t.Run("test error handling", func(t *testing.T) {
+	t.Run("test missing auth header unary", func(t *testing.T) {
+		wasCalled := false
+
+		ctx := context.Background()
+
+		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		f := func(ctx context.Context, req interface{}) (interface{}, error) {
+			wasCalled = true
+			return nil, nil
+		}
+
+		var req interface{}
+		_, err := interceptor.AuthUnaryInterceptor(ctx, req, nil, f)
+		gm.Expect(err).To(gm.Equal(auth.ErrorInvalidAuthHeader))
+		gm.Expect(wasCalled).To(gm.BeFalse())
+	})
+
+	t.Run("test error handling stream", func(t *testing.T) {
 		wasCalled := false
 		ctx := context.Background()
 
@@ -124,7 +160,26 @@ func TestInterceptors(t *testing.T) {
 		gm.Expect(stat.Message()).To(gm.Equal("Cape Error"))
 	})
 
-	t.Run("test request id", func(t *testing.T) {
+	t.Run("test error handling unary", func(t *testing.T) {
+		wasCalled := false
+
+		ctx := context.Background()
+		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		f := func(ctx context.Context, req interface{}) (interface{}, error) {
+			wasCalled = true
+			return nil, auth.ErrorInvalidAuthHeader
+		}
+
+		var req interface{}
+		resp, err := interceptor.ErrorUnaryInterceptor(ctx, req, nil, f)
+		gm.Expect(resp).To(gm.BeNil())
+		gm.Expect(wasCalled).To(gm.BeTrue())
+		gm.Expect(err).ToNot(gm.BeNil())
+		stat := status.Convert(err)
+		gm.Expect(stat.Message()).To(gm.Equal("Cape Error"))
+	})
+
+	t.Run("test request id stream", func(t *testing.T) {
 		wasCalled := false
 		ctx := context.Background()
 
@@ -144,5 +199,26 @@ func TestInterceptors(t *testing.T) {
 
 		_, err = uuid.FromString(strs[0])
 		gm.Expect(err).To(gm.BeNil())
+	})
+
+	t.Run("test request id unary", func(t *testing.T) {
+		wasCalled := false
+
+		var tag interface{}
+
+		ctx := context.Background()
+		interceptor := Interceptor{&testCoordinatorProvider{&testCoordinator{}}}
+		f := func(ctx context.Context, req interface{}) (interface{}, error) {
+			wasCalled = true
+			tag = ctx.Value(fw.RequestIDContextKey)
+			return nil, nil
+		}
+
+		var req interface{}
+		_, err := interceptor.RequestIDUnaryInterceptor(ctx, req, nil, f)
+
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(wasCalled).To(gm.BeTrue())
+		gm.Expect(tag).ToNot(gm.BeNil())
 	})
 }
