@@ -127,11 +127,11 @@ func (r *sourceResolver) Service(ctx context.Context, obj *primitives.Source) (*
 }
 
 func (r *sourceResolver) Schema(ctx context.Context, obj *primitives.Source) (*primitives.Schema, error) {
-	//session := fw.Session(ctx)
-	//enforcer := auth.NewEnforcer(session, r.Backend)
+	session := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(session, r.Backend)
 
 	var schema primitives.Schema
-	err := r.Backend.QueryOne(ctx, &schema, database.NewFilter(database.Where{"source_id": obj.ID.String()}, nil, nil))
+	err := enforcer.QueryOne(ctx, &schema, database.NewFilter(database.Where{"source_id": obj.ID.String()}, nil, nil))
 	return &schema, err
 }
 
