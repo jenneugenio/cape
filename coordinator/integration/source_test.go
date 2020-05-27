@@ -129,7 +129,7 @@ func TestSource(t *testing.T) {
 		source, err := client.AddSource(ctx, label, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		out, err := client.GetSource(ctx, source.ID)
+		out, err := client.GetSource(ctx, source.ID, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(out.Label).To(gm.Equal(label))
@@ -146,12 +146,46 @@ func TestSource(t *testing.T) {
 		source, err := client.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		otherSource, err := client.GetSourceByLabel(ctx, l)
+		otherSource, err := client.GetSourceByLabel(ctx, l, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(otherSource.Label).To(gm.Equal(source.Label))
 		gm.Expect(otherSource.Endpoint).To(gm.Equal(source.Endpoint))
 		gm.Expect(otherSource.Credentials).To(gm.BeNil())
+	})
+
+	t.Run("describe a single data source", func(t *testing.T) {
+		l, err := primitives.NewLabel("describe-me")
+		gm.Expect(err).To(gm.BeNil())
+
+		source, err := client.AddSource(ctx, l, dbURL, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		// report a fake schema for this source
+		err = client.ReportSchema(ctx, source.ID, primitives.SchemaBlob{"my-table": {"my-col": "INT"}})
+		gm.Expect(err).To(gm.BeNil())
+
+		s, err := client.GetSource(ctx, source.ID, &coordinator.SourceOptions{WithSchema: true})
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(s).ToNot(gm.BeNil())
+		gm.Expect(s.Schema.Blob).To(gm.Equal(primitives.SchemaBlob{"my-table": {"my-col": "INT"}}))
+	})
+
+	t.Run("describe a single data source by label", func(t *testing.T) {
+		l, err := primitives.NewLabel("describe-me-label")
+		gm.Expect(err).To(gm.BeNil())
+
+		source, err := client.AddSource(ctx, l, dbURL, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		// report a fake schema for this source
+		err = client.ReportSchema(ctx, source.ID, primitives.SchemaBlob{"my-table": {"my-col": "INT"}})
+		gm.Expect(err).To(gm.BeNil())
+
+		s, err := client.GetSourceByLabel(ctx, l, &coordinator.SourceOptions{WithSchema: true})
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(s).ToNot(gm.BeNil())
+		gm.Expect(s.Schema.Blob).To(gm.Equal(primitives.SchemaBlob{"my-table": {"my-col": "INT"}}))
 	})
 
 	t.Run("insert the same data source", func(t *testing.T) {
@@ -177,7 +211,7 @@ func TestSource(t *testing.T) {
 		err = client.RemoveSource(ctx, l)
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.GetSource(ctx, source.ID)
+		_, err = client.GetSource(ctx, source.ID, nil)
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 
@@ -214,7 +248,7 @@ func TestSource(t *testing.T) {
 		_, err = serviceClient.TokenLogin(ctx, apiToken)
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err = serviceClient.GetSource(ctx, source.ID)
+		source, err = serviceClient.GetSource(ctx, source.ID, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(source.Credentials.String()).To(gm.Equal(dbURL.String()))

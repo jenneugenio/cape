@@ -48,7 +48,7 @@ func (t *testCoordinator) GetIdentityPolicies(ctx context.Context, id database.I
 	return []*primitives.Policy{}, nil
 }
 
-func (t *testCoordinator) GetSourceByLabel(ctx context.Context, label primitives.Label) (*coor.SourceResponse, error) {
+func (t *testCoordinator) GetSourceByLabel(ctx context.Context, label primitives.Label, opts *coor.SourceOptions) (*coor.SourceResponse, error) {
 	return &coor.SourceResponse{}, nil
 }
 

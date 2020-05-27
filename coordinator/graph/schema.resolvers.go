@@ -311,7 +311,7 @@ func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportS
 		schema = *s
 	}
 
-	schema.Schema = schemaBlob
+	schema.Blob = schemaBlob
 	err = r.Backend.Upsert(ctx, &schema)
 	return nil, err
 }

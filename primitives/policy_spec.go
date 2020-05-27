@@ -131,6 +131,7 @@ func (ps PolicySpec) MarshalGQL(w io.Writer) {
 	json, err := json.Marshal(ps)
 	if err != nil {
 		fmt.Fprint(w, strconv.Quote(err.Error()))
+		return
 	}
 
 	fmt.Fprint(w, string(json))

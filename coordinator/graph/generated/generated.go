@@ -140,6 +140,11 @@ type ComplexityRoot struct {
 		UpdatedAt func(childComplexity int) int
 	}
 
+	Schema struct {
+		Blob     func(childComplexity int) int
+		SourceID func(childComplexity int) int
+	}
+
 	Service struct {
 		CreatedAt func(childComplexity int) int
 		Email     func(childComplexity int) int
@@ -163,6 +168,7 @@ type ComplexityRoot struct {
 		Endpoint    func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Label       func(childComplexity int) int
+		Schema      func(childComplexity int) int
 		Service     func(childComplexity int) int
 		Type        func(childComplexity int) int
 	}
@@ -232,6 +238,7 @@ type ServiceResolver interface {
 type SourceResolver interface {
 	Credentials(ctx context.Context, obj *primitives.Source) (*primitives.DBURL, error)
 	Service(ctx context.Context, obj *primitives.Source) (*primitives.Service, error)
+	Schema(ctx context.Context, obj *primitives.Source) (*primitives.Schema, error)
 }
 type UserResolver interface {
 	Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error)
@@ -870,6 +877,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Role.UpdatedAt(childComplexity), true
 
+	case "Schema.blob":
+		if e.complexity.Schema.Blob == nil {
+			break
+		}
+
+		return e.complexity.Schema.Blob(childComplexity), true
+
+	case "Schema.source_id":
+		if e.complexity.Schema.SourceID == nil {
+			break
+		}
+
+		return e.complexity.Schema.SourceID(childComplexity), true
+
 	case "Service.created_at":
 		if e.complexity.Service.CreatedAt == nil {
 			break
@@ -981,6 +1002,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Source.Label(childComplexity), true
+
+	case "Source.schema":
+		if e.complexity.Source.Schema == nil {
+			break
+		}
+
+		return e.complexity.Source.Schema(childComplexity), true
 
 	case "Source.service":
 		if e.complexity.Source.Service == nil {
@@ -1249,6 +1277,11 @@ type User implements Identity {
   roles: [Role!]
 }
 
+type Schema {
+  source_id: ID!
+  blob: SchemaBlob!
+}
+
 type CreateUserResponse {
   password: Password!
   user: User!
@@ -1343,6 +1376,7 @@ scalar EmailType
 scalar Email
 scalar SourceType
 scalar Password
+scalar SchemaBlob
 `, BuiltIn: false},
 	&ast.Source{Name: "coordinator/schema/services.graphql", Input: `type Service implements Identity {
     id: ID!
@@ -1386,6 +1420,9 @@ scalar ServiceType
 
     # if a source has a linked service
     service: Service
+
+    # User may request schema info as well
+    schema: Schema
 }
 
 input AddSourceRequest {
@@ -5167,6 +5204,74 @@ func (ec *executionContext) _Role_updated_at(ctx context.Context, field graphql.
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Schema_source_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Schema) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Schema",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SourceID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(database.ID)
+	fc.Result = res
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Schema_blob(ctx context.Context, field graphql.CollectedField, obj *primitives.Schema) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Schema",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Blob, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(primitives.SchemaBlob)
+	fc.Result = res
+	return ec.marshalNSchemaBlob2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSchemaBlob(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Service_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5765,6 +5870,37 @@ func (ec *executionContext) _Source_service(ctx context.Context, field graphql.C
 	res := resTmp.(*primitives.Service)
 	fc.Result = res
 	return ec.marshalOService2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Source_schema(ctx context.Context, field graphql.CollectedField, obj *primitives.Source) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Source",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Source().Schema(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*primitives.Schema)
+	fc.Result = res
+	return ec.marshalOSchema2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSchema(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Token_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Token) (ret graphql.Marshaler) {
@@ -8181,6 +8317,38 @@ func (ec *executionContext) _Role(ctx context.Context, sel ast.SelectionSet, obj
 	return out
 }
 
+var schemaImplementors = []string{"Schema"}
+
+func (ec *executionContext) _Schema(ctx context.Context, sel ast.SelectionSet, obj *primitives.Schema) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, schemaImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Schema")
+		case "source_id":
+			out.Values[i] = ec._Schema_source_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "blob":
+			out.Values[i] = ec._Schema_blob(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var serviceImplementors = []string{"Service", "Identity"}
 
 func (ec *executionContext) _Service(ctx context.Context, sel ast.SelectionSet, obj *primitives.Service) graphql.Marshaler {
@@ -8339,6 +8507,17 @@ func (ec *executionContext) _Source(ctx context.Context, sel ast.SelectionSet, o
 					}
 				}()
 				res = ec._Source_service(ctx, field, obj)
+				return res
+			})
+		case "schema":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Source_schema(ctx, field, obj)
 				return res
 			})
 		default:
@@ -9039,6 +9218,24 @@ func (ec *executionContext) marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋ
 	return ec._Role(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNSchemaBlob2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSchemaBlob(ctx context.Context, v interface{}) (primitives.SchemaBlob, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res primitives.SchemaBlob
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNSchemaBlob2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSchemaBlob(ctx context.Context, sel ast.SelectionSet, v primitives.SchemaBlob) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) marshalNService2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx context.Context, sel ast.SelectionSet, v primitives.Service) graphql.Marshaler {
 	return ec._Service(ctx, sel, &v)
 }
@@ -9726,6 +9923,17 @@ func (ec *executionContext) marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcape
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalOSchema2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSchema(ctx context.Context, sel ast.SelectionSet, v primitives.Schema) graphql.Marshaler {
+	return ec._Schema(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOSchema2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSchema(ctx context.Context, sel ast.SelectionSet, v *primitives.Schema) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Schema(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOService2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx context.Context, sel ast.SelectionSet, v primitives.Service) graphql.Marshaler {

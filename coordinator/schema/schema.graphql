@@ -32,6 +32,11 @@ type User implements Identity {
   roles: [Role!]
 }
 
+type Schema {
+  source_id: ID!
+  blob: SchemaBlob!
+}
+
 type CreateUserResponse {
   password: Password!
   user: User!
@@ -126,3 +131,4 @@ scalar EmailType
 scalar Email
 scalar SourceType
 scalar Password
+scalar SchemaBlob

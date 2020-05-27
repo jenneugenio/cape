@@ -29,6 +29,9 @@ type Source struct {
 	// ServiceID can be nil as it's not set when a data connector has not been
 	// linked with the service.
 	ServiceID *database.ID `json:"service_id"`
+
+	// The schema for this source
+	Schema *Schema
 }
 
 type encryptedSource struct {
@@ -65,6 +68,12 @@ func (s *Source) Validate() error {
 
 	if s.ServiceID != nil {
 		if err := s.ServiceID.Validate(); err != nil {
+			return err
+		}
+	}
+
+	if s.Schema != nil {
+		if err := s.Schema.Validate(); err != nil {
 			return err
 		}
 	}

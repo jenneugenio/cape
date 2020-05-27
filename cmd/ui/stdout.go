@@ -203,7 +203,13 @@ func (u *Stdout) Template(t string, args interface{}) error {
 		return err
 	}
 
-	return tmpl.Execute(os.Stdout, args)
+	w := ansiterm.NewTabWriter(os.Stdout, 2, 0, 4, ' ', 0)
+	err = tmpl.Execute(w, args)
+	if err != nil {
+		return err
+	}
+
+	return w.Flush()
 }
 
 // CanColorized returns whether or not colorization can be supported

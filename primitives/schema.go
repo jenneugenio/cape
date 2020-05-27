@@ -1,13 +1,38 @@
 package primitives
 
 import (
+	"encoding/json"
 	"github.com/capeprivacy/cape/connector/proto"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/mitchellh/mapstructure"
+	"io"
 )
 
 type SchemaBlob map[string]map[string]string
+
+func (s *SchemaBlob) UnmarshalGQL(v interface{}) error {
+	switch t := v.(type) {
+	case map[string]interface{}:
+		if err := mapstructure.Decode(t, s); err != nil {
+			return err
+		}
+
+		return s.Validate()
+	default:
+		return errors.New(InvalidPolicySpecCause, "Unable to unmarshal gql schema blob")
+	}
+}
+
+func (s SchemaBlob) MarshalGQL(w io.Writer) {
+	j, err := json.Marshal(s)
+	if err != nil {
+		panic(err)
+	}
+
+	w.Write(j) //nolint: errcheck
+}
 
 func (s SchemaBlob) Validate() error {
 	for _, tableName := range s {
@@ -27,7 +52,7 @@ func (s SchemaBlob) Validate() error {
 type Schema struct {
 	*database.Primitive
 	SourceID database.ID `json:"source_id"`
-	Schema   SchemaBlob  `json:"source_schema"`
+	Blob     SchemaBlob  `json:"blob"`
 }
 
 func (s *Schema) GetType() types.Type {
@@ -40,7 +65,7 @@ func (s *Schema) Validate() error {
 		return err
 	}
 
-	return s.Schema.Validate()
+	return s.Blob.Validate()
 }
 
 func NewSchema(sourceID database.ID, schema SchemaBlob) (*Schema, error) {
@@ -52,7 +77,7 @@ func NewSchema(sourceID database.ID, schema SchemaBlob) (*Schema, error) {
 	s := &Schema{
 		Primitive: p,
 		SourceID:  sourceID,
-		Schema:    schema,
+		Blob:      schema,
 	}
 
 	return s, s.Validate()

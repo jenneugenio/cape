@@ -126,6 +126,15 @@ func (r *sourceResolver) Service(ctx context.Context, obj *primitives.Source) (*
 	return service, nil
 }
 
+func (r *sourceResolver) Schema(ctx context.Context, obj *primitives.Source) (*primitives.Schema, error) {
+	//session := fw.Session(ctx)
+	//enforcer := auth.NewEnforcer(session, r.Backend)
+
+	var schema primitives.Schema
+	err := r.Backend.QueryOne(ctx, &schema, database.NewFilter(database.Where{"source_id": obj.ID.String()}, nil, nil))
+	return &schema, err
+}
+
 // Source returns generated.SourceResolver implementation.
 func (r *Resolver) Source() generated.SourceResolver { return &sourceResolver{r} }
 
