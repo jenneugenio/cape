@@ -125,6 +125,10 @@ func (p *rounding) Field() string {
 }
 
 func NewRoundingTransform(field string) (Transformation, error) {
-	p := &rounding{field: field, precisionFactor: 1.0}
+	p := &rounding{
+		field:           field,
+		roundingType:    RoundToEven,
+		precisionFactor: 1.0,
+	}
 	return p, nil
 }
