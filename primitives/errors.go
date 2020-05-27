@@ -30,4 +30,5 @@ var (
 	InvalidCredentialsCause = errors.NewCause(errors.BadRequestCategory, "invalid_credentials")
 	InvalidUserCause        = errors.NewCause(errors.BadRequestCategory, "invalid_user")
 	UnsupportedSchemaCause  = errors.NewCause(errors.BadRequestCategory, "invalid_schema")
+	SystemErrorCause        = errors.NewCause(errors.InternalServerErrorCategory, "system_error")
 )

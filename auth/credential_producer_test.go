@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/manifoldco/go-base64"
@@ -10,7 +11,7 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
-func TestCredentialFactory(t *testing.T) {
+func TestCredentialProducer(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	t.Run("can generate credentials", func(t *testing.T) {
@@ -19,6 +20,7 @@ func TestCredentialFactory(t *testing.T) {
 			alg      primitives.CredentialsAlgType
 			producer CredentialProducer
 			secret   primitives.Password
+			randRead func([]byte) (int, error)
 			cause    *errors.Cause
 		}{
 			{
@@ -47,10 +49,26 @@ func TestCredentialFactory(t *testing.T) {
 				secret:   primitives.Password("sdf"),
 				cause:    &primitives.InvalidPasswordCause,
 			},
+			{
+				name:     "errors on rand.Read error - sha256",
+				alg:      primitives.SHA256,
+				producer: DefaultSHA256Producer,
+				secret:   primitives.Password("helloabcdefgh"),
+				randRead: errRand,
+				cause:    &primitives.SystemErrorCause,
+			},
 		}
+
+		origRandRead := randRead
+		defer func() { randRead = origRandRead }()
 
 		for _, tc := range tests {
 			t.Run(tc.name, func(t *testing.T) {
+				if tc.randRead == nil {
+					randRead = origRandRead
+				} else {
+					randRead = tc.randRead
+				}
 				creds, err := tc.producer.Generate(tc.secret)
 				if tc.cause != nil {
 					gm.Expect(errors.FromCause(err, *tc.cause)).To(gm.BeTrue())
@@ -76,6 +94,7 @@ func TestCredentialFactory(t *testing.T) {
 			cause      *errors.Cause
 			genCause   *errors.Cause
 			secret     *base64.Value
+			randRead   func([]byte) (int, error)
 		}{
 			{
 				name:       "matches properly - sha256",
@@ -157,6 +176,13 @@ func TestCredentialFactory(t *testing.T) {
 				comparison: matching,
 				genCause:   &primitives.InvalidPasswordCause,
 			},
+			{
+				name:       "matches properly - sha256",
+				producer:   DefaultSHA256Producer,
+				alg:        primitives.SHA256,
+				initial:    primitives.Password("abcdefghijk"),
+				comparison: primitives.Password("abcdefghijk"),
+			},
 		}
 
 		for _, tc := range tests {
@@ -184,3 +210,12 @@ func TestCredentialFactory(t *testing.T) {
 		}
 	})
 }
+
+type ErrRandReader struct {
+	i   int
+	err error
+}
+
+func (e ErrRandReader) Read(_ []byte) (int, error) { return e.i, e.err }
+
+var errRand = ErrRandReader{0, fmt.Errorf("bad rand.Read result")}.Read
