@@ -33,6 +33,9 @@ func TestSource(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
+	workerToken, err := m.CreateWorker(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
 	dbURL, err := primitives.NewDBURL("postgres://postgres:dev@my.cool.website:5432/mydb")
 	gm.Expect(err).To(gm.BeNil())
 
@@ -211,7 +214,7 @@ func TestSource(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		// report a fake schema for this source
-		err = client.ReportSchema(ctx, source.ID, primitives.SchemaBlob{"my-table": {"my-col": "INT"}})
+		err = m.ReportSchema(ctx, workerToken, source.ID, primitives.SchemaBlob{"my-table": {"my-col": "INT"}})
 		gm.Expect(err).To(gm.BeNil())
 
 		s, err := client.GetSource(ctx, source.ID, &coordinator.SourceOptions{WithSchema: true})
@@ -228,7 +231,7 @@ func TestSource(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		// report a fake schema for this source
-		err = client.ReportSchema(ctx, source.ID, primitives.SchemaBlob{"my-table": {"my-col": "INT"}})
+		err = m.ReportSchema(ctx, workerToken, source.ID, primitives.SchemaBlob{"my-table": {"my-col": "INT"}})
 		gm.Expect(err).To(gm.BeNil())
 
 		s, err := client.GetSourceByLabel(ctx, l, &coordinator.SourceOptions{WithSchema: true})

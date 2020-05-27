@@ -31,14 +31,19 @@ var dockerImages = []*mage.DockerImage{
 		},
 	},
 	{
-		Name: "capeprivacy/update",
+		Name: "capeprivacy/coordinator_migrations",
 		Tag:  "latest",
-		File: "dockerfiles/Dockerfile.update",
+		File: "dockerfiles/Dockerfile.coordinator_migrations",
 	},
 	{
-		Name: "capeprivacy/customer_seed",
+		Name: "capeprivacy/worker_migrations",
 		Tag:  "latest",
-		File: "tools/seed/Dockerfile.customer",
+		File: "dockerfiles/Dockerfile.worker_migrations",
+	},
+	{
+		Name: "capeprivacy/customer_migrations",
+		Tag:  "latest",
+		File: "tools/seed/Dockerfile.customer_migrations",
 	},
 }
 

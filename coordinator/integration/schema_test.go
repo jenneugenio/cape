@@ -38,6 +38,9 @@ func TestSchema(t *testing.T) {
 	source, err := client.AddSource(ctx, l, dbURL, nil)
 	gm.Expect(err).To(gm.BeNil())
 
+	workerToken, err := m.CreateWorker(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
 	t.Run("create a new source", func(t *testing.T) {
 		blob := primitives.SchemaBlob{
 			"my-transactions": {
@@ -47,7 +50,7 @@ func TestSchema(t *testing.T) {
 			},
 		}
 
-		err = client.ReportSchema(ctx, source.ID, blob)
+		err = m.ReportSchema(ctx, workerToken, source.ID, blob)
 		gm.Expect(err).To(gm.BeNil())
 	})
 
@@ -60,7 +63,7 @@ func TestSchema(t *testing.T) {
 			},
 		}
 
-		err = client.ReportSchema(ctx, source.ID, blob)
+		err = m.ReportSchema(ctx, workerToken, source.ID, blob)
 		gm.Expect(err).To(gm.BeNil())
 
 		// schema changed!
@@ -73,7 +76,7 @@ func TestSchema(t *testing.T) {
 			},
 		}
 
-		err = client.ReportSchema(ctx, source.ID, blob)
+		err = m.ReportSchema(ctx, workerToken, source.ID, blob)
 		gm.Expect(err).To(gm.BeNil())
 	})
 

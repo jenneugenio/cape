@@ -9,7 +9,6 @@ import (
 
 func updateCmd(c *cli.Context) error {
 	dbURL := EnvVariables(c.Context, capeDBURL).(*primitives.DBURL)
-
 	migrator, err := database.NewMigrator(dbURL.URL, "coordinator/migrations")
 	if err != nil {
 		return err

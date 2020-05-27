@@ -93,6 +93,43 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 	return client, nil
 }
 
+// ReportSchema will log in as the provided worker (through the API token)
+// and report the provided token as that worker
+func (m *Manager) ReportSchema(ctx context.Context, token *auth.APIToken, sourceID database.ID, schema primitives.SchemaBlob) error {
+	c, err := m.h.Client()
+	if err != nil {
+		return err
+	}
+
+	_, err = c.TokenLogin(ctx, token)
+	if err != nil {
+		return err
+	}
+
+	return c.ReportSchema(ctx, sourceID, schema)
+}
+
+// Registers a worker and returns a token for that worker
+func (m *Manager) CreateWorker(ctx context.Context) (*auth.APIToken, error) {
+	workerEmail, err := primitives.NewEmail("worker@cape.com")
+	if err != nil {
+		return nil, err
+	}
+
+	service, err := primitives.NewService(workerEmail, primitives.WorkerServiceType, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	worker, err := m.Admin.Client.CreateService(ctx, service)
+	if err != nil {
+		return nil, err
+	}
+
+	token, _, err := m.Admin.Client.CreateToken(ctx, worker)
+	return token, err
+}
+
 // CreateSource creates a source on the coordinator
 func (m *Manager) CreateSource(ctx context.Context, dbURL *primitives.DBURL, serviceID database.ID) error {
 	sourceLabel := primitives.Label("test-source")

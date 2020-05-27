@@ -1,0 +1,15 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cape-worker-migration
+spec:
+  template:
+    spec:
+      containers:
+        - image: "{{ .Values.image.worker_migration_repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.worker_pull_policy }}
+          name: seeder
+          env:
+            - name: "CAPE_DB_URL"
+              value: "{{ .Values.db.url }}"
+      restartPolicy: Never

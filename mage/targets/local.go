@@ -22,17 +22,24 @@ var registry = &mage.Registry{
 
 var charts = []*mage.Chart{
 	{
-		Name:    "postgres",
+		Name:    "postgres-cape",
 		Chart:   "bitnami/postgresql",
 		Version: "8.9.4",
-		Values:  "mage/config/postgres-values.yaml",
+		Values:  "mage/config/postgres-cape-values.yaml",
 		Atomic:  true,
 	},
 	{
-		Name:    "seed",
-		Chart:   "charts/customer",
-		Version: "0.0.1",
-		Values:  "mage/config/seed-values.yaml",
+		Name:    "postgres-worker",
+		Chart:   "bitnami/postgresql",
+		Version: "8.9.4",
+		Values:  "mage/config/postgres-worker-values.yaml",
+		Atomic:  true,
+	},
+	{
+		Name:    "postgres-customer",
+		Chart:   "bitnami/postgresql",
+		Version: "8.9.4",
+		Values:  "mage/config/postgres-customer-values.yaml",
 		Atomic:  true,
 	},
 	{
@@ -47,6 +54,20 @@ var charts = []*mage.Chart{
 		Chart:   "charts/connector",
 		Version: "0.0.1",
 		Values:  "mage/config/connector-values.yaml",
+		Atomic:  false,
+	},
+	{
+		Name:    "worker",
+		Chart:   "charts/worker",
+		Version: "0.0.1",
+		Values:  "mage/config/worker-values.yaml",
+		Atomic:  false,
+	},
+	{
+		Name:    "customer-migration",
+		Chart:   "charts/customer",
+		Version: "0.0.1",
+		Values:  "mage/config/customer-migration-values.yaml",
 		Atomic:  false,
 	},
 }

@@ -1,0 +1,10 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: worker
+  labels:
+    service: worker
+spec:
+  selector:
+    service: worker
+  clusterIP: None

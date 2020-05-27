@@ -66,13 +66,7 @@ func TestSetup(t *testing.T) {
 		roles, err := client.ListRoles(ctx)
 		gm.Expect(err).To(gm.BeNil())
 
-		roleLabels := []primitives.Label{
-			primitives.AdminRole,
-			primitives.DataConnectorRole,
-			primitives.GlobalRole,
-		}
-
-		labels := make([]primitives.Label, 3)
+		labels := make([]primitives.Label, len(primitives.SystemRoles))
 		for i, role := range roles {
 			labels[i] = role.Label
 			gm.Expect(role.System).To(gm.BeTrue())
@@ -86,7 +80,7 @@ func TestSetup(t *testing.T) {
 			}
 		}
 
-		gm.Expect(labels).To(gm.ContainElements(roleLabels))
+		gm.Expect(labels).To(gm.ContainElements(primitives.SystemRoles))
 	})
 
 	t.Run("Setup cannot be called a second time", func(t *testing.T) {

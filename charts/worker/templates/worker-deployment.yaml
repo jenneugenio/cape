@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cape-worker
+  labels:
+    service: cape-worker
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      service: cape-worker
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        service: cape-worker
+      # used for local development to always upgrade the
+      # deployment when running helm upgrade
+      # TODO revist for production deployments
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - image: "{{ .Values.image.worker_repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.worker_pull_policy }}
+          command: ["cape"]
+          args: ["worker", "start"]
+          name: cape-worker
+          env:
+            - name: CAPE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.token_secret }}
+                  key: token
+            - name: CAPE_DB_URL
+              value: "{{ .Values.db.url }}"
+      {{ if (.Values.dockerSecret)}}
+      imagePullSecrets:
+        - name: {{ .Values.dockerSecret }}
+      {{ end }}

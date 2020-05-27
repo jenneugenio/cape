@@ -20,6 +20,7 @@ func (p *Pkger) Generate(_ context.Context) error {
 		"primitives/policies/default/default-admin.yaml",
 		"primitives/policies/default/default-global.yaml",
 		"primitives/policies/default/default-data-connector.yaml",
+		"primitives/policies/default/default-worker.yaml",
 	}
 
 	dst := "pkged.go"

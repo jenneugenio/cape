@@ -286,6 +286,9 @@ func (r *mutationResolver) DeleteSession(ctx context.Context, input model.Delete
 }
 
 func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportSchemaRequest) (*string, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
 	var schemaBlob primitives.SchemaBlob
 	err := json.Unmarshal([]byte(input.SourceSchema), &schemaBlob)
 	if err != nil {
@@ -297,10 +300,8 @@ func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportS
 		return nil, err
 	}
 
-	// TODO -- add enforcer (needs policy)
-
-	var schema primitives.Schema
-	err = r.Backend.QueryOne(ctx, &schema, database.NewFilter(database.Where{"source_id": input.SourceID}, nil, nil))
+	schema := &primitives.Schema{}
+	err = enforcer.QueryOne(ctx, schema, database.NewFilter(database.Where{"source_id": input.SourceID}, nil, nil))
 	if err != nil && errs.FromCause(err, database.NotFoundCause) {
 		// if not found, create it
 		s, err := primitives.NewSchema(input.SourceID, schemaBlob)
@@ -308,11 +309,11 @@ func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportS
 			return nil, err
 		}
 
-		schema = *s
+		schema = s
 	}
 
 	schema.Blob = schemaBlob
-	err = r.Backend.Upsert(ctx, &schema)
+	err = enforcer.Upsert(ctx, schema)
 	return nil, err
 }
 

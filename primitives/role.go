@@ -15,9 +15,12 @@ const (
 
 	// DataConnectorRole is the label of the data connector roles
 	DataConnectorRole = Label("data-connector")
+
+	// WorkerRole is for the cape worker
+	WorkerRole = Label("worker")
 )
 
-var SystemRoles = []Label{AdminRole, GlobalRole, DataConnectorRole}
+var SystemRoles = []Label{AdminRole, GlobalRole, DataConnectorRole, WorkerRole}
 
 // Role in a role in the system (e.g. Admin, user, etc)
 type Role struct {

@@ -106,11 +106,18 @@ $ export CAPE_TOKEN=<TOKEN PRINTED OUT FROM THE LAST COMMAND>
 $ kubectl create secret generic connector-secret --from-literal=token=$CAPE_TOKEN
 ```
 
+Get a token that you can provide the worker to be able to auth with the connector & coordinator
+```
+$ cape services create --type worker service:worker@my-cape.com
+$ export WORKER_TOKEN=<TOKEN PRINTED OUT FROM THE LAST COMMAND>
+$ kubectl create secret generic worker-secret --from-literal=token=$WORKER_TOKEN
+```
+
 Create a data source and point it to some test data located in the local cluster. This needs to be
 explicitly linked with the data connector created above.
 
 ```
-$ cape sources add --link service:dc@my-cape.com transactions postgres://postgres:dev@postgres-postgresql:5432/postgres
+$ cape sources add --link service:dc@my-cape.com transactions postgres://postgres:dev@postgres-customer-postgresql:5434/customer
 ```
 
 Create a policy so that the data is actually accessible. By default, access to data in the Cape is
@@ -120,7 +127,7 @@ blocked unless there is a policy saying you can access it.
 $ cape policies attach --from-file examples/allow-specific-fields.yaml allow-specific-fields global
 ```
 
-Try to pull the data! If this command succeds you should be good to continue experimenting and testing
+Try to pull the data! If this command succeeds you should be good to continue experimenting and testing
 the system.
 
 ```
