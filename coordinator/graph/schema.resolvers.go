@@ -255,10 +255,6 @@ func (r *mutationResolver) UpdateSource(ctx context.Context, input model.UpdateS
 		return nil, err
 	}
 
-	if source == nil {
-		panic("why is source nil")
-	}
-
 	return source, nil
 }
 
