@@ -64,7 +64,7 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.SetupRequest) 
 			return nil, err
 		}
 
-		creds, err := r.CredentialFactory.Generate(input.Password)
+		creds, err := r.CredentialProducer.Generate(input.Password)
 		if err != nil {
 			logger.Info().Err(err).Msg("Could not generate credentials")
 			return nil, err
@@ -136,7 +136,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 		return nil, err
 	}
 
-	creds, err := r.CredentialFactory.Generate(password)
+	creds, err := r.CredentialProducer.Generate(password)
 	if err != nil {
 		logger.Info().Err(err).Msg("Could not generate credentials")
 		return nil, err
@@ -264,7 +264,7 @@ func (r *mutationResolver) CreateSession(ctx context.Context, input model.Sessio
 		return nil, err
 	}
 
-	err = r.CredentialFactory.Compare(input.Secret, creds)
+	err = r.CredentialProducer.Compare(input.Secret, creds)
 	if err != nil {
 		logger.Info().Err(err).Msgf("Invalid credentials provided")
 		return nil, auth.ErrAuthentication

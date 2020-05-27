@@ -12,16 +12,13 @@ import (
 func TestCan(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	factory, err := NewCredentialFactory(primitives.SHA256)
-	gm.Expect(err).To(gm.BeNil())
-
 	email, err := primitives.NewEmail("jerry@jerry.berry")
 	gm.Expect(err).To(gm.BeNil())
 
 	password, err := primitives.GeneratePassword()
 	gm.Expect(err).To(gm.BeNil())
 
-	creds, err := factory.Generate(password)
+	creds, err := DefaultSHA256Producer.Generate(password)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("denied no rules", func(t *testing.T) {

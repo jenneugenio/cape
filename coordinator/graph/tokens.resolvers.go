@@ -48,7 +48,7 @@ func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTo
 		return nil, err
 	}
 
-	creds, err := r.CredentialFactory.Generate(password)
+	creds, err := r.CredentialProducer.Generate(password)
 	if err != nil {
 		logger.Info().Err(err).Msg("Could not generate credentials")
 		return nil, err

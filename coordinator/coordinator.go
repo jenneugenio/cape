@@ -32,8 +32,8 @@ type Coordinator struct {
 	handler http.Handler
 	logger  *zerolog.Logger
 
-	tokenAuth         *auth.TokenAuthority
-	credentialFactory *auth.CredentialFactory
+	tokenAuth          *auth.TokenAuthority
+	credentialProducer auth.CredentialProducer
 }
 
 // Setup the coordinator so it's ready to be served!
@@ -146,21 +146,21 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		return nil, err
 	}
 
-	alg := primitives.Argon2ID
-	if cfg.CredentialProducerAlg != primitives.UnknownAlg {
-		alg = cfg.CredentialProducerAlg
-	}
-
-	credentialFactory, err := auth.NewCredentialFactory(alg)
-	if err != nil {
-		return nil, err
+	var cp auth.CredentialProducer
+	switch cfg.CredentialProducerAlg {
+	case primitives.SHA256:
+		cp = auth.DefaultSHA256Producer
+	case primitives.Argon2ID:
+		cp = auth.DefaultArgon2IDProducer
+	default:
+		return nil, errors.New(InvalidConfigCause, "Unknown credential producer algorithm supplied")
 	}
 
 	config := &generated.Config{Resolvers: &graph.Resolver{
-		Backend:           backend,
-		TokenAuthority:    tokenAuth,
-		RootKey:           rootKey,
-		CredentialFactory: credentialFactory,
+		Backend:            backend,
+		TokenAuthority:     tokenAuth,
+		RootKey:            rootKey,
+		CredentialProducer: cp,
 	}}
 
 	config.Directives.IsAuthenticated = framework.IsAuthenticatedDirective(backend, tokenAuth)
@@ -184,12 +184,12 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 	).Then(health)
 
 	return &Coordinator{
-		cfg:               cfg,
-		handler:           chain,
-		backend:           backend,
-		logger:            logger,
-		tokenAuth:         tokenAuth,
-		credentialFactory: credentialFactory,
+		cfg:                cfg,
+		handler:            chain,
+		backend:            backend,
+		logger:             logger,
+		tokenAuth:          tokenAuth,
+		credentialProducer: cp,
 	}, nil
 }
 

@@ -45,6 +45,6 @@ var (
 	// ErrAuthorization is the error wrapping the AuthorizationFailure cause
 	ErrAuthorization = errors.New(AuthorizationFailure, "Access denied")
 
-	// ProducerNotFound occurs when the given algorithm does not exist
-	ProducerNotFound = errors.NewCause(errors.NotFoundCategory, "producer_not_found")
+	// UnsupportedAlgorithm occurs when the wrong credential algorithm type is specified
+	UnsupportedAlgorithm = errors.NewCause(errors.BadRequestCategory, "unsupported_algorithm")
 )

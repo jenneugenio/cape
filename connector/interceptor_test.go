@@ -26,22 +26,17 @@ func (t *testCoordinatorProvider) GetCoordinator() Coordinator {
 }
 
 type testCoordinator struct {
-	cf *auth.CredentialFactory
+	cp auth.CredentialProducer
 }
 
 func newTestCoordinator() (*testCoordinator, error) {
-	cf, err := auth.NewCredentialFactory(primitives.SHA256)
-	if err != nil {
-		return nil, err
-	}
-
 	return &testCoordinator{
-		cf: cf,
+		cp: auth.DefaultSHA256Producer,
 	}, nil
 }
 
 func (t *testCoordinator) ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error) {
-	creds, err := t.cf.Generate("hellosignmeup")
+	creds, err := t.cp.Generate("hellosignmeup")
 	if err != nil {
 		return nil, err
 	}

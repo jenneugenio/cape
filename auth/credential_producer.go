@@ -12,24 +12,22 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
+var (
+	DefaultSHA256Producer   = &SHA256Producer{}
+	DefaultArgon2IDProducer = &Argon2IDProducer{
+		Time:      1,
+		Memory:    64 * 1024,
+		Threads:   4,
+		KeyLength: primitives.SecretLength,
+	}
+)
+
 // CredentialProducer represents an interface for generating credentials and
 // comparing credentials based on a pre-shared key.
 type CredentialProducer interface {
 	Generate(primitives.Password) (*primitives.Credentials, error)
 	Compare(primitives.Password, *primitives.Credentials) error
-}
-
-type ProducerRegistry map[primitives.CredentialsAlgType]CredentialProducer
-
-// Get returns the CredentialProducer for the given AlgType. If a producer
-// doesn't exist for the algtype an error is returned.
-func (pr ProducerRegistry) Get(alg primitives.CredentialsAlgType) (CredentialProducer, error) {
-	cp, ok := pr[alg]
-	if !ok {
-		return nil, errors.New(ProducerNotFound, "Could not find producer: %s", alg.String())
-	}
-
-	return cp, nil
+	Alg() primitives.CredentialsAlgType
 }
 
 // Argon2IDProducer implements the CredentialProducer interface.
@@ -45,6 +43,10 @@ type Argon2IDProducer struct {
 }
 
 func (a *Argon2IDProducer) Generate(secret primitives.Password) (*primitives.Credentials, error) {
+	if err := secret.Validate(); err != nil {
+		return nil, err
+	}
+
 	salt := make([]byte, primitives.SaltLength)
 	_, err := rand.Read(salt)
 	if err != nil {
@@ -53,7 +55,7 @@ func (a *Argon2IDProducer) Generate(secret primitives.Password) (*primitives.Cre
 
 	value := argon2.IDKey([]byte(secret), salt, a.Time, a.Memory, a.Threads, a.KeyLength)
 	creds := &primitives.Credentials{
-		Alg:    primitives.Argon2ID,
+		Alg:    a.Alg(),
 		Secret: base64.New(value),
 		Salt:   base64.New(salt),
 	}
@@ -62,8 +64,16 @@ func (a *Argon2IDProducer) Generate(secret primitives.Password) (*primitives.Cre
 }
 
 func (a *Argon2IDProducer) Compare(secret primitives.Password, creds *primitives.Credentials) error {
+	if err := secret.Validate(); err != nil {
+		return err
+	}
+
 	if err := creds.Validate(); err != nil {
 		return err
+	}
+
+	if creds.Alg != a.Alg() {
+		return errors.New(UnsupportedAlgorithm, "Algorithm %s is not supported, requires %s", creds.Alg, a.Alg())
 	}
 
 	value := argon2.IDKey([]byte(secret), []byte(*creds.Salt), a.Time, a.Memory, a.Threads, a.KeyLength)
@@ -74,12 +84,20 @@ func (a *Argon2IDProducer) Compare(secret primitives.Password, creds *primitives
 	return nil
 }
 
+func (a *Argon2IDProducer) Alg() primitives.CredentialsAlgType {
+	return primitives.Argon2ID
+}
+
 // SHA256Producer implements the CredentialProducer interface. The
 // SHA256Producer is designed for _fast_ hashing scenarios and thus should
 // only ever be used in development situations
 type SHA256Producer struct{}
 
-func (*SHA256Producer) Generate(secret primitives.Password) (*primitives.Credentials, error) {
+func (s *SHA256Producer) Generate(secret primitives.Password) (*primitives.Credentials, error) {
+	if err := secret.Validate(); err != nil {
+		return nil, err
+	}
+
 	salt := make([]byte, primitives.SaltLength)
 	_, err := rand.Read(salt)
 	if err != nil {
@@ -88,7 +106,7 @@ func (*SHA256Producer) Generate(secret primitives.Password) (*primitives.Credent
 
 	value := sha256.Sum256(append([]byte(secret), salt...))
 	creds := &primitives.Credentials{
-		Alg:    primitives.SHA256,
+		Alg:    s.Alg(),
 		Secret: base64.New(value[:]),
 		Salt:   base64.New(salt),
 	}
@@ -96,9 +114,17 @@ func (*SHA256Producer) Generate(secret primitives.Password) (*primitives.Credent
 	return creds, creds.Validate()
 }
 
-func (*SHA256Producer) Compare(secret primitives.Password, creds *primitives.Credentials) error {
+func (s *SHA256Producer) Compare(secret primitives.Password, creds *primitives.Credentials) error {
+	if err := secret.Validate(); err != nil {
+		return err
+	}
+
 	if err := creds.Validate(); err != nil {
 		return err
+	}
+
+	if creds.Alg != s.Alg() {
+		return errors.New(UnsupportedAlgorithm, "Algorithm %s is not supported, requires %s", creds.Alg, s.Alg())
 	}
 
 	value := sha256.Sum256(append([]byte(secret), []byte(*creds.Salt)...))
@@ -107,4 +133,8 @@ func (*SHA256Producer) Compare(secret primitives.Password, creds *primitives.Cre
 	}
 
 	return nil
+}
+
+func (s *SHA256Producer) Alg() primitives.CredentialsAlgType {
+	return primitives.SHA256
 }

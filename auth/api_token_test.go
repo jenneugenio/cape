@@ -41,16 +41,13 @@ func TestAPIToken(t *testing.T) {
 	userID, err := database.GenerateID(primitives.UserType)
 	gm.Expect(err).To(gm.BeNil())
 
-	factory, err := NewCredentialFactory(primitives.SHA256)
-	gm.Expect(err).To(gm.BeNil())
-
 	password, err := primitives.GeneratePassword()
 	gm.Expect(err).To(gm.BeNil())
 
 	secret, err := FromPassword(password)
 	gm.Expect(err).To(gm.BeNil())
 
-	creds, err := factory.Generate(password)
+	creds, err := DefaultSHA256Producer.Generate(password)
 	gm.Expect(err).To(gm.BeNil())
 
 	tc, err := primitives.NewToken(userID, creds)

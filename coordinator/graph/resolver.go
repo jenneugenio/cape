@@ -9,8 +9,8 @@ import (
 
 // Resolver is used by graphql to resolve queries/mutations
 type Resolver struct {
-	Backend           database.Backend
-	TokenAuthority    *auth.TokenAuthority
-	CredentialFactory *auth.CredentialFactory
-	RootKey           [32]byte
+	Backend            database.Backend
+	TokenAuthority     *auth.TokenAuthority
+	CredentialProducer auth.CredentialProducer
+	RootKey            [32]byte
 }
