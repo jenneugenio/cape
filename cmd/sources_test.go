@@ -184,7 +184,7 @@ func TestListSources(t *testing.T) {
 		}
 
 		app, u := NewHarness([]interface{}{resp})
-		err = app.Run([]string{"cape", "sources", "update", "my-source-1", "--set-data-connector", "service:dc@example.com"})
+		err = app.Run([]string{"cape", "sources", "update", "-y", "my-source-1"})
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(len(u.Calls)).To(gm.Equal(1))

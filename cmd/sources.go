@@ -51,6 +51,7 @@ func init() {
 					Usage:   "Link the source to the data connector `CONNECTOR`",
 					EnvVars: []string{"CAPE_DATA_CONNECTOR"},
 				},
+				yesFlag(),
 			},
 		},
 	}
@@ -133,7 +134,9 @@ func sourcesAdd(c *cli.Context) error {
 }
 
 func sourcesUpdate(c *cli.Context) error {
+	skipConfirm := c.Bool("yes")
 	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
 	client, err := provider.Client(c.Context)
 	if err != nil {
 		return err
@@ -156,6 +159,13 @@ func sourcesUpdate(c *cli.Context) error {
 		}
 
 		serviceID = &service.ID
+	} else {
+		if !skipConfirm {
+			err := u.Confirm(fmt.Sprintf("Do you really want to unlink the service for this source %s", label))
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	source, err := client.UpdateSource(c.Context, label, serviceID)
@@ -163,7 +173,6 @@ func sourcesUpdate(c *cli.Context) error {
 		return err
 	}
 
-	u := provider.UI(c.Context)
 	return u.Template("Updated source {{ . | bold }} with data connector {{ . | bold }}\n", source.Label.String())
 }
 
