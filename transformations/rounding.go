@@ -1,8 +1,8 @@
 package transformations
 
 import (
-	"fmt"
 	"github.com/capeprivacy/cape/connector/proto"
+	errors "github.com/capeprivacy/cape/partyerrors"
 	"math"
 )
 
@@ -29,7 +29,7 @@ func (r *RoundingTransform) roundFloat64(x float64) (float64, error) {
 	case RoundToEven:
 		return math.RoundToEven(y) / r.precisionFactor, nil
 	}
-	return x, fmt.Errorf("Unsupported rounding type %d", r.roundingType)
+	return x, errors.New(UnsupportedType, "Unexpected error (unsupported rounding type %d)", r.roundingType)
 }
 
 func (r *RoundingTransform) Transform(input *proto.Field) (*proto.Field, error) {
@@ -63,7 +63,7 @@ func (r *RoundingTransform) Initialize(args Args) error {
 		case "awayFromZero":
 			r.roundingType = RoundAwayFromZero
 		default:
-			return fmt.Errorf("Unsupported rounding type '%s'", roundingType)
+			return errors.New(UnsupportedType, "Unsupported rounding type '%s'", roundingType)
 		}
 	}
 
@@ -84,7 +84,7 @@ func (r *RoundingTransform) Validate(args Args) error {
 		case "awayFromZero":
 			break
 		default:
-			return fmt.Errorf("Unsupported rounding type '%s'", roundingType)
+			return errors.New(UnsupportedType, "Unsupported rounding type '%s'", roundingType)
 		}
 	}
 
@@ -92,7 +92,7 @@ func (r *RoundingTransform) Validate(args Args) error {
 	if found {
 		pre, ok := precision.(int)
 		if !ok || pre < 0 {
-			return fmt.Errorf("Unsupported precision: must be positive integer")
+			return errors.New(UnsupportedType, "Unsupported precision: must be positive integer")
 		}
 	}
 
