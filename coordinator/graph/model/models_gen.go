@@ -123,6 +123,11 @@ type SetupRequest struct {
 	Password primitives.Password `json:"password"`
 }
 
+type SourceOptions struct {
+	WithSchema bool   `json:"withSchema"`
+	BlobPath   string `json:"blobPath"`
+}
+
 type UpdateSourceRequest struct {
 	SourceLabel primitives.Label `json:"source_label"`
 	ServiceID   *database.ID     `json:"service_id"`

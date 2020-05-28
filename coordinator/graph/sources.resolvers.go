@@ -128,12 +128,14 @@ func (r *queryResolver) Source(ctx context.Context, id database.ID) (*primitives
 	return source, nil
 }
 
-func (r *queryResolver) SourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error) {
+func (r *queryResolver) SourceByLabel(ctx context.Context, label primitives.Label, options *model.SourceOptions) (*primitives.Source, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
 	source := &primitives.Source{}
-	err := enforcer.QueryOne(ctx, source, database.NewFilter(database.Where{"label": label.String()}, nil, nil))
+	err := enforcer.QueryOne(ctx, source, database.NewFilter(
+		database.Where{"label": label.String()},
+		nil, nil))
 	if err != nil {
 		return nil, err
 	}

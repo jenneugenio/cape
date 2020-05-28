@@ -12,6 +12,11 @@ type Source {
     schema: Schema
 }
 
+input SourceOptions {
+    withSchema: Boolean!
+    blobPath: String!
+}
+
 input AddSourceRequest {
     label: Label!
     credentials: DBURL!
@@ -30,7 +35,7 @@ input RemoveSourceRequest {
 extend type Query {
     sources: [Source!]! @isAuthenticated
     source(id: ID!): Source! @isAuthenticated
-    sourceByLabel(label: Label!): Source! @isAuthenticated
+    sourceByLabel(label: Label!, options: SourceOptions): Source! @isAuthenticated
 }
 
 extend type Mutation {

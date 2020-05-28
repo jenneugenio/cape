@@ -126,7 +126,7 @@ type ComplexityRoot struct {
 		ServiceByEmail   func(childComplexity int, email primitives.Email) int
 		Services         func(childComplexity int) int
 		Source           func(childComplexity int, id database.ID) int
-		SourceByLabel    func(childComplexity int, label primitives.Label) int
+		SourceByLabel    func(childComplexity int, label primitives.Label, options *model.SourceOptions) int
 		Sources          func(childComplexity int) int
 		Tokens           func(childComplexity int, identityID database.ID) int
 		User             func(childComplexity int, id database.ID) int
@@ -231,7 +231,7 @@ type QueryResolver interface {
 	Services(ctx context.Context) ([]*primitives.Service, error)
 	Sources(ctx context.Context) ([]*primitives.Source, error)
 	Source(ctx context.Context, id database.ID) (*primitives.Source, error)
-	SourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error)
+	SourceByLabel(ctx context.Context, label primitives.Label, options *model.SourceOptions) (*primitives.Source, error)
 	Tokens(ctx context.Context, identityID database.ID) ([]database.ID, error)
 }
 type ServiceResolver interface {
@@ -816,7 +816,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.SourceByLabel(childComplexity, args["label"].(primitives.Label)), true
+		return e.complexity.Query.SourceByLabel(childComplexity, args["label"].(primitives.Label), args["options"].(*model.SourceOptions)), true
 
 	case "Query.sources":
 		if e.complexity.Query.Sources == nil {
@@ -1439,6 +1439,11 @@ scalar ServiceType
     schema: Schema
 }
 
+input SourceOptions {
+    withSchema: Boolean!
+    blobPath: String!
+}
+
 input AddSourceRequest {
     label: Label!
     credentials: DBURL!
@@ -1457,7 +1462,7 @@ input RemoveSourceRequest {
 extend type Query {
     sources: [Source!]! @isAuthenticated
     source(id: ID!): Source! @isAuthenticated
-    sourceByLabel(label: Label!): Source! @isAuthenticated
+    sourceByLabel(label: Label!, options: SourceOptions): Source! @isAuthenticated
 }
 
 extend type Mutation {
@@ -1962,6 +1967,14 @@ func (ec *executionContext) field_Query_sourceByLabel_args(ctx context.Context, 
 		}
 	}
 	args["label"] = arg0
+	var arg1 *model.SourceOptions
+	if tmp, ok := rawArgs["options"]; ok {
+		arg1, err = ec.unmarshalOSourceOptions2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐSourceOptions(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["options"] = arg1
 	return args, nil
 }
 
@@ -4963,7 +4976,7 @@ func (ec *executionContext) _Query_sourceByLabel(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().SourceByLabel(rctx, args["label"].(primitives.Label))
+			return ec.resolvers.Query().SourceByLabel(rctx, args["label"].(primitives.Label), args["options"].(*model.SourceOptions))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAuthenticated == nil {
@@ -7736,6 +7749,30 @@ func (ec *executionContext) unmarshalInputSetupRequest(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputSourceOptions(ctx context.Context, obj interface{}) (model.SourceOptions, error) {
+	var it model.SourceOptions
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "withSchema":
+			var err error
+			it.WithSchema, err = ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "blobPath":
+			var err error
+			it.BlobPath, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateSourceRequest(ctx context.Context, obj interface{}) (model.UpdateSourceRequest, error) {
 	var it model.UpdateSourceRequest
 	var asMap = obj.(map[string]interface{})
@@ -10113,6 +10150,18 @@ func (ec *executionContext) marshalOService2ᚖgithubᚗcomᚋcapeprivacyᚋcape
 		return graphql.Null
 	}
 	return ec._Service(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOSourceOptions2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐSourceOptions(ctx context.Context, v interface{}) (model.SourceOptions, error) {
+	return ec.unmarshalInputSourceOptions(ctx, v)
+}
+
+func (ec *executionContext) unmarshalOSourceOptions2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐSourceOptions(ctx context.Context, v interface{}) (*model.SourceOptions, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOSourceOptions2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐSourceOptions(ctx, v)
+	return &res, err
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

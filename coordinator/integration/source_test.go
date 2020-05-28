@@ -4,6 +4,7 @@ package integration
 
 import (
 	"context"
+	"github.com/capeprivacy/cape/coordinator/graph/model"
 	"testing"
 
 	gm "github.com/onsi/gomega"
@@ -217,7 +218,7 @@ func TestSource(t *testing.T) {
 		err = m.ReportSchema(ctx, workerToken, source.ID, primitives.SchemaBlob{"my-table": {"my-col": "INT"}})
 		gm.Expect(err).To(gm.BeNil())
 
-		s, err := client.GetSource(ctx, source.ID, &coordinator.SourceOptions{WithSchema: true})
+		s, err := client.GetSource(ctx, source.ID, &model.SourceOptions{WithSchema: true})
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(s).ToNot(gm.BeNil())
 		gm.Expect(s.Schema.Blob).To(gm.Equal(primitives.SchemaBlob{"my-table": {"my-col": "INT"}}))
@@ -234,7 +235,32 @@ func TestSource(t *testing.T) {
 		err = m.ReportSchema(ctx, workerToken, source.ID, primitives.SchemaBlob{"my-table": {"my-col": "INT"}})
 		gm.Expect(err).To(gm.BeNil())
 
-		s, err := client.GetSourceByLabel(ctx, l, &coordinator.SourceOptions{WithSchema: true})
+		s, err := client.GetSourceByLabel(ctx, l, &model.SourceOptions{WithSchema: true})
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(s).ToNot(gm.BeNil())
+		gm.Expect(s.Schema.Blob).To(gm.Equal(primitives.SchemaBlob{"my-table": {"my-col": "INT"}}))
+	})
+
+	t.Run("describe a subset of a single data source by label", func(t *testing.T) {
+		l, err := primitives.NewLabel("describe-me-label")
+		gm.Expect(err).To(gm.BeNil())
+
+		source, err := client.AddSource(ctx, l, dbURL, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		// report a fake schema for this source
+		err = client.ReportSchema(ctx, source.ID,
+			primitives.SchemaBlob{
+				"my-table": {"my-col": "INT"},
+				"my-other-table": {"my-col": "INT"},
+			})
+		gm.Expect(err).To(gm.BeNil())
+
+		opts := &model.SourceOptions{
+			WithSchema: true,
+			BlobPath: "my-table",
+		}
+		s, err := client.GetSourceByLabel(ctx, l, opts)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(s).ToNot(gm.BeNil())
 		gm.Expect(s.Schema.Blob).To(gm.Equal(primitives.SchemaBlob{"my-table": {"my-col": "INT"}}))

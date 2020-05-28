@@ -13,6 +13,7 @@ type Querier interface {
 	Delete(context.Context, types.Type, ID) error
 	Upsert(context.Context, Entity) error
 	Update(context.Context, Entity) error
+	SubQueryOne(context.Context, Entity, *Select, Filter) error
 	QueryOne(context.Context, Entity, Filter) error
 	Query(context.Context, interface{}, Filter) error
 }

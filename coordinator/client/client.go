@@ -26,10 +26,7 @@ var NetworkCause = errors.NewCause(errors.RequestTimeoutCategory, "network_error
 // it doesn't recognize.
 var UnrecognizedIdentityType = errors.NewCause(errors.BadRequestCategory, "unrecognized_identity")
 
-// SourceOptions can be passed to some of the source routes to provide additional functionality
-type SourceOptions struct {
-	WithSchema bool
-}
+type Path string
 
 type ClientTransport struct {
 	client    *graphql.Client
@@ -718,18 +715,23 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label, o
 	variables := make(map[string]interface{})
 	variables["label"] = label
 
-	// We will also request the schema if withSchema == true
+	extraArgs := ""
 	describeClause := ""
-	if opts != nil && opts.WithSchema {
-		describeClause = `
-			schema {
-				blob
-			}
-		`
+	if opts != nil  {
+		if opts.WithSchema {
+			describeClause = `
+				schema(opts: $options) {
+					blob
+				}
+			`
+		}
+
+		variables["options"] = opts.SchemaOptions
+		extraArgs = ", $options: SchemaOptions"
 	}
 
 	err := c.transport.Raw(ctx, fmt.Sprintf(`
-		query Sources($label: Label!) {
+		query SourcesByLabel($label: Label!%s) {
 				sourceByLabel(label: $label) {
 					id
 					label
@@ -743,7 +745,7 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label, o
 					%s
 				}
 			}
-	`, describeClause), variables, &resp)
+	`, extraArgs, describeClause), variables, &resp)
 	if err != nil {
 		return nil, err
 	}

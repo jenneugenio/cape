@@ -32,6 +32,10 @@ type Page struct {
 	Offset int
 }
 
+type Select struct {
+	LookingFor string
+}
+
 // Filter represents a filter thats applied to a Query
 type Filter struct {
 	Where Where

@@ -56,6 +56,7 @@ var (
 	Reserved    Type = 0xD00
 	Test        Type = 0xD01
 	TestMutable Type = 0xD02
+	TestNested  Type = 0xD03
 
 	// >12 bits will mess the ID encoding up!!!
 	Overflow Type = 0xFFF
@@ -123,4 +124,5 @@ func Decode(in uint16) (Type, error) {
 func init() {
 	Register(Test, "test", false)
 	Register(TestMutable, "test_mutable", true)
+	Register(TestNested, "test_nested", false)
 }

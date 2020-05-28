@@ -142,6 +142,20 @@ func (e *Enforcer) Update(ctx context.Context, entity database.Entity) error {
 	return nil
 }
 
+func (e *Enforcer) SubQueryOne(ctx context.Context, entity database.Entity, s *database.Select, filter database.Filter) error {
+	err := e.session.Can(primitives.Read, entity.GetType())
+	if err != nil {
+		return err
+	}
+
+	err = e.db.QueryOne(ctx, entity, filter)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // QueryOne calls down to the underlying db function as long as the contained policies
 // can query the given entity
 func (e *Enforcer) QueryOne(ctx context.Context, entity database.Entity, filter database.Filter) error {
