@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"github.com/rs/zerolog"
 	"io/ioutil"
 	"time"
@@ -13,14 +14,13 @@ import (
 	"github.com/jackc/pgx"
 
 	conn "github.com/capeprivacy/cape/connector/client"
-	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
 
 type SchemaJobArgs struct {
-	Source *coordinator.SourceResponse
+	Source *client.SourceResponse
 }
 
 type Worker struct {
@@ -31,7 +31,7 @@ type Worker struct {
 	// Loaded late
 	workers     *que.WorkerPool
 	qc          *que.Client
-	coordClient *coordinator.Client
+	coordClient *client.Client
 	session     *primitives.Session
 
 	logger *zerolog.Logger
@@ -130,8 +130,8 @@ func (w *Worker) GetSources(j *que.Job) error {
 }
 
 func (w *Worker) Login(ctx context.Context) error {
-	transport := coordinator.NewTransport(w.config.Token.URL, nil)
-	w.coordClient = coordinator.NewClient(transport)
+	transport := client.NewTransport(w.config.Token.URL, nil)
+	w.coordClient = client.NewClient(transport)
 	session, err := w.coordClient.TokenLogin(ctx, w.config.Token)
 	if err != nil {
 		return err

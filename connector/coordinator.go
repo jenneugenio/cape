@@ -2,10 +2,10 @@ package connector
 
 import (
 	"context"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"github.com/rs/zerolog"
 
 	"github.com/capeprivacy/cape/auth"
-	coor "github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -17,14 +17,14 @@ type CoordinatorProvider interface {
 type Coordinator interface {
 	ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error)
 	GetIdentityPolicies(ctx context.Context, id database.ID) ([]*primitives.Policy, error)
-	GetSourceByLabel(ctx context.Context, label primitives.Label, opts *coor.SourceOptions) (*coor.SourceResponse, error)
+	GetSourceByLabel(ctx context.Context, label primitives.Label, opts *client.SourceOptions) (*client.SourceResponse, error)
 }
 
 // Coordinator wraps a coordinator client giving some extra features
 // such as lazily authenticated (i.e. only authenticating when necessary)
 // and validating that a given token has a valid session
 type coordinator struct {
-	*coor.Client
+	*client.Client
 	token  *auth.APIToken
 	logger *zerolog.Logger
 }
@@ -55,8 +55,8 @@ func (c *coordinator) ValidateToken(ctx context.Context, tokenStr string) (primi
 		return nil, err
 	}
 
-	transport := coor.NewTransport(c.token.URL, token)
-	userClient := coor.NewClient(transport)
+	transport := client.NewTransport(c.token.URL, token)
+	userClient := client.NewClient(transport)
 
 	return userClient.Me(ctx)
 }
@@ -64,8 +64,8 @@ func (c *coordinator) ValidateToken(ctx context.Context, tokenStr string) (primi
 // authenticateClient lazily authenticates with a coordinator if required
 func (c *coordinator) authenticateClient(ctx context.Context) error {
 	if c.Client == nil {
-		transport := coor.NewTransport(c.token.URL, nil)
-		c.Client = coor.NewClient(transport)
+		transport := client.NewTransport(c.token.URL, nil)
+		c.Client = client.NewClient(transport)
 	}
 
 	if c.Authenticated() {

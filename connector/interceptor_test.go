@@ -2,6 +2,7 @@ package connector
 
 import (
 	"context"
+	"github.com/capeprivacy/cape/coordinator/client"
 	fw "github.com/capeprivacy/cape/framework"
 	"testing"
 
@@ -12,7 +13,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/capeprivacy/cape/auth"
-	coor "github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -48,8 +48,8 @@ func (t *testCoordinator) GetIdentityPolicies(ctx context.Context, id database.I
 	return []*primitives.Policy{}, nil
 }
 
-func (t *testCoordinator) GetSourceByLabel(ctx context.Context, label primitives.Label, opts *coor.SourceOptions) (*coor.SourceResponse, error) {
-	return &coor.SourceResponse{}, nil
+func (t *testCoordinator) GetSourceByLabel(ctx context.Context, label primitives.Label, opts *client.SourceOptions) (*client.SourceResponse, error) {
+	return &client.SourceResponse{}, nil
 }
 
 type TestStream struct {

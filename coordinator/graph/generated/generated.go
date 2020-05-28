@@ -14,6 +14,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	"github.com/capeprivacy/cape/primitives"
@@ -126,7 +127,7 @@ type ComplexityRoot struct {
 		ServiceByEmail   func(childComplexity int, email primitives.Email) int
 		Services         func(childComplexity int) int
 		Source           func(childComplexity int, id database.ID) int
-		SourceByLabel    func(childComplexity int, label primitives.Label, options *model.SourceOptions) int
+		SourceByLabel    func(childComplexity int, label primitives.Label) int
 		Sources          func(childComplexity int) int
 		Tokens           func(childComplexity int, identityID database.ID) int
 		User             func(childComplexity int, id database.ID) int
@@ -169,7 +170,7 @@ type ComplexityRoot struct {
 		Endpoint    func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Label       func(childComplexity int) int
-		Schema      func(childComplexity int) int
+		Schema      func(childComplexity int, opts *client.SchemaOptions) int
 		Service     func(childComplexity int) int
 		Type        func(childComplexity int) int
 	}
@@ -231,7 +232,7 @@ type QueryResolver interface {
 	Services(ctx context.Context) ([]*primitives.Service, error)
 	Sources(ctx context.Context) ([]*primitives.Source, error)
 	Source(ctx context.Context, id database.ID) (*primitives.Source, error)
-	SourceByLabel(ctx context.Context, label primitives.Label, options *model.SourceOptions) (*primitives.Source, error)
+	SourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error)
 	Tokens(ctx context.Context, identityID database.ID) ([]database.ID, error)
 }
 type ServiceResolver interface {
@@ -240,7 +241,7 @@ type ServiceResolver interface {
 type SourceResolver interface {
 	Credentials(ctx context.Context, obj *primitives.Source) (*primitives.DBURL, error)
 	Service(ctx context.Context, obj *primitives.Source) (*primitives.Service, error)
-	Schema(ctx context.Context, obj *primitives.Source) (*primitives.Schema, error)
+	Schema(ctx context.Context, obj *primitives.Source, opts *client.SchemaOptions) (*primitives.Schema, error)
 }
 type UserResolver interface {
 	Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error)
@@ -816,7 +817,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.SourceByLabel(childComplexity, args["label"].(primitives.Label), args["options"].(*model.SourceOptions)), true
+		return e.complexity.Query.SourceByLabel(childComplexity, args["label"].(primitives.Label)), true
 
 	case "Query.sources":
 		if e.complexity.Query.Sources == nil {
@@ -1022,7 +1023,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Source.Schema(childComplexity), true
+		args, err := ec.field_Source_schema_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Source.Schema(childComplexity, args["opts"].(*client.SchemaOptions)), true
 
 	case "Source.service":
 		if e.complexity.Source.Service == nil {
@@ -1425,7 +1431,9 @@ extend type Mutation {
 
 scalar ServiceType
 `, BuiltIn: false},
-	&ast.Source{Name: "coordinator/schema/sources.graphql", Input: `type Source {
+	&ast.Source{Name: "coordinator/schema/sources.graphql", Input: `scalar SchemaOptions
+
+type Source {
     id: ID!
     label: Label!
     type: SourceType!
@@ -1436,13 +1444,12 @@ scalar ServiceType
     service: Service
 
     # User may request schema info as well
-    schema: Schema
+    schema(opts: SchemaOptions): Schema
 }
 
-input SourceOptions {
-    withSchema: Boolean!
-    blobPath: String!
-}
+#input SchemaOptions {
+#    blobPath: String!
+#}
 
 input AddSourceRequest {
     label: Label!
@@ -1462,7 +1469,7 @@ input RemoveSourceRequest {
 extend type Query {
     sources: [Source!]! @isAuthenticated
     source(id: ID!): Source! @isAuthenticated
-    sourceByLabel(label: Label!, options: SourceOptions): Source! @isAuthenticated
+    sourceByLabel(label: Label!): Source! @isAuthenticated
 }
 
 extend type Mutation {
@@ -1967,14 +1974,6 @@ func (ec *executionContext) field_Query_sourceByLabel_args(ctx context.Context, 
 		}
 	}
 	args["label"] = arg0
-	var arg1 *model.SourceOptions
-	if tmp, ok := rawArgs["options"]; ok {
-		arg1, err = ec.unmarshalOSourceOptions2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐSourceOptions(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["options"] = arg1
 	return args, nil
 }
 
@@ -2017,6 +2016,20 @@ func (ec *executionContext) field_Query_user_args(ctx context.Context, rawArgs m
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Source_schema_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *client.SchemaOptions
+	if tmp, ok := rawArgs["opts"]; ok {
+		arg0, err = ec.unmarshalOSchemaOptions2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋclientᚐSchemaOptions(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["opts"] = arg0
 	return args, nil
 }
 
@@ -4976,7 +4989,7 @@ func (ec *executionContext) _Query_sourceByLabel(ctx context.Context, field grap
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().SourceByLabel(rctx, args["label"].(primitives.Label), args["options"].(*model.SourceOptions))
+			return ec.resolvers.Query().SourceByLabel(rctx, args["label"].(primitives.Label))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAuthenticated == nil {
@@ -5995,9 +6008,16 @@ func (ec *executionContext) _Source_schema(ctx context.Context, field graphql.Co
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Source_schema_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Source().Schema(rctx, obj)
+		return ec.resolvers.Source().Schema(rctx, obj, args["opts"].(*client.SchemaOptions))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7740,30 +7760,6 @@ func (ec *executionContext) unmarshalInputSetupRequest(ctx context.Context, obj 
 		case "password":
 			var err error
 			it.Password, err = ec.unmarshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPassword(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputSourceOptions(ctx context.Context, obj interface{}) (model.SourceOptions, error) {
-	var it model.SourceOptions
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "withSchema":
-			var err error
-			it.WithSchema, err = ec.unmarshalNBoolean2bool(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "blobPath":
-			var err error
-			it.BlobPath, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10101,6 +10097,30 @@ func (ec *executionContext) marshalOSchema2ᚖgithubᚗcomᚋcapeprivacyᚋcape�
 	return ec._Schema(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOSchemaOptions2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋclientᚐSchemaOptions(ctx context.Context, v interface{}) (client.SchemaOptions, error) {
+	var res client.SchemaOptions
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalOSchemaOptions2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋclientᚐSchemaOptions(ctx context.Context, sel ast.SelectionSet, v client.SchemaOptions) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOSchemaOptions2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋclientᚐSchemaOptions(ctx context.Context, v interface{}) (*client.SchemaOptions, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOSchemaOptions2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋclientᚐSchemaOptions(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOSchemaOptions2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋclientᚐSchemaOptions(ctx context.Context, sel ast.SelectionSet, v *client.SchemaOptions) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) marshalOService2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐService(ctx context.Context, sel ast.SelectionSet, v primitives.Service) graphql.Marshaler {
 	return ec._Service(ctx, sel, &v)
 }
@@ -10150,18 +10170,6 @@ func (ec *executionContext) marshalOService2ᚖgithubᚗcomᚋcapeprivacyᚋcape
 		return graphql.Null
 	}
 	return ec._Service(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOSourceOptions2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐSourceOptions(ctx context.Context, v interface{}) (model.SourceOptions, error) {
-	return ec.unmarshalInputSourceOptions(ctx, v)
-}
-
-func (ec *executionContext) unmarshalOSourceOptions2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐSourceOptions(ctx context.Context, v interface{}) (*model.SourceOptions, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalOSourceOptions2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐSourceOptions(ctx, v)
-	return &res, err
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

@@ -2,12 +2,12 @@ package harness
 
 import (
 	"context"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"io/ioutil"
 
 	"github.com/manifoldco/go-base64"
 
 	"github.com/capeprivacy/cape/auth"
-	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -18,7 +18,7 @@ const AdminPassword = "iamtheadmin"
 
 // User represents a user in the cape coordinator
 type User struct {
-	Client   *coordinator.Client
+	Client   *client.Client
 	User     *primitives.User
 	Password primitives.Password
 	Token    *base64.Value
@@ -50,7 +50,7 @@ type Manager struct {
 // mutation for the coordinator). This results in the creation of an Admin user.
 //
 // An authenticated client for the admin is returned.
-func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
+func (m *Manager) Setup(ctx context.Context) (*client.Client, error) {
 	client, err := m.h.Client()
 	if err != nil {
 		return nil, err

@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/capeprivacy/cape/cmd/config"
 	"github.com/capeprivacy/cape/cmd/ui"
-	"github.com/capeprivacy/cape/coordinator"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/urfave/cli/v2"
 )
@@ -82,17 +82,17 @@ func (mp *MockProvider) UI(ctx context.Context) ui.UI {
 }
 
 // Client implements Client from the Provider interface
-func (mp *MockProvider) Client(ctx context.Context) (*coordinator.Client, error) {
+func (mp *MockProvider) Client(ctx context.Context) (*client.Client, error) {
 	url, err := primitives.NewURL("http://localhost:8080")
 	if err != nil {
 		return nil, err
 	}
 
-	t := &coordinator.MockTransport{
+	t := &client.MockTransport{
 		Responses: mp.responses,
 		Counter:   0,
 		Endpoint:  url,
 	}
 
-	return coordinator.NewClient(t), nil
+	return client.NewClient(t), nil
 }

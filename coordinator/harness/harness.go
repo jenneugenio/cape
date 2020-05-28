@@ -2,6 +2,7 @@ package harness
 
 import (
 	"context"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -222,14 +223,14 @@ func (h *Harness) Teardown(ctx context.Context) error {
 
 // Client returns an unauthenticated Client for the underlying instance of the
 // coordinator.
-func (h *Harness) Client() (*coordinator.Client, error) {
+func (h *Harness) Client() (*client.Client, error) {
 	u, err := h.URL()
 	if err != nil {
 		return nil, err
 	}
 
-	transport := coordinator.NewTransport(u, nil)
-	return coordinator.NewClient(transport), nil
+	transport := client.NewTransport(u, nil)
+	return client.NewClient(transport), nil
 }
 
 // Manager returns a test state manager for this Harness

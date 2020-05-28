@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"github.com/capeprivacy/cape/coordinator/client"
 
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/cmd/ui"
-	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -81,7 +81,7 @@ func init() {
 	commands = append(commands, tokensCmd.Package())
 }
 
-func getIdentity(ctx context.Context, client *coordinator.Client) (primitives.Identity, error) {
+func getIdentity(ctx context.Context, client *client.Client) (primitives.Identity, error) {
 	var identity primitives.Identity
 	identifier, ok := Arguments(ctx, TokenIdentityArg).(primitives.Email)
 	if ok {

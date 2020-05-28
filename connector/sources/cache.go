@@ -3,9 +3,9 @@ package sources
 import (
 	"context"
 	"fmt"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"sync"
 
-	"github.com/capeprivacy/cape/coordinator"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -16,7 +16,7 @@ import (
 // This interface exists to make it easy to test the sources package in
 // isolation of other packages.
 type CoordinatorClient interface {
-	GetSourceByLabel(ctx context.Context, label primitives.Label, opts *coordinator.SourceOptions) (*coordinator.SourceResponse, error)
+	GetSourceByLabel(ctx context.Context, label primitives.Label, opts *client.SourceOptions) (*client.SourceResponse, error)
 }
 
 // Cache is responsible for managing a cache of active sources. Users request a

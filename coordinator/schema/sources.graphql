@@ -1,3 +1,5 @@
+scalar SchemaOptions
+
 type Source {
     id: ID!
     label: Label!
@@ -9,13 +11,12 @@ type Source {
     service: Service
 
     # User may request schema info as well
-    schema: Schema
+    schema(opts: SchemaOptions): Schema
 }
 
-input SourceOptions {
-    withSchema: Boolean!
-    blobPath: String!
-}
+#input SchemaOptions {
+#    blobPath: String!
+#}
 
 input AddSourceRequest {
     label: Label!
@@ -35,7 +36,7 @@ input RemoveSourceRequest {
 extend type Query {
     sources: [Source!]! @isAuthenticated
     source(id: ID!): Source! @isAuthenticated
-    sourceByLabel(label: Label!, options: SourceOptions): Source! @isAuthenticated
+    sourceByLabel(label: Label!): Source! @isAuthenticated
 }
 
 extend type Mutation {

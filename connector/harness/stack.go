@@ -2,8 +2,8 @@ package harness
 
 import (
 	"context"
+	"github.com/capeprivacy/cape/coordinator/client"
 
-	"github.com/capeprivacy/cape/coordinator"
 	coordHarness "github.com/capeprivacy/cape/coordinator/harness"
 )
 
@@ -11,7 +11,7 @@ import (
 type Stack struct {
 	Manager      *coordHarness.Manager
 	CoordHarness *coordHarness.Harness
-	CoordClient  *coordinator.Client
+	CoordClient  *client.Client
 	ConnHarness  *Harness
 }
 

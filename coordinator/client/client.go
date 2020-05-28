@@ -1,4 +1,4 @@
-package coordinator
+package client
 
 import (
 	"context"
@@ -720,17 +720,17 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label, o
 	if opts != nil  {
 		if opts.WithSchema {
 			describeClause = `
-				schema(opts: $options) {
+				schema(opts: $opts) {
 					blob
 				}
 			`
 		}
 
-		variables["options"] = opts.SchemaOptions
-		extraArgs = ", $options: SchemaOptions"
+		variables["opts"] = opts.SchemaOptions
+		extraArgs = ", $opts: SchemaOptions"
 	}
 
-	err := c.transport.Raw(ctx, fmt.Sprintf(`
+	s := fmt.Sprintf(`
 		query SourcesByLabel($label: Label!%s) {
 				sourceByLabel(label: $label) {
 					id
@@ -745,7 +745,8 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label, o
 					%s
 				}
 			}
-	`, extraArgs, describeClause), variables, &resp)
+	`, extraArgs, describeClause)
+	err := c.transport.Raw(ctx, s, variables, &resp)
 	if err != nil {
 		return nil, err
 	}

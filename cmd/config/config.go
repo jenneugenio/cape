@@ -4,6 +4,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"io"
 	"io/ioutil"
 	"os"
@@ -12,7 +13,6 @@ import (
 	"github.com/manifoldco/go-base64"
 	"sigs.k8s.io/yaml"
 
-	"github.com/capeprivacy/cape/coordinator"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -288,7 +288,7 @@ func (c *Cluster) String() string {
 
 // Transport returns a configured coordinator transport for this cluster.
 // This can be used with a client
-func (c *Cluster) Transport() (coordinator.Transport, error) {
+func (c *Cluster) Transport() (client.Transport, error) {
 	clusterURL, err := c.GetURL()
 	if err != nil {
 		return nil, err
@@ -299,7 +299,7 @@ func (c *Cluster) Transport() (coordinator.Transport, error) {
 		return nil, err
 	}
 
-	return coordinator.NewTransport(clusterURL, token), nil
+	return client.NewTransport(clusterURL, token), nil
 }
 
 // Path returns the path to local configuration yaml file.

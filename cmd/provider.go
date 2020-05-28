@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"github.com/capeprivacy/cape/cmd/ui"
-	"github.com/capeprivacy/cape/coordinator"
+	"github.com/capeprivacy/cape/coordinator/client"
 )
 
 // Provider is an interface that gives different cape commands/components
 // access to other components that they may need
 type Provider interface {
-	Client(ctx context.Context) (*coordinator.Client, error)
+	Client(ctx context.Context) (*client.Client, error)
 	UI(ctx context.Context) ui.UI
 }
 
@@ -18,7 +18,7 @@ type Provider interface {
 type AppProvider struct {
 }
 
-func (a *AppProvider) transport(ctx context.Context) (coordinator.Transport, error) {
+func (a *AppProvider) transport(ctx context.Context) (client.Transport, error) {
 	cfgSession := Session(ctx)
 	cluster, err := cfgSession.Cluster()
 
@@ -30,13 +30,13 @@ func (a *AppProvider) transport(ctx context.Context) (coordinator.Transport, err
 }
 
 // Client implements Client on the Provider interface
-func (a *AppProvider) Client(ctx context.Context) (*coordinator.Client, error) {
+func (a *AppProvider) Client(ctx context.Context) (*client.Client, error) {
 	transport, err := a.transport(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return coordinator.NewClient(transport), nil
+	return client.NewClient(transport), nil
 }
 
 // UI implements UI on the provider interface

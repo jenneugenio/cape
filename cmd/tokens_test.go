@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/capeprivacy/cape/coordinator/client"
 	"testing"
 
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/cmd/ui"
-	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -20,7 +20,7 @@ func TestCreateToken(t *testing.T) {
 	creds, err := primitives.GenerateCredentials()
 	gm.Expect(err).To(gm.BeNil())
 
-	me := coordinator.MeResponse{Identity: &primitives.IdentityImpl{
+	me := client.MeResponse{Identity: &primitives.IdentityImpl{
 		Primitive: &database.Primitive{
 			ID: user.ID,
 		},
@@ -33,8 +33,8 @@ func TestCreateToken(t *testing.T) {
 		token, err := primitives.NewToken(user.ID, creds)
 		gm.Expect(err).To(gm.BeNil())
 
-		resp := coordinator.CreateTokenResponse{
-			Response: &coordinator.CreateTokenMutation{
+		resp := client.CreateTokenResponse{
+			Response: &client.CreateTokenMutation{
 				Secret: password,
 				Token:  token,
 			},
@@ -71,7 +71,7 @@ func TestCreateToken(t *testing.T) {
 			ids[i] = ID
 		}
 
-		resp := coordinator.ListTokensResponse{
+		resp := client.ListTokensResponse{
 			IDs: ids,
 		}
 

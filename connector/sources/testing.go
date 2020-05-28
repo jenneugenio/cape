@@ -4,6 +4,7 @@ package sources
 
 import (
 	"context"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"net/url"
 
 	"github.com/jackc/pgx/v4"
@@ -11,7 +12,6 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"github.com/capeprivacy/cape/connector/proto"
-	"github.com/capeprivacy/cape/coordinator"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -52,8 +52,8 @@ type testClient struct{}
 func (t *testClient) GetSourceByLabel(
 	ctx context.Context,
 	source primitives.Label,
-	opts *coordinator.SourceOptions) (*coordinator.SourceResponse, error) {
-	return &coordinator.SourceResponse{
+	opts *client.SourceOptions) (*client.SourceResponse, error) {
+	return &client.SourceResponse{
 		Source: &primitives.Source{
 			Label: source,
 			Type:  testSourceType,
@@ -66,7 +66,7 @@ type errClient struct{}
 func (e *errClient) GetSourceByLabel(
 	ctx context.Context,
 	source primitives.Label,
-	opts *coordinator.SourceOptions) (*coordinator.SourceResponse, error) {
+	opts *client.SourceOptions) (*client.SourceResponse, error) {
 	return nil, errors.New(NotFoundCause, "whoops")
 }
 

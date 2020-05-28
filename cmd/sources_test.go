@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/capeprivacy/cape/cmd/ui"
-	"github.com/capeprivacy/cape/coordinator"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"github.com/capeprivacy/cape/primitives"
 	gm "github.com/onsi/gomega"
 	"testing"
@@ -16,8 +16,8 @@ func TestListSources(t *testing.T) {
 		url, err := primitives.NewDBURL("postgres://localhost:5432/mydb")
 		gm.Expect(err).To(gm.BeNil())
 
-		resp := coordinator.ListSourcesResponse{
-			Sources: []*coordinator.SourceResponse{
+		resp := client.ListSourcesResponse{
+			Sources: []*client.SourceResponse{
 				{
 					Source: &primitives.Source{
 						Label:    "my-source-1",
@@ -47,8 +47,8 @@ func TestListSources(t *testing.T) {
 		url, err := primitives.NewDBURL("postgres://localhost:5432/mydb")
 		gm.Expect(err).To(gm.BeNil())
 
-		resp := coordinator.ListSourcesResponse{
-			Sources: []*coordinator.SourceResponse{
+		resp := client.ListSourcesResponse{
+			Sources: []*client.SourceResponse{
 				{
 					Source: &primitives.Source{
 						Label:    "my-source-1",
@@ -79,8 +79,8 @@ func TestListSources(t *testing.T) {
 		url, err := primitives.NewDBURL("postgres://localhost:5432/mydb")
 		gm.Expect(err).To(gm.BeNil())
 
-		resp := coordinator.ListSourcesResponse{
-			Sources: []*coordinator.SourceResponse{
+		resp := client.ListSourcesResponse{
+			Sources: []*client.SourceResponse{
 				{
 					Source: &primitives.Source{
 						Label:    "my-source-1",
@@ -126,8 +126,8 @@ func TestListSources(t *testing.T) {
 	t.Run("Doesn't render a table if no sources are returned", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		resp := coordinator.ListSourcesResponse{
-			Sources: []*coordinator.SourceResponse{},
+		resp := client.ListSourcesResponse{
+			Sources: []*client.SourceResponse{},
 		}
 
 		app, u := NewHarness([]interface{}{resp})

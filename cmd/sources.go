@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/capeprivacy/cape/cmd/ui"
-	"github.com/capeprivacy/cape/coordinator"
+	client2 "github.com/capeprivacy/cape/coordinator/client"
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/coordinator/database"
@@ -263,7 +263,7 @@ func sourcesDescribe(c *cli.Context) error {
 	}
 
 	label := Arguments(c.Context, SourceLabelArg).(primitives.Label)
-	s, err := client.GetSourceByLabel(c.Context, label, &coordinator.SourceOptions{WithSchema: true})
+	s, err := client.GetSourceByLabel(c.Context, label, &client2.SourceOptions{WithSchema: true})
 	if err != nil {
 		return err
 	}

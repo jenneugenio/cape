@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
@@ -128,7 +129,7 @@ func (r *queryResolver) Source(ctx context.Context, id database.ID) (*primitives
 	return source, nil
 }
 
-func (r *queryResolver) SourceByLabel(ctx context.Context, label primitives.Label, options *model.SourceOptions) (*primitives.Source, error) {
+func (r *queryResolver) SourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -171,12 +172,19 @@ func (r *sourceResolver) Service(ctx context.Context, obj *primitives.Source) (*
 	return service, nil
 }
 
-func (r *sourceResolver) Schema(ctx context.Context, obj *primitives.Source) (*primitives.Schema, error) {
+func (r *sourceResolver) Schema(ctx context.Context, obj *primitives.Source, opts *client.SchemaOptions) (*primitives.Schema, error) {
 	session := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(session, r.Backend)
 
 	var schema primitives.Schema
 	err := enforcer.QueryOne(ctx, &schema, database.NewFilter(database.Where{"source_id": obj.ID.String()}, nil, nil))
+
+	if opts != nil && opts.BlobPath != "" {
+		schema.Blob = primitives.SchemaBlob{
+			opts.BlobPath: schema.Blob[opts.BlobPath],
+		}
+	}
+
 	return &schema, err
 }
 

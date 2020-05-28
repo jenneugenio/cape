@@ -4,12 +4,11 @@ package integration
 
 import (
 	"context"
-	"github.com/capeprivacy/cape/coordinator/graph/model"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"testing"
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/primitives"
@@ -31,7 +30,7 @@ func TestSource(t *testing.T) {
 	defer h.Teardown(ctx) // nolint: errcheck
 
 	m := h.Manager()
-	client, err := m.Setup(ctx)
+	c, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
 	workerToken, err := m.CreateWorker(ctx)
@@ -48,7 +47,7 @@ func TestSource(t *testing.T) {
 		l, err := primitives.NewLabel("my-transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, dbURL, nil)
+		source, err := c.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(source.Label).To(gm.Equal(l))
@@ -77,10 +76,10 @@ func TestSource(t *testing.T) {
 		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, serviceURL)
 		gm.Expect(err).To(gm.BeNil())
 
-		service, err = client.CreateService(ctx, service)
+		service, err = c.CreateService(ctx, service)
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, dbURL, &service.ID)
+		source, err := c.AddSource(ctx, l, dbURL, &service.ID)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(source.Label).To(gm.Equal(l))
@@ -96,7 +95,7 @@ func TestSource(t *testing.T) {
 		l, err := primitives.NewLabel("new-transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, dbURL, nil)
+		source, err := c.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(source.Label).To(gm.Equal(l))
@@ -116,11 +115,11 @@ func TestSource(t *testing.T) {
 		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, serviceURL)
 		gm.Expect(err).To(gm.BeNil())
 
-		service, err = client.CreateService(ctx, service)
+		service, err = c.CreateService(ctx, service)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(service.ID).ToNot(gm.BeNil())
 
-		linkedSource, err := client.UpdateSource(ctx, source.Label, &service.ID)
+		linkedSource, err := c.UpdateSource(ctx, source.Label, &service.ID)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(linkedSource.Label).To(gm.Equal(l))
@@ -129,7 +128,7 @@ func TestSource(t *testing.T) {
 		gm.Expect(linkedSource.Endpoint.String()).To(gm.Equal(endpoint))
 		gm.Expect(linkedSource.Service.ID).To(gm.Equal(service.ID))
 
-		linkedSource, err = client.GetSource(ctx, source.ID, nil)
+		linkedSource, err = c.GetSource(ctx, source.ID, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(linkedSource.Label).To(gm.Equal(l))
@@ -148,7 +147,7 @@ func TestSource(t *testing.T) {
 		serviceID, err := database.GenerateID(primitives.ServicePrimitiveType)
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.AddSource(ctx, l, dbURL, &serviceID)
+		_, err = c.AddSource(ctx, l, dbURL, &serviceID)
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 
@@ -165,10 +164,10 @@ func TestSource(t *testing.T) {
 		service, err := primitives.NewService(email, primitives.UserServiceType, nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		service, err = client.CreateService(ctx, service)
+		service, err = c.CreateService(ctx, service)
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, dbURL, &service.ID)
+		source, err := c.AddSource(ctx, l, dbURL, &service.ID)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(source).To(gm.BeNil())
 	})
@@ -179,10 +178,10 @@ func TestSource(t *testing.T) {
 		label, err := primitives.NewLabel("a-single-source")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, label, dbURL, nil)
+		source, err := c.AddSource(ctx, label, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		out, err := client.GetSource(ctx, source.ID, nil)
+		out, err := c.GetSource(ctx, source.ID, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(out.Label).To(gm.Equal(label))
@@ -196,10 +195,10 @@ func TestSource(t *testing.T) {
 		l, err := primitives.NewLabel("my-super-transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, dbURL, nil)
+		source, err := c.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		otherSource, err := client.GetSourceByLabel(ctx, l, nil)
+		otherSource, err := c.GetSourceByLabel(ctx, l, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(otherSource.Label).To(gm.Equal(source.Label))
@@ -211,14 +210,14 @@ func TestSource(t *testing.T) {
 		l, err := primitives.NewLabel("describe-me")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, dbURL, nil)
+		source, err := c.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		// report a fake schema for this source
 		err = m.ReportSchema(ctx, workerToken, source.ID, primitives.SchemaBlob{"my-table": {"my-col": "INT"}})
 		gm.Expect(err).To(gm.BeNil())
 
-		s, err := client.GetSource(ctx, source.ID, &model.SourceOptions{WithSchema: true})
+		s, err := c.GetSource(ctx, source.ID, &client.SourceOptions{WithSchema: true})
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(s).ToNot(gm.BeNil())
 		gm.Expect(s.Schema.Blob).To(gm.Equal(primitives.SchemaBlob{"my-table": {"my-col": "INT"}}))
@@ -228,14 +227,14 @@ func TestSource(t *testing.T) {
 		l, err := primitives.NewLabel("describe-me-label")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, dbURL, nil)
+		source, err := c.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		// report a fake schema for this source
 		err = m.ReportSchema(ctx, workerToken, source.ID, primitives.SchemaBlob{"my-table": {"my-col": "INT"}})
 		gm.Expect(err).To(gm.BeNil())
 
-		s, err := client.GetSourceByLabel(ctx, l, &model.SourceOptions{WithSchema: true})
+		s, err := c.GetSourceByLabel(ctx, l, &client.SourceOptions{WithSchema: true})
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(s).ToNot(gm.BeNil())
 		gm.Expect(s.Schema.Blob).To(gm.Equal(primitives.SchemaBlob{"my-table": {"my-col": "INT"}}))
@@ -245,22 +244,25 @@ func TestSource(t *testing.T) {
 		l, err := primitives.NewLabel("describe-me-label")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, dbURL, nil)
+		source, err := c.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		// report a fake schema for this source
-		err = client.ReportSchema(ctx, source.ID,
+		err = c.ReportSchema(ctx, source.ID,
 			primitives.SchemaBlob{
 				"my-table": {"my-col": "INT"},
 				"my-other-table": {"my-col": "INT"},
 			})
 		gm.Expect(err).To(gm.BeNil())
 
-		opts := &model.SourceOptions{
+		opts := &client.SourceOptions{
 			WithSchema: true,
-			BlobPath: "my-table",
+			SchemaOptions: &client.SchemaOptions{
+				BlobPath: "my-table",
+			},
 		}
-		s, err := client.GetSourceByLabel(ctx, l, opts)
+		s, err := c.GetSourceByLabel(ctx, l, opts)
+
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(s).ToNot(gm.BeNil())
 		gm.Expect(s.Schema.Blob).To(gm.Equal(primitives.SchemaBlob{"my-table": {"my-col": "INT"}}))
@@ -272,7 +274,7 @@ func TestSource(t *testing.T) {
 		l, err := primitives.NewLabel("my-transactions")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, dbURL, nil)
+		source, err := c.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(source).To(gm.BeNil())
 	})
@@ -283,13 +285,13 @@ func TestSource(t *testing.T) {
 		l, err := primitives.NewLabel("delete-me")
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, dbURL, nil)
+		source, err := c.AddSource(ctx, l, dbURL, nil)
 		gm.Expect(err).To(gm.BeNil())
 
-		err = client.RemoveSource(ctx, l)
+		err = c.RemoveSource(ctx, l)
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.GetSource(ctx, source.ID, nil)
+		_, err = c.GetSource(ctx, source.ID, nil)
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 
@@ -309,19 +311,19 @@ func TestSource(t *testing.T) {
 		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, serviceURL)
 		gm.Expect(err).To(gm.BeNil())
 
-		service, err = client.CreateService(ctx, service)
+		service, err = c.CreateService(ctx, service)
 		gm.Expect(err).To(gm.BeNil())
 
-		apiToken, _, err := client.CreateToken(ctx, service)
+		apiToken, _, err := c.CreateToken(ctx, service)
 		gm.Expect(err).To(gm.BeNil())
 
-		source, err := client.AddSource(ctx, l, dbURL, &service.ID)
+		source, err := c.AddSource(ctx, l, dbURL, &service.ID)
 		gm.Expect(err).To(gm.BeNil())
 
 		u, err := m.URL()
 		gm.Expect(err).To(gm.BeNil())
-		transport := coordinator.NewTransport(u, nil)
-		serviceClient := coordinator.NewClient(transport)
+		transport := client.NewTransport(u, nil)
+		serviceClient := client.NewClient(transport)
 
 		_, err = serviceClient.TokenLogin(ctx, apiToken)
 		gm.Expect(err).To(gm.BeNil())

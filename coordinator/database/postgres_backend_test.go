@@ -381,7 +381,7 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		target := &TestNestedEntity{}
-		err = db.QueryOne(ctx, target, NewFilter(Where{"data": "a"}, nil, nil))
+		err = db.Get(ctx, eA.ID, target)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(eA).To(gm.Equal(target))
 	})
