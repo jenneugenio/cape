@@ -90,18 +90,8 @@ func (r *RoundingTransform) Validate(args Args) error {
 
 	precision, found := args["precision"]
 	if found {
-		switch precision.(type) {
-		case int:
-			break
-		default:
-			return fmt.Errorf("Unsupported precision: must be positive integer")
-		}
-
-		pre := precision.(int)
-		switch {
-		case pre >= 0:
-			break
-		default:
+		pre, ok := precision.(int)
+		if !ok || pre < 0 {
 			return fmt.Errorf("Unsupported precision: must be positive integer")
 		}
 	}
