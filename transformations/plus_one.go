@@ -5,11 +5,11 @@ import (
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
-type plusOne struct {
+type PlusOneTransform struct {
 	field string
 }
 
-func (p *plusOne) Transform(input *proto.Field) (*proto.Field, error) {
+func (p *PlusOneTransform) Transform(input *proto.Field) (*proto.Field, error) {
 	output := &proto.Field{}
 	switch t := input.GetValue().(type) {
 	case *proto.Field_Double:
@@ -31,15 +31,15 @@ func (p *plusOne) Transform(input *proto.Field) (*proto.Field, error) {
 	return output, nil
 }
 
-func (p *plusOne) Initialize(args Args) error {
+func (p *PlusOneTransform) Initialize(args Args) error {
 	return nil
 }
 
-func (p *plusOne) Validate(args Args) error {
+func (p *PlusOneTransform) Validate(args Args) error {
 	return nil
 }
 
-func (p *plusOne) SupportedTypes() []proto.FieldType {
+func (p *PlusOneTransform) SupportedTypes() []proto.FieldType {
 	return []proto.FieldType{
 		proto.FieldType_BIGINT,
 		proto.FieldType_INT,
@@ -49,15 +49,15 @@ func (p *plusOne) SupportedTypes() []proto.FieldType {
 	}
 }
 
-func (p *plusOne) Function() string {
+func (p *PlusOneTransform) Function() string {
 	return "plusOne"
 }
 
-func (p *plusOne) Field() string {
+func (p *PlusOneTransform) Field() string {
 	return p.field
 }
 
 func NewPlusOneTransform(field string) (Transformation, error) {
-	p := &plusOne{field: field}
+	p := &PlusOneTransform{field: field}
 	return p, nil
 }
