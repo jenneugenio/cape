@@ -15,27 +15,27 @@ const (
 	RoundAwayFromZero
 )
 
-type rounding struct {
+type RoundingTransform struct {
 	field           string
 	roundingType    RoundingType
 	precisionFactor float64
 }
 
-func (p *rounding) roundFloat64(x float64) (float64, error) {
-	y := x * p.precisionFactor
-	switch p.roundingType {
+func (r *RoundingTransform) roundFloat64(x float64) (float64, error) {
+	y := x * r.precisionFactor
+	switch r.roundingType {
 	case RoundAwayFromZero:
-		return math.Round(y) / p.precisionFactor, nil
+		return math.Round(y) / r.precisionFactor, nil
 	case RoundToEven:
-		return math.RoundToEven(y) / p.precisionFactor, nil
+		return math.RoundToEven(y) / r.precisionFactor, nil
 	}
-	return x, fmt.Errorf("Unsupported rounding type %d", p.roundingType)
+	return x, fmt.Errorf("Unsupported rounding type %d", r.roundingType)
 }
 
-func (p *rounding) Transform(input *proto.Field) (*proto.Field, error) {
-	switch t := input.GetValue().(type) {
+func (r *RoundingTransform) Transform(input *proto.Field) (*proto.Field, error) {
+	switch ty := input.GetValue().(type) {
 	case *proto.Field_Double:
-		res, err := p.roundFloat64(t.Double)
+		res, err := r.roundFloat64(ty.Double)
 		if err != nil {
 			return nil, err
 		}
@@ -43,7 +43,7 @@ func (p *rounding) Transform(input *proto.Field) (*proto.Field, error) {
 		output.Value = &proto.Field_Double{Double: res}
 		return output, nil
 	case *proto.Field_Float:
-		res, err := p.roundFloat64(float64(t.Float))
+		res, err := r.roundFloat64(float64(ty.Float))
 		if err != nil {
 			return nil, err
 		}
@@ -54,14 +54,14 @@ func (p *rounding) Transform(input *proto.Field) (*proto.Field, error) {
 	return input, nil
 }
 
-func (p *rounding) Initialize(args Args) error {
+func (r *RoundingTransform) Initialize(args Args) error {
 	roundingType, found := args["roundingType"]
 	if found {
 		switch roundingType.(string) {
 		case "roundToEven":
-			p.roundingType = RoundToEven
+			r.roundingType = RoundToEven
 		case "awayFromZero":
-			p.roundingType = RoundAwayFromZero
+			r.roundingType = RoundAwayFromZero
 		default:
 			return fmt.Errorf("Unsupported rounding type '%s'", roundingType)
 		}
@@ -69,13 +69,13 @@ func (p *rounding) Initialize(args Args) error {
 
 	precision, found := args["precision"]
 	if found {
-		p.precisionFactor = math.Pow10(precision.(int))
+		r.precisionFactor = math.Pow10(precision.(int))
 	}
 
 	return nil
 }
 
-func (p *rounding) Validate(args Args) error {
+func (r *RoundingTransform) Validate(args Args) error {
 	roundingType, found := args["roundingType"]
 	if found {
 		switch roundingType.(string) {
@@ -109,26 +109,26 @@ func (p *rounding) Validate(args Args) error {
 	return nil
 }
 
-func (p *rounding) SupportedTypes() []proto.FieldType {
+func (r *RoundingTransform) SupportedTypes() []proto.FieldType {
 	return []proto.FieldType{
 		proto.FieldType_DOUBLE,
 		proto.FieldType_REAL,
 	}
 }
 
-func (p *rounding) Function() string {
+func (r *RoundingTransform) Function() string {
 	return "rounding"
 }
 
-func (p *rounding) Field() string {
-	return p.field
+func (r *RoundingTransform) Field() string {
+	return r.field
 }
 
 func NewRoundingTransform(field string) (Transformation, error) {
-	p := &rounding{
+	r := &RoundingTransform{
 		field:           field,
 		roundingType:    RoundToEven,
 		precisionFactor: 1.0,
 	}
-	return p, nil
+	return r, nil
 }
