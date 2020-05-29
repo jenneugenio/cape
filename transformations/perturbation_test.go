@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/capeprivacy/cape/connector/proto"
+	errors "github.com/capeprivacy/cape/partyerrors"
 	gm "github.com/onsi/gomega"
 )
 
@@ -14,17 +15,17 @@ func TestPerturbationArgs(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	err = transform.Validate(Args{})
-	gm.Expect(err).To(gm.BeNil())
+	gm.Expect(errors.CausedBy(err, MissingArgument)).To(gm.BeTrue())
 
 	err = transform.Validate(Args{
 		"min": 10.0,
 	})
-	gm.Expect(err).To(gm.BeNil())
+	gm.Expect(errors.CausedBy(err, MissingArgument)).To(gm.BeTrue())
 
 	err = transform.Validate(Args{
 		"min":  -10.0,
 		"max":  10.0,
-		"seed": 1234,
+		"seed": int64(1234),
 	})
 	gm.Expect(err).To(gm.BeNil())
 
@@ -43,7 +44,7 @@ func TestPerturbationInt64(t *testing.T) {
 	args := Args{
 		"min":  -10.,
 		"max":  10.,
-		"seed": 1234,
+		"seed": int64(1234),
 	}
 
 	err = transform.Validate(args)
@@ -70,7 +71,7 @@ func TestPerturbationInt32(t *testing.T) {
 	args := Args{
 		"min":  -10.,
 		"max":  10.,
-		"seed": 3241,
+		"seed": int64(3241),
 	}
 
 	err = transform.Validate(args)
@@ -97,7 +98,7 @@ func TestPerturbationDouble(t *testing.T) {
 	args := Args{
 		"min":  -10.,
 		"max":  10.,
-		"seed": 4354,
+		"seed": int64(4354),
 	}
 
 	err = transform.Validate(args)
@@ -124,7 +125,7 @@ func TestPerturbationFloat(t *testing.T) {
 	args := Args{
 		"min":  -10.,
 		"max":  10.,
-		"seed": 9876,
+		"seed": int64(9876),
 	}
 
 	err = transform.Validate(args)

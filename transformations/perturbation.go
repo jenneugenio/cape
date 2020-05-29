@@ -8,17 +8,26 @@ import (
 )
 
 type PerturbationTransform struct {
-	field string
-	min   float64
-	max   float64
-	seed  int
+	field        string
+	min          float64
+	max          float64
+	seed         int64
+	sourceSeeded rand.Source
 }
 
 func (p *PerturbationTransform) perturbationFloat64(x float64) (float64, error) {
-	s := rand.NewSource(int64(p.seed))
-	r := rand.New(s)
+	r := rand.New(p.sourceSeeded)
 
 	noise := r.Float64()*(p.max-p.min) + p.min
+	y := x + noise
+
+	return y, nil
+}
+
+func (p *PerturbationTransform) perturbationInt64(x int64) (int64, error) {
+	r := rand.New(p.sourceSeeded)
+
+	noise := r.Int63n(int64(p.max-p.min)) + int64(p.min)
 	y := x + noise
 
 	return y, nil
@@ -27,16 +36,16 @@ func (p *PerturbationTransform) perturbationFloat64(x float64) (float64, error) 
 func (p *PerturbationTransform) Transform(input *proto.Field) (*proto.Field, error) {
 	switch t := input.GetValue().(type) {
 	case *proto.Field_Int64:
-		res, err := p.perturbationFloat64(float64(t.Int64))
+		res, err := p.perturbationInt64(t.Int64)
 		if err != nil {
 			return nil, err
 		}
 		output := &proto.Field{}
-		output.Value = &proto.Field_Int64{Int64: int64(res)}
+		output.Value = &proto.Field_Int64{Int64: res}
 		return output, nil
 
 	case *proto.Field_Int32:
-		res, err := p.perturbationFloat64(float64(t.Int32))
+		res, err := p.perturbationInt64(int64(t.Int32))
 		if err != nil {
 			return nil, err
 		}
@@ -67,6 +76,8 @@ func (p *PerturbationTransform) Transform(input *proto.Field) (*proto.Field, err
 }
 
 func (p *PerturbationTransform) Initialize(args Args) error {
+	const unsupportedTypeMsg = "Unsupported type for %q: found %q expected %q"
+
 	min, found := args["min"]
 	if !found {
 		return errors.New(MissingArgument, "Perturbation transformation expects a min argument")
@@ -75,7 +86,7 @@ func (p *PerturbationTransform) Initialize(args Args) error {
 	var ok bool
 	p.min, ok = min.(float64)
 	if !ok {
-		return errors.New(UnsupportedType, "Unsupported min: must be a double type")
+		return errors.New(UnsupportedType, unsupportedTypeMsg, "min", min, "double")
 	}
 
 	max, found := args["max"]
@@ -85,7 +96,7 @@ func (p *PerturbationTransform) Initialize(args Args) error {
 
 	p.max, ok = max.(float64)
 	if !ok {
-		return errors.New(UnsupportedType, "Unsupported max: must be a double type")
+		return errors.New(UnsupportedType, unsupportedTypeMsg, "max", max, "double")
 	}
 
 	if p.min > p.max {
@@ -97,10 +108,12 @@ func (p *PerturbationTransform) Initialize(args Args) error {
 		return errors.New(MissingArgument, "Perturbation transformation expects a seed argument")
 	}
 
-	p.seed, ok = seed.(int)
+	p.seed, ok = seed.(int64)
 	if !ok {
-		return errors.New(UnsupportedType, "Unsupported seed: must be an integer type")
+		return errors.New(UnsupportedType, unsupportedTypeMsg, "seed", seed, "int")
 	}
+
+	p.sourceSeeded = rand.NewSource(p.seed)
 
 	return nil
 }
@@ -109,40 +122,48 @@ func (p *PerturbationTransform) Validate(args Args) error {
 	const unsupportedTypeMsg = "Unsupported type for %q: found %q expected %q"
 
 	min, found := args["min"]
-	if found {
-		switch v := min.(type) {
-		case float64:
-			break
-		default:
-			return errors.New(UnsupportedType, unsupportedTypeMsg, "min", v, "double")
-		}
+	if !found {
+		return errors.New(MissingArgument, "Perturbation transformation expects a min argument")
+	}
+
+	var ok bool
+	min, ok = min.(float64)
+	if !ok {
+		return errors.New(UnsupportedType, unsupportedTypeMsg, "min", min, "double")
 	}
 
 	max, found := args["max"]
-	if found {
-		switch v := max.(type) {
-		case float64:
-			break
-		default:
-			return errors.New(UnsupportedType, unsupportedTypeMsg, "max", v, "double")
-		}
+	if !found {
+		return errors.New(MissingArgument, "Perturbation transformation expects a max argument")
+	}
+
+	max, ok = max.(float64)
+	if !ok {
+		return errors.New(UnsupportedType, unsupportedTypeMsg, "max", max, "double")
+	}
+
+	if p.min > p.max {
+		return errors.New(WrongArgument, "Min should be less than Max")
 	}
 
 	seed, found := args["seed"]
-	if found {
-		switch v := seed.(type) {
-		case int:
-			break
-		default:
-			return errors.New(UnsupportedType, unsupportedTypeMsg, "seed", v, "int")
-		}
+	if !found {
+		return errors.New(MissingArgument, "Perturbation transformation expects a seed argument")
 	}
+
+	seed, ok = seed.(int64)
+	if !ok {
+		return errors.New(UnsupportedType, unsupportedTypeMsg, "seed", seed, "int")
+	}
+
 	return nil
 }
 
 func (p *PerturbationTransform) SupportedTypes() []proto.FieldType {
 	return []proto.FieldType{
+		proto.FieldType_BIGINT,
 		proto.FieldType_DOUBLE,
+		proto.FieldType_INT,
 		proto.FieldType_REAL,
 	}
 }
