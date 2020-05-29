@@ -133,6 +133,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 	}
 
 	coordinator, err := coordinator.New(&coordinator.Config{
+		Version: 1,
 		DB: &coordinator.DBConfig{
 			Addr: dbURL,
 		},
