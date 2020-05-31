@@ -48,9 +48,9 @@ func (a *Argon2IDProducer) Generate(secret primitives.Password) (*primitives.Cre
 	}
 
 	salt := make([]byte, primitives.SaltLength)
-	_, err := rand.Read(salt)
+	_, err := randRead(salt)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(primitives.SystemErrorCause, err)
 	}
 
 	value := argon2.IDKey([]byte(secret), salt, a.Time, a.Memory, a.Threads, a.KeyLength)
@@ -99,9 +99,9 @@ func (s *SHA256Producer) Generate(secret primitives.Password) (*primitives.Crede
 	}
 
 	salt := make([]byte, primitives.SaltLength)
-	_, err := rand.Read(salt)
+	_, err := randRead(salt)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(primitives.SystemErrorCause, err)
 	}
 
 	value := sha256.Sum256(append([]byte(secret), salt...))
@@ -138,3 +138,5 @@ func (s *SHA256Producer) Compare(secret primitives.Password, creds *primitives.C
 func (s *SHA256Producer) Alg() primitives.CredentialsAlgType {
 	return primitives.SHA256
 }
+
+var randRead = rand.Read

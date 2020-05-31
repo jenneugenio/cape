@@ -18,6 +18,11 @@ input AddSourceRequest {
     service_id: ID
 }
 
+input UpdateSourceRequest {
+    source_label: Label!
+    service_id: ID
+}
+
 input RemoveSourceRequest {
     label: Label!
 }
@@ -30,5 +35,6 @@ extend type Query {
 
 extend type Mutation {
     addSource(input: AddSourceRequest!): Source! @isAuthenticated
+    updateSource(input: UpdateSourceRequest!): Source! @isAuthenticated()
     removeSource(input: RemoveSourceRequest!): String @isAuthenticated
 }

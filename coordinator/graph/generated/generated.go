@@ -98,6 +98,7 @@ type ComplexityRoot struct {
 		ReportSchema  func(childComplexity int, input model.ReportSchemaRequest) int
 		Setup         func(childComplexity int, input model.SetupRequest) int
 		UnassignRole  func(childComplexity int, input model.AssignRoleRequest) int
+		UpdateSource  func(childComplexity int, input model.UpdateSourceRequest) int
 	}
 
 	Policy struct {
@@ -205,6 +206,7 @@ type MutationResolver interface {
 	CreateService(ctx context.Context, input model.CreateServiceRequest) (*primitives.Service, error)
 	DeleteService(ctx context.Context, input model.DeleteServiceRequest) (*string, error)
 	AddSource(ctx context.Context, input model.AddSourceRequest) (*primitives.Source, error)
+	UpdateSource(ctx context.Context, input model.UpdateSourceRequest) (*primitives.Source, error)
 	RemoveSource(ctx context.Context, input model.RemoveSourceRequest) (*string, error)
 	CreateToken(ctx context.Context, input model.CreateTokenRequest) (*model.CreateTokenResponse, error)
 	RemoveToken(ctx context.Context, id database.ID) (database.ID, error)
@@ -584,6 +586,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.UnassignRole(childComplexity, args["input"].(model.AssignRoleRequest)), true
+
+	case "Mutation.updateSource":
+		if e.complexity.Mutation.UpdateSource == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateSource_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateSource(childComplexity, args["input"].(model.UpdateSourceRequest)), true
 
 	case "Policy.created_at":
 		if e.complexity.Policy.CreatedAt == nil {
@@ -1431,6 +1445,11 @@ input AddSourceRequest {
     service_id: ID
 }
 
+input UpdateSourceRequest {
+    source_label: Label!
+    service_id: ID
+}
+
 input RemoveSourceRequest {
     label: Label!
 }
@@ -1443,6 +1462,7 @@ extend type Query {
 
 extend type Mutation {
     addSource(input: AddSourceRequest!): Source! @isAuthenticated
+    updateSource(input: UpdateSourceRequest!): Source! @isAuthenticated()
     removeSource(input: RemoveSourceRequest!): String @isAuthenticated
 }`, BuiltIn: false},
 	&ast.Source{Name: "coordinator/schema/tokens.graphql", Input: `type Token {
@@ -1733,6 +1753,20 @@ func (ec *executionContext) field_Mutation_unassignRole_args(ctx context.Context
 	var arg0 model.AssignRoleRequest
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalNAssignRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignRoleRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateSource_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.UpdateSourceRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNUpdateSourceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐUpdateSourceRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3365,6 +3399,67 @@ func (ec *executionContext) _Mutation_addSource(ctx context.Context, field graph
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
 			return ec.resolvers.Mutation().AddSource(rctx, args["input"].(model.AddSourceRequest))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*primitives.Source); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Source`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*primitives.Source)
+	fc.Result = res
+	return ec.marshalNSource2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSource(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateSource(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateSource_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateSource(rctx, args["input"].(model.UpdateSourceRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAuthenticated == nil {
@@ -7641,6 +7736,30 @@ func (ec *executionContext) unmarshalInputSetupRequest(ctx context.Context, obj 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateSourceRequest(ctx context.Context, obj interface{}) (model.UpdateSourceRequest, error) {
+	var it model.UpdateSourceRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "source_label":
+			var err error
+			it.SourceLabel, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "service_id":
+			var err error
+			it.ServiceID, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -7897,6 +8016,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_deleteService(ctx, field)
 		case "addSource":
 			out.Values[i] = ec._Mutation_addSource(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateSource":
+			out.Values[i] = ec._Mutation_updateSource(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -9381,6 +9505,10 @@ func (ec *executionContext) marshalNToken2ᚖgithubᚗcomᚋcapeprivacyᚋcape�
 		return graphql.Null
 	}
 	return ec._Token(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUpdateSourceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐUpdateSourceRequest(ctx context.Context, v interface{}) (model.UpdateSourceRequest, error) {
+	return ec.unmarshalInputUpdateSourceRequest(ctx, v)
 }
 
 func (ec *executionContext) marshalNUser2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐUser(ctx context.Context, sel ast.SelectionSet, v primitives.User) graphql.Marshaler {

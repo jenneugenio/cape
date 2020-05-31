@@ -139,4 +139,68 @@ func TestListSources(t *testing.T) {
 		gm.Expect(u.Calls[0].Args[0]).To(gm.Equal("\nFound {{ . | toString | faded }} source{{ . | pluralize \"s\"}}\n"))
 		gm.Expect(u.Calls[0].Args[1]).To(gm.Equal(0))
 	})
+
+	t.Run("Can add a source", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+		url, err := primitives.NewDBURL("postgres://localhost:5432/mydb")
+		gm.Expect(err).To(gm.BeNil())
+
+		resp := struct {
+			Source coordinator.SourceResponse `json:"addSource"`
+		}{
+			Source: coordinator.SourceResponse{
+				Source: &primitives.Source{
+					Label:    "my-source-1",
+					Type:     "postgres",
+					Endpoint: url,
+				},
+			},
+		}
+
+		app, u := NewHarness([]interface{}{resp})
+		err = app.Run([]string{"cape", "sources", "add", "my-source-1", "postgres://localhost:5432/mydb"})
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(u.Calls)).To(gm.Equal(1))
+		gm.Expect(u.Calls[0].Name).To(gm.Equal("template"))
+		gm.Expect(u.Calls[0].Args[1]).To(gm.Equal("my-source-1"))
+	})
+
+	t.Run("Can update an existing source", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+		url, err := primitives.NewDBURL("postgres://localhost:5432/mydb")
+		gm.Expect(err).To(gm.BeNil())
+
+		resp := struct {
+			Source coordinator.SourceResponse `json:"updateSource"`
+		}{
+			Source: coordinator.SourceResponse{
+				Source: &primitives.Source{
+					Label:    "my-source-1",
+					Type:     "postgres",
+					Endpoint: url,
+				},
+			},
+		}
+
+		app, u := NewHarness([]interface{}{resp})
+		err = app.Run([]string{"cape", "sources", "update", "-y", "my-source-1"})
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(u.Calls)).To(gm.Equal(1))
+		gm.Expect(u.Calls[0].Name).To(gm.Equal("template"))
+		gm.Expect(u.Calls[0].Args[1]).To(gm.Equal("my-source-1"))
+	})
+
+	t.Run("Can remove an existing source", func(t *testing.T) {
+		gm.RegisterTestingT(t)
+
+		app, u := NewHarness([]interface{}{})
+		err := app.Run([]string{"cape", "sources", "remove", "my-source-1"})
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(u.Calls)).To(gm.Equal(2))
+		gm.Expect(u.Calls[0].Name).To(gm.Equal("confirm"))
+		gm.Expect(u.Calls[1].Name).To(gm.Equal("template"))
+	})
 }

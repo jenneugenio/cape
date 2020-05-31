@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/Masterminds/sprig"
-	"github.com/manifoldco/go-base64"
 	"github.com/urfave/cli/v2"
 	"sigs.k8s.io/yaml"
 
@@ -16,7 +15,6 @@ import (
 
 	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/capeprivacy/cape/coordinator"
-	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/logging"
 	errors "github.com/capeprivacy/cape/partyerrors"
@@ -180,18 +178,9 @@ func configureCoordinatorCmd(c *cli.Context) error {
 		dbURL = i.(*primitives.DBURL)
 	}
 
-	key, err := crypto.GenerateKey()
+	cfg, err := coordinator.NewConfig(port, dbURL)
 	if err != nil {
 		return err
-	}
-
-	cfg := &coordinator.Config{
-		Version: 1,
-		Port:    port,
-		DB: &coordinator.DBConfig{
-			Addr: dbURL,
-		},
-		RootKey: base64.New(key[:]),
 	}
 
 	provider := GetProvider(c.Context)
@@ -269,6 +258,10 @@ func startCoordinatorCmd(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	// By default, we always configure Cape to use Argon2ID
+	// _unless_ we're writing unit tests.
+	cfg.CredentialProducerAlg = primitives.Argon2ID
 
 	instanceID, err := getInstanceID(c, "coordinator")
 	if err != nil {

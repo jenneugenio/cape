@@ -6,6 +6,7 @@ import (
 	"github.com/manifoldco/go-base64"
 	"sigs.k8s.io/yaml"
 
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -52,6 +53,10 @@ func (db *DBConfig) Decode(value string) error {
 
 // Validate returns an error if the DBConfig is invalid
 func (db *DBConfig) Validate() error {
+	if db.Addr == nil {
+		return errors.New(InvalidConfigCause, "A db address must be provided")
+	}
+
 	return db.Addr.Validate()
 }
 
@@ -68,6 +73,10 @@ func (c *Config) GetInstanceID() primitives.Label {
 
 // Validate returns an error if the config is invalid
 func (c *Config) Validate() error {
+	if c.Version != 1 {
+		return errors.New(InvalidConfigCause, "Version must be 1")
+	}
+
 	if c.Port > 65535 || c.Port < 1 {
 		return errors.New(InvalidConfigCause, "Port must be between 1-65335")
 	}
@@ -122,6 +131,28 @@ func LoadConfig(filePath string) (*Config, error) {
 
 	err = cfg.Validate()
 	if err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
+func NewConfig(port int, dbURL *primitives.DBURL) (*Config, error) {
+	key, err := crypto.GenerateKey()
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := &Config{
+		Version: 1,
+		Port:    port,
+		DB: &DBConfig{
+			Addr: dbURL,
+		},
+		RootKey: base64.New(key[:]),
+	}
+
+	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 

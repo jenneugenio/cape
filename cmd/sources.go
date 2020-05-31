@@ -32,6 +32,31 @@ func init() {
 		},
 	}
 
+	sourcesUpdateCmd := &Command{
+		Usage:       "Modifies the configuration of an existing data source",
+		Description: "Modifies the configuration of an existing data source",
+		Arguments:   []*Argument{SourceLabelArg},
+		Examples: []*Example{
+			{
+				Example: "cape sources update transactions --set-data-connector service:dc@my-cape.org",
+				Description: "Modifies the configuration of the data source labelled `transactions` to link to " +
+					"the data connector service identified by `service:dc@my-cape.org`",
+			},
+		},
+		Command: &cli.Command{
+			Name:   "update",
+			Action: handleSessionOverrides(sourcesUpdate),
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "set-data-connector",
+					Usage:   "Link the source to the data connector `CONNECTOR`",
+					EnvVars: []string{"CAPE_DATA_CONNECTOR"},
+				},
+				yesFlag(),
+			},
+		},
+	}
+
 	sourcesRemoveCmd := &Command{
 		Usage:       "Removes a data source to Cape",
 		Description: "Removes a data source to Cape",
@@ -81,6 +106,7 @@ func init() {
 			Name: "sources",
 			Subcommands: []*cli.Command{
 				sourcesAddCmd.Package(),
+				sourcesUpdateCmd.Package(),
 				sourcesRemoveCmd.Package(),
 				sourcesListCmd.Package(),
 				sourcesDescribeCmd.Package(),
@@ -124,6 +150,49 @@ func sourcesAdd(c *cli.Context) error {
 
 	u := provider.UI(c.Context)
 	return u.Template("Added source {{ . | bold }} to Cape\n", source.Label.String())
+}
+
+func sourcesUpdate(c *cli.Context) error {
+	skipConfirm := c.Bool("yes")
+	provider := GetProvider(c.Context)
+	u := provider.UI(c.Context)
+	client, err := provider.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
+	label := Arguments(c.Context, SourceLabelArg).(primitives.Label)
+
+	serviceEmail := c.String("set-data-connector")
+
+	var serviceID *database.ID
+	if serviceEmail != "" {
+		email, err := primitives.NewEmail(serviceEmail)
+		if err != nil {
+			return err
+		}
+
+		service, err := client.GetServiceByEmail(c.Context, email)
+		if err != nil {
+			return err
+		}
+
+		serviceID = &service.ID
+	} else {
+		if !skipConfirm {
+			err := u.Confirm(fmt.Sprintf("Do you really want to unlink the service for this source %s", label))
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	source, err := client.UpdateSource(c.Context, label, serviceID)
+	if err != nil {
+		return err
+	}
+
+	return u.Template("Updated source {{ . | bold }} with data connector {{ . | bold }}\n", source.Label.String())
 }
 
 func sourcesRemove(c *cli.Context) error {

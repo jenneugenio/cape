@@ -1,10 +1,9 @@
 version: 1
-label: allow-specific-fields
+label: allow-cholesteral-fields
 rules:
-    - target: "records:creditcards.transactions"
+    - target: "records:creditcards.cholesteral"
       action: read
       effect: allow
       fields:
-          - vendor
-          - value
-          - timestamp
+          - name
+          - chol
