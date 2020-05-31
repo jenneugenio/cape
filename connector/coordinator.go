@@ -17,7 +17,7 @@ type CoordinatorProvider interface {
 type Coordinator interface {
 	ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error)
 	GetIdentityPolicies(ctx context.Context, id database.ID) ([]*primitives.Policy, error)
-	GetSourceByLabel(ctx context.Context, label primitives.Label) (*coor.SourceResponse, error)
+	GetSourceByLabel(ctx context.Context, label primitives.Label, opts *coor.SourceOptions) (*coor.SourceResponse, error)
 }
 
 // Coordinator wraps a coordinator client giving some extra features

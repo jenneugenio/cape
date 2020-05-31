@@ -32,6 +32,11 @@ type User implements Identity {
   roles: [Role!]
 }
 
+type Schema {
+  source_id: ID!
+  blob: SchemaBlob!
+}
+
 type CreateUserResponse {
   password: Password!
   user: User!
@@ -43,17 +48,6 @@ type Session {
   owner_id: ID!
   expires_at: Time!
   token: Base64!
-}
-
-type Source {
-  id: ID!
-  label: Label!
-  type: SourceType!
-  endpoint: DBURL!
-  credentials: DBURL
-
-  # if a source has a linked service
-  service: Service
 }
 
 type Assignment {
@@ -95,21 +89,6 @@ input DeleteSessionRequest {
   token: Base64
 }
 
-input AddSourceRequest {
-  label: Label!
-  credentials: DBURL!
-  service_id: ID
-}
-
-input UpdateSourceRequest {
-  source_label: Label!
-  service_id: ID
-}
-
-input RemoveSourceRequest {
-  label: Label!
-}
-
 input ReportSchemaRequest {
   source_id: ID!
   source_schema: String!
@@ -122,12 +101,7 @@ input ReportSchemaRequest {
 type Query {
   user(id: ID!): User! @isAuthenticated()
   users: [User!] @isAuthenticated()
-
   me: Identity! @isAuthenticated()
-
-  sources: [Source!]! @isAuthenticated()
-  source(id: ID!): Source! @isAuthenticated()
-  sourceByLabel(label: Label!): Source! @isAuthenticated()
 
   identities(emails: [Email!]): [Identity!] @isAuthenticated()
 }
@@ -136,9 +110,6 @@ type Mutation {
   setup(input: SetupRequest!): User!
 
   createUser(input: CreateUserRequest!): CreateUserResponse! @isAuthenticated()
-  addSource(input: AddSourceRequest!): Source! @isAuthenticated()
-  updateSource(input: UpdateSourceRequest!): Source! @isAuthenticated()
-  removeSource(input: RemoveSourceRequest!): String @isAuthenticated()
 
   createSession(input: SessionRequest!): Session!
   deleteSession(input: DeleteSessionRequest!): String @isAuthenticated()
@@ -160,3 +131,4 @@ scalar EmailType
 scalar Email
 scalar SourceType
 scalar Password
+scalar SchemaBlob

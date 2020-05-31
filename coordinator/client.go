@@ -3,6 +3,7 @@ package coordinator
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"strings"
 
@@ -24,6 +25,11 @@ var NetworkCause = errors.NewCause(errors.RequestTimeoutCategory, "network_error
 // UnrecognizedIdentityType occurs when the client encounters an identity type
 // it doesn't recognize.
 var UnrecognizedIdentityType = errors.NewCause(errors.BadRequestCategory, "unrecognized_identity")
+
+// SourceOptions can be passed to some of the source routes to provide additional functionality
+type SourceOptions struct {
+	WithSchema bool
+}
 
 type ClientTransport struct {
 	client    *graphql.Client
@@ -549,6 +555,7 @@ func (c *Client) ListRoles(ctx context.Context) ([]*primitives.Role, error) {
 type SourceResponse struct {
 	*primitives.Source
 	Service *primitives.Service `json:"service"`
+	Schema  *primitives.Schema  `json:"schema"`
 }
 
 // AddSource adds a new source to the database
@@ -661,7 +668,7 @@ func (c *Client) RemoveSource(ctx context.Context, label primitives.Label) error
 }
 
 // GetSource returns a specific data source
-func (c *Client) GetSource(ctx context.Context, id database.ID) (*SourceResponse, error) {
+func (c *Client) GetSource(ctx context.Context, id database.ID, opts *SourceOptions) (*SourceResponse, error) {
 	var resp struct {
 		Source SourceResponse `json:"source"`
 	}
@@ -669,7 +676,17 @@ func (c *Client) GetSource(ctx context.Context, id database.ID) (*SourceResponse
 	variables := make(map[string]interface{})
 	variables["id"] = id
 
-	err := c.transport.Raw(ctx, `
+	// We will also request the schema if withSchema == true
+	describeClause := ""
+	if opts != nil && opts.WithSchema {
+		describeClause = `
+			schema {
+				blob
+			}
+		`
+	}
+
+	err := c.transport.Raw(ctx, fmt.Sprintf(`
 		query Sources($id: ID!) {
 				source(id: $id) {
 					id
@@ -681,9 +698,10 @@ func (c *Client) GetSource(ctx context.Context, id database.ID) (*SourceResponse
 						id
 						email
 					}
+					%s
 				}
 			}
-	`, variables, &resp)
+	`, describeClause), variables, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -692,7 +710,7 @@ func (c *Client) GetSource(ctx context.Context, id database.ID) (*SourceResponse
 }
 
 // GetSourceByLabel returns a specific data source given its label
-func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (*SourceResponse, error) {
+func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label, opts *SourceOptions) (*SourceResponse, error) {
 	var resp struct {
 		Source SourceResponse `json:"sourceByLabel"`
 	}
@@ -700,7 +718,17 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (
 	variables := make(map[string]interface{})
 	variables["label"] = label
 
-	err := c.transport.Raw(ctx, `
+	// We will also request the schema if withSchema == true
+	describeClause := ""
+	if opts != nil && opts.WithSchema {
+		describeClause = `
+			schema {
+				blob
+			}
+		`
+	}
+
+	err := c.transport.Raw(ctx, fmt.Sprintf(`
 		query Sources($label: Label!) {
 				sourceByLabel(label: $label) {
 					id
@@ -712,9 +740,10 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (
 						id
 						email
 					}
+					%s
 				}
 			}
-	`, variables, &resp)
+	`, describeClause), variables, &resp)
 	if err != nil {
 		return nil, err
 	}

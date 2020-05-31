@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-
+	"github.com/capeprivacy/cape/cmd/ui"
+	"github.com/capeprivacy/cape/coordinator"
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/coordinator/database"
@@ -82,6 +83,23 @@ func init() {
 		},
 	}
 
+	sourcesDescribeCmd := &Command{
+		Usage:       "Describes a data source",
+		Description: "Provides addition information about a data source, such as its schema",
+		Arguments:   []*Argument{SourceLabelArg},
+		Examples: []*Example{
+			{
+				Example:     "cape sources describe transactions",
+				Description: "Describes the source labelled `transactios`",
+			},
+		},
+		Command: &cli.Command{
+			Name:   "describe",
+			Action: handleSessionOverrides(sourcesDescribe),
+			Flags:  []cli.Flag{clusterFlag()},
+		},
+	}
+
 	sourcesCmd := &Command{
 		Usage: "Commands for adding, deleting, and modifying data sources",
 		Command: &cli.Command{
@@ -91,6 +109,7 @@ func init() {
 				sourcesUpdateCmd.Package(),
 				sourcesRemoveCmd.Package(),
 				sourcesListCmd.Package(),
+				sourcesDescribeCmd.Package(),
 			},
 		},
 	}
@@ -234,4 +253,45 @@ func sourcesList(c *cli.Context) error {
 	}
 
 	return u.Template("\nFound {{ . | toString | faded }} source{{ . | pluralize \"s\"}}\n", len(sources))
+}
+
+func sourcesDescribe(c *cli.Context) error {
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
+	label := Arguments(c.Context, SourceLabelArg).(primitives.Label)
+	s, err := client.GetSourceByLabel(c.Context, label, &coordinator.SourceOptions{WithSchema: true})
+	if err != nil {
+		return err
+	}
+
+	u := provider.UI(c.Context)
+	details := ui.Details{
+		"Name": s.Label.String(),
+		"Type": s.Endpoint.Scheme,
+		"Host": s.Endpoint.String(),
+	}
+
+	if s.Service != nil {
+		details["Data Connector"] = s.Service.Email.String()
+	}
+
+	err = u.Details(details)
+	if err != nil {
+		return err
+	}
+
+	template := "\n{{ \"Schema\" | bold }}\n"
+	for tableName, table := range s.Schema.Blob {
+		template += fmt.Sprintf("%s\n", tableName)
+		for columnName, fieldType := range table {
+			template += fmt.Sprintf("\t%s:\t%s\n", columnName, fieldType)
+		}
+		template += "\n"
+	}
+
+	return u.Template(template, nil)
 }

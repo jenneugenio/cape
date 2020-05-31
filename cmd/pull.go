@@ -71,7 +71,7 @@ func pullDataCmd(c *cli.Context) error {
 		return err
 	}
 
-	source, err := coordClient.GetSourceByLabel(c.Context, sourceLabel)
+	source, err := coordClient.GetSourceByLabel(c.Context, sourceLabel, nil)
 	if err != nil {
 		return err
 	}

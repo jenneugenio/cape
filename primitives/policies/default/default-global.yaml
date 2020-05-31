@@ -44,3 +44,6 @@ rules:
   - target: "sources:*"
     action: read
     effect: allow
+  - target: "source_schema:*"
+    action: read
+    effect: allow

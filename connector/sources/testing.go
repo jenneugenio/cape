@@ -49,7 +49,10 @@ func newTestSource(ctx context.Context, cfg *Config, source *primitives.Source) 
 
 type testClient struct{}
 
-func (t *testClient) GetSourceByLabel(ctx context.Context, source primitives.Label) (*coordinator.SourceResponse, error) {
+func (t *testClient) GetSourceByLabel(
+	ctx context.Context,
+	source primitives.Label,
+	opts *coordinator.SourceOptions) (*coordinator.SourceResponse, error) {
 	return &coordinator.SourceResponse{
 		Source: &primitives.Source{
 			Label: source,
@@ -60,7 +63,10 @@ func (t *testClient) GetSourceByLabel(ctx context.Context, source primitives.Lab
 
 type errClient struct{}
 
-func (e *errClient) GetSourceByLabel(ctx context.Context, source primitives.Label) (*coordinator.SourceResponse, error) {
+func (e *errClient) GetSourceByLabel(
+	ctx context.Context,
+	source primitives.Label,
+	opts *coordinator.SourceOptions) (*coordinator.SourceResponse, error) {
 	return nil, errors.New(NotFoundCause, "whoops")
 }
 
