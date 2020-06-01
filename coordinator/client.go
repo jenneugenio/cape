@@ -78,11 +78,13 @@ func (c *ClientTransport) Raw(ctx context.Context, query string, variables map[s
 	return nil
 }
 
+type SessionResponse struct {
+	Session primitives.Session `json:"createSession"`
+}
+
 // TokenLogin enables a user or service to login using an APIToken
 func (c *ClientTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*primitives.Session, error) {
-	var resp struct {
-		Session primitives.Session `json:"createSession"`
-	}
+	var resp SessionResponse
 
 	variables := map[string]interface{}{
 		"token_id": apiToken.TokenID,
@@ -109,9 +111,7 @@ func (c *ClientTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToke
 
 // EmailLogin starts step 1 of the login flow using an email & password
 func (c *ClientTransport) EmailLogin(ctx context.Context, email primitives.Email, password primitives.Password) (*primitives.Session, error) {
-	var resp struct {
-		Session primitives.Session `json:"createSession"`
-	}
+	var resp SessionResponse
 
 	variables := map[string]interface{}{
 		"email":  email,
