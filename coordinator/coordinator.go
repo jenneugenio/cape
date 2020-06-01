@@ -180,7 +180,18 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		framework.RoundtripLoggerMiddleware,
 		framework.RecoveryMiddleware,
 		gziphandler.GzipHandler,
-		cors.Default().Handler,
+		cors.New(cors.Options{
+			AllowedOrigins: []string{"*"},
+			AllowedHeaders: []string{
+				"Authorization",
+				"Content-Type",
+				"Accept",
+				"X-Requested-With",
+				"Origin",
+				"Referer",
+			},
+			AllowCredentials: true,
+		}).Handler,
 	).Then(health)
 
 	return &Coordinator{
