@@ -39,6 +39,10 @@ var (
 
 	// SchemaPrimitiveType represents the schema for a data source (as stored in cape)
 	SchemaPrimitiveType types.Type = 0x010
+
+	ProjectType types.Type = 0x011
+
+	ProjectSpecType types.Type = 0x012
 )
 
 func init() {
@@ -53,4 +57,6 @@ func init() {
 	types.Register(SourcePrimitiveType, "sources", true)
 	types.Register(ConfigType, "config", true)
 	types.Register(SchemaPrimitiveType, "source_schema", true)
+	types.Register(ProjectType, "projects", true)
+	types.Register(ProjectSpecType, "project_specs", true)
 }
