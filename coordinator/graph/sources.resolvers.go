@@ -179,9 +179,9 @@ func (r *sourceResolver) Schema(ctx context.Context, obj *primitives.Source, opt
 	var schema primitives.Schema
 	err := enforcer.QueryOne(ctx, &schema, database.NewFilter(database.Where{"source_id": obj.ID.String()}, nil, nil))
 
-	if opts != nil && opts.BlobPath != "" {
-		schema.Blob = primitives.SchemaBlob{
-			opts.BlobPath: schema.Blob[opts.BlobPath],
+	if opts != nil && opts.Definition != "" {
+		schema.Definition = primitives.SchemaDefinition{
+			opts.Definition: schema.Definition[opts.Definition],
 		}
 	}
 

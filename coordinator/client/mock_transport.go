@@ -8,7 +8,7 @@ import (
 	"reflect"
 )
 
-// MockTransport replaces the default transport on the client so we can return fake Responses to the CLI for testing
+// MockTransport replaces the default transport on the Client so we can return fake Responses to the CLI for testing
 type MockTransport struct {
 	Endpoint  *primitives.URL
 	Responses []interface{}

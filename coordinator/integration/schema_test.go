@@ -42,7 +42,7 @@ func TestSchema(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("create a new source", func(t *testing.T) {
-		blob := primitives.SchemaBlob{
+		blob := primitives.SchemaDefinition{
 			"my-transactions": {
 				"col-1": "INT",
 				"col-2": "INT",
@@ -55,7 +55,7 @@ func TestSchema(t *testing.T) {
 	})
 
 	t.Run("can update a source", func(t *testing.T) {
-		blob := primitives.SchemaBlob{
+		blob := primitives.SchemaDefinition{
 			"my-transactions": {
 				"col-1": "INT",
 				"col-2": "INT",
@@ -67,7 +67,7 @@ func TestSchema(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		// schema changed!
-		blob = primitives.SchemaBlob{
+		blob = primitives.SchemaDefinition{
 			"my-transactions": {
 				"col-1": "INT",
 				"col-2": "INT",
@@ -81,7 +81,7 @@ func TestSchema(t *testing.T) {
 	})
 
 	t.Run("Cannot report invalid column types", func(t *testing.T) {
-		blob := primitives.SchemaBlob{
+		blob := primitives.SchemaDefinition{
 			"my-transactions": {
 				"col-1": "thiskindofdatatypeisprobablynotfoundinmostdatabases",
 			},

@@ -10,9 +10,9 @@ import (
 	"io"
 )
 
-type SchemaBlob map[string]map[string]string
+type SchemaDefinition map[string]map[string]string
 
-func (s *SchemaBlob) UnmarshalGQL(v interface{}) error {
+func (s *SchemaDefinition) UnmarshalGQL(v interface{}) error {
 	switch t := v.(type) {
 	case map[string]interface{}:
 		if err := mapstructure.Decode(t, s); err != nil {
@@ -25,7 +25,7 @@ func (s *SchemaBlob) UnmarshalGQL(v interface{}) error {
 	}
 }
 
-func (s SchemaBlob) MarshalGQL(w io.Writer) {
+func (s SchemaDefinition) MarshalGQL(w io.Writer) {
 	j, err := json.Marshal(s)
 	if err != nil {
 		panic(err)
@@ -34,7 +34,7 @@ func (s SchemaBlob) MarshalGQL(w io.Writer) {
 	w.Write(j) //nolint: errcheck
 }
 
-func (s SchemaBlob) Validate() error {
+func (s SchemaDefinition) Validate() error {
 	for _, tableName := range s {
 		for _, v := range tableName {
 			_, ok := proto.FieldType_value[v]
@@ -51,8 +51,8 @@ func (s SchemaBlob) Validate() error {
 // It is linked with a source via the source label, the schema is currently stored as a json blob.
 type Schema struct {
 	*database.Primitive
-	SourceID database.ID `json:"source_id"`
-	Blob     SchemaBlob  `json:"blob"`
+	SourceID   database.ID      `json:"source_id"`
+	Definition SchemaDefinition `json:"blob"`
 }
 
 func (s *Schema) GetType() types.Type {
@@ -65,19 +65,19 @@ func (s *Schema) Validate() error {
 		return err
 	}
 
-	return s.Blob.Validate()
+	return s.Definition.Validate()
 }
 
-func NewSchema(sourceID database.ID, schema SchemaBlob) (*Schema, error) {
+func NewSchema(sourceID database.ID, schema SchemaDefinition) (*Schema, error) {
 	p, err := database.NewPrimitive(SchemaPrimitiveType)
 	if err != nil {
 		return nil, err
 	}
 
 	s := &Schema{
-		Primitive: p,
-		SourceID:  sourceID,
-		Blob:      schema,
+		Primitive:  p,
+		SourceID:   sourceID,
+		Definition: schema,
 	}
 
 	return s, s.Validate()

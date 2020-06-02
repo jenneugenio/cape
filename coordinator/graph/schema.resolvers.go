@@ -289,7 +289,7 @@ func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportS
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	var schemaBlob primitives.SchemaBlob
+	var schemaBlob primitives.SchemaDefinition
 	err := json.Unmarshal([]byte(input.SourceSchema), &schemaBlob)
 	if err != nil {
 		return nil, err
@@ -312,7 +312,7 @@ func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportS
 		schema = s
 	}
 
-	schema.Blob = schemaBlob
+	schema.Definition = schemaBlob
 	err = enforcer.Upsert(ctx, schema)
 	return nil, err
 }

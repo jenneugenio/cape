@@ -103,7 +103,8 @@ func (q *postgresQuerier) Get(ctx context.Context, id ID, e Entity) error {
 	return json.Unmarshal(bytes, e)
 }
 
-func (q *postgresQuerier) SubQueryOne(ctx context.Context, e Entity, s *Select, f Filter) error {
+// QueryOne uses a query to return a single entity from the database
+func (q *postgresQuerier) QueryOne(ctx context.Context, e Entity, f Filter) error {
 	if f.Page != nil {
 		panic("Pagination cannot be performed via a QueryOne")
 	}
@@ -119,7 +120,6 @@ func (q *postgresQuerier) SubQueryOne(ctx context.Context, e Entity, s *Select, 
 
 		return err
 	}
-
 
 	sql := fmt.Sprintf(`SELECT data from %s %s`, t.String(), where)
 	r := q.conn.QueryRow(ctx, sql, params...)
@@ -144,11 +144,6 @@ func (q *postgresQuerier) SubQueryOne(ctx context.Context, e Entity, s *Select, 
 	}
 
 	return json.Unmarshal(bytes, e)
-}
-
-// QueryOne uses a query to return a single entity from the database
-func (q *postgresQuerier) QueryOne(ctx context.Context, e Entity, f Filter) error {
-	return q.SubQueryOne(ctx, e, nil, f)
 }
 
 // Query retrieves entities of a single type from the database

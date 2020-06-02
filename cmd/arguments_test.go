@@ -11,35 +11,35 @@ func TestLabelArg(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	tests := []struct {
-		Name string
-		Param string
-		Input string
+		Name     string
+		Param    string
+		Input    string
 		Expected primitives.Label
 		Required bool
-	} {
+	}{
 		{
-			Name: "Gets an expected label",
-			Param: "my-label",
-			Input: "a-label",
+			Name:     "Gets an expected label",
+			Param:    "my-label",
+			Input:    "a-label",
 			Expected: primitives.Label("a-label"),
 			Required: true,
 		},
 
 		{
-			Name: "Returns nil if no label is passed on an optional param",
-			Param: "my-label",
-			Input: "",
+			Name:     "Returns nil if no label is passed on an optional param",
+			Param:    "my-label",
+			Input:    "",
 			Expected: primitives.Label("a-label"),
 			Required: false,
 		},
 	}
 
 	for _, test := range tests {
-		t.Run(test.Name, func (t *testing.T) {
+		t.Run(test.Name, func(t *testing.T) {
 			arg := LabelArg(test.Param, test.Required)
 			cmd := &Command{
 				Arguments: []*Argument{arg},
-				Usage: "A cool app!",
+				Usage:     "A cool app!",
 				Command: &cli.Command{
 					Name: "coolcmd",
 					Action: func(c *cli.Context) error {

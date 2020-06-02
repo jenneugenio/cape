@@ -19,16 +19,16 @@ import (
 	"github.com/machinebox/graphql"
 )
 
-// NetworkCause occurs when the client cannot reach the server
+// NetworkCause occurs when the Client cannot reach the server
 var NetworkCause = errors.NewCause(errors.RequestTimeoutCategory, "network_error")
 
-// UnrecognizedIdentityType occurs when the client encounters an identity type
+// UnrecognizedIdentityType occurs when the Client encounters an identity type
 // it doesn't recognize.
 var UnrecognizedIdentityType = errors.NewCause(errors.BadRequestCategory, "unrecognized_identity")
 
 type Path string
 
-type ClientTransport struct {
+type ClientTransport struct { // nolint
 	client    *graphql.Client
 	authToken *base64.Value
 	url       *primitives.URL
@@ -150,19 +150,19 @@ func (c *ClientTransport) Logout(ctx context.Context, authToken *base64.Value) e
 	`, variables, nil)
 }
 
-// Authenticated returns whether the client is authenticated or not.
-// If the authToken is not nil then its authenticated!
+// Authenticated returns whether the Client is authenticated or not.
+// If the AuthToken is not nil then its authenticated!
 func (c *ClientTransport) Authenticated() bool {
 	return c.authToken != nil
 }
 
-// Client is a wrapper around the graphql client that
+// Client is a wrapper around the graphql Client that
 // connects to the coordinator and sends queries
 type Client struct {
 	transport Transport
 }
 
-// NewClient returns a new client that connects to the given
+// NewClient returns a new Client that connects to the given
 // the configured transport
 func NewClient(transport Transport) *Client {
 	return &Client{
@@ -545,7 +545,7 @@ func (c *Client) ListRoles(ctx context.Context) ([]*primitives.Role, error) {
 // Source Routes
 
 // SourceResponse is an alias of primitives.Source
-// This is needed because the graphQL client cannot leverage the marshallers we have written
+// This is needed because the graphQL Client cannot leverage the marshallers we have written
 // for the URL properties of source (e.g. the Endpoint)
 //
 // We create a custom marshaller that encodes the endpoint as a string
@@ -717,7 +717,7 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label, o
 
 	extraArgs := ""
 	describeClause := ""
-	if opts != nil  {
+	if opts != nil {
 		if opts.WithSchema {
 			describeClause = `
 				schema(opts: $opts) {
@@ -1237,7 +1237,7 @@ func (c *Client) RemoveToken(ctx context.Context, tokenID database.ID) error {
     `, variables, nil)
 }
 
-func (c *Client) ReportSchema(ctx context.Context, sourceID database.ID, sourceSchema primitives.SchemaBlob) error {
+func (c *Client) ReportSchema(ctx context.Context, sourceID database.ID, sourceSchema primitives.SchemaDefinition) error {
 	schemaBlob, err := json.Marshal(sourceSchema)
 	if err != nil {
 		return err

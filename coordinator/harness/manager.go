@@ -95,7 +95,7 @@ func (m *Manager) Setup(ctx context.Context) (*client.Client, error) {
 
 // ReportSchema will log in as the provided worker (through the API token)
 // and report the provided token as that worker
-func (m *Manager) ReportSchema(ctx context.Context, token *auth.APIToken, sourceID database.ID, schema primitives.SchemaBlob) error {
+func (m *Manager) ReportSchema(ctx context.Context, token *auth.APIToken, sourceID database.ID, schema primitives.SchemaDefinition) error {
 	c, err := m.h.Client()
 	if err != nil {
 		return err

@@ -7,7 +7,7 @@ import (
 	"github.com/manifoldco/go-base64"
 )
 
-// Transport is an interface that describes how a coordinator client should communicate with a coordinator
+// Transport is an interface that describes how a coordinator Client should communicate with a coordinator
 type Transport interface {
 	Raw(ctx context.Context, query string, variables map[string]interface{}, resp interface{}) error
 	Authenticated() bool

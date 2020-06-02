@@ -74,7 +74,7 @@ func (w *Worker) GetSchema(j *que.Job) error {
 	}
 
 	schemas := sr.GetSchemas()
-	schemaBlob := primitives.SchemaBlob{}
+	schemaBlob := primitives.SchemaDefinition{}
 
 	for _, s := range schemas {
 		table := map[string]string{}

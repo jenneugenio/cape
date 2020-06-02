@@ -9,7 +9,7 @@ import (
 )
 
 type SchemaOptions struct {
-	BlobPath string
+	Definition string
 }
 
 func (s *SchemaOptions) UnmarshalGQL(v interface{}) error {

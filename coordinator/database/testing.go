@@ -47,7 +47,7 @@ func NewTestNestedEntity(inner *TestInnerEntity) (*TestNestedEntity, error) {
 
 	e := &TestNestedEntity{
 		Primitive: p,
-		Inner: inner,
+		Inner:     inner,
 	}
 
 	// XXX: Static time for the purposes of testing

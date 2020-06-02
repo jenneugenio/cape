@@ -214,13 +214,13 @@ func TestSource(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		// report a fake schema for this source
-		err = m.ReportSchema(ctx, workerToken, source.ID, primitives.SchemaBlob{"my-table": {"my-col": "INT"}})
+		err = m.ReportSchema(ctx, workerToken, source.ID, primitives.SchemaDefinition{"my-table": {"my-col": "INT"}})
 		gm.Expect(err).To(gm.BeNil())
 
 		s, err := c.GetSource(ctx, source.ID, &client.SourceOptions{WithSchema: true})
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(s).ToNot(gm.BeNil())
-		gm.Expect(s.Schema.Blob).To(gm.Equal(primitives.SchemaBlob{"my-table": {"my-col": "INT"}}))
+		gm.Expect(s.Schema.Definition).To(gm.Equal(primitives.SchemaDefinition{"my-table": {"my-col": "INT"}}))
 	})
 
 	t.Run("describe a single data source by label", func(t *testing.T) {
@@ -231,13 +231,13 @@ func TestSource(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		// report a fake schema for this source
-		err = m.ReportSchema(ctx, workerToken, source.ID, primitives.SchemaBlob{"my-table": {"my-col": "INT"}})
+		err = m.ReportSchema(ctx, workerToken, source.ID, primitives.SchemaDefinition{"my-table": {"my-col": "INT"}})
 		gm.Expect(err).To(gm.BeNil())
 
 		s, err := c.GetSourceByLabel(ctx, l, &client.SourceOptions{WithSchema: true})
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(s).ToNot(gm.BeNil())
-		gm.Expect(s.Schema.Blob).To(gm.Equal(primitives.SchemaBlob{"my-table": {"my-col": "INT"}}))
+		gm.Expect(s.Schema.Definition).To(gm.Equal(primitives.SchemaDefinition{"my-table": {"my-col": "INT"}}))
 	})
 
 	t.Run("describe a subset of a single data source by label", func(t *testing.T) {
@@ -249,7 +249,7 @@ func TestSource(t *testing.T) {
 
 		// report a fake schema for this source
 		err = m.ReportSchema(ctx, workerToken, source.ID,
-			primitives.SchemaBlob{
+			primitives.SchemaDefinition{
 				"my-table": {"my-col": "INT"},
 				"my-other-table": {"my-col": "INT"},
 			})
@@ -258,14 +258,14 @@ func TestSource(t *testing.T) {
 		opts := &client.SourceOptions{
 			WithSchema: true,
 			SchemaOptions: &client.SchemaOptions{
-				BlobPath: "my-table",
+				Definition: "my-table",
 			},
 		}
 		s, err := c.GetSourceByLabel(ctx, l, opts)
 
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(s).ToNot(gm.BeNil())
-		gm.Expect(s.Schema.Blob).To(gm.Equal(primitives.SchemaBlob{"my-table": {"my-col": "INT"}}))
+		gm.Expect(s.Schema.Definition).To(gm.Equal(primitives.SchemaDefinition{"my-table": {"my-col": "INT"}}))
 	})
 
 	t.Run("insert the same data source", func(t *testing.T) {

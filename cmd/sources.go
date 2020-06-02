@@ -267,7 +267,7 @@ func sourcesDescribe(c *cli.Context) error {
 
 	collection, ok := Arguments(c.Context, CollectionLabelArg).(primitives.Label)
 	if ok {
-		opts.SchemaOptions = &client.SchemaOptions{BlobPath: collection.String()}
+		opts.SchemaOptions = &client.SchemaOptions{Definition: collection.String()}
 	}
 
 	s, err := connClient.GetSourceByLabel(c.Context, label, opts)
@@ -292,7 +292,7 @@ func sourcesDescribe(c *cli.Context) error {
 	}
 
 	template := "\n{{ \"Schema\" | bold }}\n"
-	for tableName, table := range s.Schema.Blob {
+	for tableName, table := range s.Schema.Definition {
 		template += fmt.Sprintf("%s\n", tableName)
 		for columnName, fieldType := range table {
 			template += fmt.Sprintf("\t%s:\t%s\n", columnName, fieldType)
