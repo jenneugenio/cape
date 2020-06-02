@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
+	"github.com/rs/zerolog"
 	"io/ioutil"
 	"time"
 
@@ -31,6 +33,8 @@ type Worker struct {
 	qc          *que.Client
 	coordClient *coordinator.Client
 	session     *primitives.Session
+
+	logger *zerolog.Logger
 }
 
 func (w *Worker) GetSchema(j *que.Job) error {
@@ -38,28 +42,34 @@ func (w *Worker) GetSchema(j *que.Job) error {
 	var sja SchemaJobArgs
 	err := json.Unmarshal(j.Args, &sja)
 	if err != nil {
+		w.logger.Err(err).Msg("Unable to unmarshall GetSchema job arguments")
 		return err
 	}
 
 	service := sja.Source.Service
 	cert, err := ioutil.ReadFile("connector/certs/localhost.crt")
 	if err != nil {
+		w.logger.Err(err).Msg("Unable to read connector cert file")
 		return err
 	}
 
 	certPool := x509.NewCertPool()
 	ok := certPool.AppendCertsFromPEM(cert)
 	if !ok {
-		return errors.New(BadCertificateCause, "Bad cert for TLS")
+		e := errors.New(BadCertificateCause, "Bad cert for TLS")
+		w.logger.Err(e).Msg("Bad cert for TLS")
+		return e
 	}
 
 	connClient, err := conn.NewClient(service.Endpoint, w.session.Token, certPool)
 	if err != nil {
+		w.logger.Err(err).Msg("Unable to create connector client")
 		return err
 	}
 
 	sr, err := connClient.Schema(ctx, sja.Source.Label)
 	if err != nil {
+		w.logger.Err(err).Msg("Unable to get schema from connector")
 		return err
 	}
 
@@ -77,9 +87,11 @@ func (w *Worker) GetSchema(j *que.Job) error {
 
 	err = w.coordClient.ReportSchema(ctx, sja.Source.ID, schemaBlob)
 	if err != nil {
+		w.logger.Err(err).Msg("Unable to report schema to the coordinator")
 		return err
 	}
 
+	w.logger.Info().Msg(fmt.Sprintf("Reported schema for source %s", sja.Source.Label.String()))
 	return nil
 }
 
@@ -89,6 +101,7 @@ func (w *Worker) GetSources(j *que.Job) error {
 	ctx := context.Background()
 	sources, err := w.coordClient.ListSources(ctx)
 	if err != nil {
+		w.logger.Err(err).Msg("Error listing sources")
 		return err
 	}
 
@@ -96,6 +109,7 @@ func (w *Worker) GetSources(j *que.Job) error {
 	for _, s := range sources {
 		args, err := json.Marshal(&SchemaJobArgs{Source: s})
 		if err != nil {
+			w.logger.Err(err).Msg("Unable to decode schema job arguments")
 			return err
 		}
 
@@ -104,8 +118,10 @@ func (w *Worker) GetSources(j *que.Job) error {
 			Args: args,
 		}
 
+		w.logger.Info().Msg(fmt.Sprintf("Enqueueing job %s", j.Type))
 		err = w.qc.Enqueue(job)
 		if err != nil {
+			w.logger.Err(err).Msg("Unable to enqueue GetSchema job")
 			return err
 		}
 	}
@@ -159,6 +175,7 @@ func (w *Worker) poll() {
 			Type: "GetSources",
 		}
 
+		w.logger.Info().Msg(fmt.Sprintf("Enqueueing job %s", j.Type))
 		err := w.qc.Enqueue(j)
 		if err != nil {
 			panic(err)
@@ -197,5 +214,6 @@ func NewWorker(config *Config) (*Worker, error) {
 		pool:    pgxpool,
 		backend: backend,
 		config:  config,
+		logger:  config.Logger,
 	}, nil
 }

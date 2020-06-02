@@ -36,6 +36,10 @@ func (r *mutationResolver) CreateService(ctx context.Context, input model.Create
 		roleLabels = append(roleLabels, primitives.DataConnectorRole)
 	}
 
+	if input.Type == primitives.WorkerServiceType {
+		roleLabels = []primitives.Label{primitives.WorkerRole}
+	}
+
 	roles, err := getRolesByLabel(ctx, enforcer, roleLabels)
 	if err != nil {
 		return nil, err

@@ -1,0 +1,4 @@
+apiVersion: v2
+description: A Helm chart for deploying the cape worker
+name: cape-worker
+version: 0.0.1

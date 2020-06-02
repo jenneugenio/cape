@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/worker"
+	"github.com/capeprivacy/cape/logging"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/urfave/cli/v2"
 )
@@ -43,7 +44,17 @@ func startWorkerCmd(c *cli.Context) error {
 	token := EnvVariables(c.Context, capeTokenVar).(*auth.APIToken)
 	dbURL := EnvVariables(c.Context, capeDBURL).(*primitives.DBURL)
 
-	config, err := worker.NewConfig(token, dbURL)
+	instanceID, err := getInstanceID(c, "cape-worker")
+	if err != nil {
+		return err
+	}
+
+	logger, err := logging.Logger(c.String("logger"), c.String("log-level"), instanceID.String())
+	if err != nil {
+		return err
+	}
+
+	config, err := worker.NewConfig(token, dbURL, logger)
 	if err != nil {
 		return err
 	}

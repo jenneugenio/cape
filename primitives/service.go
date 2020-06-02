@@ -57,7 +57,10 @@ func (s *Service) Validate() error {
 		if err := s.Endpoint.Validate(); err != nil {
 			return err
 		}
-
+	case WorkerServiceType:
+		if s.Endpoint != nil {
+			return errors.New(InvalidServiceCause, "Can't specify endpoint on user service type")
+		}
 	case UserServiceType:
 		if s.Endpoint != nil {
 			return errors.New(InvalidServiceCause, "Can't specify endpoint on user service type")

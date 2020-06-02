@@ -1,0 +1,14 @@
+worker_pull_policy: Always
+
+image:
+  worker_repository: localhost:5000/capeprivacy/cape
+  worker_migration_repository: localhost:5000/capeprivacy/worker_migrations
+  tag: latest
+
+# the secret containing the token the worker uses
+# to authenticate with the coordinator
+# TODO -- split from connector
+token_secret: worker-secret
+
+db:
+  url: postgres://postgres:dev@postgres-worker-postgresql:5433/worker

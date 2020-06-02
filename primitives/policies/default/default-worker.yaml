@@ -1,0 +1,19 @@
+version: 1
+label: default-worker
+rules:
+  # Only workers can write schema info
+  - target: "source_schema:*"
+    action: create
+    effect: allow
+  - target: "source_schema:*"
+    action: update
+    effect: allow
+  - target: "source_schema:*"
+    action: read
+    effect: allow
+  - target: "sources:*"
+    action: read
+    effect: allow
+  - target: "services:*"
+    action: read
+    effect: allow

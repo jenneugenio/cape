@@ -1,12 +1,12 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: update-db
+  name: cape-coordinator-migration
 spec:
   template:
     spec:
       containers:
-      - image: "{{ .Values.image.update_repository }}:{{ .Values.image.tag }}"
+      - image: "{{ .Values.image.coordinator_migration_repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: Always
         name: updater
         env:

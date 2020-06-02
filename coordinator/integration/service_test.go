@@ -129,6 +129,18 @@ func TestServices(t *testing.T) {
 
 		gm.Expect(members[0].GetEmail()).To(gm.Equal(service.Email))
 	})
+
+	t.Run("can create a worker service", func(t *testing.T) {
+		email, err := primitives.NewEmail("worker@cape.com")
+		gm.Expect(err).To(gm.BeNil())
+
+		s, err := primitives.NewService(email, primitives.WorkerServiceType, nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		service, err := client.CreateService(ctx, s)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(service.Type).To(gm.Equal(s.Type))
+	})
 }
 
 func TestListServices(t *testing.T) {

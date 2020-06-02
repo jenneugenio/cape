@@ -10,6 +10,7 @@ const (
 	DefaultAdminPolicy         = Label("default-admin")
 	DefaultGlobalPolicy        = Label("default-global")
 	DefaultDataConnectorPolicy = Label("default-data-connector")
+	DefaultWorkerPolicy        = Label("default-worker")
 )
 
 // Policy is a single defined policy

@@ -1,15 +1,15 @@
 image:
   coordinator_repository: localhost:5000/capeprivacy/cape
-  update_repository: localhost:5000/capeprivacy/update
+  coordinator_migration_repository: localhost:5000/capeprivacy/coordinator_migrations
   tag: latest
 
 db:
-  url: postgres://postgres:dev@postgres-postgresql:5432/cape
+  url: postgres://postgres:dev@postgres-cape-postgresql:5432/cape
 
 # used for the config file the coordinator takes
 config:
   db:
-    addr: postgres://postgres:dev@postgres-postgresql:5432/cape
+    addr: postgres://postgres:dev@postgres-cape-postgresql:5432/cape
   port: 8080
   root_key: ul0b9qQONZDn4kLNgULl3WJOZEhBqDjT1YK-kgceFUU
   version: 1
