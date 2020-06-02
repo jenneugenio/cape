@@ -34,9 +34,9 @@ func TestSchema(t *testing.T) {
 
 	t.Run("Can unmarshal from a string", func(t *testing.T) {
 		blob := []byte(`{ "my-table" : { "my-col": "INT" }}`)
-		var schemaBlob SchemaDefinition
-		err := json.Unmarshal(blob, &schemaBlob)
+		var schemaDef SchemaDefinition
+		err := json.Unmarshal(blob, &schemaDef)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(schemaBlob["my-table"]["my-col"]).To(gm.Equal("INT"))
+		gm.Expect(schemaDef["my-table"]["my-col"]).To(gm.Equal("INT"))
 	})
 }

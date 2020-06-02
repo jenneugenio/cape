@@ -14,10 +14,6 @@ type Source {
     schema(opts: SchemaOptions): Schema
 }
 
-#input SchemaOptions {
-#    blobPath: String!
-#}
-
 input AddSourceRequest {
     label: Label!
     credentials: DBURL!

@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
@@ -382,6 +383,10 @@ func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Ema
 	return identities, nil
 }
 
+func (r *schemaResolver) Blob(ctx context.Context, obj *primitives.Schema) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *userResolver) Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
@@ -395,9 +400,13 @@ func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResol
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+// Schema returns generated.SchemaResolver implementation.
+func (r *Resolver) Schema() generated.SchemaResolver { return &schemaResolver{r} }
+
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type schemaResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

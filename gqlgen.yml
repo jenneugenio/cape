@@ -72,9 +72,7 @@ models:
     model: github.com/capeprivacy/cape/primitives.Password
   Schema:
     model: github.com/capeprivacy/cape/primitives.Schema
-  SchemaBlob:
-    model: github.com/capeprivacy/cape/primitives.SchemaBlob
+  SchemaDefinition:
+    model: github.com/capeprivacy/cape/primitives.SchemaDefinition
   SchemaOptions:
     model: github.com/capeprivacy/cape/coordinator/client.SchemaOptions
-#  SourceOptions:
-#    model: github.com/capeprivacy/cape/coordinator.SourceOptions
