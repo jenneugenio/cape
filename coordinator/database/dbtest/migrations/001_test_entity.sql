@@ -8,12 +8,6 @@ CREATE TABLE test (
 	CONSTRAINT test_id_equals CHECK (data::jsonb#>>'{id}' = id)
 );
 
-CREATE TABLE test_nested (
-	id char(29) not null primary key,
-	data jsonb not null,
-	CONSTRAINT test_id_equals CHECK (data::jsonb#>>'{id}' = id)
-);
-
 CREATE TRIGGER test_hoist_tgr
 	BEFORE INSERT ON test
 	FOR EACH ROW EXECUTE PROCEDURE hoist_values('id');

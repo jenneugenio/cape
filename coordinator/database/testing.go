@@ -17,12 +17,6 @@ type TestEntity struct {
 	Data string `json:"data"`
 }
 
-type TestInnerEntity struct {
-	Field1 string `json:"field_1"`
-	Field2 string `json:"field_2"`
-	Field3 string `json:"field_3"`
-}
-
 // GetType returns the type of this entity
 func (t *TestEntity) GetType() types.Type {
 	return types.Test
