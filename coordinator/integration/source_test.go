@@ -241,7 +241,7 @@ func TestSource(t *testing.T) {
 	})
 
 	t.Run("describe a subset of a single data source by label", func(t *testing.T) {
-		l, err := primitives.NewLabel("describe-me-label")
+		l, err := primitives.NewLabel("describe-me-subset-label")
 		gm.Expect(err).To(gm.BeNil())
 
 		source, err := c.AddSource(ctx, l, dbURL, nil)
