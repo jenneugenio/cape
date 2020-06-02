@@ -1,9 +1,10 @@
 package transformations
 
 import (
+	"testing"
+
 	"github.com/capeprivacy/cape/connector/proto"
 	gm "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestPlusOne(t *testing.T) {
