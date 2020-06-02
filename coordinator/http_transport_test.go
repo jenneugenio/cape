@@ -18,7 +18,7 @@ import (
 	"github.com/manifoldco/go-base64"
 )
 
-func TestClientTransportRaw(t *testing.T) {
+func TestHTTPTransportRaw(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "{ \"data\": \"blahblah\", \"errors\": [] }")
 	}))
@@ -31,7 +31,7 @@ func TestClientTransportRaw(t *testing.T) {
 
 	t.Run("no variables, no errors", func(t *testing.T) {
 		gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
-		ct := &ClientTransport{
+		ct := &HTTPTransport{
 			client:    gql,
 			authToken: base64.New([]byte("faketoken")),
 			url:       clientURL,
@@ -45,7 +45,7 @@ func TestClientTransportRaw(t *testing.T) {
 
 	t.Run("with variables, no errors", func(t *testing.T) {
 		gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
-		ct := &ClientTransport{
+		ct := &HTTPTransport{
 			client:    gql,
 			authToken: base64.New([]byte("faketoken")),
 			url:       clientURL,
@@ -70,7 +70,7 @@ func TestClientTransportRaw(t *testing.T) {
 			},
 		}
 		gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(hc))
-		ct := &ClientTransport{
+		ct := &HTTPTransport{
 			client:    gql,
 			authToken: base64.New([]byte("faketoken")),
 			url:       clientURL,
@@ -87,7 +87,7 @@ func TestClientTransportRaw(t *testing.T) {
 	})
 }
 
-func TestClientTransportURL(t *testing.T) {
+func TestHTTPTransportURL(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "{ \"data\": \"blahblah\", \"errors\": [] }")
 	}))
@@ -99,7 +99,7 @@ func TestClientTransportURL(t *testing.T) {
 	}
 
 	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
-	ct := &ClientTransport{
+	ct := &HTTPTransport{
 		client:    gql,
 		authToken: base64.New([]byte("faketoken")),
 		url:       clientURL,
@@ -110,7 +110,7 @@ func TestClientTransportURL(t *testing.T) {
 	}
 }
 
-func TestClientTransportTokenLogin(t *testing.T) {
+func TestHTTPTransportTokenLogin(t *testing.T) {
 	var resp struct {
 		Data SessionResponse `json:"data"`
 		Err  []string        `json:"errors"`
@@ -127,7 +127,7 @@ func TestClientTransportTokenLogin(t *testing.T) {
 	}
 
 	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
-	ct := &ClientTransport{
+	ct := &HTTPTransport{
 		client:    gql,
 		authToken: base64.New([]byte("faketoken")),
 		url:       clientURL,
@@ -149,7 +149,7 @@ func TestClientTransportTokenLogin(t *testing.T) {
 	// TODO(thor): also test error cases
 }
 
-func TestClientTransportEmailLogin(t *testing.T) {
+func TestHTTPTransportEmailLogin(t *testing.T) {
 	var resp struct {
 		Data SessionResponse `json:"data"`
 		Err  []string        `json:"errors"`
@@ -166,7 +166,7 @@ func TestClientTransportEmailLogin(t *testing.T) {
 	}
 
 	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
-	ct := &ClientTransport{
+	ct := &HTTPTransport{
 		client:    gql,
 		authToken: base64.New([]byte("faketoken")),
 		url:       clientURL,
@@ -188,7 +188,7 @@ func TestClientTransportEmailLogin(t *testing.T) {
 	// TODO(thor): also test error cases
 }
 
-func TestClientTransportLogout(t *testing.T) {
+func TestHTTPTransportLogout(t *testing.T) {
 	var resp struct {
 		Data string   `json:"data"`
 		Err  []string `json:"errors"`
@@ -205,7 +205,7 @@ func TestClientTransportLogout(t *testing.T) {
 	}
 
 	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
-	ct := &ClientTransport{
+	ct := &HTTPTransport{
 		client:    gql,
 		authToken: base64.New([]byte("faketoken")),
 		url:       clientURL,

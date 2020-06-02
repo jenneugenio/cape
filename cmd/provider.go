@@ -18,7 +18,7 @@ type Provider interface {
 type AppProvider struct {
 }
 
-func (a *AppProvider) transport(ctx context.Context) (coordinator.Transport, error) {
+func (a *AppProvider) transport(ctx context.Context) (coordinator.ClientTransport, error) {
 	cfgSession := Session(ctx)
 	cluster, err := cfgSession.Cluster()
 

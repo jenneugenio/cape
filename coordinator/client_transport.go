@@ -2,13 +2,15 @@ package coordinator
 
 import (
 	"context"
+
+	"github.com/manifoldco/go-base64"
+
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/primitives"
-	"github.com/manifoldco/go-base64"
 )
 
-// Transport is an interface that describes how a coordinator client should communicate with a coordinator
-type Transport interface {
+// ClientTransport is an interface that describes how a coordinator client should communicate with a coordinator
+type ClientTransport interface {
 	Raw(ctx context.Context, query string, variables map[string]interface{}, resp interface{}) error
 	Authenticated() bool
 	URL() *primitives.URL

@@ -294,7 +294,7 @@ func TestSource(t *testing.T) {
 
 		u, err := m.URL()
 		gm.Expect(err).To(gm.BeNil())
-		transport := coordinator.NewTransport(u, nil)
+		transport := coordinator.NewHTTPTransport(u, nil)
 		serviceClient := coordinator.NewClient(transport)
 
 		_, err = serviceClient.TokenLogin(ctx, apiToken)

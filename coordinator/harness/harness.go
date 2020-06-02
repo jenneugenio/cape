@@ -228,7 +228,7 @@ func (h *Harness) Client() (*coordinator.Client, error) {
 		return nil, err
 	}
 
-	transport := coordinator.NewTransport(u, nil)
+	transport := coordinator.NewHTTPTransport(u, nil)
 	return coordinator.NewClient(transport), nil
 }
 

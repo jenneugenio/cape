@@ -88,7 +88,7 @@ func (mp *MockProvider) Client(ctx context.Context) (*coordinator.Client, error)
 		return nil, err
 	}
 
-	t := &coordinator.MockTransport{
+	t := &coordinator.MockClientTransport{
 		Responses: mp.responses,
 		Counter:   0,
 		Endpoint:  url,

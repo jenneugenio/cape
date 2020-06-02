@@ -130,7 +130,7 @@ func (w *Worker) GetSources(j *que.Job) error {
 }
 
 func (w *Worker) Login(ctx context.Context) error {
-	transport := coordinator.NewTransport(w.config.CoordinatorURL, nil)
+	transport := coordinator.NewHTTPTransport(w.config.CoordinatorURL, nil)
 	w.coordClient = coordinator.NewClient(transport)
 	session, err := w.coordClient.TokenLogin(ctx, w.config.Token)
 	if err != nil {
