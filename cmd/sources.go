@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/capeprivacy/cape/cmd/ui"
-	client2 "github.com/capeprivacy/cape/coordinator/client"
+	"github.com/capeprivacy/cape/coordinator/client"
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/coordinator/database"
@@ -86,7 +86,7 @@ func init() {
 	sourcesDescribeCmd := &Command{
 		Usage:       "Describes a data source",
 		Description: "Provides addition information about a data source, such as its schema",
-		Arguments:   []*Argument{SourceLabelArg},
+		Arguments:   []*Argument{SourceLabelArg, CollectionLabelArg},
 		Examples: []*Example{
 			{
 				Example:     "cape sources describe transactions",
@@ -257,13 +257,20 @@ func sourcesList(c *cli.Context) error {
 
 func sourcesDescribe(c *cli.Context) error {
 	provider := GetProvider(c.Context)
-	client, err := provider.Client(c.Context)
+	connClient, err := provider.Client(c.Context)
 	if err != nil {
 		return err
 	}
 
 	label := Arguments(c.Context, SourceLabelArg).(primitives.Label)
-	s, err := client.GetSourceByLabel(c.Context, label, &client2.SourceOptions{WithSchema: true})
+	opts := &client.SourceOptions{WithSchema: true}
+
+	collection, ok := Arguments(c.Context, CollectionLabelArg).(primitives.Label)
+	if ok {
+		opts.SchemaOptions = &client.SchemaOptions{BlobPath: collection.String()}
+	}
+
+	s, err := connClient.GetSourceByLabel(c.Context, label, opts)
 	if err != nil {
 		return err
 	}

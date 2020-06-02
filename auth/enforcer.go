@@ -143,7 +143,7 @@ func (e *Enforcer) Update(ctx context.Context, entity database.Entity) error {
 }
 
 func (e *Enforcer) SubQueryOne(ctx context.Context, entity database.Entity, s *database.Select, filter database.Filter) error {
-	err := e.session.Can(primitives.Read, entity.GetType())
+	err := e.c.Can(primitives.Read, entity.GetType())
 	if err != nil {
 		return err
 	}

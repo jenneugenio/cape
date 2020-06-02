@@ -248,7 +248,7 @@ func TestSource(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		// report a fake schema for this source
-		err = c.ReportSchema(ctx, source.ID,
+		err = m.ReportSchema(ctx, workerToken, source.ID,
 			primitives.SchemaBlob{
 				"my-table": {"my-col": "INT"},
 				"my-other-table": {"my-col": "INT"},

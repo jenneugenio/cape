@@ -8,11 +8,12 @@ import (
 )
 
 var (
-	ClusterLabelArg     = LabelArg("cluster")
-	CoordinatorLabelArg = LabelArg("coordinator")
-	RoleLabelArg        = LabelArg("role")
-	PolicyLabelArg      = LabelArg("policy")
-	SourceLabelArg      = LabelArg("source")
+	ClusterLabelArg     = LabelArg("cluster", true)
+	CoordinatorLabelArg = LabelArg("coordinator", true)
+	RoleLabelArg        = LabelArg("role", true)
+	PolicyLabelArg      = LabelArg("policy", true)
+	SourceLabelArg      = LabelArg("source", true)
+	CollectionLabelArg  = LabelArg("collection", false)
 
 	ClusterURLArg = &Argument{
 		Name:        "url",
@@ -80,13 +81,19 @@ var (
 	}
 )
 
-func LabelArg(f string) *Argument {
+func LabelArg(f string, required bool) *Argument {
 	return &Argument{
 		Name:        f,
 		Description: fmt.Sprintf("A label for the %s", f),
-		Required:    true,
+		Required:    required,
 		Processor: func(in string) (interface{}, error) {
-			// NewLabel validates that the label meets label criteria
+			if in != "" && !required {
+				// NewLabel validates that the label meets label criteria
+				return primitives.NewLabel(in)
+			} else if in == "" {
+				return nil, nil
+			}
+
 			return primitives.NewLabel(in)
 		},
 	}

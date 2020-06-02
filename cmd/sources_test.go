@@ -146,9 +146,9 @@ func TestListSources(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		resp := struct {
-			Source coordinator.SourceResponse `json:"addSource"`
+			Source client.SourceResponse `json:"addSource"`
 		}{
-			Source: coordinator.SourceResponse{
+			Source: client.SourceResponse{
 				Source: &primitives.Source{
 					Label:    "my-source-1",
 					Type:     "postgres",
@@ -172,9 +172,9 @@ func TestListSources(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		resp := struct {
-			Source coordinator.SourceResponse `json:"updateSource"`
+			Source client.SourceResponse `json:"updateSource"`
 		}{
-			Source: coordinator.SourceResponse{
+			Source: client.SourceResponse{
 				Source: &primitives.Source{
 					Label:    "my-source-1",
 					Type:     "postgres",
