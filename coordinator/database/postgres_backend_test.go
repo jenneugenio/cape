@@ -368,24 +368,6 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(target.Data).To(gm.Equal("joe"))
 	})
 
-	t.Run("Can query json blobs", func(t *testing.T) {
-		db, err := dbConnect(ctx, testDB, codec)
-		gm.Expect(err).To(gm.BeNil())
-		defer db.Close()
-
-		eA, err := NewTestNestedEntity(&TestInnerEntity{
-			Field1: "hi",
-			Field2: "cool",
-			Field3: "guy",
-		})
-		gm.Expect(err).To(gm.BeNil())
-
-		target := &TestNestedEntity{}
-		err = db.Get(ctx, eA.ID, target)
-		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(eA).To(gm.Equal(target))
-	})
-
 	t.Run("can query a single entity", func(t *testing.T) {
 		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())

@@ -23,44 +23,9 @@ type TestInnerEntity struct {
 	Field3 string `json:"field_3"`
 }
 
-type TestNestedEntity struct {
-	*Primitive
-	Inner *TestInnerEntity
-}
-
-// GetType returns the type of this entity
-func (t *TestNestedEntity) GetType() types.Type {
-	return types.TestNested
-}
-
 // GetType returns the type of this entity
 func (t *TestEntity) GetType() types.Type {
 	return types.Test
-}
-
-// NewTestEntity returns a new TestEntity struct
-func NewTestNestedEntity(inner *TestInnerEntity) (*TestNestedEntity, error) {
-	p, err := NewPrimitive(types.Test)
-	if err != nil {
-		return nil, err
-	}
-
-	e := &TestNestedEntity{
-		Primitive: p,
-		Inner:     inner,
-	}
-
-	// XXX: Static time for the purposes of testing
-	e.CreatedAt = time.Unix(0, 0).UTC()
-	e.UpdatedAt = time.Unix(0, 0).UTC()
-
-	ID, err := DeriveID(e)
-	if err != nil {
-		return nil, err
-	}
-
-	e.ID = ID
-	return e, nil
 }
 
 // NewTestEntity returns a new TestEntity struct
