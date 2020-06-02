@@ -7,4 +7,5 @@ import (
 var (
 	MissingEnvCause     = errors.NewCause(errors.BadRequestCategory, "missing_env")
 	BadCertificateCause = errors.NewCause(errors.BadRequestCategory, "invalid_cert")
+	InvalidConfigCause  = errors.NewCause(errors.BadRequestCategory, "invalid_config")
 )

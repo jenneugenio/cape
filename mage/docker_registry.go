@@ -13,6 +13,7 @@ import (
 type Registry struct {
 	Name string
 	Port string
+	Host string
 }
 
 // Docker Registry represents a dependency for creating a Docker Registry using

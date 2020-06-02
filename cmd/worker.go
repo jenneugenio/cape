@@ -9,13 +9,20 @@ import (
 )
 
 func init() {
+	exampleStr := "CAPE_COORDINATOR_URL=https://localhost:8080 CAPE_TOKEN=sdfasf " +
+		"CAPE_DB_URL=postgres://user:pass@host:5432/db cape worker start"
+
 	startCmd := &Command{
-		Usage:     "Start an instance of the cape worker",
-		Variables: []*EnvVar{capeTokenVar, capeDBURL},
+		Usage: "Start an instance of the cape worker",
+		Variables: []*EnvVar{
+			capeTokenVar,
+			capeCoordinatorURLVar,
+			capeDBURL,
+		},
 		Examples: []*Example{
 			{
-				Example:     "cape worker start",
-				Description: "starts a cape worker",
+				Example:     exampleStr,
+				Description: "Starts a Cape worker instance configured with a Coordinator URL, DB URL, and Token",
 			},
 		},
 		Command: &cli.Command{
@@ -43,6 +50,7 @@ func init() {
 func startWorkerCmd(c *cli.Context) error {
 	token := EnvVariables(c.Context, capeTokenVar).(*auth.APIToken)
 	dbURL := EnvVariables(c.Context, capeDBURL).(*primitives.DBURL)
+	coordinatorURL := EnvVariables(c.Context, capeCoordinatorURLVar).(*primitives.URL)
 
 	instanceID, err := getInstanceID(c, "cape-worker")
 	if err != nil {
@@ -54,7 +62,7 @@ func startWorkerCmd(c *cli.Context) error {
 		return err
 	}
 
-	config, err := worker.NewConfig(token, dbURL, logger)
+	config, err := worker.NewConfig(token, dbURL, coordinatorURL, logger)
 	if err != nil {
 		return err
 	}

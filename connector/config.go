@@ -8,9 +8,10 @@ import (
 
 // Config is a configuration object for the Connector
 type Config struct {
-	InstanceID primitives.Label
-	Port       int
-	Token      *auth.APIToken
+	InstanceID     primitives.Label
+	Port           int
+	Token          *auth.APIToken
+	CoordinatorURL *primitives.URL
 }
 
 // Validate returns an error if the provided config is invalid
@@ -23,7 +24,19 @@ func (c *Config) Validate() error {
 		return errors.New(InvalidConfigCause, "Missing token")
 	}
 
-	return c.Token.Validate()
+	if err := c.Token.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.InstanceID.Validate(); err != nil {
+		return err
+	}
+
+	if c.CoordinatorURL == nil {
+		return errors.New(InvalidConfigCause, "Missing coordinator url")
+	}
+
+	return c.CoordinatorURL.Validate()
 }
 
 // GetPort satisfies the framework.Config interface

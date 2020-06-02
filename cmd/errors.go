@@ -6,6 +6,9 @@ var (
 	// InvalidAPITokenCause is when a provided APIToken is not valid
 	InvalidAPITokenCause = errors.NewCause(errors.BadRequestCategory, "invalid_api_token")
 
+	// InvalidCoordinatorURL is when a provided coordinator url is not valid
+	InvalidCoordinatorURL = errors.NewCause(errors.BadRequestCategory, "invalid_coordinator_url")
+
 	// MissingArgCause is when a user has not supplied a required argument
 	MissingArgCause = errors.NewCause(errors.BadRequestCategory, "missing_argument")
 

@@ -38,6 +38,8 @@ spec:
                   key: token
             - name: CAPE_DB_URL
               value: "{{ .Values.db.url }}"
+            - name: CAPE_COORDINATOR_URL
+              value: "{{ .Values.coordinator_url }}"
       {{ if (.Values.dockerSecret)}}
       imagePullSecrets:
         - name: {{ .Values.dockerSecret }}

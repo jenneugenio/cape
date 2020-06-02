@@ -102,6 +102,14 @@ func (d *Docker) Build(ctx context.Context, image *DockerImage) error {
 	return sh.RunV("docker", cmd...)
 }
 
+func (d *Docker) Tag(ctx context.Context, image *DockerImage, tag string) error {
+	return sh.RunV("docker", "tag", image.String(), tag)
+}
+
+func (d *Docker) Push(ctx context.Context, tag string) error {
+	return sh.RunV("docker", "push", tag)
+}
+
 type NetworkSettings struct {
 	Networks map[string]struct {
 		IPAddress string `json:"IPAddress"`

@@ -7,13 +7,25 @@ import (
 	"github.com/capeprivacy/cape/connector"
 	"github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/logging"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 func init() {
+	exampleStr := "CAPE_COORDINATOR_URL=https://localhost:8080 CAPE_TOKEN=sdfasf cape connector start"
+
 	startCmd := &Command{
 		Usage:       "Start an instance of the Cape data connector",
 		Description: "Use this command to start an instance of a Cape data connector.",
-		Variables:   []*EnvVar{capeTokenVar},
+		Variables: []*EnvVar{
+			capeTokenVar,
+			capeCoordinatorURLVar,
+		},
+		Examples: []*Example{
+			{
+				Example:     exampleStr,
+				Description: "Starts a Cape connector instance configured with a Coordinator URL and Token",
+			},
+		},
 		Command: &cli.Command{
 			Name:   "start",
 			Action: startConnectorCmd,
@@ -41,6 +53,7 @@ func init() {
 func startConnectorCmd(c *cli.Context) error {
 	port := c.Int("port")
 	token := EnvVariables(c.Context, capeTokenVar).(*auth.APIToken)
+	coordinatorURL := EnvVariables(c.Context, capeCoordinatorURLVar).(*primitives.URL)
 
 	instanceID, err := getInstanceID(c, "connector")
 	if err != nil {
@@ -48,9 +61,10 @@ func startConnectorCmd(c *cli.Context) error {
 	}
 
 	cfg := &connector.Config{
-		InstanceID: instanceID,
-		Port:       port,
-		Token:      token,
+		InstanceID:     instanceID,
+		Port:           port,
+		Token:          token,
+		CoordinatorURL: coordinatorURL,
 	}
 
 	// TODO: Consider having the "logger" be configured by the server?

@@ -54,16 +54,14 @@ func FromPassword(password primitives.Password) (Secret, error) {
 // that is tied to an identity (user or service)
 type APIToken struct {
 	TokenID database.ID
-	URL     *primitives.URL
 	Version byte
 	Secret  Secret
 }
 
 // NewAPIToken returns a new api token from email and url
-func NewAPIToken(secret Secret, tokenCredentialID database.ID, u *primitives.URL) (*APIToken, error) {
+func NewAPIToken(secret Secret, tokenCredentialID database.ID) (*APIToken, error) {
 	return &APIToken{
 		TokenID: tokenCredentialID,
-		URL:     u,
 		Version: tokenVersion,
 		Secret:  secret,
 	}, nil
@@ -72,10 +70,6 @@ func NewAPIToken(secret Secret, tokenCredentialID database.ID, u *primitives.URL
 // Validate returns an error if the underlying APIToken has invalid contents in
 // its fields.
 func (a *APIToken) Validate() error {
-	if err := a.URL.Validate(); err != nil {
-		return err
-	}
-
 	if a.Version != tokenVersion {
 		return errors.New(BadAPITokenVersion, "Expected version: %x", tokenVersion)
 	}
@@ -92,16 +86,12 @@ func (a *APIToken) Validate() error {
 // {version}|{secret}|{url} are bytes concatenated together and
 // encoded as base64
 func (a *APIToken) Marshal() (string, error) {
-	urlBytes := []byte(a.URL.String())
-
-	bytes := make([]byte, len(urlBytes)+1+secretBytes)
+	bytes := make([]byte, 1+secretBytes)
 	bytes[0] = a.Version
-
+	copy(bytes[1:], []byte(a.Secret))
 	copy(bytes[1:secretBytes+1], []byte(a.Secret))
-	copy(bytes[secretBytes+1:], urlBytes)
 
 	val := base64.New(bytes)
-
 	tokenStr := fmt.Sprintf("%s,%s", a.TokenID, val.String())
 
 	return tokenStr, nil
@@ -114,12 +104,10 @@ func (a *APIToken) Unmarshal(token string) error {
 		return errors.New(BadTokenFormat, "Invalid API Token provided")
 	}
 
-	tokenCredentialID, err := database.DecodeFromString(strs[0])
+	ID, err := database.DecodeFromString(strs[0])
 	if err != nil {
 		return err
 	}
-
-	a.TokenID = tokenCredentialID
 
 	val, err := base64.NewFromString(strs[1])
 	if err != nil {
@@ -128,15 +116,10 @@ func (a *APIToken) Unmarshal(token string) error {
 
 	tokenBytes := []byte(*val)
 
+	a.TokenID = ID
 	a.Version = tokenBytes[0]
-	a.Secret = Secret(tokenBytes[1 : secretBytes+1])
+	a.Secret = Secret(tokenBytes[1:])
 
-	u, err := primitives.NewURL(string(tokenBytes[secretBytes+1:]))
-	if err != nil {
-		return err
-	}
-
-	a.URL = u
 	return a.Validate()
 }
 
@@ -150,4 +133,26 @@ func ParseAPIToken(in string) (*APIToken, error) {
 	}
 
 	return token, nil
+}
+
+// GenerateToken should _not_ be used in any production use case. It only
+// exists to simplify the creation of tests for things that take an APIToken as
+// an input.
+func GenerateToken() (*APIToken, error) {
+	password, err := primitives.GeneratePassword()
+	if err != nil {
+		return nil, err
+	}
+
+	secret, err := FromPassword(password)
+	if err != nil {
+		return nil, err
+	}
+
+	ID, err := database.DeriveID(&primitives.Token{})
+	if err != nil {
+		return nil, err
+	}
+
+	return NewAPIToken(secret, ID)
 }

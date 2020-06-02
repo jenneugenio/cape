@@ -12,3 +12,7 @@ token_secret: worker-secret
 
 db:
   url: postgres://postgres:dev@postgres-worker-postgresql:5433/worker
+
+# the url to the coordinator deployed inside of the cluster. since we're using
+# nodeport services this is a static address instead of a service dns
+coordinator_url: http://localhost:8080

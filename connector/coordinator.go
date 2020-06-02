@@ -25,14 +25,16 @@ type Coordinator interface {
 // and validating that a given token has a valid session
 type coordinator struct {
 	*coor.Client
+	url    *primitives.URL
 	token  *auth.APIToken
 	logger *zerolog.Logger
 }
 
 // NewCoordinator returns a new Coordinator
-func NewCoordinator(token *auth.APIToken, logger *zerolog.Logger) Coordinator {
+func NewCoordinator(url *primitives.URL, token *auth.APIToken, logger *zerolog.Logger) Coordinator {
 	return &coordinator{
 		token:  token,
+		url:    url,
 		logger: logger,
 	}
 }
@@ -55,7 +57,7 @@ func (c *coordinator) ValidateToken(ctx context.Context, tokenStr string) (primi
 		return nil, err
 	}
 
-	transport := coor.NewTransport(c.token.URL, token)
+	transport := coor.NewTransport(c.url, token)
 	userClient := coor.NewClient(transport)
 
 	return userClient.Me(ctx)
@@ -64,7 +66,7 @@ func (c *coordinator) ValidateToken(ctx context.Context, tokenStr string) (primi
 // authenticateClient lazily authenticates with a coordinator if required
 func (c *coordinator) authenticateClient(ctx context.Context) error {
 	if c.Client == nil {
-		transport := coor.NewTransport(c.token.URL, nil)
+		transport := coor.NewTransport(c.url, nil)
 		c.Client = coor.NewClient(transport)
 	}
 
@@ -74,10 +76,10 @@ func (c *coordinator) authenticateClient(ctx context.Context) error {
 
 	_, err := c.TokenLogin(ctx, c.token)
 	if err != nil {
-		c.logger.Info().Msgf("Unable to log into the coordinator at %s. Err: %s", c.token.URL, err)
+		c.logger.Info().Msgf("Unable to log into the coordinator at %s. Err: %s", c.url, err)
 		return err
 	}
-	c.logger.Info().Msgf("Logged into the coordinator at %s", c.token.URL)
+	c.logger.Info().Msgf("Logged into the coordinator at %s", c.url)
 
 	return nil
 }

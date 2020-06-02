@@ -33,6 +33,8 @@ spec:
           ports:
             - containerPort: {{ .Values.port }}
           env:
+            - name: CAPE_COORDINATOR_URL
+              value: {{ .Values.coordinator_url }}
             - name: CAPE_TOKEN
               valueFrom:
                 secretKeyRef:

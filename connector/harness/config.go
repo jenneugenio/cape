@@ -15,7 +15,7 @@ var (
 
 // Config is the connector harness config
 type Config struct {
-	CoordinatorURL      *primitives.URL
+	coordinatorURL      *primitives.URL
 	dbURL               *primitives.DBURL
 	token               *auth.APIToken
 	sourceMigrationsDir string
@@ -23,6 +23,30 @@ type Config struct {
 
 // Validate returns an error if the struct contains invalid configuration
 func (c *Config) Validate() error {
+	if c.coordinatorURL == nil {
+		return errors.New(MissingConfig, "A coordinator url is required")
+	}
+
+	if err := c.coordinatorURL.Validate(); err != nil {
+		return err
+	}
+
+	if c.token == nil {
+		return errors.New(MissingConfig, "A token is required")
+	}
+
+	if err := c.token.Validate(); err != nil {
+		return err
+	}
+
+	if c.dbURL == nil {
+		return errors.New(MissingConfig, "A db url is required")
+	}
+
+	if err := c.dbURL.Validate(); err != nil {
+		return err
+	}
+
 	if c.sourceMigrationsDir == "" {
 		return errors.New(MissingConfig, "Cannot run tests, missing 'CAPE_DB_SEED_MIGRATIONS' environment variable")
 	}
@@ -38,7 +62,7 @@ func NewConfig(coordinatorURL *primitives.URL, token *auth.APIToken) (*Config, e
 	}
 
 	c := &Config{
-		CoordinatorURL:      coordinatorURL,
+		coordinatorURL:      coordinatorURL,
 		sourceMigrationsDir: os.Getenv("CAPE_DB_SEED_MIGRATIONS"),
 		token:               token,
 		dbURL:               dbURL,

@@ -70,7 +70,7 @@ func New(cfg *Config, logger *zerolog.Logger) (*Connector, error) {
 		return nil, err
 	}
 
-	coordinator := NewCoordinator(cfg.Token, logger)
+	coordinator := NewCoordinator(cfg.CoordinatorURL, cfg.Token, logger)
 
 	sCfg := &sources.Config{
 		InstanceID: cfg.InstanceID,

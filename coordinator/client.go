@@ -1184,7 +1184,7 @@ func (c *Client) CreateToken(ctx context.Context, identity primitives.Identity) 
 		return nil, nil, err
 	}
 
-	token, err := auth.NewAPIToken(secret, resp.Response.Token.ID, c.transport.URL())
+	token, err := auth.NewAPIToken(secret, resp.Response.Token.ID)
 	return token, resp.Response.Token, err
 }
 

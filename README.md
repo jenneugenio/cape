@@ -102,8 +102,8 @@ running until you complete this step has it requires the kubernetes secret inser
 
 ```
 $ cape services create --type data-connector --endpoint https://localhost:8081 service:dc@my-cape.com
-$ export CAPE_TOKEN=<TOKEN PRINTED OUT FROM THE LAST COMMAND>
-$ kubectl create secret generic connector-secret --from-literal=token=$CAPE_TOKEN
+$ export CONNECTOR_TOKEN=<TOKEN PRINTED OUT FROM THE LAST COMMAND>
+$ kubectl create secret generic connector-secret --from-literal=token=$CONNECTOR_TOKEN
 ```
 
 Get a token that you can provide the worker to be able to auth with the connector & coordinator

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/magefile/mage/mg"
-	"github.com/magefile/mage/sh"
 
 	"github.com/capeprivacy/cape/mage"
 )
@@ -18,6 +17,7 @@ var cluster = &mage.Cluster{
 var registry = &mage.Registry{
 	Name: "cape-local-docker-registry",
 	Port: "5000",
+	Host: "localhost",
 }
 
 var charts = []*mage.Chart{
@@ -134,16 +134,21 @@ func (l Local) Create(ctx context.Context) error {
 func (l Local) Push(ctx context.Context) error {
 	mg.SerialCtxDeps(ctx, Build.Docker)
 
+	deps, err := mage.Dependencies.Get([]string{"docker"})
+	if err != nil {
+		return err
+	}
+
+	docker := deps[0].(*mage.Docker)
+
 	for _, image := range dockerImages {
-		newTag := "localhost:5000/" + image.String()
-		tagCmd := []string{"tag", image.String(), newTag}
-		err := sh.RunV("docker", tagCmd...)
+		tag := fmt.Sprintf("%s:%s/%s", registry.Host, registry.Port, image.String())
+		err = docker.Tag(ctx, image, tag)
 		if err != nil {
 			return err
 		}
 
-		pushCmd := []string{"push", newTag}
-		err = sh.RunV("docker", pushCmd...)
+		err = docker.Push(ctx, tag)
 		if err != nil {
 			return err
 		}

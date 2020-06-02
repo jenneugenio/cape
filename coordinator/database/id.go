@@ -50,6 +50,7 @@ func DeriveID(e Entity) (ID, error) {
 		return EmptyID, err
 	}
 
+	// XXX: Does json marshal deterministically create the same output?
 	b, err := json.Marshal(e)
 	if err != nil {
 		return EmptyID, err

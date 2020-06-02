@@ -19,6 +19,18 @@ var (
 			return auth.ParseAPIToken(in)
 		},
 	}
+	capeCoordinatorURLVar = &EnvVar{
+		Name:        "CAPE_COORDINATOR_URL",
+		Required:    true,
+		Description: "The URL that can be used to connect to the desired Cape Coordinator",
+		Processor: func(in string) (interface{}, error) {
+			if in == "" {
+				return nil, errors.New(InvalidCoordinatorURL, "A coordinator URL must be provided")
+			}
+
+			return primitives.NewURL(in)
+		},
+	}
 	capePasswordVar = &EnvVar{
 		Name:        "CAPE_PASSWORD",
 		Required:    false,

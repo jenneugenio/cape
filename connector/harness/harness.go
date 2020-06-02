@@ -121,9 +121,10 @@ func (h *Harness) Setup(ctx context.Context) error {
 	}
 
 	connector, err := connector.New(&connector.Config{
-		InstanceID: "cape-connector",
-		Port:       1, // This port is ignored!
-		Token:      h.apiToken,
+		InstanceID:     "cape-connector",
+		Port:           1, // This port is ignored!
+		Token:          h.apiToken,
+		CoordinatorURL: h.cfg.coordinatorURL,
 	}, logger)
 	if err != nil {
 		return err
