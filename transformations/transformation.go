@@ -66,4 +66,5 @@ func init() {
 	registry.Add("identity", NewIdentityTransform)
 	registry.Add("plusOne", NewPlusOneTransform)
 	registry.Add("rounding", NewRoundingTransform)
+	registry.Add("perturbation", NewPerturbationTransform)
 }

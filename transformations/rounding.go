@@ -1,9 +1,10 @@
 package transformations
 
 import (
+	"math"
+
 	"github.com/capeprivacy/cape/connector/proto"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"math"
 )
 
 type RoundingType int
