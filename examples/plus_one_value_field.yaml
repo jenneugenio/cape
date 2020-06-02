@@ -6,4 +6,5 @@ rules:
   transformations:
     - field: value
       function: plusOne
+      where: "vendor == 'Kassulke Group'"
 version: 1

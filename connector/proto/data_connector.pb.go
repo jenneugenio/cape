@@ -223,9 +223,9 @@ type Record struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Blob is only available on the first message
+	// Schema is only available on the first message
 	Schema *Schema `protobuf:"bytes,1,opt,name=schema,proto3" json:"schema,omitempty"`
-	// Each field value goes over the wire and the number of values maps to the number of fields in the Blob.
+	// Each field value goes over the wire and the number of values maps to the number of fields in the Schema.
 	Fields []*Field `protobuf:"bytes,2,rep,name=fields,proto3" json:"fields,omitempty"`
 }
 
@@ -439,7 +439,7 @@ func (*Field_Bytes) isField_Value() {}
 
 func (*Field_Bool) isField_Value() {}
 
-// Blob contains information
+// Schema contains information
 type Schema struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -478,7 +478,7 @@ func (x *Schema) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Blob.ProtoReflect.Descriptor instead.
+// Deprecated: Use Schema.ProtoReflect.Descriptor instead.
 func (*Schema) Descriptor() ([]byte, []int) {
 	return file_data_connector_proto_rawDescGZIP(), []int{3}
 }
@@ -870,7 +870,7 @@ var file_data_connector_proto_goTypes = []interface{}{
 	(*QueryRequest)(nil),        // 2: cape.QueryRequest
 	(*Record)(nil),              // 3: cape.Record
 	(*Field)(nil),               // 4: cape.Field
-	(*Schema)(nil),              // 5: cape.Blob
+	(*Schema)(nil),              // 5: cape.Schema
 	(*SchemaRequest)(nil),       // 6: cape.SchemaRequest
 	(*SchemaResponse)(nil),      // 7: cape.SchemaResponse
 	(*FieldInfo)(nil),           // 8: cape.FieldInfo
@@ -879,18 +879,18 @@ var file_data_connector_proto_goTypes = []interface{}{
 	(*timestamp.Timestamp)(nil), // 11: google.protobuf.Timestamp
 }
 var file_data_connector_proto_depIdxs = []int32{
-	5,  // 0: cape.Record.schema:type_name -> cape.Blob
+	5,  // 0: cape.Record.schema:type_name -> cape.Schema
 	4,  // 1: cape.Record.fields:type_name -> cape.Field
 	11, // 2: cape.Field.timestamp:type_name -> google.protobuf.Timestamp
-	0,  // 3: cape.Blob.type:type_name -> cape.RecordType
-	8,  // 4: cape.Blob.fields:type_name -> cape.FieldInfo
-	5,  // 5: cape.SchemaResponse.schemas:type_name -> cape.Blob
+	0,  // 3: cape.Schema.type:type_name -> cape.RecordType
+	8,  // 4: cape.Schema.fields:type_name -> cape.FieldInfo
+	5,  // 5: cape.SchemaResponse.schemas:type_name -> cape.Schema
 	1,  // 6: cape.FieldInfo.field:type_name -> cape.FieldType
 	2,  // 7: cape.DataConnector.Query:input_type -> cape.QueryRequest
-	6,  // 8: cape.DataConnector.Blob:input_type -> cape.SchemaRequest
+	6,  // 8: cape.DataConnector.Schema:input_type -> cape.SchemaRequest
 	9,  // 9: cape.DataConnector.Version:input_type -> cape.VersionRequest
 	3,  // 10: cape.DataConnector.Query:output_type -> cape.Record
-	7,  // 11: cape.DataConnector.Blob:output_type -> cape.SchemaResponse
+	7,  // 11: cape.DataConnector.Schema:output_type -> cape.SchemaResponse
 	10, // 12: cape.DataConnector.Version:output_type -> cape.VersionResponse
 	10, // [10:13] is the sub-list for method output_type
 	7,  // [7:10] is the sub-list for method input_type
@@ -1104,7 +1104,7 @@ func (x *dataConnectorQueryClient) Recv() (*Record, error) {
 
 func (c *dataConnectorClient) Schema(ctx context.Context, in *SchemaRequest, opts ...grpc.CallOption) (*SchemaResponse, error) {
 	out := new(SchemaResponse)
-	err := c.cc.Invoke(ctx, "/cape.DataConnector/Blob", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/cape.DataConnector/Schema", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1135,7 +1135,7 @@ func (*UnimplementedDataConnectorServer) Query(*QueryRequest, DataConnector_Quer
 	return status.Errorf(codes.Unimplemented, "method Query not implemented")
 }
 func (*UnimplementedDataConnectorServer) Schema(context.Context, *SchemaRequest) (*SchemaResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Blob not implemented")
+	return nil, status.Errorf(codes.Unimplemented, "method Schema not implemented")
 }
 func (*UnimplementedDataConnectorServer) Version(context.Context, *VersionRequest) (*VersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Version not implemented")
@@ -1176,7 +1176,7 @@ func _DataConnector_Schema_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/cape.DataConnector/Blob",
+		FullMethod: "/cape.DataConnector/Schema",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataConnectorServer).Schema(ctx, req.(*SchemaRequest))
@@ -1207,7 +1207,7 @@ var _DataConnector_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*DataConnectorServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Blob",
+			MethodName: "Schema",
 			Handler:    _DataConnector_Schema_Handler,
 		},
 		{

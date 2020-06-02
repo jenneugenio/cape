@@ -11,4 +11,8 @@ var (
 	MissingArgument = errors.NewCause(errors.BadRequestCategory, "missing_arg")
 	// WrongArgument happens when a wrong combination of argument is apply to the transformation
 	WrongArgument = errors.NewCause(errors.BadRequestCategory, "wrong_arg")
+
+	// EvaluateBoolOnly occurs when a govalute expression evaluates to something other than
+	// bool
+	EvaluateBoolOnly = errors.NewCause(errors.BadRequestCategory, "evaluate_bool_only")
 )

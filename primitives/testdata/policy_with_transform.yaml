@@ -9,4 +9,5 @@ rules:
   transformations:
     - field: card_number
       function: identity
+      where: "card_number == 'hello'"
 version: 1

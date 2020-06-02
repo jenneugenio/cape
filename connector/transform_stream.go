@@ -1,6 +1,10 @@
 package connector
 
 import (
+	"time"
+
+	"github.com/golang/protobuf/ptypes"
+
 	"github.com/capeprivacy/cape/connector/proto"
 	"github.com/capeprivacy/cape/connector/sources"
 	errors "github.com/capeprivacy/cape/partyerrors"
@@ -12,17 +16,19 @@ import (
 // done on the flowing out of the connector.
 type TransformStream struct {
 	sources.Stream
-	schema     *proto.Schema
-	transforms []transformations.Transformation
+	schema       *proto.Schema
+	transforms   []transformations.Transformation
+	conditionals []*transformations.Conditional
 }
 
 // NewTransformStream constructs the transforms and creates a stream.
 func NewTransformStream(stream sources.Stream, schema *proto.Schema,
 	transforms []*primitives.Transformation) (*TransformStream, error) {
 	initTransforms := make([]transformations.Transformation, len(transforms))
+	conditionals := make([]*transformations.Conditional, len(transforms))
 
 	for i, t := range transforms {
-		ctor := transformations.Get(t.Function.String())
+		ctor := transformations.Get(t.Function)
 		initT, err := ctor(t.Field.String())
 		if err != nil {
 			return nil, err
@@ -38,6 +44,14 @@ func NewTransformStream(stream sources.Stream, schema *proto.Schema,
 			return nil, err
 		}
 
+		if t.Where != "" {
+			c, err := transformations.NewConditional(t.Where.String())
+			if err != nil {
+				return nil, err
+			}
+			conditionals[i] = c
+		}
+
 		err = initT.Initialize(t.Args)
 		if err != nil {
 			return nil, err
@@ -47,9 +61,10 @@ func NewTransformStream(stream sources.Stream, schema *proto.Schema,
 	}
 
 	return &TransformStream{
-		Stream:     stream,
-		schema:     schema,
-		transforms: initTransforms,
+		Stream:       stream,
+		schema:       schema,
+		transforms:   initTransforms,
+		conditionals: conditionals,
 	}, nil
 }
 
@@ -60,10 +75,28 @@ func (t *TransformStream) Send(record *proto.Record) error {
 		t.schema = record.Schema
 	}
 
-	for _, transform := range t.transforms {
+	for i, transform := range t.transforms {
 		index, err := fieldToFieldIndex(transform.Field(), t.schema)
 		if err != nil {
 			return err
+		}
+
+		if t.conditionals[i] != nil {
+			vars := t.conditionals[i].Vars()
+
+			params, err := fillParams(t.schema, record, vars)
+			if err != nil {
+				return err
+			}
+
+			shouldNotTransform, err := t.conditionals[i].Evaluate(params)
+			if err != nil {
+				return err
+			}
+
+			if shouldNotTransform {
+				continue
+			}
 		}
 
 		output, err := transform.Transform(record.Fields[index])
@@ -108,4 +141,55 @@ func fieldToFieldInfo(field string, schema *proto.Schema) (*proto.FieldInfo, err
 	}
 
 	return nil, errors.New(FieldNotFound, "Could not find field %s for target %s", field, schema.Target)
+}
+
+func fillParams(schema *proto.Schema, record *proto.Record, vars []string) (map[string]interface{}, error) {
+	params := make(map[string]interface{}, len(vars))
+	for _, v := range vars {
+		found := false
+		for i, field := range schema.Fields {
+			if v == field.Name {
+				i, err := fieldToInterface(record.GetFields()[i])
+				if err != nil {
+					return nil, err
+				}
+				params[v] = i
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nil, errors.New(FieldNotFound, "Could not evaluate where clause because '%s' is not a field in %s",
+				v, schema.GetDataSource())
+		}
+	}
+
+	return params, nil
+}
+
+func fieldToInterface(field *proto.Field) (interface{}, error) {
+	switch t := field.GetValue().(type) {
+	case *proto.Field_Bool:
+		return t.Bool, nil
+	case *proto.Field_Bytes:
+		return t.Bytes, nil
+	case *proto.Field_Double:
+		return t.Double, nil
+	case *proto.Field_Float:
+		return t.Float, nil
+	case *proto.Field_Int32:
+		return t.Int32, nil
+	case *proto.Field_Int64:
+		return t.Int64, nil
+	case *proto.Field_String_:
+		return t.String_, nil
+	case *proto.Field_Timestamp:
+		tim, err := ptypes.Timestamp(t.Timestamp)
+		if err != nil {
+			return nil, err
+		}
+		return tim.Format(time.RFC3339), nil
+	}
+
+	return nil, errors.New(InvalidFieldType, "Invalid field type got %t", field.GetValue())
 }

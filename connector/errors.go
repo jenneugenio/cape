@@ -18,4 +18,7 @@ var (
 	// FieldNotFound occurs when the data connector is trying to find information on
 	// field for a given schema and cannot.
 	FieldNotFound = errors.NewCause(errors.BadRequestCategory, "field_not_found")
+
+	// InvalidFieldType occurs when a fields type can not be accounted for
+	InvalidFieldType = errors.NewCause(errors.BadRequestCategory, "invalid_field_type")
 )

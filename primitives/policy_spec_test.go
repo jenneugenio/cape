@@ -66,6 +66,59 @@ func TestYamlMarshalling(t *testing.T) {
 	gm.Expect(d).To(gm.Equal(expected), fmt.Sprintf("Wanted \n%s, got \n%s", string(expected), string(d)))
 }
 
+func TestPolicySpecType(t *testing.T) {
+	gm.RegisterTestingT(t)
+
+	var tests = []struct {
+		name         string
+		spec         *PolicySpec
+		expectedRule RuleType
+	}{
+		{
+			name: "get where type",
+			spec: &PolicySpec{
+				Version: PolicyVersion(1),
+				Label:   "protect-ssn",
+				Rules: []*Rule{
+					{
+						Target: "records:creditcards.transactions",
+						Action: Read,
+						Effect: Deny,
+						Where: []Where{
+							{"partner": "visa"},
+						},
+						Sudo: false,
+					},
+				},
+			},
+			expectedRule: WhereRule,
+		},
+		{
+			name: "get field type",
+			spec: &PolicySpec{
+				Version: PolicyVersion(1),
+				Label:   "protect-ssn",
+				Rules: []*Rule{
+					{
+						Target: "records:creditcards.transactions",
+						Action: Read,
+						Effect: Deny,
+						Fields: []Field{"card_number"},
+						Sudo:   false,
+					},
+				},
+			},
+			expectedRule: FieldRule,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			gm.Expect(test.spec.Rules[0].Type()).To(gm.Equal(test.expectedRule))
+		})
+	}
+}
+
 func TestPolicySpecRuleSudo(t *testing.T) {
 	t.Run("policy with no sudo defaults false", func(t *testing.T) {
 		gm.RegisterTestingT(t)
@@ -103,7 +156,7 @@ func TestRuleWithTransformations(t *testing.T) {
 	gm.Expect(transformations[0].Args).To(gm.BeNil())
 
 	gm.Expect(transformations[0].Field.String()).To(gm.Equal("card_number"))
-	gm.Expect(transformations[0].Function.String()).To(gm.Equal("identity"))
+	gm.Expect(transformations[0].Function).To(gm.Equal("identity"))
 }
 
 func TestPolicySpecValidation(t *testing.T) {
@@ -182,7 +235,6 @@ func TestPolicySpecValidation(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			err := test.spec.Validate()
 			gm.Expect(err).ToNot(gm.BeNil())
-			fmt.Println(err.Error())
 			gm.Expect(err.Error()).To(gm.Equal(test.errStr))
 		})
 	}
