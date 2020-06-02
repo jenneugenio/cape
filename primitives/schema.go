@@ -21,7 +21,7 @@ func (s *SchemaDefinition) UnmarshalGQL(v interface{}) error {
 
 		return s.Validate()
 	default:
-		return errors.New(InvalidPolicySpecCause, "Unable to unmarshal gql schema blob")
+		return errors.New(InvalidPolicySpecCause, "Unable to unmarshal gql schema definition")
 	}
 }
 
@@ -52,7 +52,7 @@ func (s SchemaDefinition) Validate() error {
 type Schema struct {
 	*database.Primitive
 	SourceID   database.ID      `json:"source_id"`
-	Definition SchemaDefinition `json:"blob"`
+	Definition SchemaDefinition `json:"definition"`
 }
 
 func (s *Schema) GetType() types.Type {

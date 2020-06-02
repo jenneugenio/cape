@@ -6,8 +6,6 @@ package graph
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
@@ -290,13 +288,13 @@ func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportS
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	var schemaBlob primitives.SchemaDefinition
-	err := json.Unmarshal([]byte(input.SourceSchema), &schemaBlob)
+	var schemaDefinition primitives.SchemaDefinition
+	err := json.Unmarshal([]byte(input.SourceSchema), &schemaDefinition)
 	if err != nil {
 		return nil, err
 	}
 
-	err = schemaBlob.Validate()
+	err = schemaDefinition.Validate()
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +303,7 @@ func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportS
 	err = enforcer.QueryOne(ctx, schema, database.NewFilter(database.Where{"source_id": input.SourceID}, nil, nil))
 	if err != nil && errs.FromCause(err, database.NotFoundCause) {
 		// if not found, create it
-		s, err := primitives.NewSchema(input.SourceID, schemaBlob)
+		s, err := primitives.NewSchema(input.SourceID, schemaDefinition)
 		if err != nil {
 			return nil, err
 		}
@@ -313,7 +311,7 @@ func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportS
 		schema = s
 	}
 
-	schema.Definition = schemaBlob
+	schema.Definition = schemaDefinition
 	err = enforcer.Upsert(ctx, schema)
 	return nil, err
 }
@@ -383,10 +381,6 @@ func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Ema
 	return identities, nil
 }
 
-func (r *schemaResolver) Blob(ctx context.Context, obj *primitives.Schema) (string, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
 func (r *userResolver) Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
@@ -400,13 +394,9 @@ func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResol
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
-// Schema returns generated.SchemaResolver implementation.
-func (r *Resolver) Schema() generated.SchemaResolver { return &schemaResolver{r} }
-
 // User returns generated.UserResolver implementation.
 func (r *Resolver) User() generated.UserResolver { return &userResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-type schemaResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }

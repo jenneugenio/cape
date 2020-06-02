@@ -74,7 +74,7 @@ func (w *Worker) GetSchema(j *que.Job) error {
 	}
 
 	schemas := sr.GetSchemas()
-	schemaBlob := primitives.SchemaDefinition{}
+	definition := primitives.SchemaDefinition{}
 
 	for _, s := range schemas {
 		table := map[string]string{}
@@ -82,10 +82,10 @@ func (w *Worker) GetSchema(j *que.Job) error {
 			table[field.Name] = field.Field.String()
 		}
 
-		schemaBlob[s.Target] = table
+		definition[s.Target] = table
 	}
 
-	err = w.coordClient.ReportSchema(ctx, sja.Source.ID, schemaBlob)
+	err = w.coordClient.ReportSchema(ctx, sja.Source.ID, definition)
 	if err != nil {
 		w.logger.Err(err).Msg("Unable to report schema to the coordinator")
 		return err

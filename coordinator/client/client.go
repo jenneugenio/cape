@@ -678,7 +678,7 @@ func (c *Client) GetSource(ctx context.Context, id database.ID, opts *SourceOpti
 	if opts != nil && opts.WithSchema {
 		describeClause = `
 			schema {
-				blob
+				definition
 			}
 		`
 	}
@@ -721,7 +721,7 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label, o
 		if opts.WithSchema {
 			describeClause = `
 				schema(opts: $opts) {
-					blob
+					definition
 				}
 			`
 		}
@@ -1238,14 +1238,14 @@ func (c *Client) RemoveToken(ctx context.Context, tokenID database.ID) error {
 }
 
 func (c *Client) ReportSchema(ctx context.Context, sourceID database.ID, sourceSchema primitives.SchemaDefinition) error {
-	schemaBlob, err := json.Marshal(sourceSchema)
+	schemaDefinition, err := json.Marshal(sourceSchema)
 	if err != nil {
 		return err
 	}
 
 	variables := make(map[string]interface{})
 	variables["source_id"] = sourceID
-	variables["source_schema"] = string(schemaBlob)
+	variables["source_schema"] = string(schemaDefinition)
 
 	return c.transport.Raw(ctx, `
 		mutation ReportSchema($source_id: ID!, $source_schema: String!) {

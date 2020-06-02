@@ -29,7 +29,7 @@ func TestLabelArg(t *testing.T) {
 			Name:     "Returns nil if no label is passed on an optional param",
 			Param:    "my-label",
 			Input:    "",
-			Expected: primitives.Label("a-label"),
+			Expected: primitives.Label(""),
 			Required: false,
 		},
 	}

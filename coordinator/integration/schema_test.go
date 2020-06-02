@@ -42,7 +42,7 @@ func TestSchema(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("create a new source", func(t *testing.T) {
-		blob := primitives.SchemaDefinition{
+		definition := primitives.SchemaDefinition{
 			"my-transactions": {
 				"col-1": "INT",
 				"col-2": "INT",
@@ -50,12 +50,12 @@ func TestSchema(t *testing.T) {
 			},
 		}
 
-		err = m.ReportSchema(ctx, workerToken, source.ID, blob)
+		err = m.ReportSchema(ctx, workerToken, source.ID, definition)
 		gm.Expect(err).To(gm.BeNil())
 	})
 
 	t.Run("can update a source", func(t *testing.T) {
-		blob := primitives.SchemaDefinition{
+		definition := primitives.SchemaDefinition{
 			"my-transactions": {
 				"col-1": "INT",
 				"col-2": "INT",
@@ -63,11 +63,11 @@ func TestSchema(t *testing.T) {
 			},
 		}
 
-		err = m.ReportSchema(ctx, workerToken, source.ID, blob)
+		err = m.ReportSchema(ctx, workerToken, source.ID, definition)
 		gm.Expect(err).To(gm.BeNil())
 
 		// schema changed!
-		blob = primitives.SchemaDefinition{
+		definition = primitives.SchemaDefinition{
 			"my-transactions": {
 				"col-1": "INT",
 				"col-2": "INT",
@@ -76,18 +76,18 @@ func TestSchema(t *testing.T) {
 			},
 		}
 
-		err = m.ReportSchema(ctx, workerToken, source.ID, blob)
+		err = m.ReportSchema(ctx, workerToken, source.ID, definition)
 		gm.Expect(err).To(gm.BeNil())
 	})
 
 	t.Run("Cannot report invalid column types", func(t *testing.T) {
-		blob := primitives.SchemaDefinition{
+		definition := primitives.SchemaDefinition{
 			"my-transactions": {
 				"col-1": "thiskindofdatatypeisprobablynotfoundinmostdatabases",
 			},
 		}
 
-		err = client.ReportSchema(ctx, source.ID, blob)
+		err = client.ReportSchema(ctx, source.ID, definition)
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 }
