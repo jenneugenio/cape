@@ -7,6 +7,7 @@ var (
 	InvalidArgumentCause  = NewCause(BadRequestCategory, "invalid_argument")
 	InvalidStateCause     = NewCause(BadRequestCategory, "invalid_state")
 	TimeoutCause          = NewCause(RequestTimeoutCategory, "timeout")
+	NotImplementedCause   = NewCause(NotImplementedCategory, "not_implemented")
 )
 
 // Cause is the cause of an error

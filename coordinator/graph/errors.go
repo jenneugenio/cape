@@ -5,9 +5,6 @@ import (
 )
 
 var (
-	// RouteNotImplemented occurs when a graphQL route that has not been implemented is invoked
-	RouteNotImplemented = errors.NewCause(errors.NotImplementedCategory, "route_not_implemented")
-
 	// MembersNotCreated occurs when members couldn't be created as a part of
 	// creating a role
 	MembersNotCreated = errors.NewCause(errors.BadRequestCategory, "members_not_created")

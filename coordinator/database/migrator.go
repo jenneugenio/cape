@@ -24,7 +24,7 @@ var validMigrators = map[string]NewMigratorFunc{
 func NewMigrator(dbURL *url.URL, migrations ...string) (Migrator, error) {
 	ctor, ok := validMigrators[dbURL.Scheme]
 	if !ok {
-		return nil, errors.New(NotImplementedCause, "migrator not supported")
+		return nil, errors.New(errors.NotImplementedCause, "migrator not supported")
 	}
 
 	return ctor(dbURL, migrations...)

@@ -31,7 +31,7 @@ var validDBs = map[string]NewBackendFunc{
 func New(dbURL *url.URL, appName string) (Backend, error) {
 	ctor, ok := validDBs[dbURL.Scheme]
 	if !ok {
-		return nil, errors.New(NotImplementedCause, "database not supported")
+		return nil, errors.New(errors.NotImplementedCause, "database not supported")
 	}
 
 	return ctor(dbURL, appName)

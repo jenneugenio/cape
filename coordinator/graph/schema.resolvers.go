@@ -331,7 +331,7 @@ func (r *queryResolver) User(ctx context.Context, id database.ID) (*primitives.U
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*primitives.User, error) {
-	return nil, errs.New(RouteNotImplemented, "Users query not implemented")
+	return nil, errs.New(errs.NotImplementedCause, "Users query not implemented")
 }
 
 func (r *queryResolver) Me(ctx context.Context) (primitives.Identity, error) {
