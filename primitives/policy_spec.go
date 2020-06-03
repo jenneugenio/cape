@@ -198,7 +198,10 @@ func (t *Transformation) Validate() error {
 		return err
 	}
 
-	ctor := transformations.Get(t.Function)
+	ctor, err := transformations.Get(t.Function)
+	if err != nil {
+		return err
+	}
 
 	transform, err := ctor(t.Field.String())
 	if err != nil {

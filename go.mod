@@ -32,6 +32,7 @@ require (
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jackc/pgx/v4 v4.4.1
 	github.com/jackc/tern v1.9.1
+	github.com/jdkato/prose v1.1.1
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 	github.com/justinas/alice v1.2.0
@@ -51,6 +52,7 @@ require (
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mitchellh/mapstructure v1.2.2
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
+	github.com/neurosnap/sentences v1.0.6 // indirect
 	github.com/onsi/gomega v1.9.0
 	github.com/rs/cors v1.7.0
 	github.com/rs/zerolog v1.18.0
@@ -66,6 +68,7 @@ require (
 	google.golang.org/grpc v1.28.1
 	google.golang.org/protobuf v1.21.0
 	gopkg.in/ini.v1 v1.55.0 // indirect
+	gopkg.in/neurosnap/sentences.v1 v1.0.6 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1
 	helm.sh/helm/v3 v3.2.0
 	mvdan.cc/unparam v0.0.0-20200314162735-0ac8026f7d06 // indirect

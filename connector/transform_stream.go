@@ -22,7 +22,11 @@ func NewTransformStream(stream sources.Stream, schema *proto.Schema,
 	initTransforms := make([]transformations.Transformation, len(transforms))
 
 	for i, t := range transforms {
-		ctor := transformations.Get(t.Function)
+		ctor, err := transformations.Get(t.Function)
+		if err != nil {
+			return nil, err
+		}
+
 		initT, err := ctor(t.Field.String())
 		if err != nil {
 			return nil, err

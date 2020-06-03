@@ -49,7 +49,7 @@ func TestTransformationArgs(t *testing.T) {
 			err = yaml.Unmarshal(by, &args)
 			gm.Expect(err).To(gm.BeNil())
 
-			ctor := Get(test.transform)
+			ctor, err := Get(test.transform)
 			gm.Expect(err).To(gm.BeNil())
 
 			transform, err := ctor("test")
@@ -116,7 +116,7 @@ func TestTransformationArgs(t *testing.T) {
 			err = yaml.Unmarshal(by, &args)
 			gm.Expect(err).To(gm.BeNil())
 
-			ctor := Get(test.transform)
+			ctor, err := Get(test.transform)
 			gm.Expect(err).To(gm.BeNil())
 
 			transform, err := ctor("test")

@@ -22,4 +22,7 @@ var (
 
 	// InvalidFieldType occurs when a fields type can not be accounted for
 	InvalidFieldType = errors.NewCause(errors.BadRequestCategory, "invalid_field_type")
+
+	// TransformationNotFound occurs when a transformation is not registered properly
+	TransformationNotFound = errors.NewCause(errors.BadRequestCategory, "transformation_not_found")
 )

@@ -56,8 +56,13 @@ func (c Registry) Add(function string, ctor Constructor) {
 }
 
 // Get returns the Transformation constructor for the given function label
-func Get(function string) Constructor {
-	return registry[function]
+func Get(function string) (Constructor, error) {
+	ctor, ok := registry[function]
+	if !ok {
+		return nil, errors.New(TransformationNotFound, "Could not find transformation %s", function)
+	}
+
+	return ctor, nil
 }
 
 func init() {
@@ -69,6 +74,7 @@ func init() {
 	registry.Add("rounding", NewRoundingTransform)
 	registry.Add("perturbation", NewPerturbationTransform)
 	registry.Add("tokenization", NewTokenizationTransform)
+	registry.Add("scrambler", NewScramblerTransform)
 }
 
 func GetField(schema *proto.Schema, record *proto.Record, field string) (*proto.Field, error) {

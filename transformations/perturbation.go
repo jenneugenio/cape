@@ -72,7 +72,7 @@ func (p *PerturbationTransform) Transform(schema *proto.Schema, input *proto.Rec
 }
 
 func (p *PerturbationTransform) Initialize(args Args) error {
-	const unsupportedTypeMsg = "Unsupported type for %q: found %q expected %q"
+	const unsupportedTypeMsg = "Unsupported type for %s: found %T expected %s"
 
 	min, found := args["min"]
 	if !found {
@@ -107,7 +107,7 @@ func (p *PerturbationTransform) Initialize(args Args) error {
 }
 
 func (p *PerturbationTransform) Validate(args Args) error {
-	const unsupportedTypeMsg = "Unsupported type for %q: found %T expected %q"
+	const unsupportedTypeMsg = "Unsupported type for %s: found %T expected %s"
 
 	min, found := args["min"]
 	if !found {
