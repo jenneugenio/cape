@@ -74,3 +74,13 @@ models:
     model: github.com/capeprivacy/cape/primitives.Schema
   SchemaBlob:
     model: github.com/capeprivacy/cape/primitives.SchemaBlob
+  Project:
+    model: github.com/capeprivacy/cape/primitives.Project
+  ProjectSpec:
+    model: github.com/capeprivacy/cape/primitives.ProjectSpec
+  Description:
+    model: github.com/capeprivacy/cape/primitives.Description
+  ProjectStatus:
+    model: github.com/capeprivacy/cape/primitives.ProjectStatus
+  DisplayName:
+    model: github.com/capeprivacy/cape/primitives.DisplayName
