@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/manifoldco/go-base64"
 
@@ -40,10 +39,6 @@ func NewClient(transport ClientTransport) *Client {
 	return &Client{
 		transport: transport,
 	}
-}
-
-func convertError(err error) error {
-	return errors.New(errors.UnknownCause, strings.TrimPrefix(err.Error(), "graphql: "))
 }
 
 type MeResponse struct {

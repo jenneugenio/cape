@@ -4,30 +4,46 @@ import (
 	"context"
 	"encoding/json"
 	goerrors "errors"
-	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 
+	"github.com/machinebox/graphql"
+	"github.com/manifoldco/go-base64"
+
 	"github.com/capeprivacy/cape/auth"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
-	"github.com/machinebox/graphql"
-	"github.com/manifoldco/go-base64"
 )
 
-func TestHTTPTransportRaw(t *testing.T) {
+type gqlResponse struct {
+	Data interface{} `json:"data"`
+	Err  []string    `json:"errors"`
+}
+
+func setupGQLTestServer(resp *gqlResponse) (*httptest.Server, *primitives.URL, error) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "{ \"data\": \"blahblah\", \"errors\": [] }")
+		_ = json.NewEncoder(w).Encode(resp)
 	}))
-	defer ts.Close()
 
 	clientURL, err := primitives.NewURL(ts.URL)
 	if err != nil {
-		t.Errorf("error creating test client")
+		return nil, nil, err
 	}
+
+	return ts, clientURL, nil
+}
+
+func TestHTTPTransportRaw(t *testing.T) {
+	ts, clientURL, err := setupGQLTestServer(&gqlResponse{
+		Data: "blahblah",
+	})
+	if err != nil {
+		t.Errorf("error setting up test")
+	}
+	defer ts.Close()
 
 	t.Run("no variables, no errors", func(t *testing.T) {
 		gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
@@ -88,15 +104,13 @@ func TestHTTPTransportRaw(t *testing.T) {
 }
 
 func TestHTTPTransportURL(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "{ \"data\": \"blahblah\", \"errors\": [] }")
-	}))
-	defer ts.Close()
-
-	clientURL, err := primitives.NewURL(ts.URL)
+	ts, clientURL, err := setupGQLTestServer(&gqlResponse{
+		Data: "blahblah",
+	})
 	if err != nil {
-		t.Errorf("error creating test client")
+		t.Errorf("error setting up test")
 	}
+	defer ts.Close()
 
 	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
 	ct := &HTTPTransport{
@@ -111,20 +125,16 @@ func TestHTTPTransportURL(t *testing.T) {
 }
 
 func TestHTTPTransportTokenLogin(t *testing.T) {
-	var resp struct {
-		Data SessionResponse `json:"data"`
-		Err  []string        `json:"errors"`
-	}
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(resp)
-	}))
-	defer ts.Close()
-
-	clientURL, err := primitives.NewURL(ts.URL)
+	wantSess := primitives.Session{}
+	ts, clientURL, err := setupGQLTestServer(&gqlResponse{
+		Data: &SessionResponse{
+			Session: wantSess,
+		},
+	})
 	if err != nil {
-		t.Errorf("error creating test client")
+		t.Errorf("error setting up test")
 	}
+	defer ts.Close()
 
 	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
 	ct := &HTTPTransport{
@@ -133,10 +143,6 @@ func TestHTTPTransportTokenLogin(t *testing.T) {
 		url:       clientURL,
 	}
 
-	wantSess := primitives.Session{}
-	resp.Data = SessionResponse{
-		Session: wantSess,
-	}
 	gotSess, err := ct.TokenLogin(context.TODO(), &auth.APIToken{})
 	if err != nil {
 		t.Errorf("token login returned unexpected error: %v", err)
@@ -150,31 +156,22 @@ func TestHTTPTransportTokenLogin(t *testing.T) {
 }
 
 func TestHTTPTransportEmailLogin(t *testing.T) {
-	var resp struct {
-		Data SessionResponse `json:"data"`
-		Err  []string        `json:"errors"`
-	}
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(resp)
-	}))
-	defer ts.Close()
-
-	clientURL, err := primitives.NewURL(ts.URL)
+	wantSess := primitives.Session{}
+	ts, clientURL, err := setupGQLTestServer(&gqlResponse{
+		Data: &SessionResponse{
+			Session: wantSess,
+		},
+	})
 	if err != nil {
-		t.Errorf("error creating test client")
+		t.Errorf("error setting up test")
 	}
+	defer ts.Close()
 
 	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
 	ct := &HTTPTransport{
 		client:    gql,
 		authToken: base64.New([]byte("faketoken")),
 		url:       clientURL,
-	}
-
-	wantSess := primitives.Session{}
-	resp.Data = SessionResponse{
-		Session: wantSess,
 	}
 	gotSess, err := ct.EmailLogin(context.TODO(), primitives.Email{}, primitives.EmptyPassword)
 	if err != nil {
@@ -189,20 +186,11 @@ func TestHTTPTransportEmailLogin(t *testing.T) {
 }
 
 func TestHTTPTransportLogout(t *testing.T) {
-	var resp struct {
-		Data string   `json:"data"`
-		Err  []string `json:"errors"`
-	}
-
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_ = json.NewEncoder(w).Encode(resp)
-	}))
-	defer ts.Close()
-
-	clientURL, err := primitives.NewURL(ts.URL)
+	ts, clientURL, err := setupGQLTestServer(&gqlResponse{})
 	if err != nil {
-		t.Errorf("error creating test client")
+		t.Errorf("error setting up test")
 	}
+	defer ts.Close()
 
 	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
 	ct := &HTTPTransport{
@@ -211,7 +199,6 @@ func TestHTTPTransportLogout(t *testing.T) {
 		url:       clientURL,
 	}
 
-	resp.Data = ""
 	err = ct.Logout(context.TODO(), nil)
 	if err != nil {
 		t.Errorf("logout returned unexpected error: %v", err)

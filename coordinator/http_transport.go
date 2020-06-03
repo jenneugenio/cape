@@ -3,6 +3,7 @@ package coordinator
 import (
 	"context"
 	"net"
+	"strings"
 
 	"github.com/machinebox/graphql"
 	"github.com/manifoldco/go-base64"
@@ -143,4 +144,8 @@ func (c *HTTPTransport) Logout(ctx context.Context, authToken *base64.Value) err
 // If the authToken is not nil then its authenticated!
 func (c *HTTPTransport) Authenticated() bool {
 	return c.authToken != nil
+}
+
+func convertError(err error) error {
+	return errors.New(errors.UnknownCause, strings.TrimPrefix(err.Error(), "graphql: "))
 }
