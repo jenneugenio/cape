@@ -95,8 +95,8 @@ func (c *Command) UsageText() string {
 		if i > 0 {
 			str += "   "
 		}
-		str += fmt.Sprintf("%s\n", e.Description)
-		str += fmt.Sprintf("\t\t\t%s", e.Example)
+		str += fmt.Sprintf("%s\n", e.Example)
+		str += fmt.Sprintf("\t\t\t- %s", e.Description)
 
 		if i < len(c.Examples)-1 {
 			str += "\n\n"
