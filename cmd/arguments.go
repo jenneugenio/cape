@@ -80,18 +80,18 @@ var (
 	}
 
 	ProjectNameArg = &Argument{
-		Name: "name",
+		Name:        "name",
 		Description: "The name of your project",
-		Required: true,
+		Required:    true,
 		Processor: func(in string) (interface{}, error) {
 			return primitives.NewDisplayName(in)
 		},
 	}
 
 	ProjectDescriptionArg = &Argument{
-		Name: "description",
+		Name:        "description",
 		Description: "Describe what your project is for",
-		Required: false,
+		Required:    false,
 		Processor: func(in string) (interface{}, error) {
 			return primitives.NewDescription(in)
 		},

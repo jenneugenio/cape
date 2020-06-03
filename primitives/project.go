@@ -18,6 +18,10 @@ func (d Description) Validate() error {
 	return nil
 }
 
+func (d Description) String() string {
+	return string(d)
+}
+
 func NewDescription(in string) (Description, error) {
 	d := Description(in)
 	return d, d.Validate()
@@ -30,6 +34,10 @@ const (
 	ProjectActive   ProjectStatus = "Active"
 	ProjectArchived ProjectStatus = "Archived"
 )
+
+func (p ProjectStatus) String() string {
+	return string(p)
+}
 
 func (p ProjectStatus) Validate() error {
 	switch p {
