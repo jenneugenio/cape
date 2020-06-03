@@ -78,6 +78,24 @@ var (
 			return database.DecodeFromString(in)
 		},
 	}
+
+	ProjectNameArg = &Argument{
+		Name: "name",
+		Description: "The name of your project",
+		Required: true,
+		Processor: func(in string) (interface{}, error) {
+			return primitives.NewDisplayName(in)
+		},
+	}
+
+	ProjectDescriptionArg = &Argument{
+		Name: "description",
+		Description: "Describe what your project is for",
+		Required: false,
+		Processor: func(in string) (interface{}, error) {
+			return primitives.NewDescription(in)
+		},
+	}
 )
 
 func LabelArg(f string) *Argument {

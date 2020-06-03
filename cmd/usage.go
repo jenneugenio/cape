@@ -59,11 +59,7 @@ type Argument struct {
 
 // String returns a string representation of the argument
 func (a *Argument) String() string {
-	if a.Required {
-		return fmt.Sprintf("<%s>", a.Name)
-	}
-
-	return fmt.Sprintf("[%s]", a.Name)
+	return a.Name
 }
 
 // Returns a string specifying the argument's usage
