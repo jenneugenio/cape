@@ -1,0 +1,54 @@
+scalar ProjectStatus
+scalar DisplayName
+scalar Description
+
+type Project {
+    id: ID!
+    name: DisplayName!
+    label: Label!
+    Description: Description!
+    Status: ProjectStatus!
+    current_spec: ProjectSpec
+}
+
+type ProjectSpec {
+    id: ID!
+    project: Project!
+    parent: ProjectSpec
+    policies: [PolicySpec!]!
+    sources: [Source!]!
+}
+
+input CreateProjectRequest {
+    name: DisplayName!
+    label: Label!
+    Description: Description!
+}
+
+input UpdateProjectRequest {
+    name: DisplayName
+    label: Label
+    Description: Description
+}
+
+input CreateProjectSpecRequest {
+    id: ID!
+    project_id: ID!
+    parent_id: ID
+    source_ids: [ID!]
+    policies: [PolicySpec!]
+}
+
+extend type Query {
+    projects(status: [ProjectStatus!]): [Project!]! @isAuthenticated
+    project(id: ID, label: Label): Project @isAuthenticated
+}
+
+extend type Mutation {
+    createProject(project: CreateProjectRequest!): Project! @isAuthenticated
+    updateProject(project: UpdateSourceRequest!): Project! @isAuthenticated
+    createProjectSpec(projectSpec: CreateProjectSpecRequest!): ProjectSpec! @isAuthenticated
+
+    archiveProject(id: ID, label: Label): Project! @isAuthenticated
+    unarchiveProject(id: ID, label: Label): Project! @isAuthenticated
+}

@@ -47,6 +47,20 @@ type CreatePolicyRequest struct {
 	Spec  primitives.PolicySpec `json:"spec"`
 }
 
+type CreateProjectRequest struct {
+	Name        primitives.DisplayName `json:"name"`
+	Label       primitives.Label       `json:"label"`
+	Description primitives.Description `json:"Description"`
+}
+
+type CreateProjectSpecRequest struct {
+	ID        database.ID              `json:"id"`
+	ProjectID database.ID              `json:"project_id"`
+	ParentID  *database.ID             `json:"parent_id"`
+	SourceIds []database.ID            `json:"source_ids"`
+	Policies  []*primitives.PolicySpec `json:"policies"`
+}
+
 type CreateRoleRequest struct {
 	Label       primitives.Label `json:"label"`
 	IdentityIds []database.ID    `json:"identity_ids"`
@@ -121,6 +135,12 @@ type SetupRequest struct {
 	Name     primitives.Name     `json:"name"`
 	Email    primitives.Email    `json:"email"`
 	Password primitives.Password `json:"password"`
+}
+
+type UpdateProjectRequest struct {
+	Name        *primitives.DisplayName `json:"name"`
+	Label       *primitives.Label       `json:"label"`
+	Description *primitives.Description `json:"Description"`
 }
 
 type UpdateSourceRequest struct {
