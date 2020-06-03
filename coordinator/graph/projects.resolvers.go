@@ -7,14 +7,41 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
+	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/primitives"
+	"github.com/gosimple/slug"
 )
 
 func (r *mutationResolver) CreateProject(ctx context.Context, project model.CreateProjectRequest) (*primitives.Project, error) {
-	panic(fmt.Errorf("not implemented"))
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	var label primitives.Label
+	if project.Label != nil {
+		label = *project.Label
+	} else {
+		labelStr := slug.Make(project.Name.String())
+		l, err := primitives.NewLabel(labelStr)
+		if err != nil {
+			return nil, err
+		}
+
+		label = l
+	}
+
+	p, err := primitives.NewProject(project.Name, label, project.Description)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := enforcer.Create(ctx, p); err != nil {
+		return nil, err
+	}
+	return p, nil
 }
 
 func (r *mutationResolver) UpdateProject(ctx context.Context, project model.UpdateSourceRequest) (*primitives.Project, error) {

@@ -743,7 +743,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Project.CurrentSpec(childComplexity), true
 
-	case "Project.Description":
+	case "Project.description":
 		if e.complexity.Project.Description == nil {
 			break
 		}
@@ -771,7 +771,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Project.Name(childComplexity), true
 
-	case "Project.Status":
+	case "Project.status":
 		if e.complexity.Project.Status == nil {
 			break
 		}
@@ -1431,8 +1431,8 @@ type Project {
     id: ID!
     name: DisplayName!
     label: Label!
-    Description: Description!
-    Status: ProjectStatus!
+    description: Description!
+    status: ProjectStatus!
     current_spec: ProjectSpec
 }
 
@@ -1446,7 +1446,7 @@ type ProjectSpec {
 
 input CreateProjectRequest {
     name: DisplayName!
-    label: Label!
+    label: Label
     Description: Description!
 }
 
@@ -4631,7 +4631,7 @@ func (ec *executionContext) _Project_label(ctx context.Context, field graphql.Co
 	return ec.marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Project_Description(ctx context.Context, field graphql.CollectedField, obj *primitives.Project) (ret graphql.Marshaler) {
+func (ec *executionContext) _Project_description(ctx context.Context, field graphql.CollectedField, obj *primitives.Project) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4665,7 +4665,7 @@ func (ec *executionContext) _Project_Description(ctx context.Context, field grap
 	return ec.marshalNDescription2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDescription(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Project_Status(ctx context.Context, field graphql.CollectedField, obj *primitives.Project) (ret graphql.Marshaler) {
+func (ec *executionContext) _Project_status(ctx context.Context, field graphql.CollectedField, obj *primitives.Project) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -8609,7 +8609,7 @@ func (ec *executionContext) unmarshalInputCreateProjectRequest(ctx context.Conte
 			}
 		case "label":
 			var err error
-			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			it.Label, err = ec.unmarshalOLabel2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9418,13 +9418,13 @@ func (ec *executionContext) _Project(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "Description":
-			out.Values[i] = ec._Project_Description(ctx, field, obj)
+		case "description":
+			out.Values[i] = ec._Project_description(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "Status":
-			out.Values[i] = ec._Project_Status(ctx, field, obj)
+		case "status":
+			out.Values[i] = ec._Project_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}

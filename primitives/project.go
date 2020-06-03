@@ -46,10 +46,10 @@ func (p ProjectStatus) Validate() error {
 
 type Project struct {
 	*database.Primitive
-	Name        DisplayName
-	Label       Label
-	Description Description
-	Status      ProjectStatus
+	Name        DisplayName   `json:"name"`
+	Label       Label         `json:"label"`
+	Description Description   `json:"description"`
+	Status      ProjectStatus `json:"status"`
 
 	// The active spec (this references a ProjectSpec)
 	CurrentSpecID *database.ID

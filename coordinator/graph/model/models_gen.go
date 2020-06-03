@@ -49,7 +49,7 @@ type CreatePolicyRequest struct {
 
 type CreateProjectRequest struct {
 	Name        primitives.DisplayName `json:"name"`
-	Label       primitives.Label       `json:"label"`
+	Label       *primitives.Label      `json:"label"`
 	Description primitives.Description `json:"Description"`
 }
 

@@ -17,6 +17,10 @@ func (p DisplayName) Validate() error {
 	return nil
 }
 
+func (p DisplayName) String() string {
+	return string(p)
+}
+
 func NewDisplayName(in string) (DisplayName, error) {
 	p := DisplayName(in)
 	return p, p.Validate()
