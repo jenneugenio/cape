@@ -135,6 +135,12 @@ func TestTokens(t *testing.T) {
 
 			gm.Expect(len(tokenIDS)).To(gm.Equal(1))
 		})
+
+		t.Run("user can't create token for admin", func(t *testing.T) {
+			_, _, err := userClient.CreateToken(ctx, m.Admin.User)
+			gm.Expect(err).NotTo(gm.BeNil())
+			gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Can only create a token for yourself"))
+		})
 	})
 
 	t.Run("service tokens", func(t *testing.T) {
