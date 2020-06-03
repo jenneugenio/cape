@@ -75,7 +75,7 @@ type Source interface {
 // NewSourceFunc represents a function constructor for a Source
 type NewSourceFunc func(context.Context, *Config, *primitives.Source) (Source, error)
 
-// Config represents configuration thats common across the Cache and Sources
+// Config represents configuration thats common across the Cache and SourceIDs
 type Config struct {
 	InstanceID primitives.Label
 	Logger     *zerolog.Logger

@@ -500,7 +500,7 @@ type ListSourcesResponse struct {
 func (c *Client) ListSources(ctx context.Context) ([]*SourceResponse, error) {
 	var resp ListSourcesResponse
 	err := c.transport.Raw(ctx, `
-		query Sources {
+		query SourceIDs {
 				sources {
 					id
 					label
@@ -556,7 +556,7 @@ func (c *Client) GetSource(ctx context.Context, id database.ID, opts *SourceOpti
 	}
 
 	err := c.transport.Raw(ctx, fmt.Sprintf(`
-		query Sources($id: ID!) {
+		query SourceIDs($id: ID!) {
 				source(id: $id) {
 					id
 					label
@@ -598,7 +598,7 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label, o
 	}
 
 	err := c.transport.Raw(ctx, fmt.Sprintf(`
-		query Sources($label: Label!) {
+		query SourceIDs($label: Label!) {
 				sourceByLabel(label: $label) {
 					id
 					label
