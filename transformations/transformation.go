@@ -2,6 +2,7 @@ package transformations
 
 import (
 	"github.com/capeprivacy/cape/connector/proto"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // Args represents the arguments to be passed into
@@ -21,7 +22,7 @@ type Transformation interface {
 	// transform to handle the different input types and return an
 	// error if an invalid type is encountered. The output type will
 	// be handled by the grpc encoding.
-	Transform(input *proto.Field) (*proto.Field, error)
+	Transform(schema *proto.Schema, input *proto.Record) error
 
 	// Initialize does any complex and potential expensive work to prepare
 	// for transforming data.
@@ -68,4 +69,34 @@ func init() {
 	registry.Add("rounding", NewRoundingTransform)
 	registry.Add("perturbation", NewPerturbationTransform)
 	registry.Add("tokenization", NewTokenizationTransform)
+}
+
+func GetField(schema *proto.Schema, record *proto.Record, field string) (*proto.Field, error) {
+	i, err := fieldToFieldIndex(schema, field)
+	if err != nil {
+		return nil, err
+	}
+
+	return record.Fields[i], nil
+}
+
+func SetField(schema *proto.Schema, record *proto.Record, newField *proto.Field, fieldName string) error {
+	i, err := fieldToFieldIndex(schema, fieldName)
+	if err != nil {
+		return err
+	}
+
+	record.Fields[i] = newField
+	return nil
+}
+
+// fieldToFieldIndex returns the index of the field given the string
+func fieldToFieldIndex(schema *proto.Schema, field string) (int, error) {
+	for i, info := range schema.Fields {
+		if field == info.Name {
+			return i, nil
+		}
+	}
+
+	return -1, errors.New(FieldNotFound, "Could not find field %s for target %s", field, schema.Target)
 }

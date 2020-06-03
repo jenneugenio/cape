@@ -36,26 +36,28 @@ func (t *TokenizationTransform) tokenizeBytes(x []byte) (string, error) {
 	return hashHex[0:size], err
 }
 
-func (t *TokenizationTransform) Transform(input *proto.Field) (*proto.Field, error) {
-	switch ty := input.GetValue().(type) {
+func (t *TokenizationTransform) Transform(schema *proto.Schema, input *proto.Record) error {
+	field, err := GetField(schema, input, t.field)
+	if err != nil {
+		return err
+	}
+
+	output := &proto.Field{}
+	switch ty := field.GetValue().(type) {
 	case *proto.Field_String_:
 		res, err := t.tokenizeBytes([]byte(ty.String_))
 		if err != nil {
-			return nil, err
+			return err
 		}
-		output := &proto.Field{}
 		output.Value = &proto.Field_String_{String_: res}
-		return output, nil
 	case *proto.Field_Bytes:
 		res, err := t.tokenizeBytes(ty.Bytes)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		output := &proto.Field{}
 		output.Value = &proto.Field_Bytes{Bytes: []byte(res)}
-		return output, nil
 	}
-	return input, nil
+	return SetField(schema, input, output, t.field)
 }
 
 func (t *TokenizationTransform) Initialize(args Args) error {

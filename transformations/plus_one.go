@@ -9,9 +9,14 @@ type PlusOneTransform struct {
 	field string
 }
 
-func (p *PlusOneTransform) Transform(input *proto.Field) (*proto.Field, error) {
+func (p *PlusOneTransform) Transform(schema *proto.Schema, input *proto.Record) error {
+	field, err := GetField(schema, input, p.field)
+	if err != nil {
+		return err
+	}
+
 	output := &proto.Field{}
-	switch t := input.GetValue().(type) {
+	switch t := field.GetValue().(type) {
 	case *proto.Field_Double:
 		res := t.Double + 1
 		output.Value = &proto.Field_Double{Double: res}
@@ -25,10 +30,10 @@ func (p *PlusOneTransform) Transform(input *proto.Field) (*proto.Field, error) {
 		res := t.Int64 + 1
 		output.Value = &proto.Field_Int64{Int64: res}
 	default:
-		return nil, errors.New(UnsupportedType, "Attempted to call %s transform on an unsupported type %T", p.Function(), t)
+		return errors.New(UnsupportedType, "Attempted to call %s transform on an unsupported type %T", p.Function(), t)
 	}
 
-	return output, nil
+	return SetField(schema, input, output, p.field)
 }
 
 func (p *PlusOneTransform) Initialize(args Args) error {
@@ -58,6 +63,5 @@ func (p *PlusOneTransform) Field() string {
 }
 
 func NewPlusOneTransform(field string) (Transformation, error) {
-	p := &PlusOneTransform{field: field}
-	return p, nil
+	return &PlusOneTransform{field: field}, nil
 }

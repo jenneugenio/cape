@@ -6,7 +6,6 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/Knetic/govaluate"
 	"github.com/mitchellh/mapstructure"
 	"sigs.k8s.io/yaml"
 
@@ -154,27 +153,12 @@ func ParsePolicySpec(data []byte) (*PolicySpec, error) {
 	return &ps, ps.Validate()
 }
 
-type Condition string
-
-func (c Condition) String() string {
-	return string(c)
-}
-
-func (c Condition) Validate() error {
-	if c.String() != "" {
-		_, err := govaluate.NewEvaluableExpression(c.String())
-		return err
-	}
-
-	return nil
-}
-
 // Transformation represents a transform in the policy spec
 type Transformation struct {
-	Field    Field                `json:"field"`
-	Function string               `json:"function"`
-	Args     transformations.Args `json:"args"`
-	Where    Condition            `json:"where,omitempty"`
+	Field    Field                     `json:"field"`
+	Function string                    `json:"function"`
+	Args     transformations.Args      `json:"args"`
+	Where    transformations.Condition `json:"where,omitempty"`
 }
 
 // Validate that the policy spec is valids

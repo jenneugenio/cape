@@ -8,6 +8,16 @@ import (
 	gm "github.com/onsi/gomega"
 )
 
+var schema = &proto.Schema{
+	Fields: []*proto.FieldInfo{
+		{
+			Field: proto.FieldType_BIGINT,
+			Name:  "income",
+			Size:  8,
+		},
+	},
+}
+
 func TestPerturbationArgs(t *testing.T) {
 	gm.RegisterTestingT(t)
 
@@ -55,11 +65,13 @@ func TestPerturbationInt64(t *testing.T) {
 
 	inputField := &proto.Field{Value: &proto.Field_Int64{Int64: 100}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Int64{Int64: 94}}
+	record := &proto.Record{Fields: []*proto.Field{inputField}, Schema: schema}
+	expectedRecord := &proto.Record{Fields: []*proto.Field{expectedOutputField}, Schema: schema}
 
-	actualOutputField, err := transform.Transform(inputField)
+	err = transform.Transform(schema, record)
 	gm.Expect(err).To(gm.BeNil())
 
-	gm.Expect(actualOutputField).To(gm.Equal(expectedOutputField))
+	gm.Expect(record).To(gm.Equal(expectedRecord))
 }
 
 func TestPerturbationInt32(t *testing.T) {
@@ -82,11 +94,13 @@ func TestPerturbationInt32(t *testing.T) {
 
 	inputField := &proto.Field{Value: &proto.Field_Int32{Int32: 100}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Int32{Int32: 101}}
+	record := &proto.Record{Fields: []*proto.Field{inputField}, Schema: schema}
+	expectedRecord := &proto.Record{Fields: []*proto.Field{expectedOutputField}, Schema: schema}
 
-	actualOutputField, err := transform.Transform(inputField)
+	err = transform.Transform(schema, record)
 	gm.Expect(err).To(gm.BeNil())
 
-	gm.Expect(actualOutputField).To(gm.Equal(expectedOutputField))
+	gm.Expect(record).To(gm.Equal(expectedRecord))
 }
 
 func TestPerturbationDouble(t *testing.T) {
@@ -109,11 +123,12 @@ func TestPerturbationDouble(t *testing.T) {
 
 	inputField := &proto.Field{Value: &proto.Field_Double{Double: 100}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Double{Double: 93.5}}
+	record := &proto.Record{Fields: []*proto.Field{inputField}, Schema: schema}
 
-	actualOutputField, err := transform.Transform(inputField)
+	err = transform.Transform(schema, record)
 	gm.Expect(err).To(gm.BeNil())
 
-	gm.Expect(actualOutputField.GetDouble()).To(gm.BeNumerically("~", expectedOutputField.GetDouble(), 0.1))
+	gm.Expect(record.Fields[0].GetDouble()).To(gm.BeNumerically("~", expectedOutputField.GetDouble(), 0.1))
 }
 
 func TestPerturbationFloat(t *testing.T) {
@@ -136,9 +151,10 @@ func TestPerturbationFloat(t *testing.T) {
 
 	inputField := &proto.Field{Value: &proto.Field_Float{Float: 100}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Float{Float: 107.1}}
+	record := &proto.Record{Fields: []*proto.Field{inputField}, Schema: schema}
 
-	actualOutputField, err := transform.Transform(inputField)
+	err = transform.Transform(schema, record)
 	gm.Expect(err).To(gm.BeNil())
 
-	gm.Expect(actualOutputField.GetFloat()).To(gm.BeNumerically("~", expectedOutputField.GetFloat(), 0.1))
+	gm.Expect(record.Fields[0].GetFloat()).To(gm.BeNumerically("~", expectedOutputField.GetFloat(), 0.1))
 }

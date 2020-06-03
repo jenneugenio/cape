@@ -8,8 +8,8 @@ type identity struct {
 	field string
 }
 
-func (i *identity) Transform(input *proto.Field) (*proto.Field, error) {
-	return input, nil
+func (i *identity) Transform(schema *proto.Schema, input *proto.Record) error {
+	return nil
 }
 
 func (i *identity) Initialize(args Args) error {

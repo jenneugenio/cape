@@ -22,9 +22,11 @@ func TestPlusOne(t *testing.T) {
 
 	inputField := &proto.Field{Value: &proto.Field_Double{Double: 64.5}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Double{Double: 65.5}}
+	record := &proto.Record{Fields: []*proto.Field{inputField}, Schema: schema}
+	expectedRecord := &proto.Record{Fields: []*proto.Field{expectedOutputField}, Schema: schema}
 
-	actualOutputField, err := transform.Transform(inputField)
+	err = transform.Transform(schema, record)
 	gm.Expect(err).To(gm.BeNil())
 
-	gm.Expect(actualOutputField).To(gm.Equal(expectedOutputField))
+	gm.Expect(record).To(gm.Equal(expectedRecord))
 }

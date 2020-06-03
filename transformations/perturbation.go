@@ -33,46 +33,44 @@ func (p *PerturbationTransform) perturbationInt64(x int64) (int64, error) {
 	return y, nil
 }
 
-func (p *PerturbationTransform) Transform(input *proto.Field) (*proto.Field, error) {
-	switch t := input.GetValue().(type) {
+func (p *PerturbationTransform) Transform(schema *proto.Schema, input *proto.Record) error {
+	field, err := GetField(schema, input, p.field)
+	if err != nil {
+		return err
+	}
+
+	output := &proto.Field{}
+	switch t := field.GetValue().(type) {
 	case *proto.Field_Int64:
 		res, err := p.perturbationInt64(t.Int64)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		output := &proto.Field{}
 		output.Value = &proto.Field_Int64{Int64: res}
-		return output, nil
-
 	case *proto.Field_Int32:
 		res, err := p.perturbationInt64(int64(t.Int32))
 		if err != nil {
-			return nil, err
+			return err
 		}
-		output := &proto.Field{}
 		output.Value = &proto.Field_Int32{Int32: int32(res)}
-		return output, nil
 
 	case *proto.Field_Double:
 		res, err := p.perturbationFloat64(t.Double)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		output := &proto.Field{}
 		output.Value = &proto.Field_Double{Double: res}
-		return output, nil
-
 	case *proto.Field_Float:
 		res, err := p.perturbationFloat64(float64(t.Float))
 		if err != nil {
-			return nil, err
+			return err
 		}
-		output := &proto.Field{}
 		output.Value = &proto.Field_Float{Float: float32(res)}
-		return output, nil
+	default:
+		return errors.New(UnsupportedType, "Attempted to call %s transform on an unsupported type %T", p.Function(), t)
 	}
 
-	return input, nil
+	return SetField(schema, input, output, p.field)
 }
 
 func (p *PerturbationTransform) Initialize(args Args) error {
@@ -177,6 +175,10 @@ func (p *PerturbationTransform) Field() string {
 }
 
 func NewPerturbationTransform(field string) (Transformation, error) {
-	p := &PerturbationTransform{field: field, min: 0, max: 1, seed: 1234}
-	return p, nil
+	return &PerturbationTransform{
+		field: field,
+		min:   0,
+		max:   1,
+		seed:  1234,
+	}, nil
 }

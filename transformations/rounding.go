@@ -33,26 +33,31 @@ func (r *RoundingTransform) roundFloat64(x float64) (float64, error) {
 	return x, errors.New(UnsupportedType, "Unexpected error (unsupported rounding type %d)", r.roundingType)
 }
 
-func (r *RoundingTransform) Transform(input *proto.Field) (*proto.Field, error) {
-	switch ty := input.GetValue().(type) {
+func (r *RoundingTransform) Transform(schema *proto.Schema, input *proto.Record) error {
+	field, err := GetField(schema, input, r.field)
+	if err != nil {
+		return err
+	}
+
+	output := &proto.Field{}
+	switch ty := field.GetValue().(type) {
 	case *proto.Field_Double:
 		res, err := r.roundFloat64(ty.Double)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		output := &proto.Field{}
 		output.Value = &proto.Field_Double{Double: res}
-		return output, nil
 	case *proto.Field_Float:
 		res, err := r.roundFloat64(float64(ty.Float))
 		if err != nil {
-			return nil, err
+			return err
 		}
-		output := &proto.Field{}
 		output.Value = &proto.Field_Float{Float: float32(res)}
-		return output, nil
+	default:
+		return errors.New(UnsupportedType, "Attempted to call %s transform on an unsupported type %T", r.Function(), ty)
 	}
-	return input, nil
+
+	return SetField(schema, input, output, r.field)
 }
 
 func (r *RoundingTransform) Initialize(args Args) error {
