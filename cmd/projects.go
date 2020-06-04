@@ -44,6 +44,31 @@ func init() {
 		},
 	}
 
+	projectsUpdateCmd := &Command{
+		Usage:     "Update a projects attributes",
+		Arguments: []*Argument{ProjectLabelArg},
+		Examples: []*Example{
+			{
+				Example:     `cape projects update --description "This project now does xyz" my-project`,
+				Description: `Changes the description of "my-project"`,
+			},
+			{
+				Example:     `cape projects update --from-spec spec.yaml my-project`,
+				Description: `Updates the current project-spec to spec.yaml on my-project`,
+			},
+		},
+		Command: &cli.Command{
+			Name:   "update",
+			Action: handleSessionOverrides(projectsUpdate),
+			Flags: []cli.Flag{
+				projectNameFlag(),
+				projectDescriptionFlag(),
+				projectSpecFlag(),
+				clusterFlag(),
+			},
+		},
+	}
+
 	projectsCmd := &Command{
 		Usage: "Commands for interacting with Cape projects",
 		Command: &cli.Command{
@@ -51,6 +76,7 @@ func init() {
 			Subcommands: []*cli.Command{
 				projectsCreateCmd.Package(),
 				projectsListCmd.Package(),
+				projectsUpdateCmd.Package(),
 			},
 		},
 	}
@@ -124,4 +150,21 @@ func projectsList(c *cli.Context) error {
 	}
 
 	return u.Template("\nFound {{ . | toString | faded }} project{{ . | pluralize \"s\"}}\n", len(projects))
+}
+
+// TODO -- this is split up so two people can work on it at the same time
+//         In the future, we will need to allow a spec & name/desc/etc to be updated at the same time.
+func updateProjectSpec(c *cli.Context) error {
+	fmt.Println("update spec")
+	return nil
+}
+
+func projectsUpdate(c *cli.Context) error {
+	updateSpec := c.String("from-spec")
+	if updateSpec != "" {
+		return updateProjectSpec(c)
+	}
+
+	fmt.Println("Not implemented")
+	return nil
 }
