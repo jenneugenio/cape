@@ -18,7 +18,11 @@ func TestProjectsCreate(t *testing.T) {
 	}
 
 	t.Run("Can create a project", func(t *testing.T) {
-		app, u := NewHarness([]interface{}{resp})
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
 		err = app.Run([]string{"cape", "projects", "create", p.Name.String(), p.Description.String()})
 		gm.Expect(err).To(gm.BeNil())
 
@@ -28,7 +32,11 @@ func TestProjectsCreate(t *testing.T) {
 	})
 
 	t.Run("Can create a project without a description", func(t *testing.T) {
-		app, u := NewHarness([]interface{}{resp})
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
 		err = app.Run([]string{"cape", "projects", "create", p.Name.String()})
 		gm.Expect(err).To(gm.BeNil())
 
@@ -38,7 +46,11 @@ func TestProjectsCreate(t *testing.T) {
 	})
 
 	t.Run("Must pass at least a name", func(t *testing.T) {
-		app, _ := NewHarness([]interface{}{resp})
+		app, _ := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
 		err = app.Run([]string{"cape", "projects", "create"})
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(err.Error()).To(gm.Equal("missing_argument: The argument name is required, but was not provided"))
@@ -59,7 +71,11 @@ func TestProjectsList(t *testing.T) {
 			Projects: []*primitives.Project{p1, p2},
 		}
 
-		app, u := NewHarness([]interface{}{resp})
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
 		err = app.Run([]string{"cape", "projects", "list"})
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(len(u.Calls)).To(gm.Equal(2))
@@ -68,7 +84,15 @@ func TestProjectsList(t *testing.T) {
 	})
 
 	t.Run("Works when there are no projects", func(t *testing.T) {
-		app, u := NewHarness([]interface{}{})
+		resp := coordinator.ListProjectsResponse{
+			Projects: []*primitives.Project{},
+		}
+
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
 		err := app.Run([]string{"cape", "projects", "list"})
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(len(u.Calls)).To(gm.Equal(1))

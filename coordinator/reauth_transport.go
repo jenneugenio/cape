@@ -91,6 +91,7 @@ func (r *ReAuthTransport) attempt(ctx context.Context) error {
 		return err
 	}
 
+	r.logger.Info().Msgf("Successfully authenticated with coordinator at %s", url)
 	return nil
 }
 

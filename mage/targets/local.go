@@ -3,6 +3,7 @@ package targets
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/magefile/mage/mg"
 
@@ -286,6 +287,10 @@ func (l Local) DestroyAll(ctx context.Context) error {
 
 	errors := mage.NewErrors()
 	errors.Append(kind.Destroy(ctx, cluster))
-	errors.Append(dockerRegistry.Destroy(ctx, registry))
+
+	if os.Getenv("CAPE_DESTROY_ALL") != "" {
+		errors.Append(dockerRegistry.Destroy(ctx, registry))
+	}
+
 	return errors.Err()
 }
