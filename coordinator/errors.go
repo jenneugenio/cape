@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	InvalidConfigCause = errors.NewCause(errors.BadRequestCategory, "invalid_config")
+	InvalidConfigCause   = errors.NewCause(errors.BadRequestCategory, "invalid_config")
+	InvalidArgumentCause = errors.NewCause(errors.BadRequestCategory, "invalid_argument")
 )
 
 func errorPresenter(ctx context.Context, e error) *gqlerror.Error {

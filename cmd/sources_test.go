@@ -28,7 +28,11 @@ func TestListSources(t *testing.T) {
 			},
 		}
 
-		app, u := NewHarness([]interface{}{resp})
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
 		err = app.Run([]string{"cape", "sources", "list"})
 		gm.Expect(err).To(gm.BeNil())
 
@@ -64,7 +68,11 @@ func TestListSources(t *testing.T) {
 			},
 		}
 
-		app, u := NewHarness([]interface{}{resp})
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
 		err = app.Run([]string{"cape", "sources", "list"})
 		gm.Expect(err).To(gm.BeNil())
 
@@ -105,7 +113,11 @@ func TestListSources(t *testing.T) {
 			},
 		}
 
-		app, u := NewHarness([]interface{}{resp})
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
 		err = app.Run([]string{"cape", "sources", "list"})
 		gm.Expect(err).To(gm.BeNil())
 
@@ -130,7 +142,11 @@ func TestListSources(t *testing.T) {
 			Sources: []*coordinator.SourceResponse{},
 		}
 
-		app, u := NewHarness([]interface{}{resp})
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
 		err := app.Run([]string{"cape", "sources", "list"})
 		gm.Expect(err).To(gm.BeNil())
 
@@ -157,7 +173,11 @@ func TestListSources(t *testing.T) {
 			},
 		}
 
-		app, u := NewHarness([]interface{}{resp})
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
 		err = app.Run([]string{"cape", "sources", "add", "my-source-1", "postgres://localhost:5432/mydb"})
 		gm.Expect(err).To(gm.BeNil())
 
@@ -183,7 +203,11 @@ func TestListSources(t *testing.T) {
 			},
 		}
 
-		app, u := NewHarness([]interface{}{resp})
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
 		err = app.Run([]string{"cape", "sources", "update", "-y", "my-source-1"})
 		gm.Expect(err).To(gm.BeNil())
 
@@ -195,7 +219,7 @@ func TestListSources(t *testing.T) {
 	t.Run("Can remove an existing source", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		app, u := NewHarness([]interface{}{})
+		app, u := NewHarness([]*coordinator.MockResponse{})
 		err := app.Run([]string{"cape", "sources", "remove", "my-source-1"})
 		gm.Expect(err).To(gm.BeNil())
 

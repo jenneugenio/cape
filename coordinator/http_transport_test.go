@@ -36,6 +36,21 @@ func setupGQLTestServer(resp *gqlResponse) (*httptest.Server, *primitives.URL, e
 	return ts, clientURL, nil
 }
 
+func createHTTPTransport(ts *httptest.Server, clientURL *primitives.URL, client *http.Client) *HTTPTransport {
+	if client == nil {
+		client = ts.Client()
+	}
+
+	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(client))
+	ct := &HTTPTransport{
+		client:    gql,
+		authToken: base64.New([]byte("faketoken")),
+		url:       clientURL,
+	}
+
+	return ct
+}
+
 func TestHTTPTransportRaw(t *testing.T) {
 	ts, clientURL, err := setupGQLTestServer(&gqlResponse{
 		Data: "blahblah",
@@ -46,32 +61,20 @@ func TestHTTPTransportRaw(t *testing.T) {
 	defer ts.Close()
 
 	t.Run("no variables, no errors", func(t *testing.T) {
-		gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
-		ct := &HTTPTransport{
-			client:    gql,
-			authToken: base64.New([]byte("faketoken")),
-			url:       clientURL,
-		}
-
-		err = ct.Raw(context.TODO(), "fakequery", nil, nil)
+		ct := createHTTPTransport(ts, clientURL, nil)
+		err := ct.Raw(context.TODO(), "fakequery", nil, nil)
 		if err != nil {
 			t.Errorf("failed call to Raw with error %v", err)
 		}
 	})
 
 	t.Run("with variables, no errors", func(t *testing.T) {
-		gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
-		ct := &HTTPTransport{
-			client:    gql,
-			authToken: base64.New([]byte("faketoken")),
-			url:       clientURL,
-		}
-
+		ct := createHTTPTransport(ts, clientURL, nil)
 		variables := map[string]interface{}{
 			"one": 1,
 			"two": 2,
 		}
-		err = ct.Raw(context.TODO(), "fakequery", variables, nil)
+		err := ct.Raw(context.TODO(), "fakequery", variables, nil)
 		if err != nil {
 			t.Errorf("failed call to Raw with error %v", err)
 		}
@@ -85,13 +88,8 @@ func TestHTTPTransportRaw(t *testing.T) {
 				},
 			},
 		}
-		gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(hc))
-		ct := &HTTPTransport{
-			client:    gql,
-			authToken: base64.New([]byte("faketoken")),
-			url:       clientURL,
-		}
 
+		ct := createHTTPTransport(ts, clientURL, hc)
 		variables := map[string]interface{}{
 			"one": 1,
 			"two": 2,
@@ -112,13 +110,7 @@ func TestHTTPTransportURL(t *testing.T) {
 	}
 	defer ts.Close()
 
-	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
-	ct := &HTTPTransport{
-		client:    gql,
-		authToken: base64.New([]byte("faketoken")),
-		url:       clientURL,
-	}
-
+	ct := createHTTPTransport(ts, clientURL, nil)
 	if ct.URL() != clientURL {
 		t.Errorf("did not return correct url: got %q, want %q", ct.URL(), clientURL)
 	}
@@ -136,13 +128,7 @@ func TestHTTPTransportTokenLogin(t *testing.T) {
 	}
 	defer ts.Close()
 
-	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
-	ct := &HTTPTransport{
-		client:    gql,
-		authToken: base64.New([]byte("faketoken")),
-		url:       clientURL,
-	}
-
+	ct := createHTTPTransport(ts, clientURL, nil)
 	gotSess, err := ct.TokenLogin(context.TODO(), &auth.APIToken{})
 	if err != nil {
 		t.Errorf("token login returned unexpected error: %v", err)
@@ -167,12 +153,7 @@ func TestHTTPTransportEmailLogin(t *testing.T) {
 	}
 	defer ts.Close()
 
-	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
-	ct := &HTTPTransport{
-		client:    gql,
-		authToken: base64.New([]byte("faketoken")),
-		url:       clientURL,
-	}
+	ct := createHTTPTransport(ts, clientURL, nil)
 	gotSess, err := ct.EmailLogin(context.TODO(), primitives.Email{}, primitives.EmptyPassword)
 	if err != nil {
 		t.Errorf("email login returned unexpected error: %v", err)
@@ -192,13 +173,7 @@ func TestHTTPTransportLogout(t *testing.T) {
 	}
 	defer ts.Close()
 
-	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(ts.Client()))
-	ct := &HTTPTransport{
-		client:    gql,
-		authToken: base64.New([]byte("faketoken")),
-		url:       clientURL,
-	}
-
+	ct := createHTTPTransport(ts, clientURL, nil)
 	err = ct.Logout(context.TODO(), nil)
 	if err != nil {
 		t.Errorf("logout returned unexpected error: %v", err)

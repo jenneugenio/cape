@@ -13,13 +13,13 @@ import (
 // stub various components out
 type Harness struct {
 	app       *cli.App
-	responses []interface{}
+	responses []*coordinator.MockResponse
 	ui        *ui.Mock
 }
 
 // NewHarness returns a Harness
 // You can provide a list of Responses you want the CLI to respond with
-func NewHarness(responses []interface{}) (*cli.App, *ui.Mock) {
+func NewHarness(responses []*coordinator.MockResponse) (*cli.App, *ui.Mock) {
 	u := &ui.Mock{
 		Calls: []*ui.Call{},
 	}
@@ -67,7 +67,7 @@ func (t *Harness) mockBeforeMiddleware(c *cli.Context) error {
 // MockProvider is what we replace the default provider with
 type MockProvider struct {
 	context   *cli.Context
-	responses []interface{}
+	responses []*coordinator.MockResponse
 	ui        ui.UI
 }
 

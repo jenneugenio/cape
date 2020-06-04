@@ -40,7 +40,14 @@ func TestCreateToken(t *testing.T) {
 			},
 		}
 
-		app, u := NewHarness([]interface{}{me, resp})
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: me,
+			},
+			{
+				Value: resp,
+			},
+		})
 		err = app.Run([]string{"cape", "tokens", "create"})
 		gm.Expect(err).To(gm.BeNil())
 
@@ -75,7 +82,14 @@ func TestCreateToken(t *testing.T) {
 			IDs: ids,
 		}
 
-		app, u := NewHarness([]interface{}{me, resp})
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: me,
+			},
+			{
+				Value: resp,
+			},
+		})
 		err = app.Run([]string{"cape", "tokens", "list"})
 		gm.Expect(err).To(gm.BeNil())
 
@@ -91,7 +105,7 @@ func TestCreateToken(t *testing.T) {
 	})
 
 	t.Run("Can remove a token", func(t *testing.T) {
-		app, u := NewHarness([]interface{}{})
+		app, u := NewHarness([]*coordinator.MockResponse{})
 		ID := "2018d9x3ntbca95dda3bu9wnrr"
 		err = app.Run([]string{"cape", "tokens", "remove", ID})
 		gm.Expect(err).To(gm.BeNil())
@@ -105,7 +119,7 @@ func TestCreateToken(t *testing.T) {
 	t.Run("Can't remove a token if you don't specify an ID", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		app, _ := NewHarness([]interface{}{})
+		app, _ := NewHarness([]*coordinator.MockResponse{})
 		err = app.Run([]string{"cape", "tokens", "remove"})
 		gm.Expect(err).ToNot(gm.BeNil())
 	})

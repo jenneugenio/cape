@@ -71,79 +71,34 @@ type SessionResponse struct {
 
 // TokenLogin enables a user or service to login using an APIToken
 func (c *HTTPTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*primitives.Session, error) {
-	var resp SessionResponse
-
-	variables := map[string]interface{}{
-		"token_id": apiToken.TokenID,
-		"secret":   apiToken.Secret.Password(),
-	}
-
-	err := c.Raw(ctx, `
-		mutation CreateSession($token_id: ID, $secret: Password!) {
-			createSession(input: { token_id: $token_id, secret: $secret }) {
-				id
-				identity_id
-				expires_at
-				token
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	c.authToken = resp.Session.Token
-	return &resp.Session, nil
+	return tokenLogin(ctx, c, apiToken)
 }
 
 // EmailLogin starts step 1 of the login flow using an email & password
 func (c *HTTPTransport) EmailLogin(ctx context.Context, email primitives.Email, password primitives.Password) (*primitives.Session, error) {
-	var resp SessionResponse
-
-	variables := map[string]interface{}{
-		"email":  email,
-		"secret": password,
-	}
-
-	err := c.Raw(ctx, `
-		mutation CreateSession($email: Email, $secret: Password!) {
-			createSession(input: { email: $email, secret: $secret }) {
-				id
-				identity_id
-				expires_at
-				token
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	c.authToken = resp.Session.Token
-	return &resp.Session, nil
+	return emailLogin(ctx, c, email, password)
 }
 
 // Logout of the active session
 func (c *HTTPTransport) Logout(ctx context.Context, authToken *base64.Value) error {
-	var token *base64.Value
-	if authToken != nil {
-		token = authToken
-	}
-
-	variables := make(map[string]interface{})
-	variables["token"] = token
-
-	return c.Raw(ctx, `
-		mutation DeleteSession($token: Base64) {
-			deleteSession(input: { token: $token })
-		}
-	`, variables, nil)
+	return logout(ctx, c, authToken)
 }
 
 // Authenticated returns whether the client is authenticated or not.
 // If the authToken is not nil then its authenticated!
 func (c *HTTPTransport) Authenticated() bool {
 	return c.authToken != nil
+}
+
+// SetToken enables a caller to set the auth token used by the transport
+func (c *HTTPTransport) SetToken(value *base64.Value) {
+	c.authToken = value
+}
+
+// Token enables a caller to retrieve the current auth token used by the
+// transport
+func (c *HTTPTransport) Token() *base64.Value {
+	return c.authToken
 }
 
 func convertError(err error) error {
