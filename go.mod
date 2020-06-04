@@ -11,7 +11,6 @@ require (
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad
 	github.com/bgentry/que-go v1.0.1
-	github.com/bombsimon/wsl/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1
@@ -20,7 +19,7 @@ require (
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golang/protobuf v1.4.0
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
-	github.com/golangci/golangci-lint v1.24.0
+	github.com/golangci/golangci-lint v1.27.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/gosimple/slug v1.9.0
@@ -38,6 +37,7 @@ require (
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 	github.com/justinas/alice v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/kr/pretty v0.2.0 // indirect
 	github.com/leekchan/gtf v0.0.0-20190214083521-5fba33c5b00b
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/machinebox/graphql v0.2.2
@@ -55,7 +55,6 @@ require (
 	github.com/onsi/gomega v1.9.0
 	github.com/rs/cors v1.7.0
 	github.com/rs/zerolog v1.18.0
-	github.com/securego/gosec v0.0.0-20200316084457-7da9f46445fd // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.6.2 // indirect
 	github.com/urfave/cli/v2 v2.1.1

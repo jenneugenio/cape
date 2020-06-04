@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/urfave/cli/v2"
@@ -165,6 +166,49 @@ func projectsUpdate(c *cli.Context) error {
 		return updateProjectSpec(c)
 	}
 
-	fmt.Println("Not implemented")
-	return nil
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
+	label := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
+
+	var name *primitives.DisplayName
+	var desc *primitives.Description
+
+	nameFlag, err := primitives.NewDisplayName(c.String("name"))
+	if err != nil {
+		return err
+	}
+	if nameFlag != "" {
+		name = &nameFlag
+	}
+	descFlag, err := primitives.NewDescription(c.String("description"))
+	if err != nil {
+		return err
+	}
+	if descFlag != "" {
+		desc = &descFlag
+	}
+
+	project, err := client.UpdateProject(c.Context, nil, &label, name, desc)
+	if err != nil {
+		return err
+	}
+
+	u := provider.UI(c.Context)
+	err = u.Template("Updated {{ . | bold }}!\n\n", project.Name.String())
+	if err != nil {
+		return err
+	}
+
+	details := ui.Details{
+		"Name":        project.Name.String(),
+		"Description": project.Description.String(),
+		"Label":       project.Label.String(),
+		"Status":      project.Status.String(),
+	}
+
+	return u.Details(details)
 }

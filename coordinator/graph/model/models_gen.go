@@ -139,8 +139,7 @@ type SetupRequest struct {
 
 type UpdateProjectRequest struct {
 	Name        *primitives.DisplayName `json:"name"`
-	Label       *primitives.Label       `json:"label"`
-	Description *primitives.Description `json:"Description"`
+	Description *primitives.Description `json:"description"`
 }
 
 type UpdateSourceRequest struct {

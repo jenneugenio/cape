@@ -104,7 +104,7 @@ type ComplexityRoot struct {
 		Setup             func(childComplexity int, input model.SetupRequest) int
 		UnarchiveProject  func(childComplexity int, id *database.ID, label *primitives.Label) int
 		UnassignRole      func(childComplexity int, input model.AssignRoleRequest) int
-		UpdateProject     func(childComplexity int, project model.UpdateSourceRequest) int
+		UpdateProject     func(childComplexity int, id *database.ID, label *primitives.Label, update model.UpdateProjectRequest) int
 		UpdateSource      func(childComplexity int, input model.UpdateSourceRequest) int
 	}
 
@@ -226,7 +226,7 @@ type MutationResolver interface {
 	AttachPolicy(ctx context.Context, input model.AttachPolicyRequest) (*model.Attachment, error)
 	DetachPolicy(ctx context.Context, input model.DetachPolicyRequest) (*string, error)
 	CreateProject(ctx context.Context, project model.CreateProjectRequest) (*primitives.Project, error)
-	UpdateProject(ctx context.Context, project model.UpdateSourceRequest) (*primitives.Project, error)
+	UpdateProject(ctx context.Context, id *database.ID, label *primitives.Label, update model.UpdateProjectRequest) (*primitives.Project, error)
 	CreateProjectSpec(ctx context.Context, projectSpec model.CreateProjectSpecRequest) (*primitives.ProjectSpec, error)
 	ArchiveProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error)
 	UnarchiveProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error)
@@ -687,7 +687,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateProject(childComplexity, args["project"].(model.UpdateSourceRequest)), true
+		return e.complexity.Mutation.UpdateProject(childComplexity, args["id"].(*database.ID), args["label"].(*primitives.Label), args["update"].(model.UpdateProjectRequest)), true
 
 	case "Mutation.updateSource":
 		if e.complexity.Mutation.UpdateSource == nil {
@@ -1452,8 +1452,7 @@ input CreateProjectRequest {
 
 input UpdateProjectRequest {
     name: DisplayName
-    label: Label
-    Description: Description
+    description: Description
 }
 
 input CreateProjectSpecRequest {
@@ -1471,7 +1470,7 @@ extend type Query {
 
 extend type Mutation {
     createProject(project: CreateProjectRequest!): Project! @isAuthenticated
-    updateProject(project: UpdateSourceRequest!): Project! @isAuthenticated
+    updateProject(id: ID, label: Label, update: UpdateProjectRequest!): Project! @isAuthenticated
     createProjectSpec(projectSpec: CreateProjectSpecRequest!): ProjectSpec! @isAuthenticated
 
     archiveProject(id: ID, label: Label): Project! @isAuthenticated
@@ -2093,14 +2092,30 @@ func (ec *executionContext) field_Mutation_unassignRole_args(ctx context.Context
 func (ec *executionContext) field_Mutation_updateProject_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.UpdateSourceRequest
-	if tmp, ok := rawArgs["project"]; ok {
-		arg0, err = ec.unmarshalNUpdateSourceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐUpdateSourceRequest(ctx, tmp)
+	var arg0 *database.ID
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["project"] = arg0
+	args["id"] = arg0
+	var arg1 *primitives.Label
+	if tmp, ok := rawArgs["label"]; ok {
+		arg1, err = ec.unmarshalOLabel2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["label"] = arg1
+	var arg2 model.UpdateProjectRequest
+	if tmp, ok := rawArgs["update"]; ok {
+		arg2, err = ec.unmarshalNUpdateProjectRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐUpdateProjectRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["update"] = arg2
 	return args, nil
 }
 
@@ -3481,7 +3496,7 @@ func (ec *executionContext) _Mutation_updateProject(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().UpdateProject(rctx, args["project"].(model.UpdateSourceRequest))
+			return ec.resolvers.Mutation().UpdateProject(rctx, args["id"].(*database.ID), args["label"].(*primitives.Label), args["update"].(model.UpdateProjectRequest))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAuthenticated == nil {
@@ -8991,13 +9006,7 @@ func (ec *executionContext) unmarshalInputUpdateProjectRequest(ctx context.Conte
 			if err != nil {
 				return it, err
 			}
-		case "label":
-			var err error
-			it.Label, err = ec.unmarshalOLabel2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "Description":
+		case "description":
 			var err error
 			it.Description, err = ec.unmarshalODescription2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDescription(ctx, v)
 			if err != nil {
@@ -11104,6 +11113,10 @@ func (ec *executionContext) marshalNToken2ᚖgithubᚗcomᚋcapeprivacyᚋcape�
 		return graphql.Null
 	}
 	return ec._Token(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUpdateProjectRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐUpdateProjectRequest(ctx context.Context, v interface{}) (model.UpdateProjectRequest, error) {
+	return ec.unmarshalInputUpdateProjectRequest(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNUpdateSourceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐUpdateSourceRequest(ctx context.Context, v interface{}) (model.UpdateSourceRequest, error) {
