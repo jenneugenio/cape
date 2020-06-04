@@ -1119,3 +1119,41 @@ func (c *Client) ReportSchema(ctx context.Context, sourceID database.ID, sourceS
 		}
     `, variables, nil)
 }
+
+type CreateProjectResponse struct {
+	Project *primitives.Project `json:"createProject"`
+}
+
+func (c *Client) CreateProject(
+	ctx context.Context,
+	name primitives.DisplayName,
+	label *primitives.Label,
+	desc primitives.Description) (*primitives.Project, error) {
+	createReq := &model.CreateProjectRequest{
+		Name:        name,
+		Label:       label,
+		Description: desc,
+	}
+
+	variables := make(map[string]interface{})
+	variables["create_project"] = createReq
+
+	var resp CreateProjectResponse
+
+	err := c.transport.Raw(ctx, `
+		mutation CreateProject($create_project: CreateProjectRequest!) {
+			createProject(project: $create_project) {
+				name,
+				label,
+				description,
+				status
+			}
+		}
+	`, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Project, nil
+}

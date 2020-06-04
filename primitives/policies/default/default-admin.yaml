@@ -76,3 +76,16 @@ rules:
   - target: "source_schema:*"
     action: read
     effect: allow
+  # Projects
+  - target: "projects:*"
+    action: create
+    effect: allow
+  - target: "projects:*"
+    action: read
+    effect: allow
+  - target: "projects:*"
+    action: update
+    effect: allow
+  - target: "projects:*"
+    action: delete
+    effect: allow

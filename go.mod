@@ -23,6 +23,7 @@ require (
 	github.com/golangci/golangci-lint v1.24.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
 	github.com/gorilla/websocket v1.4.1 // indirect
+	github.com/gosimple/slug v1.9.0
 	github.com/gostaticanalysis/analysisutil v0.0.3 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
 	github.com/imdario/mergo v0.3.9 // indirect

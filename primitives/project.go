@@ -18,6 +18,10 @@ func (d Description) Validate() error {
 	return nil
 }
 
+func (d Description) String() string {
+	return string(d)
+}
+
 func NewDescription(in string) (Description, error) {
 	d := Description(in)
 	return d, d.Validate()
@@ -30,6 +34,10 @@ const (
 	ProjectActive   ProjectStatus = "Active"
 	ProjectArchived ProjectStatus = "Archived"
 )
+
+func (p ProjectStatus) String() string {
+	return string(p)
+}
 
 func (p ProjectStatus) Validate() error {
 	switch p {
@@ -46,10 +54,10 @@ func (p ProjectStatus) Validate() error {
 
 type Project struct {
 	*database.Primitive
-	Name        DisplayName
-	Label       Label
-	Description Description
-	Status      ProjectStatus
+	Name        DisplayName   `json:"name"`
+	Label       Label         `json:"label"`
+	Description Description   `json:"description"`
+	Status      ProjectStatus `json:"status"`
 
 	// The active spec (this references a ProjectSpec)
 	CurrentSpecID *database.ID
