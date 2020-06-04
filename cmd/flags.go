@@ -219,3 +219,27 @@ func formatFlag() cli.Flag {
 		EnvVars: []string{"CAPE_CONFIG_FORMAT"},
 	}
 }
+
+func projectNameFlag() cli.Flag {
+	return &cli.StringFlag{
+		Name:    "name",
+		Usage:   "The name of the project",
+		EnvVars: []string{"CAPE_PROJECT_NAME"},
+	}
+}
+
+func projectDescriptionFlag() cli.Flag {
+	return &cli.StringFlag{
+		Name:    "description",
+		Usage:   "The description of the project",
+		EnvVars: []string{"CAPE_PROJECT_DESCRIPTION"},
+	}
+}
+
+func projectSpecFlag() cli.Flag {
+	return &cli.StringFlag{
+		Name:    "from-spec",
+		Usage:   "The spec file you wish to use",
+		EnvVars: []string{"CAPE_PROJECT_SPEC"},
+	}
+}

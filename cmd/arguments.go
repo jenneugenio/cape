@@ -13,6 +13,7 @@ var (
 	RoleLabelArg        = LabelArg("role")
 	PolicyLabelArg      = LabelArg("policy")
 	SourceLabelArg      = LabelArg("source")
+	ProjectLabelArg     = LabelArg("project-label")
 
 	ClusterURLArg = &Argument{
 		Name:        "url",
