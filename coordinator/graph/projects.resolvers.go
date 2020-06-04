@@ -6,7 +6,6 @@ package graph
 import (
 	"context"
 	"fmt"
-
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
@@ -77,7 +76,16 @@ func (r *projectSpecResolver) Sources(ctx context.Context, obj *primitives.Proje
 }
 
 func (r *queryResolver) Projects(ctx context.Context, status []primitives.ProjectStatus) ([]*primitives.Project, error) {
-	panic(fmt.Errorf("not implemented"))
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	var projects []*primitives.Project
+	err := enforcer.Query(ctx, &projects, database.NewEmptyFilter())
+	if err != nil {
+		return nil, err
+	}
+
+	return projects, nil
 }
 
 func (r *queryResolver) Project(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error) {

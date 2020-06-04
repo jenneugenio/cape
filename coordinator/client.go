@@ -1157,3 +1157,30 @@ func (c *Client) CreateProject(
 
 	return resp.Project, nil
 }
+
+type ListProjectsResponse struct {
+	Projects []*primitives.Project `json:"projects"`
+}
+
+func (c *Client) ListProjects(ctx context.Context, status []primitives.ProjectStatus) ([]*primitives.Project, error) {
+	variables := make(map[string]interface{})
+	variables["status"] = status
+
+	var resp ListProjectsResponse
+	err := c.transport.Raw(ctx, `
+		query ListProjects($status: [ProjectStatus!]) {
+			projects(status: $status) {
+				name,
+				label,
+				description,
+				status
+			}
+		}
+	`, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Projects, nil
+}
