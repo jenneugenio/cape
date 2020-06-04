@@ -27,8 +27,7 @@ input CreateProjectRequest {
 
 input UpdateProjectRequest {
     name: DisplayName
-    label: Label
-    Description: Description
+    description: Description
 }
 
 input CreateProjectSpecRequest {
@@ -46,7 +45,7 @@ extend type Query {
 
 extend type Mutation {
     createProject(project: CreateProjectRequest!): Project! @isAuthenticated
-    updateProject(project: UpdateSourceRequest!): Project! @isAuthenticated
+    updateProject(id: ID, label: Label, update: UpdateProjectRequest!): Project! @isAuthenticated
     createProjectSpec(projectSpec: CreateProjectSpecRequest!): ProjectSpec! @isAuthenticated
 
     archiveProject(id: ID, label: Label): Project! @isAuthenticated

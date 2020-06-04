@@ -4,13 +4,14 @@ package integration
 
 import (
 	"context"
+	"testing"
+
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/primitives"
 	gm "github.com/onsi/gomega"
-	"testing"
 )
 
-func TestProjectsCreate(t *testing.T) {
+func TestProjects(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	ctx := context.Background()
@@ -44,6 +45,34 @@ func TestProjectsCreate(t *testing.T) {
 		_, err = client.CreateProject(ctx, "Duplicate Me", nil, "This project does great things")
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: entity already exists"))
+	})
+
+	t.Run("Can update name and description by label", func(t *testing.T) {
+		p, err := client.CreateProject(ctx, "Updatable Project", nil, "This project does great things")
+		gm.Expect(err).To(gm.BeNil())
+
+		name := primitives.DisplayName("New Name")
+		desc := primitives.Description("This project is now updated")
+
+		updatedP, err := client.UpdateProject(ctx, nil, &p.Label, &name, &desc)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(updatedP.Name).To(gm.Equal(name))
+		gm.Expect(updatedP.Label).To(gm.Equal(p.Label))
+		gm.Expect(updatedP.Description).To(gm.Equal(desc))
+	})
+
+	t.Run("Can update name and description by id", func(t *testing.T) {
+		p, err := client.CreateProject(ctx, "Another Updatable Project", nil, "This project does great things")
+		gm.Expect(err).To(gm.BeNil())
+
+		name := primitives.DisplayName("New Name")
+		desc := primitives.Description("This project is now updated")
+
+		updatedP, err := client.UpdateProject(ctx, &p.ID, nil, &name, &desc)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(updatedP.Name).To(gm.Equal(name))
+		gm.Expect(updatedP.Label).To(gm.Equal(p.Label))
+		gm.Expect(updatedP.Description).To(gm.Equal(desc))
 	})
 }
 

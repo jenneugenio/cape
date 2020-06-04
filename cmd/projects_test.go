@@ -1,10 +1,12 @@
 package main
 
 import (
+	"testing"
+
+	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/primitives"
 	gm "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestProjectsCreate(t *testing.T) {
@@ -54,6 +56,58 @@ func TestProjectsCreate(t *testing.T) {
 		err = app.Run([]string{"cape", "projects", "create"})
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(err.Error()).To(gm.Equal("missing_argument: The argument name is required, but was not provided"))
+	})
+
+	t.Run("Can update a project", func(t *testing.T) {
+		updatedP, err := primitives.NewProject("Updated Project", "my-project", "Update ME")
+		gm.Expect(err).To(gm.BeNil())
+
+		updateResp := coordinator.UpdateProjectResponse{
+			Project: updatedP,
+		}
+
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: updateResp,
+			},
+		})
+		err = app.Run([]string{
+			"cape", "projects", "update",
+			"--name", updatedP.Name.String(), "--description", updatedP.Description.String(),
+			p.Label.String(),
+		})
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(u.Calls)).To(gm.Equal(2))
+		gm.Expect(u.Calls[0].Name).To(gm.Equal("template"))
+		gm.Expect(u.Calls[0].Args[1]).To(gm.Equal(updatedP.Name.String()))
+		gm.Expect(u.Calls[1].Args[0].(ui.Details)["Description"]).To(gm.Equal(updatedP.Description.String()))
+	})
+
+	t.Run("Can update a project without a description", func(t *testing.T) {
+		updatedP, err := primitives.NewProject("Updated Project", "my-project", "What is this project even about")
+		gm.Expect(err).To(gm.BeNil())
+
+		updateResp := coordinator.UpdateProjectResponse{
+			Project: updatedP,
+		}
+
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: updateResp,
+			},
+		})
+		err = app.Run([]string{
+			"cape", "projects", "update",
+			"--name", updatedP.Name.String(),
+			p.Label.String(),
+		})
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(len(u.Calls)).To(gm.Equal(2))
+		gm.Expect(u.Calls[0].Name).To(gm.Equal("template"))
+		gm.Expect(u.Calls[0].Args[1]).To(gm.Equal(updatedP.Name.String()))
+		gm.Expect(u.Calls[1].Args[0].(ui.Details)["Description"]).To(gm.Equal(updatedP.Description.String()))
 	})
 }
 

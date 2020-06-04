@@ -12,6 +12,7 @@ import (
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
+	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/gosimple/slug"
 )
@@ -44,8 +45,39 @@ func (r *mutationResolver) CreateProject(ctx context.Context, project model.Crea
 	return p, nil
 }
 
-func (r *mutationResolver) UpdateProject(ctx context.Context, project model.UpdateSourceRequest) (*primitives.Project, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *mutationResolver) UpdateProject(ctx context.Context, id *database.ID, label *primitives.Label, update model.UpdateProjectRequest) (*primitives.Project, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	project := &primitives.Project{}
+	if id != nil {
+		err := enforcer.Get(ctx, *id, project)
+		if err != nil {
+			return nil, err
+		}
+	} else if label != nil {
+		err := enforcer.QueryOne(ctx, project, database.NewFilter(database.Where{"label": label}, nil, nil))
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		return nil, errs.New(InvalidParametersCause, "Either id or label must be supplied to updateProject")
+	}
+
+	if update.Name != nil {
+		project.Name = *update.Name
+	}
+
+	if update.Description != nil {
+		project.Description = *update.Description
+	}
+
+	err := enforcer.Update(ctx, project)
+	if err != nil {
+		return nil, err
+	}
+
+	return project, nil
 }
 
 func (r *mutationResolver) CreateProjectSpec(ctx context.Context, projectSpec model.CreateProjectSpecRequest) (*primitives.ProjectSpec, error) {

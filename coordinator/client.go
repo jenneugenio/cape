@@ -1143,6 +1143,7 @@ func (c *Client) CreateProject(
 	err := c.transport.Raw(ctx, `
 		mutation CreateProject($create_project: CreateProjectRequest!) {
 			createProject(project: $create_project) {
+				id,
 				name,
 				label,
 				description,
@@ -1170,6 +1171,7 @@ func (c *Client) ListProjects(ctx context.Context, status []primitives.ProjectSt
 	err := c.transport.Raw(ctx, `
 		query ListProjects($status: [ProjectStatus!]) {
 			projects(status: $status) {
+				id,
 				name,
 				label,
 				description,
@@ -1183,4 +1185,46 @@ func (c *Client) ListProjects(ctx context.Context, status []primitives.ProjectSt
 	}
 
 	return resp.Projects, nil
+}
+
+type UpdateProjectResponse struct {
+	Project *primitives.Project `json:"updateProject"`
+}
+
+func (c *Client) UpdateProject(
+	ctx context.Context,
+	id *database.ID,
+	label *primitives.Label,
+	name *primitives.DisplayName,
+	desc *primitives.Description) (*primitives.Project, error) {
+	updateReq := &model.UpdateProjectRequest{
+		Name:        name,
+		Description: desc,
+	}
+
+	variables := map[string]interface{}{
+		"id":             id,
+		"label":          label,
+		"update_project": updateReq,
+	}
+
+	var resp UpdateProjectResponse
+
+	err := c.transport.Raw(ctx, `
+		mutation UpdateProject($id: ID, $label: Label, $update_project: UpdateProjectRequest!) {
+			updateProject(id: $id, label: $label, update: $update_project) {
+				id,
+				name,
+				label,
+				description,
+				status
+			}
+		}
+	`, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Project, nil
 }
