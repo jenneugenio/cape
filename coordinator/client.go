@@ -151,6 +151,11 @@ func (c *Client) Logout(ctx context.Context, authToken *base64.Value) error {
 	return c.transport.Logout(ctx, authToken)
 }
 
+// SessionToken returns the client's current session token
+func (c *Client) SessionToken() *base64.Value {
+	return c.transport.Token()
+}
+
 // Role Routes
 
 // CreateRole creates a new role with a label

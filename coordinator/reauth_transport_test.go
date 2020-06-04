@@ -7,12 +7,13 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
 
 func createReAuthTransport(token *auth.APIToken, mock *MockClientTransport) (*ReAuthTransport, error) {
-	t, err := NewReAuthTransport(mock.URL(), token)
+	t, err := NewReAuthTransport(mock.URL(), token, framework.TestLogger())
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +91,7 @@ func TestReAuthTransport(t *testing.T) {
 
 		for _, tc := range tests {
 			t.Run(tc.name, func(t *testing.T) {
-				_, err := NewReAuthTransport(tc.coordinatorURL, tc.apiToken)
+				_, err := NewReAuthTransport(tc.coordinatorURL, tc.apiToken, framework.TestLogger())
 				if tc.cause != nil {
 					gm.Expect(errors.FromCause(err, *tc.cause)).To(gm.BeTrue())
 					return

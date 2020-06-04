@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/manifoldco/go-base64"
+	"github.com/rs/zerolog"
 
 	"github.com/capeprivacy/cape/auth"
 	errors "github.com/capeprivacy/cape/partyerrors"
@@ -19,6 +20,7 @@ import (
 type ReAuthTransport struct {
 	transport ClientTransport
 	apiToken  *auth.APIToken
+	logger    *zerolog.Logger
 
 	// ReAuthTransport uses a mutex to avoid multiple calls from attempting to
 	// authenticate at the same time.
@@ -26,7 +28,7 @@ type ReAuthTransport struct {
 }
 
 // NewReAuthTransport returns a ReAuthTransport
-func NewReAuthTransport(coordinatorURL *primitives.URL, apiToken *auth.APIToken) (ClientTransport, error) {
+func NewReAuthTransport(coordinatorURL *primitives.URL, apiToken *auth.APIToken, logger *zerolog.Logger) (ClientTransport, error) {
 	if coordinatorURL == nil {
 		return nil, errors.New(InvalidArgumentCause, "Missing coordinator url")
 	}
@@ -47,6 +49,7 @@ func NewReAuthTransport(coordinatorURL *primitives.URL, apiToken *auth.APIToken)
 		transport: NewHTTPTransport(coordinatorURL, nil),
 		apiToken:  apiToken,
 		mutex:     &sync.Mutex{},
+		logger:    logger,
 	}, nil
 }
 
@@ -79,8 +82,16 @@ func (r *ReAuthTransport) attempt(ctx context.Context) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
+	url := r.transport.URL()
+
+	r.logger.Info().Msgf("Attempting to authenticate with coordinator at %s", url)
 	_, err := r.transport.TokenLogin(ctx, r.apiToken)
-	return err
+	if err != nil {
+		r.logger.Err(err).Msgf("Failed to authenticate with coordinator at %s", url)
+		return err
+	}
+
+	return nil
 }
 
 // EmailLogin is not implemented by ReAuthTransport. Only authentication

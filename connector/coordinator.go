@@ -31,27 +31,24 @@ type coordinator struct {
 }
 
 // NewCoordinator returns a new Coordinator
-func NewCoordinator(url *primitives.URL, token *auth.APIToken, logger *zerolog.Logger) Coordinator {
+func NewCoordinator(url *primitives.URL, token *auth.APIToken, logger *zerolog.Logger) (Coordinator, error) {
+	transport, err := coor.NewReAuthTransport(url, token, logger)
+	if err != nil {
+		return nil, err
+	}
+
 	return &coordinator{
+		Client: coor.NewClient(transport),
 		token:  token,
 		url:    url,
 		logger: logger,
-	}
+	}, nil
 }
 
 // ValidateToken validates that a given token has a valid session and returns the
 // related identity. Used for validating that a user making a request actually
 // has a valid session.
 func (c *coordinator) ValidateToken(ctx context.Context, tokenStr string) (primitives.Identity, error) {
-	// make sure the connector is actually authenticated before continuing
-	//
-	// XXX: This only ensures the connector is authenticated _IF_ you call
-	// ValidateToken
-	err := c.authenticateClient(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	token, err := auth.GetBearerToken(tokenStr)
 	if err != nil {
 		return nil, err
@@ -60,26 +57,11 @@ func (c *coordinator) ValidateToken(ctx context.Context, tokenStr string) (primi
 	transport := coor.NewHTTPTransport(c.url, token)
 	userClient := coor.NewClient(transport)
 
-	return userClient.Me(ctx)
-}
-
-// authenticateClient lazily authenticates with a coordinator if required
-func (c *coordinator) authenticateClient(ctx context.Context) error {
-	if c.Client == nil {
-		transport := coor.NewHTTPTransport(c.url, nil)
-		c.Client = coor.NewClient(transport)
-	}
-
-	if c.Authenticated() {
-		return nil
-	}
-
-	_, err := c.TokenLogin(ctx, c.token)
+	identity, err := userClient.Me(ctx)
 	if err != nil {
-		c.logger.Info().Msgf("Unable to log into the coordinator at %s. Err: %s", c.url, err)
-		return err
+		c.logger.Info().Err(err).Msgf("Unable to validate token with coordinator at %s", c.url)
+		return nil, err
 	}
-	c.logger.Info().Msgf("Logged into the coordinator at %s", c.url)
 
-	return nil
+	return identity, nil
 }

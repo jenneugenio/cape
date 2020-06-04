@@ -24,17 +24,15 @@ type SchemaJobArgs struct {
 }
 
 type Worker struct {
-	pool    *pgx.ConnPool
-	backend database.Backend
-	config  *Config
-
-	// Loaded late
-	workers     *que.WorkerPool
-	qc          *que.Client
+	pool        *pgx.ConnPool
+	backend     database.Backend
+	config      *Config
 	coordClient *coordinator.Client
-	session     *primitives.Session
+	logger      *zerolog.Logger
 
-	logger *zerolog.Logger
+	// Loaded late at Start
+	workers *que.WorkerPool
+	qc      *que.Client
 }
 
 func (w *Worker) GetSchema(j *que.Job) error {
@@ -61,7 +59,7 @@ func (w *Worker) GetSchema(j *que.Job) error {
 		return e
 	}
 
-	connClient, err := conn.NewClient(service.Endpoint, w.session.Token, certPool)
+	connClient, err := conn.NewClient(service.Endpoint, w.coordClient.SessionToken(), certPool)
 	if err != nil {
 		w.logger.Err(err).Msg("Unable to create connector client")
 		return err
@@ -129,18 +127,6 @@ func (w *Worker) GetSources(j *que.Job) error {
 	return nil
 }
 
-func (w *Worker) Login(ctx context.Context) error {
-	transport := coordinator.NewHTTPTransport(w.config.CoordinatorURL, nil)
-	w.coordClient = coordinator.NewClient(transport)
-	session, err := w.coordClient.TokenLogin(ctx, w.config.Token)
-	if err != nil {
-		return err
-	}
-
-	w.session = session
-	return nil
-}
-
 func (w *Worker) Start() error {
 	ctx := context.Background()
 	defer w.pool.Close()
@@ -152,11 +138,6 @@ func (w *Worker) Start() error {
 	}
 
 	err := w.backend.Open(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = w.Login(ctx)
 	if err != nil {
 		return err
 	}
@@ -210,10 +191,16 @@ func NewWorker(config *Config) (*Worker, error) {
 		return nil, err
 	}
 
+	transport, err := coordinator.NewReAuthTransport(config.CoordinatorURL, config.Token, config.Logger)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Worker{
-		pool:    pgxpool,
-		backend: backend,
-		config:  config,
-		logger:  config.Logger,
+		pool:        pgxpool,
+		backend:     backend,
+		config:      config,
+		logger:      config.Logger,
+		coordClient: coordinator.NewClient(transport),
 	}, nil
 }
