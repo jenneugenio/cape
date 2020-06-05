@@ -2,24 +2,10 @@ serviceAccount:
   create: true
   name: ""
 
-image:
-  repository: localhost:5000/capeprivacy/cape
-  tag: latest
-  pullPolicy: Always
-
-# used for the config file the coordinator takes
-config:
-  db:
-    addr: postgres://postgres:dev@postgres-cape-postgresql:5432/cape
-  port: 8080
-  root_key: ul0b9qQONZDn4kLNgULl3WJOZEhBqDjT1YK-kgceFUU
-  version: 1
-
 service:
-  type: "NodePort"
-  port: 8080
-  targetPort: 8080
-  nodePort: 30880
+  type: "ClusterIP"
+  port: 80
+  targetPort: 3000
   annotations: {}
   labels: {}
   portName: service
@@ -37,6 +23,11 @@ deploymentStrategy:
 admin:
   existingSecret: ""
 
+image:
+  repository: capeprivacy/cape
+  tag: latest
+  pullPolicy: IfNotPresent
+
 ## Assign a PriorityClassName to pods if set
 # priorityClassName
 
@@ -52,3 +43,10 @@ nameOverride: ""
 
 ## Override the generated full name
 fullnameOverride: ""
+
+config:
+  db:
+    addr: "postgres://postgres:dev@postgres-cape-postgresql:5432/cape"
+  port: 8080
+  root_key: ul0b9qQONZDn4kLNgULl3WJOZEhBqDjT1YK-kgceFUU
+  version: 1
