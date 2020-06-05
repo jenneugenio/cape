@@ -1179,12 +1179,55 @@ func (c *Client) ListProjects(ctx context.Context, status []primitives.ProjectSt
 			}
 		}
 	`, variables, &resp)
-
 	if err != nil {
 		return nil, err
 	}
 
 	return resp.Projects, nil
+}
+
+type UpdateProjectSpecResponseBody struct {
+	*primitives.Project
+	ProjectSpec *primitives.ProjectSpec `json:"current_spec"`
+}
+
+type UpdateProjectSpecResponse struct {
+	UpdateProjectSpecResponseBody `json:"updateProjectSpec"`
+}
+
+func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel primitives.Label, spec *primitives.ProjectSpecFile) (*primitives.Project, *primitives.ProjectSpec, error) {
+	variables := make(map[string]interface{})
+	variables["project"] = &projectLabel
+	variables["projectSpecFile"] = spec
+
+	var resp UpdateProjectSpecResponse
+	err := c.transport.Raw(ctx, `
+		mutation UpdateProjectSpec($project: Label, $projectSpecFile: ProjectSpecFile!) {
+			updateProjectSpec(project_label: $project, request: $projectSpecFile) {
+				name,
+				label,
+				description,
+				status,
+				current_spec {
+					id,
+					policy,
+					sources {
+						id,
+						label
+					}
+				}
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	p := resp.UpdateProjectSpecResponseBody.Project
+	s := resp.UpdateProjectSpecResponseBody.ProjectSpec
+
+	p.CurrentSpecID = &s.ID
+	return p, s, nil
 }
 
 type UpdateProjectResponse struct {

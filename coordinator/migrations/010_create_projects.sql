@@ -21,7 +21,7 @@ CREATE TABLE project_specs (
 
 CREATE TRIGGER project_specs_hoist_tgr
   BEFORE INSERT ON project_specs
-  FOR EACH ROW EXECUTE PROCEDURE hoist_values('id', 'parent_id');
+  FOR EACH ROW EXECUTE PROCEDURE hoist_values('id', 'parent_id', 'project_id');
 
 ALTER TABLE projects add column current_spec char(29) references project_specs(id);
 

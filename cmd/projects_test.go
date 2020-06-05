@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/capeprivacy/cape/coordinator/database"
 	"testing"
 
 	"github.com/capeprivacy/cape/cmd/ui"
@@ -108,6 +109,42 @@ func TestProjectsCreate(t *testing.T) {
 		gm.Expect(u.Calls[0].Name).To(gm.Equal("template"))
 		gm.Expect(u.Calls[0].Args[1]).To(gm.Equal(updatedP.Name.String()))
 		gm.Expect(u.Calls[1].Args[0].(ui.Details)["Description"]).To(gm.Equal(updatedP.Description.String()))
+	})
+
+	t.Run("Can update a project spec", func(t *testing.T) {
+		project, err := primitives.NewProject("Project", "my-project", "What is this project even about")
+		gm.Expect(err).To(gm.BeNil())
+
+		prim, err := database.NewPrimitive(primitives.ProjectSpecType)
+		gm.Expect(err).To(gm.BeNil())
+		spec := &primitives.ProjectSpec{
+			Primitive: prim,
+		}
+		id, err := database.GenerateID(primitives.ProjectSpecType)
+		gm.Expect(err).To(gm.BeNil())
+		spec.ID = id
+
+		respBody := coordinator.UpdateProjectSpecResponseBody{
+			Project:     project,
+			ProjectSpec: spec,
+		}
+
+		resp := coordinator.UpdateProjectSpecResponse{UpdateProjectSpecResponseBody: respBody}
+
+		app, u := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
+		err = app.Run([]string{
+			"cape", "projects", "update",
+			"--from-spec", "./testdata/project_spec.yaml",
+			p.Label.String(),
+		})
+
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(len(u.Calls)).To(gm.Equal(1))
+		gm.Expect(u.Calls[0].Name).To(gm.Equal("template"))
 	})
 }
 

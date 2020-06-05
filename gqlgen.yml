@@ -66,6 +66,8 @@ models:
     model: github.com/capeprivacy/cape/primitives.EmailType
   PolicySpec:
     model: github.com/capeprivacy/cape/primitives.PolicySpec
+  Rule:
+    model: github.com/capeprivacy/cape/primitives.Rule
   Token:
     model: github.com/capeprivacy/cape/primitives.Token
   Password:
@@ -78,6 +80,8 @@ models:
     model: github.com/capeprivacy/cape/primitives.Project
   ProjectSpec:
     model: github.com/capeprivacy/cape/primitives.ProjectSpec
+  ProjectSpecFile:
+    model: github.com/capeprivacy/cape/primitives.ProjectSpecFile
   Description:
     model: github.com/capeprivacy/cape/primitives.Description
   ProjectStatus:

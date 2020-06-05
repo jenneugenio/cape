@@ -87,7 +87,6 @@ type ComplexityRoot struct {
 		AttachPolicy      func(childComplexity int, input model.AttachPolicyRequest) int
 		CreatePolicy      func(childComplexity int, input model.CreatePolicyRequest) int
 		CreateProject     func(childComplexity int, project model.CreateProjectRequest) int
-		CreateProjectSpec func(childComplexity int, projectSpec model.CreateProjectSpecRequest) int
 		CreateRole        func(childComplexity int, input model.CreateRoleRequest) int
 		CreateService     func(childComplexity int, input model.CreateServiceRequest) int
 		CreateSession     func(childComplexity int, input model.SessionRequest) int
@@ -105,6 +104,7 @@ type ComplexityRoot struct {
 		UnarchiveProject  func(childComplexity int, id *database.ID, label *primitives.Label) int
 		UnassignRole      func(childComplexity int, input model.AssignRoleRequest) int
 		UpdateProject     func(childComplexity int, id *database.ID, label *primitives.Label, update model.UpdateProjectRequest) int
+		UpdateProjectSpec func(childComplexity int, projectLabel *primitives.Label, projectID *database.ID, request primitives.ProjectSpecFile) int
 		UpdateSource      func(childComplexity int, input model.UpdateSourceRequest) int
 	}
 
@@ -126,11 +126,11 @@ type ComplexityRoot struct {
 	}
 
 	ProjectSpec struct {
-		ID       func(childComplexity int) int
-		Parent   func(childComplexity int) int
-		Policies func(childComplexity int) int
-		Project  func(childComplexity int) int
-		Sources  func(childComplexity int) int
+		ID      func(childComplexity int) int
+		Parent  func(childComplexity int) int
+		Policy  func(childComplexity int) int
+		Project func(childComplexity int) int
+		Sources func(childComplexity int) int
 	}
 
 	Query struct {
@@ -227,7 +227,7 @@ type MutationResolver interface {
 	DetachPolicy(ctx context.Context, input model.DetachPolicyRequest) (*string, error)
 	CreateProject(ctx context.Context, project model.CreateProjectRequest) (*primitives.Project, error)
 	UpdateProject(ctx context.Context, id *database.ID, label *primitives.Label, update model.UpdateProjectRequest) (*primitives.Project, error)
-	CreateProjectSpec(ctx context.Context, projectSpec model.CreateProjectSpecRequest) (*primitives.ProjectSpec, error)
+	UpdateProjectSpec(ctx context.Context, projectLabel *primitives.Label, projectID *database.ID, request primitives.ProjectSpecFile) (*primitives.Project, error)
 	ArchiveProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error)
 	UnarchiveProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error)
 	CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error)
@@ -473,18 +473,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateProject(childComplexity, args["project"].(model.CreateProjectRequest)), true
 
-	case "Mutation.createProjectSpec":
-		if e.complexity.Mutation.CreateProjectSpec == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createProjectSpec_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateProjectSpec(childComplexity, args["projectSpec"].(model.CreateProjectSpecRequest)), true
-
 	case "Mutation.createRole":
 		if e.complexity.Mutation.CreateRole == nil {
 			break
@@ -689,6 +677,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateProject(childComplexity, args["id"].(*database.ID), args["label"].(*primitives.Label), args["update"].(model.UpdateProjectRequest)), true
 
+	case "Mutation.updateProjectSpec":
+		if e.complexity.Mutation.UpdateProjectSpec == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateProjectSpec_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateProjectSpec(childComplexity, args["project_label"].(*primitives.Label), args["project_id"].(*database.ID), args["request"].(primitives.ProjectSpecFile)), true
+
 	case "Mutation.updateSource":
 		if e.complexity.Mutation.UpdateSource == nil {
 			break
@@ -792,12 +792,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ProjectSpec.Parent(childComplexity), true
 
-	case "ProjectSpec.policies":
-		if e.complexity.ProjectSpec.Policies == nil {
+	case "ProjectSpec.policy":
+		if e.complexity.ProjectSpec.Policy == nil {
 			break
 		}
 
-		return e.complexity.ProjectSpec.Policies(childComplexity), true
+		return e.complexity.ProjectSpec.Policy(childComplexity), true
 
 	case "ProjectSpec.project":
 		if e.complexity.ProjectSpec.Project == nil {
@@ -1362,6 +1362,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	&ast.Source{Name: "coordinator/schema/policy.graphql", Input: `scalar PolicySpec
+scalar Rule
 
 type Policy {
   id: ID!
@@ -1440,7 +1441,7 @@ type ProjectSpec {
     id: ID!
     project: Project!
     parent: ProjectSpec
-    policies: [PolicySpec!]!
+    policy: [Rule!]!
     sources: [Source!]!
 }
 
@@ -1455,12 +1456,9 @@ input UpdateProjectRequest {
     description: Description
 }
 
-input CreateProjectSpecRequest {
-    id: ID!
-    project_id: ID!
-    parent_id: ID
-    source_ids: [ID!]
-    policies: [PolicySpec!]
+input ProjectSpecFile {
+    sources: [Label!]!
+    policy: [Rule!]!
 }
 
 extend type Query {
@@ -1471,7 +1469,7 @@ extend type Query {
 extend type Mutation {
     createProject(project: CreateProjectRequest!): Project! @isAuthenticated
     updateProject(id: ID, label: Label, update: UpdateProjectRequest!): Project! @isAuthenticated
-    createProjectSpec(projectSpec: CreateProjectSpecRequest!): ProjectSpec! @isAuthenticated
+    updateProjectSpec(project_label: Label, project_id: ID, request: ProjectSpecFile!): Project! @isAuthenticated
 
     archiveProject(id: ID, label: Label): Project! @isAuthenticated
     unarchiveProject(id: ID, label: Label): Project! @isAuthenticated
@@ -1829,20 +1827,6 @@ func (ec *executionContext) field_Mutation_createPolicy_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createProjectSpec_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.CreateProjectSpecRequest
-	if tmp, ok := rawArgs["projectSpec"]; ok {
-		arg0, err = ec.unmarshalNCreateProjectSpecRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateProjectSpecRequest(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["projectSpec"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_createProject_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2086,6 +2070,36 @@ func (ec *executionContext) field_Mutation_unassignRole_args(ctx context.Context
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateProjectSpec_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *primitives.Label
+	if tmp, ok := rawArgs["project_label"]; ok {
+		arg0, err = ec.unmarshalOLabel2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["project_label"] = arg0
+	var arg1 *database.ID
+	if tmp, ok := rawArgs["project_id"]; ok {
+		arg1, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["project_id"] = arg1
+	var arg2 primitives.ProjectSpecFile
+	if tmp, ok := rawArgs["request"]; ok {
+		arg2, err = ec.unmarshalNProjectSpecFile2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProjectSpecFile(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg2
 	return args, nil
 }
 
@@ -3532,7 +3546,7 @@ func (ec *executionContext) _Mutation_updateProject(ctx context.Context, field g
 	return ec.marshalNProject2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProject(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_createProjectSpec(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_updateProjectSpec(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3548,7 +3562,7 @@ func (ec *executionContext) _Mutation_createProjectSpec(ctx context.Context, fie
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_createProjectSpec_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_updateProjectSpec_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -3557,7 +3571,7 @@ func (ec *executionContext) _Mutation_createProjectSpec(ctx context.Context, fie
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateProjectSpec(rctx, args["projectSpec"].(model.CreateProjectSpecRequest))
+			return ec.resolvers.Mutation().UpdateProjectSpec(rctx, args["project_label"].(*primitives.Label), args["project_id"].(*database.ID), args["request"].(primitives.ProjectSpecFile))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAuthenticated == nil {
@@ -3573,10 +3587,10 @@ func (ec *executionContext) _Mutation_createProjectSpec(ctx context.Context, fie
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*primitives.ProjectSpec); ok {
+		if data, ok := tmp.(*primitives.Project); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.ProjectSpec`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/capeprivacy/cape/primitives.Project`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3588,9 +3602,9 @@ func (ec *executionContext) _Mutation_createProjectSpec(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.ProjectSpec)
+	res := resTmp.(*primitives.Project)
 	fc.Result = res
-	return ec.marshalNProjectSpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProjectSpec(ctx, field.Selections, res)
+	return ec.marshalNProject2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProject(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_archiveProject(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4844,7 +4858,7 @@ func (ec *executionContext) _ProjectSpec_parent(ctx context.Context, field graph
 	return ec.marshalOProjectSpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProjectSpec(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ProjectSpec_policies(ctx context.Context, field graphql.CollectedField, obj *primitives.ProjectSpec) (ret graphql.Marshaler) {
+func (ec *executionContext) _ProjectSpec_policy(ctx context.Context, field graphql.CollectedField, obj *primitives.ProjectSpec) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4861,7 +4875,7 @@ func (ec *executionContext) _ProjectSpec_policies(ctx context.Context, field gra
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Policies, nil
+		return obj.Policy, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4873,9 +4887,9 @@ func (ec *executionContext) _ProjectSpec_policies(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*primitives.PolicySpec)
+	res := resTmp.([]*primitives.Rule)
 	fc.Result = res
-	return ec.marshalNPolicySpec2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpecᚄ(ctx, field.Selections, res)
+	return ec.marshalNRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRuleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ProjectSpec_sources(ctx context.Context, field graphql.CollectedField, obj *primitives.ProjectSpec) (ret graphql.Marshaler) {
@@ -8640,48 +8654,6 @@ func (ec *executionContext) unmarshalInputCreateProjectRequest(ctx context.Conte
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputCreateProjectSpecRequest(ctx context.Context, obj interface{}) (model.CreateProjectSpecRequest, error) {
-	var it model.CreateProjectSpecRequest
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "id":
-			var err error
-			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "project_id":
-			var err error
-			it.ProjectID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "parent_id":
-			var err error
-			it.ParentID, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "source_ids":
-			var err error
-			it.SourceIds, err = ec.unmarshalOID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐIDᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "policies":
-			var err error
-			it.Policies, err = ec.unmarshalOPolicySpec2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpecᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputCreateRoleRequest(ctx context.Context, obj interface{}) (model.CreateRoleRequest, error) {
 	var it model.CreateRoleRequest
 	var asMap = obj.(map[string]interface{})
@@ -8883,6 +8855,30 @@ func (ec *executionContext) unmarshalInputPolicyInput(ctx context.Context, obj i
 		case "label":
 			var err error
 			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputProjectSpecFile(ctx context.Context, obj interface{}) (primitives.ProjectSpecFile, error) {
+	var it primitives.ProjectSpecFile
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "sources":
+			var err error
+			it.Sources, err = ec.unmarshalNLabel2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabelᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "policy":
+			var err error
+			it.Policy, err = ec.unmarshalNRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRuleᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9285,8 +9281,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "createProjectSpec":
-			out.Values[i] = ec._Mutation_createProjectSpec(ctx, field)
+		case "updateProjectSpec":
+			out.Values[i] = ec._Mutation_updateProjectSpec(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -9500,8 +9496,8 @@ func (ec *executionContext) _ProjectSpec(ctx context.Context, sel ast.SelectionS
 				res = ec._ProjectSpec_parent(ctx, field, obj)
 				return res
 			})
-		case "policies":
-			out.Values[i] = ec._ProjectSpec_policies(ctx, field, obj)
+		case "policy":
+			out.Values[i] = ec._ProjectSpec_policy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -10545,10 +10541,6 @@ func (ec *executionContext) unmarshalNCreateProjectRequest2githubᚗcomᚋcapepr
 	return ec.unmarshalInputCreateProjectRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNCreateProjectSpecRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateProjectSpecRequest(ctx context.Context, v interface{}) (model.CreateProjectSpecRequest, error) {
-	return ec.unmarshalInputCreateProjectSpecRequest(ctx, v)
-}
-
 func (ec *executionContext) unmarshalNCreateRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateRoleRequest(ctx context.Context, v interface{}) (model.CreateRoleRequest, error) {
 	return ec.unmarshalInputCreateRoleRequest(ctx, v)
 }
@@ -10754,6 +10746,35 @@ func (ec *executionContext) marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋpr
 	return v
 }
 
+func (ec *executionContext) unmarshalNLabel2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabelᚄ(ctx context.Context, v interface{}) ([]primitives.Label, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]primitives.Label, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNLabel2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabelᚄ(ctx context.Context, sel ast.SelectionSet, v []primitives.Label) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐName(ctx context.Context, v interface{}) (primitives.Name, error) {
 	var res primitives.Name
 	return res, res.UnmarshalGQL(v)
@@ -10799,35 +10820,6 @@ func (ec *executionContext) unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋca
 
 func (ec *executionContext) marshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v primitives.PolicySpec) graphql.Marshaler {
 	return v
-}
-
-func (ec *executionContext) unmarshalNPolicySpec2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpecᚄ(ctx context.Context, v interface{}) ([]*primitives.PolicySpec, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]*primitives.PolicySpec, len(vSlice))
-	for i := range vSlice {
-		res[i], err = ec.unmarshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNPolicySpec2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpecᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.PolicySpec) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx, sel, v[i])
-	}
-
-	return ret
 }
 
 func (ec *executionContext) unmarshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, v interface{}) (*primitives.PolicySpec, error) {
@@ -10899,18 +10891,8 @@ func (ec *executionContext) marshalNProject2ᚖgithubᚗcomᚋcapeprivacyᚋcape
 	return ec._Project(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNProjectSpec2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProjectSpec(ctx context.Context, sel ast.SelectionSet, v primitives.ProjectSpec) graphql.Marshaler {
-	return ec._ProjectSpec(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNProjectSpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProjectSpec(ctx context.Context, sel ast.SelectionSet, v *primitives.ProjectSpec) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._ProjectSpec(ctx, sel, v)
+func (ec *executionContext) unmarshalNProjectSpecFile2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProjectSpecFile(ctx context.Context, v interface{}) (primitives.ProjectSpecFile, error) {
+	return ec.unmarshalInputProjectSpecFile(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNProjectStatus2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProjectStatus(ctx context.Context, v interface{}) (primitives.ProjectStatus, error) {
@@ -10948,6 +10930,62 @@ func (ec *executionContext) marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋ
 		return graphql.Null
 	}
 	return ec._Role(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNRule2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx context.Context, v interface{}) (primitives.Rule, error) {
+	var res primitives.Rule
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNRule2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx context.Context, sel ast.SelectionSet, v primitives.Rule) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRuleᚄ(ctx context.Context, v interface{}) ([]*primitives.Rule, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*primitives.Rule, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNRule2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRuleᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Rule) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNRule2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNRule2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx context.Context, v interface{}) (*primitives.Rule, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNRule2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalNRule2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx context.Context, sel ast.SelectionSet, v *primitives.Rule) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalNSchemaBlob2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐSchemaBlob(ctx context.Context, v interface{}) (primitives.SchemaBlob, error) {
@@ -11694,38 +11732,6 @@ func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋca
 
 	}
 	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) unmarshalOPolicySpec2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpecᚄ(ctx context.Context, v interface{}) ([]*primitives.PolicySpec, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]*primitives.PolicySpec, len(vSlice))
-	for i := range vSlice {
-		res[i], err = ec.unmarshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOPolicySpec2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpecᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.PolicySpec) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx, sel, v[i])
-	}
-
 	return ret
 }
 

@@ -53,14 +53,6 @@ type CreateProjectRequest struct {
 	Description primitives.Description `json:"Description"`
 }
 
-type CreateProjectSpecRequest struct {
-	ID        database.ID              `json:"id"`
-	ProjectID database.ID              `json:"project_id"`
-	ParentID  *database.ID             `json:"parent_id"`
-	SourceIds []database.ID            `json:"source_ids"`
-	Policies  []*primitives.PolicySpec `json:"policies"`
-}
-
 type CreateRoleRequest struct {
 	Label       primitives.Label `json:"label"`
 	IdentityIds []database.ID    `json:"identity_ids"`

@@ -89,3 +89,15 @@ rules:
   - target: "projects:*"
     action: delete
     effect: allow
+  - target: "project_specs:*"
+    action: create
+    effect: allow
+  - target: "project_specs:*"
+    action: read
+    effect: allow
+  - target: "project_specs:*"
+    action: update
+    effect: allow
+  - target: "project_specs:*"
+    action: delete
+    effect: allow

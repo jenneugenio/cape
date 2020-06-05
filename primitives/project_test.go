@@ -86,10 +86,10 @@ func TestProject(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		sources := []database.ID{s.ID}
 
-		policies, err := samplePolicySpec()
+		policy, err := samplePolicySpec()
 		gm.Expect(err).To(gm.BeNil())
 
-		projectSpec, err := NewProjectSpec(p.ID, nil, sources, policies)
+		projectSpec, err := NewProjectSpec(p.ID, nil, sources, policy.Rules)
 		gm.Expect(err).To(gm.BeNil())
 
 		p.CurrentSpecID = &projectSpec.ID

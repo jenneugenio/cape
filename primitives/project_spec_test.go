@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func samplePolicySpec() ([]*PolicySpec, error) {
+func samplePolicySpec() (*PolicySpec, error) {
 	specBytes, err := ioutil.ReadFile("./testdata/policy.yaml")
 	if err != nil {
 		return nil, err
@@ -19,7 +19,7 @@ func samplePolicySpec() ([]*PolicySpec, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []*PolicySpec{spec}, nil
+	return spec, nil
 }
 
 func TestProjectSpec(t *testing.T) {
@@ -35,17 +35,17 @@ func TestProjectSpec(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("Can create a project spec without a parent", func(t *testing.T) {
-		ps, err := NewProjectSpec(projectID, nil, []database.ID{sourceID}, policy)
+		ps, err := NewProjectSpec(projectID, nil, []database.ID{sourceID}, policy.Rules)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(ps).ToNot(gm.BeNil())
 		gm.Expect(ps.ID).ToNot(gm.BeNil())
 	})
 
 	t.Run("Can create a project spec with a parent", func(t *testing.T) {
-		parent, err := NewProjectSpec(projectID, nil, []database.ID{sourceID}, policy)
+		parent, err := NewProjectSpec(projectID, nil, []database.ID{sourceID}, policy.Rules)
 		gm.Expect(err).To(gm.BeNil())
 
-		ps, err := NewProjectSpec(projectID, &parent.ID, []database.ID{sourceID}, policy)
+		ps, err := NewProjectSpec(projectID, &parent.ID, []database.ID{sourceID}, policy.Rules)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(ps).ToNot(gm.BeNil())
 		gm.Expect(ps.ID).ToNot(gm.BeNil())
@@ -57,6 +57,15 @@ func TestProjectSpec(t *testing.T) {
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(errors.CausedBy(err, InvalidProjectSpecCause)).To(gm.BeTrue())
 		gm.Expect(ps).To(gm.BeNil())
+	})
+
+	t.Run("Can create a project spec from yaml", func(t *testing.T) {
+		f, err := ioutil.ReadFile("./testdata/project_spec.yaml")
+		gm.Expect(err).To(gm.BeNil())
+
+		spec, err := ParseProjectSpecFile(f)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(spec.Sources[0]).To(gm.Equal(Label("transactions")))
 	})
 }
 
@@ -114,10 +123,10 @@ func TestProjectSpecInvalidIDs(t *testing.T) {
 				sourceIDs[i] = sid
 			}
 
-			policies, err := samplePolicySpec()
+			policy, err := samplePolicySpec()
 			gm.Expect(err).To(gm.BeNil())
 
-			projectSpec, err := NewProjectSpec(projectID, &ParentID, sourceIDs, policies)
+			projectSpec, err := NewProjectSpec(projectID, &ParentID, sourceIDs, policy.Rules)
 			gm.Expect(projectSpec).To(gm.BeNil())
 			gm.Expect(err).ToNot(gm.BeNil())
 			gm.Expect(errors.CausedBy(err, InvalidIDCause)).To(gm.BeTrue())

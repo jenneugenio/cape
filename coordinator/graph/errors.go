@@ -25,4 +25,8 @@ var (
 
 	// InvalidParametersCause happens when you pass invalid input
 	InvalidParametersCause = errors.NewCause(errors.BadRequestCategory, "invalid_input_parameters")
+
+	InvalidSource = errors.NewCause(errors.BadRequestCategory, "invalid_source")
+
+	NoActiveSpecCause = errors.NewCause(errors.BadRequestCategory, "no_active_spec")
 )

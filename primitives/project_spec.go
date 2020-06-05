@@ -4,16 +4,29 @@ import (
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
+	"sigs.k8s.io/yaml"
 )
+
+type ProjectSpecFile struct {
+	Sources []Label `json:"sources"`
+	Policy  []*Rule `json:"policy"`
+}
+
+func ParseProjectSpecFile(data []byte) (*ProjectSpecFile, error) {
+	var spec ProjectSpecFile
+	if err := yaml.Unmarshal(data, &spec); err != nil {
+		return nil, err
+	}
+
+	return &spec, nil
+}
 
 type ProjectSpec struct {
 	*database.Primitive
 	ProjectID database.ID
 	ParentID  *database.ID
-
-	// Source IDS are not tracked as a foreign key in postgres
 	SourceIDs []database.ID
-	Policies  []*PolicySpec
+	Policy    []*Rule `json:"policy"`
 }
 
 func (p *ProjectSpec) GetType() types.Type {
@@ -63,11 +76,11 @@ func (p *ProjectSpec) Validate() error {
 		}
 	}
 
-	if len(p.Policies) == 0 {
+	if len(p.Policy) == 0 {
 		return errors.New(InvalidProjectSpecCause, "ProjectSpecs must define at least one policy")
 	}
 
-	for _, policy := range p.Policies {
+	for _, policy := range p.Policy {
 		err := policy.Validate()
 		if err != nil {
 			return err
@@ -81,7 +94,7 @@ func NewProjectSpec(
 	projectID database.ID,
 	parent *database.ID,
 	sources []database.ID,
-	policies []*PolicySpec,
+	policy []*Rule,
 ) (*ProjectSpec, error) {
 	p, err := database.NewPrimitive(ProjectSpecType)
 	if err != nil {
@@ -93,7 +106,7 @@ func NewProjectSpec(
 		ProjectID: projectID,
 		ParentID:  parent,
 		SourceIDs: sources,
-		Policies:  policies,
+		Policy:    policy,
 	}
 
 	if err := spec.Validate(); err != nil {

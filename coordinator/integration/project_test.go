@@ -9,6 +9,7 @@ import (
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/primitives"
 	gm "github.com/onsi/gomega"
+	"io/ioutil"
 )
 
 func TestProjects(t *testing.T) {
@@ -114,5 +115,73 @@ func TestProjectsList(t *testing.T) {
 		projects, err := client.ListProjects(ctx, nil)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(len(projects)).To(gm.Equal(len(seedProjects)))
+	})
+}
+
+func TestProjectSpecCreate(t *testing.T) {
+	gm.RegisterTestingT(t)
+
+	ctx := context.Background()
+	cfg, err := harness.NewConfig()
+	gm.Expect(err).To(gm.BeNil())
+
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err).To(gm.BeNil())
+
+	err = h.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	defer h.Teardown(ctx) // nolint: errcheck
+
+	m := h.Manager()
+	client, err := m.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	p, err := client.CreateProject(ctx, "My Project", nil, "This is my project")
+	gm.Expect(err).To(gm.BeNil())
+
+	// seed a source
+	l, err := primitives.NewLabel("transactions")
+	gm.Expect(err).To(gm.BeNil())
+	dbURL, err := primitives.NewDBURL("postgres://postgres:dev@my.cool.website:5432/mydb")
+	gm.Expect(err).To(gm.BeNil())
+	_, err = client.AddSource(ctx, l, dbURL, nil)
+	gm.Expect(err).To(gm.BeNil())
+
+	f, err := ioutil.ReadFile("./testdata/project_spec.yaml")
+	gm.Expect(err).To(gm.BeNil())
+
+	spec, err := primitives.ParseProjectSpecFile(f)
+	gm.Expect(err).To(gm.BeNil())
+
+	t.Run("Can create a spec", func(t *testing.T) {
+		gm.Expect(p.Status).To(gm.Equal(primitives.ProjectPending))
+		p, _, err := client.UpdateProjectSpec(ctx, p.Label, spec)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(p.Status).To(gm.Equal(primitives.ProjectActive))
+	})
+
+	t.Run("New specs become active", func(t *testing.T) {
+		p, s, err := client.UpdateProjectSpec(ctx, p.Label, spec)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(p.Status).To(gm.Equal(primitives.ProjectActive))
+		gm.Expect(p.CurrentSpecID).To(gm.Equal(&s.ID))
+	})
+
+	t.Run("Cannot create a spec for a source that doesn't exist", func(t *testing.T) {
+		spec.Sources = []primitives.Label{"iamprettysureiwontbeinthedatabase"}
+		p, _, err := client.UpdateProjectSpec(ctx, p.Label, spec)
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: One or more sources declared in the project spec do not exist"))
+		gm.Expect(p).To(gm.BeNil())
+	})
+
+	t.Run("Cannot update a spec with a source with at least one non existant source", func(t *testing.T) {
+		spec, err = primitives.ParseProjectSpecFile(f)
+		gm.Expect(err).To(gm.BeNil())
+		spec.Sources = append(spec.Sources, "imnotreal")
+		_, _, err = client.UpdateProjectSpec(ctx, p.Label, spec)
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: One or more sources declared in the project spec do not exist"))
 	})
 }

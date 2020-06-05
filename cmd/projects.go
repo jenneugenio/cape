@@ -6,6 +6,7 @@ import (
 	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/urfave/cli/v2"
+	"io/ioutil"
 )
 
 func init() {
@@ -153,17 +154,46 @@ func projectsList(c *cli.Context) error {
 	return u.Template("\nFound {{ . | toString | faded }} project{{ . | pluralize \"s\"}}\n", len(projects))
 }
 
-// TODO -- this is split up so two people can work on it at the same time
-//         In the future, we will need to allow a spec & name/desc/etc to be updated at the same time.
-func updateProjectSpec(c *cli.Context) error {
-	fmt.Println("update spec")
-	return nil
+func updateProjectSpec(c *cli.Context, specFile string) error {
+	projectLabel := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
+
+	bytes, err := ioutil.ReadFile(specFile)
+	if err != nil {
+		return err
+	}
+
+	spec, err := primitives.ParseProjectSpecFile(bytes)
+	if err != nil {
+		return err
+	}
+
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
+	project, _, err := client.UpdateProjectSpec(c.Context, projectLabel, spec)
+	if err != nil {
+		return err
+	}
+
+	args := struct {
+		ProjectName string
+		FileName    string
+	}{
+		ProjectName: project.Name.String(),
+		FileName:    specFile,
+	}
+
+	u := provider.UI(c.Context)
+	return u.Template("Applied {{ .FileName | bold }} to {{ .ProjectName | bold }}\n", args)
 }
 
 func projectsUpdate(c *cli.Context) error {
 	updateSpec := c.String("from-spec")
 	if updateSpec != "" {
-		return updateProjectSpec(c)
+		return updateProjectSpec(c, updateSpec)
 	}
 
 	provider := GetProvider(c.Context)

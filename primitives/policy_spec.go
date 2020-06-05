@@ -54,6 +54,31 @@ type Rule struct {
 	Sudo            bool              `json:"sudo"`
 }
 
+// UnmarshalGQL implements the graphql.Unmarshaler interface
+func (r *Rule) UnmarshalGQL(v interface{}) error {
+	switch t := v.(type) {
+	case map[string]interface{}:
+		if err := mapstructure.Decode(t, r); err != nil {
+			return err
+		}
+
+		return r.Validate()
+	default:
+		return errors.New(InvalidPolicySpecCause, "Unable to unmarshal gql policy spec")
+	}
+}
+
+// MarshalGQL implements the graphql.Marshaler interface
+func (r Rule) MarshalGQL(w io.Writer) {
+	json, err := json.Marshal(r)
+	if err != nil {
+		fmt.Fprint(w, strconv.Quote(err.Error()))
+		return
+	}
+
+	fmt.Fprint(w, string(json))
+}
+
 // Validate validates that the rule arguments are valid
 func (r *Rule) Validate() error {
 	err := r.Target.Validate()

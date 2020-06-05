@@ -15,7 +15,7 @@ type ProjectSpec {
     id: ID!
     project: Project!
     parent: ProjectSpec
-    policies: [PolicySpec!]!
+    policy: [Rule!]!
     sources: [Source!]!
 }
 
@@ -30,12 +30,9 @@ input UpdateProjectRequest {
     description: Description
 }
 
-input CreateProjectSpecRequest {
-    id: ID!
-    project_id: ID!
-    parent_id: ID
-    source_ids: [ID!]
-    policies: [PolicySpec!]
+input ProjectSpecFile {
+    sources: [Label!]!
+    policy: [Rule!]!
 }
 
 extend type Query {
@@ -46,7 +43,7 @@ extend type Query {
 extend type Mutation {
     createProject(project: CreateProjectRequest!): Project! @isAuthenticated
     updateProject(id: ID, label: Label, update: UpdateProjectRequest!): Project! @isAuthenticated
-    createProjectSpec(projectSpec: CreateProjectSpecRequest!): ProjectSpec! @isAuthenticated
+    updateProjectSpec(project_label: Label, project_id: ID, request: ProjectSpecFile!): Project! @isAuthenticated
 
     archiveProject(id: ID, label: Label): Project! @isAuthenticated
     unarchiveProject(id: ID, label: Label): Project! @isAuthenticated

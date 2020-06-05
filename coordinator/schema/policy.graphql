@@ -1,4 +1,5 @@
 scalar PolicySpec
+scalar Rule
 
 type Policy {
   id: ID!

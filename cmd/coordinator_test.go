@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sigs.k8s.io/yaml"
 	"testing"
 
-	"github.com/ghodss/yaml"
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator"
