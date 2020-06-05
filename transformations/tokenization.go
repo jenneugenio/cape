@@ -70,11 +70,12 @@ func (t *TokenizationTransform) Initialize(args Args) error {
 
 	maxSize, found := args["maxSize"]
 	if found {
-		var ok bool
-		t.maxSize, ok = maxSize.(int)
-		if !ok || t.maxSize < 0 {
+		maxSize, ok := maxSize.(float64)
+		if !ok || maxSize < 0 {
 			return errors.New(UnsupportedType, "Unsupported max size: must be positive integer")
 		}
+
+		t.maxSize = int(maxSize)
 	}
 
 	return nil
@@ -83,7 +84,7 @@ func (t *TokenizationTransform) Initialize(args Args) error {
 func (t *TokenizationTransform) Validate(args Args) error {
 	maxSize, found := args["maxSize"]
 	if found {
-		size, ok := maxSize.(int)
+		size, ok := maxSize.(float64)
 		if !ok || size < 0 {
 			return errors.New(UnsupportedType, "Unsupported max size: must be positive integer")
 		}

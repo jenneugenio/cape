@@ -35,7 +35,7 @@ func TestPerturbationArgs(t *testing.T) {
 	err = transform.Validate(Args{
 		"min":  -10.0,
 		"max":  10.0,
-		"seed": int64(1234),
+		"seed": 1234.0,
 	})
 	gm.Expect(err).To(gm.BeNil())
 
@@ -54,7 +54,7 @@ func TestPerturbationInt64(t *testing.T) {
 	args := Args{
 		"min":  -10.,
 		"max":  10.,
-		"seed": int64(1234),
+		"seed": 1234.0,
 	}
 
 	err = transform.Validate(args)
@@ -83,7 +83,7 @@ func TestPerturbationInt32(t *testing.T) {
 	args := Args{
 		"min":  -10.,
 		"max":  10.,
-		"seed": int64(3241),
+		"seed": 3241.0,
 	}
 
 	err = transform.Validate(args)
@@ -112,7 +112,7 @@ func TestPerturbationDouble(t *testing.T) {
 	args := Args{
 		"min":  -10.,
 		"max":  10.,
-		"seed": int64(4354),
+		"seed": 4354.0,
 	}
 
 	err = transform.Validate(args)
@@ -140,7 +140,7 @@ func TestPerturbationFloat(t *testing.T) {
 	args := Args{
 		"min":  -10.,
 		"max":  10.,
-		"seed": int64(9876),
+		"seed": 9876.0,
 	}
 
 	err = transform.Validate(args)

@@ -106,10 +106,12 @@ func (p *PerturbationTransform) Initialize(args Args) error {
 		return errors.New(MissingArgument, "Perturbation transformation expects a seed argument")
 	}
 
-	p.seed, ok = seed.(int64)
+	seedFloat, ok := seed.(float64)
 	if !ok {
 		return errors.New(UnsupportedType, unsupportedTypeMsg, "seed", seed, "int")
 	}
+
+	p.seed = int64(seedFloat)
 
 	p.sourceSeeded = rand.NewSource(p.seed)
 
@@ -117,7 +119,7 @@ func (p *PerturbationTransform) Initialize(args Args) error {
 }
 
 func (p *PerturbationTransform) Validate(args Args) error {
-	const unsupportedTypeMsg = "Unsupported type for %q: found %q expected %q"
+	const unsupportedTypeMsg = "Unsupported type for %q: found %T expected %q"
 
 	min, found := args["min"]
 	if !found {
@@ -149,7 +151,7 @@ func (p *PerturbationTransform) Validate(args Args) error {
 		return errors.New(MissingArgument, "Perturbation transformation expects a seed argument")
 	}
 
-	seed, ok = seed.(int64)
+	seed, ok = seed.(float64)
 	if !ok {
 		return errors.New(UnsupportedType, unsupportedTypeMsg, "seed", seed, "int")
 	}

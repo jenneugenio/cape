@@ -280,3 +280,13 @@ func TestPolicySpecGQL(t *testing.T) {
 		gm.Expect(newSpec).To(gm.Equal(*spec))
 	})
 }
+
+func TestTransformationWithArgs(t *testing.T) {
+	gm.RegisterTestingT(t)
+
+	data, err := loadPolicy("transformation_with_args.yaml")
+	gm.Expect(err).To(gm.BeNil())
+
+	_, err = ParsePolicySpec(data)
+	gm.Expect(err).To(gm.BeNil())
+}

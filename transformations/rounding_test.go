@@ -22,13 +22,13 @@ func TestRoundingArgs(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	err = transform.Validate(Args{
-		"precision": 1,
+		"precision": 1.0,
 	})
 	gm.Expect(err).To(gm.BeNil())
 
 	err = transform.Validate(Args{
 		"roundingType": "roundToEven",
-		"precision":    1,
+		"precision":    1.0,
 	})
 	gm.Expect(err).To(gm.BeNil())
 
@@ -38,12 +38,7 @@ func TestRoundingArgs(t *testing.T) {
 	gm.Expect(err).NotTo(gm.BeNil())
 
 	err = transform.Validate(Args{
-		"precision": 1.5,
-	})
-	gm.Expect(err).NotTo(gm.BeNil())
-
-	err = transform.Validate(Args{
-		"precision": -1,
+		"precision": -1.0,
 	})
 	gm.Expect(err).NotTo(gm.BeNil())
 }
@@ -55,7 +50,7 @@ func TestRoundingDouble(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 	args := Args{
 		"roundingType": "roundToEven",
-		"precision":    1,
+		"precision":    1.0,
 	}
 
 	err = transform.Validate(args)

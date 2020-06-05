@@ -27,12 +27,12 @@ func TestTokenizationArgs(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	err = transform.Validate(Args{
-		"maxSize": 1,
+		"maxSize": 1.0,
 	})
 	gm.Expect(err).To(gm.BeNil())
 
 	err = transform.Validate(Args{
-		"maxSize": -1,
+		"maxSize": -1.0,
 	})
 	gm.Expect(err).NotTo(gm.BeNil())
 }
@@ -97,7 +97,7 @@ func TestTokenizationWithSize(t *testing.T) {
 	transform, err := NewTokenizationTransform("name")
 	gm.Expect(err).To(gm.BeNil())
 	args := Args{
-		"maxSize": 10,
+		"maxSize": 10.0,
 	}
 
 	err = transform.Validate(args)

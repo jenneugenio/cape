@@ -75,7 +75,7 @@ func (r *RoundingTransform) Initialize(args Args) error {
 
 	precision, found := args["precision"]
 	if found {
-		r.precisionFactor = math.Pow10(precision.(int))
+		r.precisionFactor = math.Pow10(int(precision.(float64)))
 	}
 
 	return nil
@@ -96,7 +96,7 @@ func (r *RoundingTransform) Validate(args Args) error {
 
 	precision, found := args["precision"]
 	if found {
-		pre, ok := precision.(int)
+		pre, ok := precision.(float64)
 		if !ok || pre < 0 {
 			return errors.New(UnsupportedType, "Unsupported precision: must be positive integer")
 		}
