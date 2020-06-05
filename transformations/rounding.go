@@ -7,13 +7,13 @@ import (
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
-type RoundingType int
+type RoundingType string
 
 // See more at https://en.wikipedia.org/wiki/Rounding
 // and https://www.cockroachlabs.com/blog/rounding-implementations-in-go/
 const (
-	RoundToEven RoundingType = iota
-	RoundAwayFromZero
+	RoundToEven       RoundingType = "roundToEven"
+	RoundAwayFromZero RoundingType = "awayFromZero"
 )
 
 type RoundingTransform struct {
@@ -30,7 +30,7 @@ func (r *RoundingTransform) roundFloat64(x float64) (float64, error) {
 	case RoundToEven:
 		return math.RoundToEven(y) / r.precisionFactor, nil
 	}
-	return x, errors.New(UnsupportedType, "Unexpected error (unsupported rounding type %d)", r.roundingType)
+	return x, errors.New(UnsupportedType, "Unexpected error (unsupported rounding type %s)", r.roundingType)
 }
 
 func (r *RoundingTransform) Transform(schema *proto.Schema, input *proto.Record) error {
@@ -63,10 +63,15 @@ func (r *RoundingTransform) Transform(schema *proto.Schema, input *proto.Record)
 func (r *RoundingTransform) Initialize(args Args) error {
 	roundingType, found := args["roundingType"]
 	if found {
-		switch roundingType.(string) {
-		case "roundToEven":
+		rt, ok := roundingType.(string)
+		if !ok {
+			return errors.New(UnsupportedType, "Rounding args expected roundingType string saw %T", roundingType)
+		}
+
+		switch RoundingType(rt) {
+		case RoundToEven:
 			r.roundingType = RoundToEven
-		case "awayFromZero":
+		case RoundAwayFromZero:
 			r.roundingType = RoundAwayFromZero
 		default:
 			return errors.New(UnsupportedType, "Unsupported rounding type '%s'", roundingType)
@@ -84,10 +89,15 @@ func (r *RoundingTransform) Initialize(args Args) error {
 func (r *RoundingTransform) Validate(args Args) error {
 	roundingType, found := args["roundingType"]
 	if found {
-		switch roundingType.(string) {
-		case "roundToEven":
+		rt, ok := roundingType.(string)
+		if !ok {
+			return errors.New(UnsupportedType, "Rounding args expected roundingType string saw %T", roundingType)
+		}
+
+		switch RoundingType(rt) {
+		case RoundToEven:
 			break
-		case "awayFromZero":
+		case RoundAwayFromZero:
 			break
 		default:
 			return errors.New(UnsupportedType, "Unsupported rounding type '%s'", roundingType)
