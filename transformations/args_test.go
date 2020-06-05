@@ -26,9 +26,8 @@ func TestTransformationArgs(t *testing.T) {
 			name:      "test perturbation args",
 			transform: "perturbation",
 			args: Args{
-				"min":  10,
-				"max":  20,
-				"seed": 1234,
+				"min": 10,
+				"max": 20,
 			},
 		},
 		{
@@ -86,18 +85,8 @@ func TestTransformationArgs(t *testing.T) {
 			name:      "max is a string",
 			transform: "perturbation",
 			args: Args{
-				"min":  10,
-				"max":  "string",
-				"seed": 1234,
-			},
-		},
-		{
-			name:      "seed is a string",
-			transform: "perturbation",
-			args: Args{
-				"min":  10,
-				"max":  20,
-				"seed": "string",
+				"min": 10,
+				"max": "string",
 			},
 		},
 		{
