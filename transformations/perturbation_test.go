@@ -62,7 +62,7 @@ func TestPerturbationInt64(t *testing.T) {
 	err = transform.Initialize(args)
 	gm.Expect(err).To(gm.BeNil())
 
-	transform.(*PerturbationTransform).sourceSeeded = rand.NewSource(1234)
+	transform.(*PerturbationTransform).randInstance = rand.New(rand.NewSource(1234))
 
 	inputField := &proto.Field{Value: &proto.Field_Int64{Int64: 100}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Int64{Int64: 94}}
@@ -92,7 +92,7 @@ func TestPerturbationInt32(t *testing.T) {
 	err = transform.Initialize(args)
 	gm.Expect(err).To(gm.BeNil())
 
-	transform.(*PerturbationTransform).sourceSeeded = rand.NewSource(3241)
+	transform.(*PerturbationTransform).randInstance = rand.New(rand.NewSource(3241))
 
 	inputField := &proto.Field{Value: &proto.Field_Int32{Int32: 100}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Int32{Int32: 101}}
@@ -122,7 +122,7 @@ func TestPerturbationDouble(t *testing.T) {
 	err = transform.Initialize(args)
 	gm.Expect(err).To(gm.BeNil())
 
-	transform.(*PerturbationTransform).sourceSeeded = rand.NewSource(4354)
+	transform.(*PerturbationTransform).randInstance = rand.New(rand.NewSource(4354))
 
 	inputField := &proto.Field{Value: &proto.Field_Double{Double: 100}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Double{Double: 93.5}}
@@ -151,7 +151,7 @@ func TestPerturbationFloat(t *testing.T) {
 	err = transform.Initialize(args)
 	gm.Expect(err).To(gm.BeNil())
 
-	transform.(*PerturbationTransform).sourceSeeded = rand.NewSource(9876)
+	transform.(*PerturbationTransform).randInstance = rand.New(rand.NewSource(9876))
 
 	inputField := &proto.Field{Value: &proto.Field_Float{Float: 100}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Float{Float: 107.1}}

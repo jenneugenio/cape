@@ -14,21 +14,18 @@ type PerturbationTransform struct {
 	max          float64
 	seed         int64
 	sourceSeeded rand.Source
+	randInstance *rand.Rand
 }
 
 func (p *PerturbationTransform) perturbationFloat64(x float64) (float64, error) {
-	r := rand.New(p.sourceSeeded)
-
-	noise := r.Float64()*(p.max-p.min) + p.min
+	noise := p.randInstance.Float64()*(p.max-p.min) + p.min
 	y := x + noise
 
 	return y, nil
 }
 
 func (p *PerturbationTransform) perturbationInt64(x int64) (int64, error) {
-	r := rand.New(p.sourceSeeded)
-
-	noise := r.Int63n(int64(p.max-p.min)) + int64(p.min)
+	noise := p.randInstance.Int63n(int64(p.max-p.min)) + int64(p.min)
 	y := x + noise
 
 	return y, nil
@@ -104,6 +101,7 @@ func (p *PerturbationTransform) Initialize(args Args) error {
 
 	p.seed = time.Now().UnixNano()
 	p.sourceSeeded = rand.NewSource(p.seed)
+	p.randInstance = rand.New(p.sourceSeeded)
 
 	return nil
 }
