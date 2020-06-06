@@ -40,9 +40,15 @@ var (
 	// SchemaPrimitiveType represents the schema for a data source (as stored in cape)
 	SchemaPrimitiveType types.Type = 0x010
 
+	// ProjectType represents the root collaborative entity inside of Cape
 	ProjectType types.Type = 0x011
 
+	// ProjectSpecType represents a version of a projects available data
+	// sources and policeis.
 	ProjectSpecType types.Type = 0x012
+
+	// RecoveryType represents an attempt by a user to recover their lost account.
+	RecoveryType types.Type = 0x013
 )
 
 func init() {
@@ -59,4 +65,5 @@ func init() {
 	types.Register(SchemaPrimitiveType, "source_schema", true)
 	types.Register(ProjectType, "projects", true)
 	types.Register(ProjectSpecType, "project_specs", true)
+	types.Register(RecoveryType, "recoveries", false)
 }
