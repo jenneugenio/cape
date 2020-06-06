@@ -37,6 +37,22 @@ func (s *Session) Validate() error {
 		return errors.Wrap(InvalidSessionCause, err)
 	}
 
+	identityTypes := []types.Type{
+		UserType,
+		ServicePrimitiveType,
+	}
+	if err := s.IdentityID.OneOf(identityTypes); err != nil {
+		return errors.Wrap(InvalidSessionCause, err)
+	}
+
+	if err := s.OwnerID.Validate(); err != nil {
+		return errors.Wrap(InvalidSessionCause, err)
+	}
+
+	if err := s.OwnerID.OneOf([]types.Type{UserType, TokenPrimitiveType}); err != nil {
+		return errors.Wrap(InvalidSessionCause, err)
+	}
+
 	return nil
 }
 

@@ -8,26 +8,132 @@ import (
 	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
-func TestNewSession(t *testing.T) {
+func TestSession(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	_, user, err := GenerateUser("bob", "test@email.com")
 	gm.Expect(err).To(gm.BeNil())
 
+	_, token, err := GenerateToken(user)
+	gm.Expect(err).To(gm.BeNil())
+
 	ti := time.Now().UTC().Add(time.Minute * 5)
-	token := base64.New([]byte("random-string"))
+	sessionToken := base64.New([]byte("random-string"))
+
+	t.Run("validate", func(t *testing.T) {
+		tests := []struct {
+			name  string
+			fn    func() (*Session, error)
+			cause *errors.Cause
+		}{
+			{
+				name: "valid session owned by user",
+				fn: func() (*Session, error) {
+					return NewSession(user)
+				},
+			},
+			{
+				name: "valid session owned by token",
+				fn: func() (*Session, error) {
+					return NewSession(token)
+				},
+			},
+			{
+				name: "invalid id",
+				fn: func() (*Session, error) {
+					session, err := NewSession(user)
+					if err != nil {
+						return nil, err
+					}
+
+					session.ID = database.EmptyID
+					return session, nil
+				},
+				cause: &InvalidSessionCause,
+			},
+			{
+				name: "invalid identity id",
+				fn: func() (*Session, error) {
+					session, err := NewSession(user)
+					if err != nil {
+						return nil, err
+					}
+
+					session.IdentityID = database.EmptyID
+					return session, nil
+				},
+				cause: &InvalidSessionCause,
+			},
+			{
+				name: "identity id is not a service or user",
+				fn: func() (*Session, error) {
+					session, err := NewSession(user)
+					if err != nil {
+						return nil, err
+					}
+
+					session.IdentityID = session.ID
+					return session, nil
+				},
+				cause: &InvalidSessionCause,
+			},
+			{
+				name: "invalid owner id",
+				fn: func() (*Session, error) {
+					session, err := NewSession(user)
+					if err != nil {
+						return nil, err
+					}
+
+					session.OwnerID = database.EmptyID
+					return session, nil
+				},
+				cause: &InvalidSessionCause,
+			},
+			{
+				name: "owner id is not a token or user",
+				fn: func() (*Session, error) {
+					session, err := NewSession(user)
+					if err != nil {
+						return nil, err
+					}
+
+					session.OwnerID = session.ID
+					return session, nil
+				},
+				cause: &InvalidSessionCause,
+			},
+		}
+
+		for _, tc := range tests {
+			t.Run(tc.name, func(t *testing.T) {
+				s, err := tc.fn()
+				gm.Expect(err).To(gm.BeNil())
+
+				err = s.Validate()
+				if tc.cause != nil {
+					gm.Expect(errors.FromCause(err, *tc.cause)).To(gm.BeTrue())
+					return
+				}
+
+				gm.Expect(err).To(gm.BeNil())
+			})
+		}
+	})
 
 	t.Run("new session", func(t *testing.T) {
 		session, err := NewSession(user)
 		gm.Expect(err).To(gm.BeNil())
-		session.SetToken(token, ti)
+		session.SetToken(sessionToken, ti)
 
 		gm.Expect(session.GetType()).To(gm.Equal(SessionType))
 		gm.Expect(session.ExpiresAt).To(gm.Equal(ti))
-		gm.Expect(session.Token).To(gm.Equal(token))
+		gm.Expect(session.Token).To(gm.Equal(sessionToken))
 		gm.Expect(session.IdentityID).To(gm.Equal(user.ID))
 		gm.Expect(session.OwnerID).To(gm.Equal(user.ID))
 	})
@@ -36,7 +142,7 @@ func TestNewSession(t *testing.T) {
 		session, err := NewSession(user)
 		gm.Expect(err).To(gm.BeNil())
 
-		session.SetToken(token, ti)
+		session.SetToken(sessionToken, ti)
 
 		key, err := crypto.NewBase64KeyURL(nil)
 		gm.Expect(err).To(gm.BeNil())

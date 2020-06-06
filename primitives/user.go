@@ -18,7 +18,7 @@ type User struct {
 	Name Name `json:"name"`
 
 	// We never want to send Credentials over the wire!
-	Credentials *Credentials `json:"credentials" gqlgen:"-"`
+	Credentials *Credentials `json:"-" gqlgen:"-"`
 }
 
 type encryptedUser struct {

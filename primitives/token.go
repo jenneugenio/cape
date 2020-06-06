@@ -17,7 +17,7 @@ type Token struct {
 	IdentityID database.ID `json:"identity_id"`
 
 	// We never want to send Credentials over the wire!
-	Credentials *Credentials `json:"credentials" gqlgen:"-"`
+	Credentials *Credentials `json:"-" gqlgen:"-"`
 }
 
 type encryptedToken struct {

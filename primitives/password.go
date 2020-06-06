@@ -62,7 +62,7 @@ func GeneratePassword() (Password, error) {
 	bytes := make([]byte, PasswordByteLength)
 	_, err := rand.Read(bytes)
 	if err != nil {
-		return Password(""), err
+		return EmptyPassword, err
 	}
 
 	return Password(base64.New(bytes).String()), nil
