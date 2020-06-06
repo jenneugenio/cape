@@ -108,6 +108,10 @@ func (id ID) Validate() error {
 		return errors.New(InvalidIDCause, "Invalid ID Provided")
 	}
 
+	if len(id) != byteLength {
+		return errors.New(InvalidIDCause, "Wrong byte length for ID")
+	}
+
 	return nil
 }
 
@@ -143,6 +147,27 @@ func (id ID) Type() (types.Type, error) {
 	return types.DecodeBytes(id[0]&0x0F, id[1])
 }
 
+// IsType returns an error if the ID does not represent the provided type
+func (id ID) IsType(t types.Type) error {
+	return id.OneOf([]types.Type{t})
+}
+
+// OneOf returns an error if the ID is not one of the provided types
+func (id ID) OneOf(list []types.Type) error {
+	this, err := id.Type()
+	if err != nil {
+		return err
+	}
+
+	for _, t := range list {
+		if t == this {
+			return nil
+		}
+	}
+
+	return errors.New(InvalidIDCause, "Invalid ID Type")
+}
+
 func (id *ID) fill(in []byte) error {
 	out, err := decodeFromBytes(in)
 	if err != nil {
@@ -157,10 +182,6 @@ func decodeFromBytes(raw []byte) ([]byte, error) {
 	out, err := base32.DecodeString(string(raw))
 	if err != nil {
 		return nil, err
-	}
-
-	if len(out) != byteLength {
-		return nil, errors.New(InvalidIDCause, "Incorrect length for ID")
 	}
 
 	return out, nil

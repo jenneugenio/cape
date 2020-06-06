@@ -58,6 +58,8 @@ func TestDecodeString(t *testing.T) {
 }
 
 func TestGQL(t *testing.T) {
+	gm.RegisterTestingT(t)
+
 	t.Run("Can gql unmarshal", func(t *testing.T) {
 		e, err := NewTestMutableEntity("ha")
 		gm.Expect(err).To(gm.BeNil())
@@ -78,4 +80,32 @@ func TestGQL(t *testing.T) {
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(errors.CausedBy(err, InvalidIDCause))
 	})
+}
+
+func TestIsType(t *testing.T) {
+	gm.RegisterTestingT(t)
+
+	t.Run("is actually the type", func(t *testing.T) {
+		ID, err := GenerateID(types.TestMutable)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(ID.IsType(types.TestMutable)).To(gm.BeNil())
+	})
+
+	t.Run("is not the type", func(t *testing.T) {
+		ID, err := GenerateID(types.TestMutable)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(ID.IsType(types.Test)).ToNot(gm.BeNil())
+	})
+}
+
+func TestOneOf(t *testing.T) {
+	gm.RegisterTestingT(t)
+
+	ID, err := GenerateID(types.TestMutable)
+	gm.Expect(err).To(gm.BeNil())
+
+	gm.Expect(ID.OneOf([]types.Type{types.Test, types.TestMutable})).To(gm.BeNil())
+	gm.Expect(ID.OneOf([]types.Type{types.Test})).ToNot(gm.BeNil())
 }
