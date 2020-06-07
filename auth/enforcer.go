@@ -83,13 +83,13 @@ func (e *Enforcer) Get(ctx context.Context, id database.ID, entity database.Enti
 
 // Delete calls down to the underlying db function as long as the contained policies
 // can delete the given entity
-func (e *Enforcer) Delete(ctx context.Context, typ types.Type, id database.ID) error {
+func (e *Enforcer) Delete(ctx context.Context, typ types.Type, ids ...database.ID) error {
 	err := e.c.Can(primitives.Delete, typ)
 	if err != nil {
 		return err
 	}
 
-	err = e.db.Delete(ctx, typ, id)
+	err = e.db.Delete(ctx, typ, ids...)
 	if err != nil {
 		return err
 	}

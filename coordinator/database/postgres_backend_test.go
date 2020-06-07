@@ -156,6 +156,15 @@ func TestPostgresBackend(t *testing.T) {
 		gm.Expect(errors.FromCause(err, DuplicateCause)).To(gm.BeTrue())
 	})
 
+	t.Run("can't delete without providing an id", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB, codec)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		err = db.Delete(ctx, types.Test)
+		gm.Expect(err).ToNot(gm.BeNil())
+	})
+
 	t.Run("can delete an entity", func(t *testing.T) {
 		db, err := dbConnect(ctx, testDB, codec)
 		gm.Expect(err).To(gm.BeNil())
@@ -173,6 +182,31 @@ func TestPostgresBackend(t *testing.T) {
 		target := &TestEntity{}
 		err = db.Get(ctx, e.GetID(), target)
 		gm.Expect(errors.FromCause(err, NotFoundCause)).To(gm.BeTrue())
+	})
+
+	t.Run("can delete multiple entities", func(t *testing.T) {
+		db, err := dbConnect(ctx, testDB, codec)
+		gm.Expect(err).To(gm.BeNil())
+		defer db.Close()
+
+		e, err := NewTestEntity("hi")
+		gm.Expect(err).To(gm.BeNil())
+
+		e2, err := NewTestEntity("hi2")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Create(ctx, e, e2)
+		gm.Expect(err).To(gm.BeNil())
+
+		err = db.Delete(ctx, types.Test, e.GetID(), e2.GetID())
+		gm.Expect(err).To(gm.BeNil())
+
+		target := []TestEntity{}
+		err = db.Query(ctx, &target, NewFilter(Where{
+			"id": In{e.GetID(), e2.GetID()},
+		}, nil, nil))
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(len(target)).To(gm.Equal(0))
 	})
 
 	t.Run("cannot delete an entity from wrong table", func(t *testing.T) {

@@ -30,11 +30,11 @@ type TestQuerier struct {
 	err error
 }
 
-func (t TestQuerier) Create(context.Context, ...database.Entity) error        { return t.err }
-func (t TestQuerier) Get(context.Context, database.ID, database.Entity) error { return t.err }
-func (t TestQuerier) Delete(context.Context, types.Type, database.ID) error   { return t.err }
-func (t TestQuerier) Upsert(context.Context, database.Entity) error           { return t.err }
-func (t TestQuerier) Update(context.Context, database.Entity) error           { return t.err }
+func (t TestQuerier) Create(context.Context, ...database.Entity) error         { return t.err }
+func (t TestQuerier) Get(context.Context, database.ID, database.Entity) error  { return t.err }
+func (t TestQuerier) Delete(context.Context, types.Type, ...database.ID) error { return t.err }
+func (t TestQuerier) Upsert(context.Context, database.Entity) error            { return t.err }
+func (t TestQuerier) Update(context.Context, database.Entity) error            { return t.err }
 func (t TestQuerier) QueryOne(context.Context, database.Entity, database.Filter) error {
 	return t.err
 }

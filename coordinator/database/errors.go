@@ -37,4 +37,7 @@ var (
 	// ErrEmptyIn happens when a Filter is provided that has an In with zero
 	// values.
 	ErrEmptyIn = errors.New(NotFoundCause, "Cannot pull back entities with an empty 'in' statement")
+
+	// ErrMissingID happens when a Delete is called without providing an ID
+	ErrMissingID = errors.New(errors.ProgrammerErrorCause, "An ID must be provided to perform this action")
 )

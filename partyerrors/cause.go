@@ -4,6 +4,7 @@ package partyerrors
 var (
 	UnsupportedErrorCause = NewCause(InternalServerErrorCategory, "unsupported_error")
 	UnknownCause          = NewCause(InternalServerErrorCategory, "unknown_cause")
+	ProgrammerErrorCause  = NewCause(InternalServerErrorCategory, "programmer_error")
 	InvalidArgumentCause  = NewCause(BadRequestCategory, "invalid_argument")
 	InvalidStateCause     = NewCause(BadRequestCategory, "invalid_state")
 	TimeoutCause          = NewCause(RequestTimeoutCategory, "timeout")

@@ -227,24 +227,38 @@ func (q *postgresQuerier) Query(ctx context.Context, arr interface{}, f Filter) 
 }
 
 // Delete an entity from the database
-func (q *postgresQuerier) Delete(ctx context.Context, typ types.Type, id ID) error {
-	t, err := id.Type()
+func (q *postgresQuerier) Delete(ctx context.Context, typ types.Type, ids ...ID) error {
+	in := In{}
+	for _, id := range ids {
+		t, err := id.Type()
+		if err != nil {
+			return err
+		}
+
+		if t != typ {
+			return errors.New(TypeMismatchCause, "Type of ID (%s) does not match specified type (%s)", t, typ)
+		}
+
+		in = append(in, id)
+	}
+
+	where, params, err := buildFilter(Filter{Where: Where{"id": in}})
 	if err != nil {
 		return err
 	}
 
-	if t != typ {
-		return errors.New(TypeMismatchCause, "Type of ID (%s) does not match specified type (%s)", t, typ)
-	}
-
-	sql := fmt.Sprintf(`DELETE FROM %s WHERE id = $1`, t)
-	ct, err := q.conn.Exec(ctx, sql, id.String())
+	sql := fmt.Sprintf(`DELETE FROM %s %s`, typ, where)
+	ct, err := q.conn.Exec(ctx, sql, params...)
 	if err != nil {
 		return err
 	}
 
-	if ct.RowsAffected() != 1 {
-		return errors.New(NotFoundCause, "could not find %s: %s", t.String(), id)
+	// XXX: For discussion as a reminder during PR: Should we do something
+	// special here if not all IDs could be found? Is there something we should
+	// do under the hood to ensure the delete fails if not all references are
+	// found?
+	if ct.RowsAffected() != int64(len(ids)) {
+		return errors.New(NotFoundCause, "some entites could not be found")
 	}
 
 	return nil
