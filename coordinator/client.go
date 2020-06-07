@@ -1277,7 +1277,7 @@ func (c *Client) CreateRecovery(ctx context.Context, email primitives.Email) err
 		"email": email,
 	}
 
-	query := `mutation createRecovery($email: Email) {
+	query := `mutation createRecovery($email: Email!) {
 		createRecovery(input: { email: $email })
 	}`
 
@@ -1291,7 +1291,7 @@ func (c *Client) AttemptRecovery(ctx context.Context, ID database.ID, secret pri
 		"id":           ID.String(),
 	}
 
-	query := `mutation attemptRecovery($new_password: Password, $secret: Secret, $id: ID) {
+	query := `mutation attemptRecovery($new_password: Password!, $secret: Password!, $id: ID!) {
 		attemptRecovery(input: {
 			new_password: $new_password,
 			secret: $secret,
@@ -1302,10 +1302,39 @@ func (c *Client) AttemptRecovery(ctx context.Context, ID database.ID, secret pri
 	return c.transport.Raw(ctx, query, variables, nil)
 }
 
+type ListRecoveriesResponse struct {
+	Recoveries []*primitives.Recovery `json:"recoveries"`
+}
+
 func (c *Client) Recoveries(ctx context.Context) ([]*primitives.Recovery, error) {
-	return []*primitives.Recovery{}, nil
+	var resp ListRecoveriesResponse
+	query := `
+		query ListRecoveries() {
+			recoveries() {
+				id,
+				created_at,
+				updated_at
+			}
+		}
+	`
+	err := c.transport.Raw(ctx, query, nil, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Recoveries, nil
 }
 
 func (c *Client) DeleteRecoveries(ctx context.Context, ids []database.ID) error {
-	return nil
+	variables := map[string]interface{}{
+		"ids": ids,
+	}
+
+	query := `
+		mutation DeleteRecoveries($ids: [ID!]!) {
+			deleteRecoveries(input: { ids: $ids })
+		}
+	`
+
+	return c.transport.Raw(ctx, query, variables, nil)
 }
