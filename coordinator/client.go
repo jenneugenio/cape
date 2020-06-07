@@ -1271,3 +1271,41 @@ func (c *Client) UpdateProject(
 
 	return resp.Project, nil
 }
+
+func (c *Client) CreateRecovery(ctx context.Context, email primitives.Email) error {
+	variables := map[string]interface{}{
+		"email": email,
+	}
+
+	query := `mutation createRecovery($email: Email) {
+		createRecovery(input: { email: $email })
+	}`
+
+	return c.transport.Raw(ctx, query, variables, nil)
+}
+
+func (c *Client) AttemptRecovery(ctx context.Context, ID database.ID, secret primitives.Password, newPassword primitives.Password) error {
+	variables := map[string]interface{}{
+		"new_password": newPassword.String(),
+		"secret":       secret.String(),
+		"id":           ID.String(),
+	}
+
+	query := `mutation attemptRecovery($new_password: Password, $secret: Secret, $id: ID) {
+		attemptRecovery(input: {
+			new_password: $new_password,
+			secret: $secret,
+			id: $id,
+		})
+	}`
+
+	return c.transport.Raw(ctx, query, variables, nil)
+}
+
+func (c *Client) Recoveries(ctx context.Context) ([]*primitives.Recovery, error) {
+	return []*primitives.Recovery{}, nil
+}
+
+func (c *Client) DeleteRecoveries(ctx context.Context, ids []database.ID) error {
+	return nil
+}

@@ -42,6 +42,12 @@ type Attachment struct {
 	Policy    *primitives.Policy `json:"policy"`
 }
 
+type AttemptRecoveryRequest struct {
+	NewPassword primitives.Password `json:"new_password"`
+	Secret      primitives.Password `json:"secret"`
+	ID          database.ID         `json:"id"`
+}
+
 type CreatePolicyRequest struct {
 	Label primitives.Label      `json:"label"`
 	Spec  primitives.PolicySpec `json:"spec"`
@@ -51,6 +57,10 @@ type CreateProjectRequest struct {
 	Name        primitives.DisplayName `json:"name"`
 	Label       *primitives.Label      `json:"label"`
 	Description primitives.Description `json:"Description"`
+}
+
+type CreateRecoveryRequest struct {
+	Email primitives.Email `json:"email"`
 }
 
 type CreateRoleRequest struct {
@@ -85,6 +95,10 @@ type CreateUserResponse struct {
 
 type DeletePolicyRequest struct {
 	ID database.ID `json:"id"`
+}
+
+type DeleteRecoveriesRequest struct {
+	Ids []database.ID `json:"ids"`
 }
 
 type DeleteRoleRequest struct {

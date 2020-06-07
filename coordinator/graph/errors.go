@@ -29,4 +29,7 @@ var (
 	InvalidSource = errors.NewCause(errors.BadRequestCategory, "invalid_source")
 
 	NoActiveSpecCause = errors.NewCause(errors.BadRequestCategory, "no_active_spec")
+
+	RecoveryFailedCause = errors.NewCause(errors.UnauthorizedCategory, "recovery_failed")
+	ErrRecoveryFailed   = errors.New(RecoveryFailedCause, "recovery_failed")
 )

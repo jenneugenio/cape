@@ -85,14 +85,17 @@ type ComplexityRoot struct {
 		ArchiveProject    func(childComplexity int, id *database.ID, label *primitives.Label) int
 		AssignRole        func(childComplexity int, input model.AssignRoleRequest) int
 		AttachPolicy      func(childComplexity int, input model.AttachPolicyRequest) int
+		AttemptRecovery   func(childComplexity int, input model.AttemptRecoveryRequest) int
 		CreatePolicy      func(childComplexity int, input model.CreatePolicyRequest) int
 		CreateProject     func(childComplexity int, project model.CreateProjectRequest) int
+		CreateRecovery    func(childComplexity int, input model.CreateRecoveryRequest) int
 		CreateRole        func(childComplexity int, input model.CreateRoleRequest) int
 		CreateService     func(childComplexity int, input model.CreateServiceRequest) int
 		CreateSession     func(childComplexity int, input model.SessionRequest) int
 		CreateToken       func(childComplexity int, input model.CreateTokenRequest) int
 		CreateUser        func(childComplexity int, input model.CreateUserRequest) int
 		DeletePolicy      func(childComplexity int, input model.DeletePolicyRequest) int
+		DeleteRecoveries  func(childComplexity int, input model.DeleteRecoveriesRequest) int
 		DeleteRole        func(childComplexity int, input model.DeleteRoleRequest) int
 		DeleteService     func(childComplexity int, input model.DeleteServiceRequest) int
 		DeleteSession     func(childComplexity int, input model.DeleteSessionRequest) int
@@ -143,6 +146,7 @@ type ComplexityRoot struct {
 		PolicyByLabel    func(childComplexity int, label primitives.Label) int
 		Project          func(childComplexity int, id *database.ID, label *primitives.Label) int
 		Projects         func(childComplexity int, status []primitives.ProjectStatus) int
+		Recoveries       func(childComplexity int) int
 		Role             func(childComplexity int, id database.ID) int
 		RoleByLabel      func(childComplexity int, label primitives.Label) int
 		RoleMembers      func(childComplexity int, roleID database.ID) int
@@ -157,6 +161,12 @@ type ComplexityRoot struct {
 		Tokens           func(childComplexity int, identityID database.ID) int
 		User             func(childComplexity int, id database.ID) int
 		Users            func(childComplexity int) int
+	}
+
+	Recovery struct {
+		CreatedAt func(childComplexity int) int
+		ID        func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
 	}
 
 	Role struct {
@@ -230,6 +240,9 @@ type MutationResolver interface {
 	UpdateProjectSpec(ctx context.Context, projectLabel *primitives.Label, projectID *database.ID, request primitives.ProjectSpecFile) (*primitives.Project, error)
 	ArchiveProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error)
 	UnarchiveProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error)
+	CreateRecovery(ctx context.Context, input model.CreateRecoveryRequest) (*string, error)
+	AttemptRecovery(ctx context.Context, input model.AttemptRecoveryRequest) (*string, error)
+	DeleteRecoveries(ctx context.Context, input model.DeleteRecoveriesRequest) (*string, error)
 	CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error)
 	DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error)
 	AssignRole(ctx context.Context, input model.AssignRoleRequest) (*model.Assignment, error)
@@ -264,6 +277,7 @@ type QueryResolver interface {
 	Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error)
 	Projects(ctx context.Context, status []primitives.ProjectStatus) ([]*primitives.Project, error)
 	Project(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error)
+	Recoveries(ctx context.Context) ([]*primitives.Recovery, error)
 	Role(ctx context.Context, id database.ID) (*primitives.Role, error)
 	RoleByLabel(ctx context.Context, label primitives.Label) (*primitives.Role, error)
 	Roles(ctx context.Context) ([]*primitives.Role, error)
@@ -449,6 +463,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AttachPolicy(childComplexity, args["input"].(model.AttachPolicyRequest)), true
 
+	case "Mutation.attemptRecovery":
+		if e.complexity.Mutation.AttemptRecovery == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_attemptRecovery_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AttemptRecovery(childComplexity, args["input"].(model.AttemptRecoveryRequest)), true
+
 	case "Mutation.createPolicy":
 		if e.complexity.Mutation.CreatePolicy == nil {
 			break
@@ -472,6 +498,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateProject(childComplexity, args["project"].(model.CreateProjectRequest)), true
+
+	case "Mutation.createRecovery":
+		if e.complexity.Mutation.CreateRecovery == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createRecovery_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateRecovery(childComplexity, args["input"].(model.CreateRecoveryRequest)), true
 
 	case "Mutation.createRole":
 		if e.complexity.Mutation.CreateRole == nil {
@@ -544,6 +582,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeletePolicy(childComplexity, args["input"].(model.DeletePolicyRequest)), true
+
+	case "Mutation.deleteRecoveries":
+		if e.complexity.Mutation.DeleteRecoveries == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteRecoveries_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteRecoveries(childComplexity, args["input"].(model.DeleteRecoveriesRequest)), true
 
 	case "Mutation.deleteRole":
 		if e.complexity.Mutation.DeleteRole == nil {
@@ -911,6 +961,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Projects(childComplexity, args["status"].([]primitives.ProjectStatus)), true
 
+	case "Query.recoveries":
+		if e.complexity.Query.Recoveries == nil {
+			break
+		}
+
+		return e.complexity.Query.Recoveries(childComplexity), true
+
 	case "Query.role":
 		if e.complexity.Query.Role == nil {
 			break
@@ -1058,6 +1115,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Users(childComplexity), true
+
+	case "Recovery.created_at":
+		if e.complexity.Recovery.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Recovery.CreatedAt(childComplexity), true
+
+	case "Recovery.id":
+		if e.complexity.Recovery.ID == nil {
+			break
+		}
+
+		return e.complexity.Recovery.ID(childComplexity), true
+
+	case "Recovery.updated_at":
+		if e.complexity.Recovery.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Recovery.UpdatedAt(childComplexity), true
 
 	case "Role.created_at":
 		if e.complexity.Role.CreatedAt == nil {
@@ -1474,6 +1552,43 @@ extend type Mutation {
     archiveProject(id: ID, label: Label): Project! @isAuthenticated
     unarchiveProject(id: ID, label: Label): Project! @isAuthenticated
 }`, BuiltIn: false},
+	&ast.Source{Name: "coordinator/schema/recoveries.graphql", Input: `type Recovery {
+  id: ID!
+  created_at: Time!
+  updated_at: Time!
+}
+
+input CreateRecoveryRequest {
+  email: Email!
+}
+
+input AttemptRecoveryRequest {
+  new_password: Password!
+  secret: Password!
+  id: ID!
+}
+
+input DeleteRecoveriesRequest {
+  ids: [ID!]!
+}
+
+extend type Query {
+  # Only the worker can call the recoveries query to list existing recoveries
+  #
+  # TODO: Introduce ability to filter and paginate returned recoveries to the
+  # worker.
+  recoveries: [Recovery!]! @isAuthenticated()
+}
+
+extend type Mutation {
+  # Create & attempt do not return any response as a non-error response is a success
+  createRecovery(input: CreateRecoveryRequest!): String
+  attemptRecovery(input: AttemptRecoveryRequest!): String
+
+  # Only the worker can attempt to delete a recovery attempt
+  deleteRecoveries(input: DeleteRecoveriesRequest!): String @isAuthenticated()
+}
+`, BuiltIn: false},
 	&ast.Source{Name: "coordinator/schema/roles.graphql", Input: `type Role {
   id: ID!
   label: Label!
@@ -1813,6 +1928,20 @@ func (ec *executionContext) field_Mutation_attachPolicy_args(ctx context.Context
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_attemptRecovery_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.AttemptRecoveryRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNAttemptRecoveryRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttemptRecoveryRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createPolicy_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1838,6 +1967,20 @@ func (ec *executionContext) field_Mutation_createProject_args(ctx context.Contex
 		}
 	}
 	args["project"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createRecovery_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.CreateRecoveryRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNCreateRecoveryRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateRecoveryRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -1917,6 +2060,20 @@ func (ec *executionContext) field_Mutation_deletePolicy_args(ctx context.Context
 	var arg0 model.DeletePolicyRequest
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalNDeletePolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeletePolicyRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteRecoveries_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.DeleteRecoveriesRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNDeleteRecoveriesRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteRecoveriesRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3727,6 +3884,140 @@ func (ec *executionContext) _Mutation_unarchiveProject(ctx context.Context, fiel
 	res := resTmp.(*primitives.Project)
 	fc.Result = res
 	return ec.marshalNProject2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProject(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createRecovery(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createRecovery_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateRecovery(rctx, args["input"].(model.CreateRecoveryRequest))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_attemptRecovery(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_attemptRecovery_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AttemptRecovery(rctx, args["input"].(model.AttemptRecoveryRequest))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteRecoveries(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteRecoveries_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteRecoveries(rctx, args["input"].(model.DeleteRecoveriesRequest))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5619,6 +5910,60 @@ func (ec *executionContext) _Query_project(ctx context.Context, field graphql.Co
 	return ec.marshalOProject2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProject(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_recoveries(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Recoveries(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.IsAuthenticated == nil {
+				return nil, errors.New("directive isAuthenticated is not implemented")
+			}
+			return ec.directives.IsAuthenticated(ctx, nil, directive0)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*primitives.Recovery); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/capeprivacy/cape/primitives.Recovery`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*primitives.Recovery)
+	fc.Result = res
+	return ec.marshalNRecovery2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRecoveryᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_role(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6327,6 +6672,108 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	res := resTmp.(*introspection.Schema)
 	fc.Result = res
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Recovery_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Recovery) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Recovery",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(database.ID)
+	fc.Result = res
+	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Recovery_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Recovery) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Recovery",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Recovery_updated_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Recovery) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Recovery",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Role_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
@@ -8600,6 +9047,36 @@ func (ec *executionContext) unmarshalInputAttachPolicyRequest(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAttemptRecoveryRequest(ctx context.Context, obj interface{}) (model.AttemptRecoveryRequest, error) {
+	var it model.AttemptRecoveryRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "new_password":
+			var err error
+			it.NewPassword, err = ec.unmarshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPassword(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "secret":
+			var err error
+			it.Secret, err = ec.unmarshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPassword(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "id":
+			var err error
+			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreatePolicyRequest(ctx context.Context, obj interface{}) (model.CreatePolicyRequest, error) {
 	var it model.CreatePolicyRequest
 	var asMap = obj.(map[string]interface{})
@@ -8645,6 +9122,24 @@ func (ec *executionContext) unmarshalInputCreateProjectRequest(ctx context.Conte
 		case "Description":
 			var err error
 			it.Description, err = ec.unmarshalNDescription2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDescription(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateRecoveryRequest(ctx context.Context, obj interface{}) (model.CreateRecoveryRequest, error) {
+	var it model.CreateRecoveryRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "email":
+			var err error
+			it.Email, err = ec.unmarshalNEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8759,6 +9254,24 @@ func (ec *executionContext) unmarshalInputDeletePolicyRequest(ctx context.Contex
 		case "id":
 			var err error
 			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputDeleteRecoveriesRequest(ctx context.Context, obj interface{}) (model.DeleteRecoveriesRequest, error) {
+	var it model.DeleteRecoveriesRequest
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "ids":
+			var err error
+			it.Ids, err = ec.unmarshalNID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐIDᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9296,6 +9809,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createRecovery":
+			out.Values[i] = ec._Mutation_createRecovery(ctx, field)
+		case "attemptRecovery":
+			out.Values[i] = ec._Mutation_attemptRecovery(ctx, field)
+		case "deleteRecoveries":
+			out.Values[i] = ec._Mutation_deleteRecoveries(ctx, field)
 		case "createRole":
 			out.Values[i] = ec._Mutation_createRole(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -9691,6 +10210,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_project(ctx, field)
 				return res
 			})
+		case "recoveries":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_recoveries(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "role":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -9840,6 +10373,43 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
 			out.Values[i] = ec._Query___schema(ctx, field)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var recoveryImplementors = []string{"Recovery"}
+
+func (ec *executionContext) _Recovery(ctx context.Context, sel ast.SelectionSet, obj *primitives.Recovery) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, recoveryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Recovery")
+		case "id":
+			out.Values[i] = ec._Recovery_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "created_at":
+			out.Values[i] = ec._Recovery_created_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updated_at":
+			out.Values[i] = ec._Recovery_updated_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10487,6 +11057,10 @@ func (ec *executionContext) marshalNAttachment2ᚖgithubᚗcomᚋcapeprivacyᚋc
 	return ec._Attachment(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNAttemptRecoveryRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAttemptRecoveryRequest(ctx context.Context, v interface{}) (model.AttemptRecoveryRequest, error) {
+	return ec.unmarshalInputAttemptRecoveryRequest(ctx, v)
+}
+
 func (ec *executionContext) unmarshalNBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx context.Context, v interface{}) (base64.Value, error) {
 	return primitives.UnmarshalBase64Value(v)
 }
@@ -10539,6 +11113,10 @@ func (ec *executionContext) unmarshalNCreatePolicyRequest2githubᚗcomᚋcapepri
 
 func (ec *executionContext) unmarshalNCreateProjectRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateProjectRequest(ctx context.Context, v interface{}) (model.CreateProjectRequest, error) {
 	return ec.unmarshalInputCreateProjectRequest(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNCreateRecoveryRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateRecoveryRequest(ctx context.Context, v interface{}) (model.CreateRecoveryRequest, error) {
+	return ec.unmarshalInputCreateRecoveryRequest(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNCreateRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateRoleRequest(ctx context.Context, v interface{}) (model.CreateRoleRequest, error) {
@@ -10614,6 +11192,10 @@ func (ec *executionContext) marshalNDBURL2ᚖgithubᚗcomᚋcapeprivacyᚋcape�
 
 func (ec *executionContext) unmarshalNDeletePolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeletePolicyRequest(ctx context.Context, v interface{}) (model.DeletePolicyRequest, error) {
 	return ec.unmarshalInputDeletePolicyRequest(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNDeleteRecoveriesRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteRecoveriesRequest(ctx context.Context, v interface{}) (model.DeleteRecoveriesRequest, error) {
+	return ec.unmarshalInputDeleteRecoveriesRequest(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNDeleteRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteRoleRequest(ctx context.Context, v interface{}) (model.DeleteRoleRequest, error) {
@@ -10908,6 +11490,57 @@ func (ec *executionContext) marshalNProjectStatus2githubᚗcomᚋcapeprivacyᚋc
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNRecovery2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRecovery(ctx context.Context, sel ast.SelectionSet, v primitives.Recovery) graphql.Marshaler {
+	return ec._Recovery(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRecovery2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRecoveryᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Recovery) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRecovery2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRecovery(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNRecovery2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRecovery(ctx context.Context, sel ast.SelectionSet, v *primitives.Recovery) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Recovery(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNRemoveSourceRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRemoveSourceRequest(ctx context.Context, v interface{}) (model.RemoveSourceRequest, error) {

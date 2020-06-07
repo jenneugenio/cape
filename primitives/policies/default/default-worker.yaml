@@ -17,3 +17,9 @@ rules:
   - target: "services:*"
     action: read
     effect: allow
+  - target: "recoveries:*"
+    action: read
+    effect: allow
+  - target: "recoveries:*"
+    action: delete
+    effect: allow

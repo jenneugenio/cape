@@ -88,3 +88,5 @@ models:
     model: github.com/capeprivacy/cape/primitives.ProjectStatus
   DisplayName:
     model: github.com/capeprivacy/cape/primitives.DisplayName
+  Recovery:
+    model: github.com/capeprivacy/cape/primitives.Recovery
