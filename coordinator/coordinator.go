@@ -19,6 +19,7 @@ import (
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/graph"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
+	"github.com/capeprivacy/cape/coordinator/mailer"
 	"github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -31,6 +32,7 @@ type Coordinator struct {
 	backend database.Backend
 	handler http.Handler
 	logger  *zerolog.Logger
+	mailer  mailer.Mailer
 
 	tokenAuth          *auth.TokenAuthority
 	credentialProducer auth.CredentialProducer
@@ -124,7 +126,7 @@ func (c *Coordinator) setTokenAuthKeyPair(cfg *primitives.Config, rootKey *base6
 // If the mode is set to Testing then the Coordinator will use the SHA256
 // algorithm for hashing passwords. This mode should only be used within the
 // context of unit & integration tests.
-func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
+func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinator, error) {
 	if cfg == nil {
 		return nil, errors.New(InvalidConfigCause, "Config must be provided")
 	}
@@ -161,6 +163,7 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		TokenAuthority:     tokenAuth,
 		RootKey:            rootKey,
 		CredentialProducer: cp,
+		Mailer:             mailer,
 	}}
 
 	config.Directives.IsAuthenticated = framework.IsAuthenticatedDirective(backend, tokenAuth)
@@ -200,6 +203,7 @@ func New(cfg *Config, logger *zerolog.Logger) (*Coordinator, error) {
 		backend:            backend,
 		logger:             logger,
 		tokenAuth:          tokenAuth,
+		mailer:             mailer,
 		credentialProducer: cp,
 	}, nil
 }

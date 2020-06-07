@@ -15,6 +15,7 @@ import (
 
 	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/capeprivacy/cape/coordinator"
+	"github.com/capeprivacy/cape/coordinator/mailer"
 	"github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/logging"
 	errors "github.com/capeprivacy/cape/partyerrors"
@@ -283,7 +284,10 @@ func startCoordinatorCmd(c *cli.Context) error {
 		return err
 	}
 
-	ctrl, err := coordinator.New(cfg, logger)
+	// TODO: Enable proper configuration of the mailer including support for
+	// sending email via SMPT over TLS. All email must be sent over TLS.
+	mailer := &mailer.TestMailer{}
+	ctrl, err := coordinator.New(cfg, logger, mailer)
 	if err != nil {
 		return err
 	}

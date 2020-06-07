@@ -65,7 +65,12 @@ func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.Creat
 		return nil, err
 	}
 
-	// TODO: Send email to the user, for now, we just log it for debugging.
+	err = r.mailer.Send(ctx, user, recovery, password)
+	if err != nil {
+		logger.Error().Err(err).Msg("Could not send recovery email to user")
+		return nil, err
+	}
+
 	logger.Info().Msgf("Recovery created with id %s with secret %s", recovery.ID, password)
 	return nil, nil
 }

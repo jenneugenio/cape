@@ -13,6 +13,7 @@ import (
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/database/dbtest"
+	"github.com/capeprivacy/cape/coordinator/mailer"
 	"github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -54,6 +55,7 @@ type Harness struct {
 	component framework.Component
 	logger    *zerolog.Logger
 	manager   *Manager
+	mailer    *mailer.TestMailer
 	cfg       *Config
 }
 
@@ -64,7 +66,8 @@ func NewHarness(cfg *Config) (*Harness, error) {
 	}
 
 	return &Harness{
-		cfg: cfg,
+		cfg:    cfg,
+		mailer: &mailer.TestMailer{},
 	}, nil
 }
 
@@ -141,7 +144,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 		Port:                  1, // This port is ignored!
 		RootKey:               base64.New(rootKey[:]),
 		CredentialProducerAlg: primitives.SHA256,
-	}, logger)
+	}, logger, h.mailer)
 	if err != nil {
 		return err
 	}
@@ -244,4 +247,9 @@ func (h *Harness) URL() (*primitives.URL, error) {
 	}
 
 	return primitives.NewURL(h.server.URL)
+}
+
+// Mail returns a list of emails sent by this server instance
+func (h *Harness) Mails() []*mailer.TestMail {
+	return h.mailer.Mails
 }
