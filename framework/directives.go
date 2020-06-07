@@ -111,6 +111,9 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			return nil, err
 		}
 
+		logger = logger.With().Str("identity_id", aSession.GetID().String()).Logger()
+
+		ctx = context.WithValue(ctx, LoggerContextKey, logger)
 		ctx = context.WithValue(ctx, SessionContextKey, aSession)
 
 		return next(ctx)

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -53,6 +54,10 @@ func (s *Session) Validate() error {
 	}
 
 	return nil
+}
+
+func (s *Session) GetID() database.ID {
+	return s.Identity.GetID()
 }
 
 // Can checks to see if the given identity can do an action on the given primitive type. This
