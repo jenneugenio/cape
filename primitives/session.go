@@ -41,16 +41,16 @@ func (s *Session) Validate() error {
 		UserType,
 		ServicePrimitiveType,
 	}
-	if err := s.IdentityID.OneOf(identityTypes); err != nil {
-		return errors.Wrap(InvalidSessionCause, err)
+	if !s.IdentityID.OneOf(identityTypes) {
+		return errors.New(InvalidSessionCause, "Identity ID is not a user or service")
 	}
 
 	if err := s.OwnerID.Validate(); err != nil {
 		return errors.Wrap(InvalidSessionCause, err)
 	}
 
-	if err := s.OwnerID.OneOf([]types.Type{UserType, TokenPrimitiveType}); err != nil {
-		return errors.Wrap(InvalidSessionCause, err)
+	if !s.OwnerID.OneOf([]types.Type{UserType, TokenPrimitiveType}) {
+		return errors.New(InvalidSessionCause, "Owner ID is not a user or token")
 	}
 
 	return nil

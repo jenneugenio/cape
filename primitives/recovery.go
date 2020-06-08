@@ -38,8 +38,8 @@ func (r *Recovery) Validate() error {
 		return errors.Wrap(InvalidRecoveryCause, err)
 	}
 
-	if err := r.UserID.IsType(UserType); err != nil {
-		return errors.Wrap(InvalidRecoveryCause, err)
+	if !r.UserID.IsType(UserType) {
+		return errors.New(InvalidRecoveryCause, "User ID is not an ID of a user")
 	}
 
 	if r.Credentials == nil {

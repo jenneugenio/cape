@@ -78,6 +78,14 @@ func TestRecoveries(t *testing.T) {
 		gm.Expect(len(h.Mails())).To(gm.Equal(1))
 	})
 
+	t.Run("can't supply invalid email", func(t *testing.T) {
+		err := client.CreateRecovery(ctx, primitives.Email{
+			Email: "sdfsdf",
+			Type:  primitives.UserEmail,
+		})
+		gm.Expect(err).ToNot(gm.BeNil())
+	})
+
 	t.Run("can't recover with wrong id", func(t *testing.T) {
 		err := client.CreateRecovery(ctx, email)
 		gm.Expect(err).To(gm.BeNil())

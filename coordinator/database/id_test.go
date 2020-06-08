@@ -89,14 +89,14 @@ func TestIsType(t *testing.T) {
 		ID, err := GenerateID(types.TestMutable)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(ID.IsType(types.TestMutable)).To(gm.BeNil())
+		gm.Expect(ID.IsType(types.TestMutable)).To(gm.BeTrue())
 	})
 
 	t.Run("is not the type", func(t *testing.T) {
 		ID, err := GenerateID(types.TestMutable)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(ID.IsType(types.Test)).ToNot(gm.BeNil())
+		gm.Expect(ID.IsType(types.Test)).To(gm.BeFalse())
 	})
 }
 
@@ -106,6 +106,6 @@ func TestOneOf(t *testing.T) {
 	ID, err := GenerateID(types.TestMutable)
 	gm.Expect(err).To(gm.BeNil())
 
-	gm.Expect(ID.OneOf([]types.Type{types.Test, types.TestMutable})).To(gm.BeNil())
-	gm.Expect(ID.OneOf([]types.Type{types.Test})).ToNot(gm.BeNil())
+	gm.Expect(ID.OneOf([]types.Type{types.Test, types.TestMutable})).To(gm.BeTrue())
+	gm.Expect(ID.OneOf([]types.Type{types.Test})).To(gm.BeFalse())
 }

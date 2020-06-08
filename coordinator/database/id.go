@@ -148,24 +148,24 @@ func (id ID) Type() (types.Type, error) {
 }
 
 // IsType returns an error if the ID does not represent the provided type
-func (id ID) IsType(t types.Type) error {
+func (id ID) IsType(t types.Type) bool {
 	return id.OneOf([]types.Type{t})
 }
 
 // OneOf returns an error if the ID is not one of the provided types
-func (id ID) OneOf(list []types.Type) error {
+func (id ID) OneOf(list []types.Type) bool {
 	this, err := id.Type()
 	if err != nil {
-		return err
+		return false
 	}
 
 	for _, t := range list {
 		if t == this {
-			return nil
+			return true
 		}
 	}
 
-	return errors.New(InvalidIDCause, "Invalid ID Type")
+	return false
 }
 
 func (id *ID) fill(in []byte) error {

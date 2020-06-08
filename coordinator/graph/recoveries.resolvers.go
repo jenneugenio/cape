@@ -17,11 +17,6 @@ import (
 func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.CreateRecoveryRequest) (*string, error) {
 	logger := fw.Logger(ctx)
 
-	if err := input.Email.Validate(); err != nil {
-		logger.Info().Msg("Invalid email provided to create recovery")
-		return nil, err
-	}
-
 	user := &primitives.User{}
 	err := r.Backend.QueryOne(ctx, user, database.NewFilter(database.Where{
 		"email": input.Email,
@@ -77,21 +72,6 @@ func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.Creat
 
 func (r *mutationResolver) AttemptRecovery(ctx context.Context, input model.AttemptRecoveryRequest) (*string, error) {
 	logger := fw.Logger(ctx)
-
-	if err := input.NewPassword.Validate(); err != nil {
-		logger.Info().Err(err).Msg("Invalid password provided to attempt recovery")
-		return nil, ErrRecoveryFailed
-	}
-
-	if err := input.Secret.Validate(); err != nil {
-		logger.Info().Err(err).Msg("Invalid secret provided to attempt recovery")
-		return nil, ErrRecoveryFailed
-	}
-
-	if err := input.ID.Validate(); err != nil {
-		logger.Info().Err(err).Msg("Invalid id provided to attempt recovery")
-		return nil, ErrRecoveryFailed
-	}
 
 	logger = logger.With().Str("recovery_id", input.ID.String()).Logger()
 
