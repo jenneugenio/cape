@@ -21,6 +21,16 @@ func TestCan(t *testing.T) {
 	creds, err := DefaultSHA256Producer.Generate(password)
 	gm.Expect(err).To(gm.BeNil())
 
+	t.Run("GetID returns the identity id", func(t *testing.T) {
+		_, user, err := primitives.GenerateUser("hiho", "jerry@berry.jerry")
+		gm.Expect(err).To(gm.BeNil())
+
+		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{}, []*primitives.Role{}, user)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(session.GetID()).To(gm.Equal(user.ID))
+	})
+
 	t.Run("denied no rules", func(t *testing.T) {
 		user, err := primitives.NewUser("Jerry Berry", email, creds)
 		gm.Expect(err).To(gm.BeNil())
