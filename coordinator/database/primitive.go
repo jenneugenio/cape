@@ -66,6 +66,14 @@ func (p *Primitive) Validate() error {
 		return errors.New(InvalidVersionCause, "Version must be greater than zero")
 	}
 
+	if p.CreatedAt.IsZero() {
+		return errors.New(InvalidTimeCause, "CreatedAt cannot be a zero time")
+	}
+
+	if p.UpdatedAt.IsZero() {
+		return errors.New(InvalidTimeCause, "UpdatedAT cannot be a zero time")
+	}
+
 	if p.UpdatedAt.Before(p.CreatedAt) {
 		return errors.New(InvalidTimeCause, "UpdatedAt cannot be before CreatedAt")
 	}
