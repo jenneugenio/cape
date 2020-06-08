@@ -1,6 +1,7 @@
 package transformations
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/capeprivacy/cape/connector/proto"
@@ -33,16 +34,15 @@ func TestPerturbationArgs(t *testing.T) {
 	gm.Expect(errors.CausedBy(err, MissingArgument)).To(gm.BeTrue())
 
 	err = transform.Validate(Args{
-		"min":  -10.0,
-		"max":  10.0,
-		"seed": 1234.0,
+		"min": -10.0,
+		"max": 10.0,
 	})
 	gm.Expect(err).To(gm.BeNil())
 
 	err = transform.Validate(Args{
-		"seed": 1234.38,
+		"min": "10.0",
 	})
-	gm.Expect(err).NotTo(gm.BeNil())
+	gm.Expect(errors.CausedBy(err, UnsupportedType)).To(gm.BeTrue())
 }
 
 func TestPerturbationInt64(t *testing.T) {
@@ -52,9 +52,8 @@ func TestPerturbationInt64(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	args := Args{
-		"min":  -10.,
-		"max":  10.,
-		"seed": 1234.0,
+		"min": -10.,
+		"max": 10.,
 	}
 
 	err = transform.Validate(args)
@@ -62,6 +61,8 @@ func TestPerturbationInt64(t *testing.T) {
 
 	err = transform.Initialize(args)
 	gm.Expect(err).To(gm.BeNil())
+
+	transform.(*PerturbationTransform).randInstance = rand.New(rand.NewSource(1234))
 
 	inputField := &proto.Field{Value: &proto.Field_Int64{Int64: 100}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Int64{Int64: 94}}
@@ -81,9 +82,8 @@ func TestPerturbationInt32(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	args := Args{
-		"min":  -10.,
-		"max":  10.,
-		"seed": 3241.0,
+		"min": -10.,
+		"max": 10.,
 	}
 
 	err = transform.Validate(args)
@@ -91,6 +91,8 @@ func TestPerturbationInt32(t *testing.T) {
 
 	err = transform.Initialize(args)
 	gm.Expect(err).To(gm.BeNil())
+
+	transform.(*PerturbationTransform).randInstance = rand.New(rand.NewSource(3241))
 
 	inputField := &proto.Field{Value: &proto.Field_Int32{Int32: 100}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Int32{Int32: 101}}
@@ -110,9 +112,8 @@ func TestPerturbationDouble(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	args := Args{
-		"min":  -10.,
-		"max":  10.,
-		"seed": 4354.0,
+		"min": -10.,
+		"max": 10.,
 	}
 
 	err = transform.Validate(args)
@@ -120,6 +121,8 @@ func TestPerturbationDouble(t *testing.T) {
 
 	err = transform.Initialize(args)
 	gm.Expect(err).To(gm.BeNil())
+
+	transform.(*PerturbationTransform).randInstance = rand.New(rand.NewSource(4354))
 
 	inputField := &proto.Field{Value: &proto.Field_Double{Double: 100}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Double{Double: 93.5}}
@@ -138,9 +141,8 @@ func TestPerturbationFloat(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	args := Args{
-		"min":  -10.,
-		"max":  10.,
-		"seed": 9876.0,
+		"min": -10.,
+		"max": 10.,
 	}
 
 	err = transform.Validate(args)
@@ -148,6 +150,8 @@ func TestPerturbationFloat(t *testing.T) {
 
 	err = transform.Initialize(args)
 	gm.Expect(err).To(gm.BeNil())
+
+	transform.(*PerturbationTransform).randInstance = rand.New(rand.NewSource(9876))
 
 	inputField := &proto.Field{Value: &proto.Field_Float{Float: 100}}
 	expectedOutputField := &proto.Field{Value: &proto.Field_Float{Float: 107.1}}

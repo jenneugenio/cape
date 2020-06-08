@@ -2,6 +2,7 @@ package transformations
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/capeprivacy/cape/connector/proto"
 	errors "github.com/capeprivacy/cape/partyerrors"
@@ -13,21 +14,18 @@ type PerturbationTransform struct {
 	max          float64
 	seed         int64
 	sourceSeeded rand.Source
+	randInstance *rand.Rand
 }
 
 func (p *PerturbationTransform) perturbationFloat64(x float64) (float64, error) {
-	r := rand.New(p.sourceSeeded)
-
-	noise := r.Float64()*(p.max-p.min) + p.min
+	noise := p.randInstance.Float64()*(p.max-p.min) + p.min
 	y := x + noise
 
 	return y, nil
 }
 
 func (p *PerturbationTransform) perturbationInt64(x int64) (int64, error) {
-	r := rand.New(p.sourceSeeded)
-
-	noise := r.Int63n(int64(p.max-p.min)) + int64(p.min)
+	noise := p.randInstance.Int63n(int64(p.max-p.min)) + int64(p.min)
 	y := x + noise
 
 	return y, nil
@@ -101,19 +99,9 @@ func (p *PerturbationTransform) Initialize(args Args) error {
 		return errors.New(WrongArgument, "Min should be less than Max")
 	}
 
-	seed, found := args["seed"]
-	if !found {
-		return errors.New(MissingArgument, "Perturbation transformation expects a seed argument")
-	}
-
-	seedFloat, ok := seed.(float64)
-	if !ok {
-		return errors.New(UnsupportedType, unsupportedTypeMsg, "seed", seed, "int")
-	}
-
-	p.seed = int64(seedFloat)
-
+	p.seed = time.Now().UnixNano()
 	p.sourceSeeded = rand.NewSource(p.seed)
+	p.randInstance = rand.New(p.sourceSeeded)
 
 	return nil
 }
@@ -146,16 +134,6 @@ func (p *PerturbationTransform) Validate(args Args) error {
 		return errors.New(WrongArgument, "Min should be less than Max")
 	}
 
-	seed, found := args["seed"]
-	if !found {
-		return errors.New(MissingArgument, "Perturbation transformation expects a seed argument")
-	}
-
-	seed, ok = seed.(float64)
-	if !ok {
-		return errors.New(UnsupportedType, unsupportedTypeMsg, "seed", seed, "int")
-	}
-
 	return nil
 }
 
@@ -181,6 +159,5 @@ func NewPerturbationTransform(field string) (Transformation, error) {
 		field: field,
 		min:   0,
 		max:   1,
-		seed:  1234,
 	}, nil
 }
