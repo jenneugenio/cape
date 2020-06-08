@@ -111,6 +111,11 @@ func (r *mutationResolver) AttemptRecovery(ctx context.Context, input model.Atte
 
 	logger = logger.With().Str("user_id", recovery.UserID.String()).Logger()
 
+	if recovery.Expired() {
+		logger.Info().Msg("Recovery has expired")
+		return nil, ErrRecoveryFailed
+	}
+
 	err = r.CredentialProducer.Compare(input.Secret, recovery.Credentials)
 	if err != nil {
 		logger.Info().Err(err).Msg("Invalid credentials provided")

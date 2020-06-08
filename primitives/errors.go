@@ -36,4 +36,5 @@ var (
 	InvalidProjectSpecCause        = errors.NewCause(errors.BadRequestCategory, "invalid_project_spec")
 	InvalidProjectStatusCause      = errors.NewCause(errors.BadRequestCategory, "invalid_project_status")
 	InvalidProjectDescriptionCause = errors.NewCause(errors.BadRequestCategory, "invalid_project_description")
+	InvalidRecoveryCause           = errors.NewCause(errors.BadRequestCategory, "invalid_recovery")
 )

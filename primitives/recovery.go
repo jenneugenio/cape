@@ -3,6 +3,7 @@ package primitives
 import (
 	"context"
 	"encoding/json"
+	"time"
 
 	"github.com/manifoldco/go-base64"
 
@@ -12,10 +13,15 @@ import (
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
+// RecoveryExpiration is the amount of time that has passed since a recovery
+// was created before it's no longer valid.
+var RecoveryExpiration time.Duration = 30 * time.Minute
+
 type Recovery struct {
 	*database.Primitive
 	UserID      database.ID  `json:"user_id"`
 	Credentials *Credentials `json:"-" gqlgen:"-"`
+	ExpiresAt   time.Time    `json:"expires_at"`
 }
 
 type encryptedRecovery struct {
@@ -44,7 +50,15 @@ func (r *Recovery) Validate() error {
 		return errors.Wrap(InvalidRecoveryCause, err)
 	}
 
+	if r.ExpiresAt.IsZero() {
+		return errors.New(InvalidRecoveryCause, "Missing expires at")
+	}
+
 	return nil
+}
+
+func (r *Recovery) Expired() bool {
+	return time.Now().UTC().After(r.ExpiresAt)
 }
 
 func (r *Recovery) GetType() types.Type {
@@ -93,6 +107,7 @@ func (r *Recovery) Decrypt(ctx context.Context, codec crypto.EncryptionCodec, da
 	r.Primitive = in.Primitive
 	r.UserID = in.UserID
 	r.Credentials = creds
+	r.ExpiresAt = in.ExpiresAt
 
 	return nil
 }
@@ -107,6 +122,7 @@ func NewRecovery(userID database.ID, creds *Credentials) (*Recovery, error) {
 		Primitive:   p,
 		UserID:      userID,
 		Credentials: creds,
+		ExpiresAt:   time.Now().UTC().Add(RecoveryExpiration),
 	}
 
 	id, err := database.DeriveID(r)
@@ -116,4 +132,18 @@ func NewRecovery(userID database.ID, creds *Credentials) (*Recovery, error) {
 
 	r.ID = id
 	return r, r.Validate()
+}
+
+func GenerateRecovery() (*Recovery, error) {
+	userID, err := database.GenerateID(UserType)
+	if err != nil {
+		return nil, err
+	}
+
+	creds, err := GenerateCredentials()
+	if err != nil {
+		return nil, err
+	}
+
+	return NewRecovery(userID, creds)
 }

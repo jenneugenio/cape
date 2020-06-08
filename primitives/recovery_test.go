@@ -3,6 +3,7 @@ package primitives
 import (
 	"context"
 	"testing"
+	"time"
 
 	gm "github.com/onsi/gomega"
 
@@ -90,12 +91,28 @@ func TestRecovery(t *testing.T) {
 			{
 				name: "bad credentials",
 				fn: func() (*Recovery, error) {
-					r, err := NewRecovery(user.ID, creds)
+					badcreds, err := GenerateCredentials()
+					gm.Expect(err).To(gm.BeNil())
+
+					r, err := NewRecovery(user.ID, badcreds)
 					if err != nil {
 						return nil, err
 					}
 
 					r.Credentials.Alg = CredentialsAlgType("sdfs")
+					return r, nil
+				},
+				cause: &InvalidRecoveryCause,
+			},
+			{
+				name: "expires at is zero value",
+				fn: func() (*Recovery, error) {
+					r, err := NewRecovery(user.ID, creds)
+					if err != nil {
+						return nil, err
+					}
+
+					r.ExpiresAt = time.Time{}
 					return r, nil
 				},
 				cause: &InvalidRecoveryCause,
@@ -116,6 +133,20 @@ func TestRecovery(t *testing.T) {
 				gm.Expect(err).To(gm.BeNil())
 			})
 		}
+	})
+
+	t.Run("expired returns true if expire at exceeded", func(t *testing.T) {
+		r, err := GenerateRecovery()
+		gm.Expect(err).To(gm.BeNil())
+
+		r.ExpiresAt = time.Now().UTC().Add(-1 * time.Minute)
+		gm.Expect(r.Expired()).To(gm.BeTrue())
+	})
+
+	t.Run("expired returns true if expire at exceeded", func(t *testing.T) {
+		r, err := GenerateRecovery()
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(r.Expired()).To(gm.BeFalse())
 	})
 
 	t.Run("encrypt & decrypt", func(t *testing.T) {

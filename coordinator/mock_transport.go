@@ -57,8 +57,10 @@ func (m *MockClientTransport) Raw(ctx context.Context, query string, variables m
 		return r.Error
 	}
 
-	v := reflect.ValueOf(resp)
-	v.Elem().Set(reflect.ValueOf(r.Value))
+	if r.Value != nil {
+		v := reflect.ValueOf(resp)
+		v.Elem().Set(reflect.ValueOf(r.Value))
+	}
 
 	return nil
 }

@@ -127,14 +127,47 @@ func (w *Worker) GetSources(j *que.Job) error {
 	return nil
 }
 
+func (w *Worker) DeleteRecoveries(j *que.Job) error {
+	w.logger.Info().Msg("Attempting to delete old recoveries")
+
+	ctx := context.Background()
+	recoveries, err := w.coordClient.Recoveries(ctx)
+	if err != nil {
+		w.logger.Error().Err(err).Msgf("Could not retrieve a list of recoveries from the coordinator")
+		return err
+	}
+
+	ids := []database.ID{}
+	for _, recovery := range recoveries {
+		if recovery.Expired() {
+			ids = append(ids, recovery.ID)
+		}
+	}
+
+	if len(ids) == 0 {
+		return nil
+	}
+
+	w.logger.Info().Msgf("Attempting to delete %d of %d recoveries", len(ids), len(recoveries))
+	err = w.coordClient.DeleteRecoveries(ctx, ids)
+	if err != nil {
+		w.logger.Error().Err(err).Msgf("Failed to delete recoveries")
+		return err
+	}
+
+	w.logger.Info().Msg("Successfully deleted recoveries")
+	return nil
+}
+
 func (w *Worker) Start() error {
 	ctx := context.Background()
 	defer w.pool.Close()
 	w.qc = que.NewClient(w.pool)
 
 	wm := que.WorkMap{
-		"GetSources": w.GetSources,
-		"GetSchema":  w.GetSchema,
+		"GetSources":       w.GetSources,
+		"GetSchema":        w.GetSchema,
+		"DeleteRecoveries": w.DeleteRecoveries,
 	}
 
 	err := w.backend.Open(ctx)
@@ -152,18 +185,40 @@ func (w *Worker) Start() error {
 
 func (w *Worker) poll() {
 	for {
-		j := &que.Job{
-			Type: "GetSources",
+		jobs := []*que.Job{
+			{
+				Type: "GetSources",
+			},
+			{
+				Type: "DeleteRecoveries",
+			},
 		}
 
-		w.logger.Info().Msg(fmt.Sprintf("Enqueueing job %s", j.Type))
-		err := w.qc.Enqueue(j)
-		if err != nil {
-			panic(err)
+		for _, j := range jobs {
+			// Purposely ignore the error; we should recover gracefully once
+			// we connect to the database again or can successfully submit a job.
+			_ = w.Enqueue(j)
 		}
 
+		// XXX: With the way this is currently setup, if the amount of work
+		// exceeds what workers can do then we will keep appending jobs to the
+		// end of the job queue. This will result in an explosion  in the
+		// number of jobs in the queue ultimately bringing everything to a
+		// hault.
 		time.Sleep(5 * time.Second)
 	}
+}
+
+func (w *Worker) Enqueue(j *que.Job) error {
+	w.logger.Info().Msgf("Enqueuing job %s", j.Type)
+	err := w.qc.Enqueue(j)
+	if err != nil {
+		w.logger.Error().Err(err).Msgf("Could not enqueue job %s", j.Type)
+		return err
+	}
+
+	w.logger.Info().Msgf("Successfully enqueued job %s", j.Type)
+	return nil
 }
 
 func NewWorker(config *Config) (*Worker, error) {
