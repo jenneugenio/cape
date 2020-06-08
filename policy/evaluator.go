@@ -113,7 +113,7 @@ func (e *Evaluator) evaluateStar() (*query.Query, error) {
 	}
 
 	if len(fields) == 0 {
-		return nil, errors.New(auth.AuthorizationFailure, "No policies match the provided query")
+		return nil, auth.ErrNoMatchingPolicies
 	}
 
 	if e.checkDeniedWheres() {
@@ -140,7 +140,7 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 	}
 
 	if len(e.allowFieldRules) == 0 {
-		return nil, errors.New(auth.AuthorizationFailure, "No policies match the provided query")
+		return nil, auth.ErrNoMatchingPolicies
 	}
 
 	// Now, we must find a rule that allowFieldRules the provided query to run
@@ -186,7 +186,7 @@ func (e *Evaluator) Evaluate() (*query.Query, error) {
 	}
 
 	if !allowed {
-		return nil, errors.New(auth.AuthorizationFailure, "No policies allow the requested action to run")
+		return nil, auth.ErrNoMatchingPolicies
 	}
 
 	denied := false

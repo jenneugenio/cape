@@ -6,6 +6,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/connector/harness"
 	"github.com/capeprivacy/cape/connector/proto"
 	"github.com/capeprivacy/cape/connector/sources"
@@ -89,6 +90,20 @@ func TestQuery(t *testing.T) {
 			i++
 		}
 		gm.Expect(stream.Error()).To(gm.BeNil())
+	})
+
+	t.Run("query table that doesn't exist", func(t *testing.T) {
+		query := "SELECT * FROM poof"
+		stream, err := connClient.Query(context.Background(), s.Manager.TestSource.Label, query, 50, 50)
+		gm.Expect(err).To(gm.BeNil())
+
+		defer stream.Close()
+
+		ok := stream.NextRecord()
+		gm.Expect(ok).To(gm.BeFalse())
+		gm.Expect(stream.Error()).NotTo(gm.BeNil())
+
+		gm.Expect(stream.Error()).To(gm.Equal(auth.ErrNoMatchingPolicies))
 	})
 }
 

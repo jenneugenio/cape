@@ -2,8 +2,11 @@ package connector
 
 import (
 	"context"
+
+	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zerolog/ctxzr"
 	"github.com/rs/zerolog"
 
+	"github.com/capeprivacy/cape/auth"
 	pb "github.com/capeprivacy/cape/connector/proto"
 	"github.com/capeprivacy/cape/connector/sources"
 	fw "github.com/capeprivacy/cape/framework"
@@ -31,6 +34,7 @@ func (g *grpcHandler) Query(req *pb.QueryRequest, server pb.DataConnector_QueryS
 
 func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_QueryServer) error {
 	session := fw.Session(server.Context())
+	logger := ctxzr.Extract(server.Context()).Logger
 	policies := session.Policies
 
 	dataSource, err := primitives.NewLabel(req.GetDataSource())
@@ -54,12 +58,17 @@ func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_
 	// was causing a problems with k8s port forwarding causing our tests
 	// to break.
 	collection := primitives.Collection(query.Collection())
-	schema, err := source.Schema(context.Background(), collection)
+	schemas, err := source.Schema(context.Background(), collection)
 	if err != nil {
 		return err
 	}
 
-	evaluator := policy.NewEvaluator(query, schema[0], policies...)
+	if len(schemas) == 0 {
+		logger.Info().Err(auth.ErrNoMatchingPolicies).Msgf("No schemas found for query %s", query.Collection())
+		return auth.ErrNoMatchingPolicies
+	}
+
+	evaluator := policy.NewEvaluator(query, schemas[0], policies...)
 	query, err = evaluator.Evaluate()
 	if err != nil {
 		return err
@@ -67,7 +76,7 @@ func (g *grpcHandler) handleQuery(req *pb.QueryRequest, server pb.DataConnector_
 
 	transforms := evaluator.Transforms()
 	if len(transforms) > 0 {
-		transformStream, err := NewTransformStream(server, schema[0], transforms)
+		transformStream, err := NewTransformStream(server, schemas[0], transforms)
 		if err != nil {
 			return err
 		}

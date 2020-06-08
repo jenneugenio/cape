@@ -45,6 +45,9 @@ var (
 	// ErrAuthorization is the error wrapping the AuthorizationFailure cause
 	ErrAuthorization = errors.New(AuthorizationFailure, "Access denied")
 
+	// ErrNoMatchingPolicies occurs when there are no policies matching the query submitted by the user
+	ErrNoMatchingPolicies = errors.New(AuthorizationFailure, "No policies match the provided query")
+
 	// UnsupportedAlgorithm occurs when the wrong credential algorithm type is specified
 	UnsupportedAlgorithm = errors.NewCause(errors.BadRequestCategory, "unsupported_algorithm")
 )
