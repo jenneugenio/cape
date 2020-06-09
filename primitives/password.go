@@ -15,7 +15,7 @@ const MinPasswordLength = 8
 const MaxPasswordLength = 128
 
 // PasswordByteLength represents the number of bytes used to generate a Cape password
-const PasswordByteLength = 16
+const PasswordByteLength = 24
 
 var EmptyPassword = Password("")
 

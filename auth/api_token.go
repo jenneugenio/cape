@@ -13,7 +13,7 @@ import (
 
 const (
 	tokenVersion = 0x01
-	secretBytes  = 16
+	secretBytes  = 24
 )
 
 // Secret represents a Secret stored inside of an APIToken

@@ -1,8 +1,10 @@
 package primitives
 
 import (
+	"crypto/rand"
 	"testing"
 
+	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 
 	errors "github.com/capeprivacy/cape/partyerrors"
@@ -10,6 +12,10 @@ import (
 
 func TestPassword(t *testing.T) {
 	gm.RegisterTestingT(t)
+
+	pw := make([]byte, 128)
+	_, err := rand.Read(pw)
+	gm.Expect(err).To(gm.BeNil())
 
 	tests := map[string]struct {
 		in    Password
@@ -20,7 +26,7 @@ func TestPassword(t *testing.T) {
 			cause: InvalidPasswordCause,
 		},
 		"long password": {
-			in:    Password("sdfkjsfkljasflkjs;fj;aksjfkalsjfkljslkjfalkjsdfjjlkfjkljsadf"),
+			in:    Password(base64.New(pw).String()),
 			cause: InvalidPasswordCause,
 		},
 	}
