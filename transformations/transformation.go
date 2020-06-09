@@ -5,10 +5,6 @@ import (
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
-// Args represents the arguments to be passed into
-// a transformation
-type Args map[string]interface{}
-
 var (
 	// Registry contains all of the transformations currently
 	// registered with cape.

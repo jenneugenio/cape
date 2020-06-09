@@ -68,10 +68,12 @@ func (t *TokenizationTransform) Initialize(args Args) error {
 	}
 	t.key = key
 
-	maxSize, found := args["maxSize"]
+	maxSize, found, err := args.LookupFloat64("maxSize")
+	if err != nil {
+		return err
+	}
 	if found {
-		maxSize, ok := maxSize.(float64)
-		if !ok || maxSize < 0 {
+		if maxSize < 0 {
 			return errors.New(UnsupportedType, "Unsupported max size: must be positive integer")
 		}
 
@@ -82,12 +84,12 @@ func (t *TokenizationTransform) Initialize(args Args) error {
 }
 
 func (t *TokenizationTransform) Validate(args Args) error {
-	maxSize, found := args["maxSize"]
-	if found {
-		size, ok := maxSize.(float64)
-		if !ok || size < 0 {
-			return errors.New(UnsupportedType, "Unsupported max size: must be positive integer")
-		}
+	maxSize, found, err := args.LookupFloat64("maxSize")
+	if err != nil {
+		return err
+	}
+	if found && maxSize < 0 {
+		return errors.New(UnsupportedType, "Unsupported max size: must be positive integer")
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package transformations
 
 import (
+	"encoding/json"
 	"testing"
 
 	gm "github.com/onsi/gomega"
@@ -126,4 +127,32 @@ func TestTransformationArgs(t *testing.T) {
 			gm.Expect(err).ToNot(gm.BeNil())
 		})
 	}
+}
+
+func TestJsonNumberArgs(t *testing.T) {
+	gm.RegisterTestingT(t)
+	by, err := yaml.Marshal(Args{
+		"min":  10,
+		"max":  20,
+		"seed": 1234,
+	})
+	gm.Expect(err).To(gm.BeNil())
+
+	opt := func(dec *json.Decoder) *json.Decoder {
+		dec.UseNumber()
+		return dec
+	}
+
+	var args Args
+	err = yaml.Unmarshal(by, &args, opt)
+	gm.Expect(err).To(gm.BeNil())
+
+	ctor, err := Get("perturbation")
+	gm.Expect(err).To(gm.BeNil())
+
+	transform, err := ctor("test")
+	gm.Expect(err).To(gm.BeNil())
+
+	err = transform.Validate(args)
+	gm.Expect(err).To(gm.BeNil())
 }

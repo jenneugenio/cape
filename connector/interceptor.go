@@ -111,12 +111,12 @@ func (i *Interceptor) authIntercept(ctx context.Context) (*auth.Session, error) 
 	coordinator := i.provider.GetCoordinator()
 	identity, err := coordinator.ValidateToken(ctx, authToken[0])
 	if err != nil {
-		return nil, auth.ErrorInvalidAuthHeader
+		return nil, auth.ErrAuthorization
 	}
 
 	policies, err := coordinator.GetIdentityPolicies(ctx, identity.GetID())
 	if err != nil {
-		return nil, auth.ErrorInvalidAuthHeader
+		return nil, auth.ErrAuthorization
 	}
 
 	// TODO -- We aren't passing a credential provider here, but we don't actually need one

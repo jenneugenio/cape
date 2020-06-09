@@ -71,29 +71,33 @@ func (p *PerturbationTransform) Transform(schema *proto.Schema, input *proto.Rec
 	return SetField(schema, input, output, p.field)
 }
 
+func (p *PerturbationTransform) getMinMax(args Args) (float64, float64, error) {
+	min, ok, err := args.LookupFloat64("min")
+	if err != nil {
+		return 0, 0, err
+	}
+	if !ok {
+		return 0, 0, errors.New(MissingArgument, "Perturbation transformation expects a min argument")
+	}
+
+	max, ok, err := args.LookupFloat64("max")
+	if err != nil {
+		return 0, 0, err
+	}
+	if !ok {
+		return 0, 0, errors.New(MissingArgument, "Perturbation transformation expects a max argument")
+	}
+
+	return min, max, nil
+}
+
 func (p *PerturbationTransform) Initialize(args Args) error {
-	const unsupportedTypeMsg = "Unsupported type for %s: found %T expected %s"
-
-	min, found := args["min"]
-	if !found {
-		return errors.New(MissingArgument, "Perturbation transformation expects a min argument")
+	min, max, err := p.getMinMax(args)
+	if err != nil {
+		return err
 	}
-
-	var ok bool
-	p.min, ok = min.(float64)
-	if !ok {
-		return errors.New(UnsupportedType, unsupportedTypeMsg, "min", min, "double")
-	}
-
-	max, found := args["max"]
-	if !found {
-		return errors.New(MissingArgument, "Perturbation transformation expects a max argument")
-	}
-
-	p.max, ok = max.(float64)
-	if !ok {
-		return errors.New(UnsupportedType, unsupportedTypeMsg, "max", max, "double")
-	}
+	p.min = min
+	p.max = max
 
 	if p.min > p.max {
 		return errors.New(WrongArgument, "Min should be less than Max")
@@ -107,30 +111,12 @@ func (p *PerturbationTransform) Initialize(args Args) error {
 }
 
 func (p *PerturbationTransform) Validate(args Args) error {
-	const unsupportedTypeMsg = "Unsupported type for %s: found %T expected %s"
-
-	min, found := args["min"]
-	if !found {
-		return errors.New(MissingArgument, "Perturbation transformation expects a min argument")
+	min, max, err := p.getMinMax(args)
+	if err != nil {
+		return err
 	}
 
-	var ok bool
-	min, ok = min.(float64)
-	if !ok {
-		return errors.New(UnsupportedType, unsupportedTypeMsg, "min", min, "double")
-	}
-
-	max, found := args["max"]
-	if !found {
-		return errors.New(MissingArgument, "Perturbation transformation expects a max argument")
-	}
-
-	max, ok = max.(float64)
-	if !ok {
-		return errors.New(UnsupportedType, unsupportedTypeMsg, "max", max, "double")
-	}
-
-	if p.min > p.max {
+	if min > max {
 		return errors.New(WrongArgument, "Min should be less than Max")
 	}
 
