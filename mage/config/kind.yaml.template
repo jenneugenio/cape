@@ -24,6 +24,9 @@ nodes:
   - containerPort: 30881
     hostPort: 8081
     protocol: TCP
+  - containerPort: 30882
+    hostPort: 8082
+    protocol: TCP
 containerdConfigPatches:
 - |-
   [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:{{.Registry.Port}}"]

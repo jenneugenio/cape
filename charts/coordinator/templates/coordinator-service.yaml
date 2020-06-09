@@ -35,5 +35,14 @@ spec:
 {{ if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.nodePort))) }}
     nodePort: {{ .Values.service.nodePort }}
 {{ end }}
+{{ if not (empty .Values.service.uiPort) }}
+  - name: {{ .Values.service.uiPortName }}
+    port: {{ .Values.service.uiPort }}
+    protocol: TCP
+    targetPort: {{ .Values.service.uiPort }}
+{{ if (and (eq .Values.service.type "NodePort") (not (empty .Values.service.nodePort))) }}
+    nodePort: {{ .Values.service.uiNodePort }}
+{{ end }}
+{{ end }}
   selector:
     {{- include "cape.selectorLabels" . | nindent 4 }}

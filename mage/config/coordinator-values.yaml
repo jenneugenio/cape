@@ -7,6 +7,11 @@ image:
   tag: latest
   pullPolicy: Always
 
+uiImage:
+  repository: localhost:5000/capeprivacy/cape-ui
+  tag: latest
+  pullPolicy: Always
+
 # used for the config file the coordinator takes
 config:
   db:
@@ -20,6 +25,9 @@ service:
   port: 8080
   targetPort: 8080
   nodePort: 30880
+  uiPortName: "cape-ui"
+  uiPort: 80
+  uiNodePort: 30882
   annotations: {}
   labels: {}
   portName: service

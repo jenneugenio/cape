@@ -4,8 +4,10 @@ serviceAccount:
 
 service:
   type: "ClusterIP"
-  port: 80
+  port: 8080
   targetPort: 3000
+  uiPort: 80
+  uiTargetPort: 80
   annotations: {}
   labels: {}
   portName: service
@@ -25,6 +27,11 @@ admin:
 
 image:
   repository: capeprivacy/cape
+  tag: latest
+  pullPolicy: IfNotPresent
+
+uiImage:
+  repository: capeprivacy/cape-ui
   tag: latest
   pullPolicy: IfNotPresent
 
