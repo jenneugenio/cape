@@ -12,7 +12,7 @@ import (
 const MinPasswordLength = 8
 
 // MaxPasswordLength represents the maximum length of a Cape password
-const MaxPasswordLength = 32
+const MaxPasswordLength = 128
 
 // PasswordByteLength represents the number of bytes used to generate a Cape password
 const PasswordByteLength = 16
