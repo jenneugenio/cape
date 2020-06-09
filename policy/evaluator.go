@@ -255,7 +255,9 @@ func NewEvaluator(q *query.Query, s *proto.Schema, policies ...*primitives.Polic
 
 	for _, p := range policies {
 		for _, r := range p.Spec.Rules {
-			transforms = append(transforms, r.Transformations...)
+			if r.Target.Entity().String() == q.Entity() {
+				transforms = append(transforms, r.Transformations...)
+			}
 
 			if r.Type() == primitives.FieldRule && r.Target.Entity().String() == q.Entity() && r.Effect == primitives.Allow {
 				allowFieldRules = append(allowFieldRules, r)

@@ -63,7 +63,7 @@ func (t TargetType) String() string {
 	return string(t)
 }
 
-// Entity of a policy
+// Target of a rule
 type Target string
 
 // Validate that target is valid
@@ -76,7 +76,7 @@ func (t Target) Validate() error {
 	return t.Type().Validate()
 }
 
-// Checks if this target and the provided target match. This supports wildcards
+// Matches checks if this target and the provided target match. This supports wildcards
 func (t Target) Matches(other Target) bool {
 	return t.Entity() == other.Entity()
 }

@@ -1,0 +1,8 @@
+label: test-table
+rules:
+- action: read
+  effect: allow
+  fields:
+    - test_text
+  target: records:creditcards.test
+version: 1

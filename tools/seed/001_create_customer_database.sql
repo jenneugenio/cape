@@ -18,5 +18,5 @@ COMMIT;
 ---- create above / drop below ----
 
 BEGIN;
-    drop table transactions;
+DROP TABLE transactions;
 COMMIT;

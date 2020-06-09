@@ -105,6 +105,35 @@ func TestQuery(t *testing.T) {
 
 		gm.Expect(stream.Error()).To(gm.Equal(auth.ErrNoMatchingPolicies))
 	})
+
+	err = s.Manager.CreatePolicy(ctx, "./testdata/policy_test_table.yaml")
+	gm.Expect(err).To(gm.BeNil())
+
+	// there was an issue where policy targetting another table (entity)
+	// was interferring with querying other tables this confirms it
+	// is not still a bug
+	t.Run("can query other table", func(t *testing.T) {
+		query := "SELECT * FROM test"
+		stream, err := connClient.Query(context.Background(), s.Manager.TestSource.Label, query, 50, 50)
+		gm.Expect(err).To(gm.BeNil())
+
+		defer stream.Close()
+
+		expectedRows, err := sources.GetExpectedRows(ctx, s.ConnHarness.SourceCredentials().ToURL(), query+" LIMIT 50 OFFSET 50", nil)
+		gm.Expect(err).To(gm.BeNil())
+
+		i := 0
+		for stream.NextRecord() {
+			record := stream.Record()
+			// could check row to row but this is easier to see
+			// if there are any errors
+			for j, val := range record.Values() {
+				gm.Expect(val).To(gm.Equal(expectedRows[i][j]))
+			}
+			i++
+		}
+		gm.Expect(stream.Error()).To(gm.BeNil())
+	})
 }
 
 func TestQueryDenied(t *testing.T) {
