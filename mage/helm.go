@@ -10,11 +10,12 @@ import (
 )
 
 type Chart struct {
-	Name    string
-	Chart   string
-	Version string // Version of the chart
-	Values  string
-	Atomic  bool
+	Name             string
+	Chart            string
+	Version          string // Version of the chart
+	Values           string
+	AdditionalValues map[string]string
+	Atomic           bool
 }
 
 type Helm struct {
@@ -129,6 +130,10 @@ func (h *Helm) Install(ctx context.Context, c *Chart) error {
 		args = append(args, "--values", c.Values)
 	}
 
+	for k, v := range c.AdditionalValues {
+		args = append(args, "--set", fmt.Sprintf("%s=%s", k, v))
+	}
+
 	args = append(args, c.Name, c.Chart)
 
 	return sh.RunV("helm", args...)
@@ -145,6 +150,10 @@ func (h *Helm) Update(ctx context.Context, c *Chart, current *Release) error {
 
 	if c.Values != "" {
 		args = append(args, "--values", c.Values)
+	}
+
+	for k, v := range c.AdditionalValues {
+		args = append(args, "--set", fmt.Sprintf("%s=%s", k, v))
 	}
 
 	args = append(args, c.Name, c.Chart)
