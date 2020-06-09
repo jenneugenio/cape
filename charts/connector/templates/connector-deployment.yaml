@@ -1,47 +1,39 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: connector
+  name: {{ template "cape.fullname" . }}
+  namespace: {{ template "cape.namespace" . }}
   labels:
-    service: connector
+    {{- include "cape.labels" . | nindent 4 }}
+{{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 4 }}
+{{- end }}
+{{- with .Values.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
 spec:
-  replicas: 1
-  strategy:
-    type: Recreate
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
-      service: connector
+      {{- include "cape.selectorLabels" . | nindent 6 }}
+{{- with .Values.deploymentStrategy }}
+  strategy:
+{{ toYaml . | trim | indent 4 }}
+{{- end }}
   template:
     metadata:
-      creationTimestamp: null
       labels:
-        service: connector
-      # used for local development to always upgrade the
-      # deployment when running helm upgrade
-      # TODO revist for production deployments
+        {{- include "cape.selectorLabels" . | nindent 8 }}
+{{- with .Values.podLabels }}
+{{ toYaml . | indent 6 }}
+{{- end }}
+{{- if not .Values.admin.existingSecret }}
       annotations:
-        rollme: {{ randAlphaNum 5 | quote }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+{{- end }}
+{{- with .Values.podAnnotations }}
+{{ toYaml . | indent 8 }}
+{{- end }}
     spec:
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
-      containers:
-        - image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: Always
-          name: connector
-          command: ["cape"]
-          args: ["connector", "start"]
-          ports:
-            - containerPort: {{ .Values.port }}
-          env:
-            - name: CAPE_COORDINATOR_URL
-              value: {{ .Values.coordinator_url }}
-            - name: CAPE_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.token_secret }}
-                  key: token
-      {{ if (.Values.dockerSecret)}}
-      imagePullSecrets:
-        - name: {{ .Values.dockerSecret }}
-      {{ end }}
-status: {}
+      {{- include "cape.pod" . | indent 6 }}

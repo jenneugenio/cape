@@ -1,16 +1,17 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: cape-coordinator-migration
+  name: {{ template "cape.fullname" . }}-migration
 spec:
   template:
     spec:
       containers:
-      - image: "{{ .Values.image.coordinator_migration_repository }}:{{ .Values.image.tag }}"
+      - name: updater
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        command: [ "cape" ]
+        args: [ "update" ]
         imagePullPolicy: Always
-        name: updater
         env:
           - name: "CAPE_DB_URL"
-            value: "{{ .Values.db.url }}"
+            value: "{{ .Values.config.db.addr }}"
       restartPolicy: Never
-status: {}

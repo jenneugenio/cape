@@ -1,17 +1,3 @@
-image:
-  repository: localhost:5000/capeprivacy/cape
-  tag: latest
-  pullPolicy: Always
-
-# the secret containing the token the worker uses
-# to authenticate with the coordinator
-# TODO -- split from connector
-token_secret: worker-secret
-
-# the url to the coordinator deployed inside of the cluster. since we're using
-# nodeport services this is a static address instead of a service dns
-coordinator_url: http://localhost:8080
-
 serviceAccount:
   create: true
   name: ""
@@ -37,6 +23,11 @@ deploymentStrategy:
 admin:
   existingSecret: ""
 
+image:
+  repository: capeprivacy/cape
+  tag: latest
+  pullPolicy: IfNotPresent
+
 ## Assign a PriorityClassName to pods if set
 # priorityClassName
 
@@ -55,7 +46,7 @@ fullnameOverride: ""
 
 config:
   db:
-    addr: "postgres://postgres:dev@postgres-worker-postgresql:5433/worker"
+    addr: "postgres://postgres:dev@postgres-cape-postgresql:5432/worker"
   port: 8080
   root_key: ul0b9qQONZDn4kLNgULl3WJOZEhBqDjT1YK-kgceFUU
   version: 1

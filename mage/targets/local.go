@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/magefile/mage/mg"
 
@@ -48,21 +49,33 @@ var charts = []*mage.Chart{
 		Chart:   "charts/coordinator",
 		Version: "0.0.1",
 		Values:  "mage/config/coordinator-values.yaml",
-		Atomic:  true,
+		AdditionalValues: map[string]string{
+			"annotations.rollme":    fmt.Sprintf("r%d", time.Now().UnixNano()),
+			"podAnnotations.rollme": fmt.Sprintf("r%d", time.Now().UnixNano()),
+		},
+		Atomic: true,
 	},
 	{
 		Name:    "connector",
 		Chart:   "charts/connector",
 		Version: "0.0.1",
 		Values:  "mage/config/connector-values.yaml",
-		Atomic:  false,
+		AdditionalValues: map[string]string{
+			"annotations.rollme":    fmt.Sprintf("r%d", time.Now().UnixNano()),
+			"podAnnotations.rollme": fmt.Sprintf("r%d", time.Now().UnixNano()),
+		},
+		Atomic: false,
 	},
 	{
 		Name:    "worker",
 		Chart:   "charts/worker",
 		Version: "0.0.1",
 		Values:  "mage/config/worker-values.yaml",
-		Atomic:  false,
+		AdditionalValues: map[string]string{
+			"annotations.rollme":    fmt.Sprintf("r%d", time.Now().UnixNano()),
+			"podAnnotations.rollme": fmt.Sprintf("r%d", time.Now().UnixNano()),
+		},
+		Atomic: false,
 	},
 	{
 		Name:    "customer-migration",
