@@ -24,6 +24,8 @@ service:
   labels: {}
   portName: service
 
+instance_id: local-dev
+
 labels: {}
 annotations: {}
 
