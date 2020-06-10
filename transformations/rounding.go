@@ -104,10 +104,12 @@ func (r *RoundingTransform) Validate(args Args) error {
 		}
 	}
 
-	precision, found := args["precision"]
+	precision, found, err := args.LookupFloat64("precision")
+	if err != nil {
+		return err
+	}
 	if found {
-		pre, ok := precision.(float64)
-		if !ok || pre < 0 {
+		if precision < 0 {
 			return errors.New(UnsupportedType, "Unsupported precision: must be positive integer")
 		}
 	}
