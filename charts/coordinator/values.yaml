@@ -30,6 +30,7 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
+includeUI: false
 uiImage:
   repository: capeprivacy/cape-ui
   tag: latest

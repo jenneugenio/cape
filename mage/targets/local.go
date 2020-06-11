@@ -52,6 +52,7 @@ var charts = []*mage.Chart{
 		AdditionalValues: map[string]string{
 			"annotations.rollme":    fmt.Sprintf("r%d", time.Now().UnixNano()),
 			"podAnnotations.rollme": fmt.Sprintf("r%d", time.Now().UnixNano()),
+			"includeUI":             envOrDefault("CAPE_INCLUDE_UI", "false"),
 		},
 		Atomic: true,
 	},
@@ -306,4 +307,13 @@ func (l Local) DestroyAll(ctx context.Context) error {
 	}
 
 	return errors.Err()
+}
+
+func envOrDefault(env, defaultVal string) string {
+	val, ok := os.LookupEnv(env)
+	if !ok {
+		return defaultVal
+	}
+
+	return val
 }

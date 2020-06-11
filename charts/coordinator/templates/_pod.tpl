@@ -34,9 +34,11 @@ containers:
   - name: config
     mountPath: "/etc/coordinator"
     readOnly: true
+{{ if eq .Values.includeUI true }}
 - name: {{ .Chart.Name }}-ui
   image: "{{ .Values.uiImage.repository }}:{{ .Values.uiImage.tag }}"
   imagePullPolicy: {{ .Values.uiImage.pullPolicy }}
+{{- end }}
 volumes:
 - name: config
   secret:
