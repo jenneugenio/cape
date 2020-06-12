@@ -40,6 +40,7 @@ func init() {
 				loggingLevelFlag(),
 				configFilesFlag(),
 				instanceIDFlag(),
+				uiFlag(),
 			},
 		},
 	}
@@ -277,6 +278,8 @@ func startCoordinatorCmd(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	cfg.EnableUI = c.Bool("enable-ui")
 
 	// TODO: Consider having the "logger" be configured by the server?
 	logger, err := logging.Logger(c.String("logger"), c.String("log-level"), cfg.InstanceID.String())

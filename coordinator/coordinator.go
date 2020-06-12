@@ -23,6 +23,7 @@ import (
 	"github.com/capeprivacy/cape/coordinator/graph"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/mailer"
+	"github.com/capeprivacy/cape/coordinator/ui"
 	"github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -196,6 +197,10 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 	root.Handle("/v1/login", framework.LoginHandler(backend, capedb, cp, tokenAuth))
 	root.Handle("/v1/setup", framework.SetupHandler(backend, capedb, cp, tokenAuth, rootKey))
 	root.Handle("/v1/logout", framework.AuthTokenMiddleware(authenticated(framework.LogoutHandler(backend, tokenAuth))))
+
+	if cfg.EnableUI {
+		root.Handle("/", ui.Handler())
+	}
 
 	health := healthz.NewHandler(root)
 	chain := alice.New(

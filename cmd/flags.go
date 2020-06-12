@@ -191,3 +191,11 @@ func projectSpecFlag() cli.Flag {
 		EnvVars: []string{"CAPE_PROJECT_SPEC"},
 	}
 }
+
+func uiFlag() cli.Flag {
+	return &cli.BoolFlag{
+		Name:    "enable-ui",
+		Usage:   "Enable the web UI within the coordinator service",
+		EnvVars: []string{"CAPE_ENABLE_UI"},
+	}
+}

@@ -9,7 +9,7 @@ require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/Masterminds/squirrel v1.4.0
-	github.com/NYTimes/gziphandler v1.1.1
+	github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46
 	github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/fatih/color v1.9.0 // indirect
@@ -20,7 +20,6 @@ require (
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.27.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
-	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/gosimple/slug v1.9.0
 	github.com/gostaticanalysis/analysisutil v0.0.3 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
@@ -47,7 +46,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1
 	github.com/onsi/gomega v1.9.0
-	github.com/rs/cors v1.7.0
+	github.com/rs/cors v1.6.0
 	github.com/rs/zerolog v1.19.0
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.6.2 // indirect

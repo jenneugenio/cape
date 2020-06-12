@@ -29,6 +29,20 @@ jobs:
           version: 3.11.4
     - name: Check out repository
       uses: actions/checkout@v1
+
+    # Setup gsutil and download the appropriate version of Cape UI
+    - name: Authenticate on GCS
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        version: '300.0.0'
+        service_account_email: ${{ secrets.GCS_SERVICE_ACCOUNT }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+    - name: Download Cape UI
+      if: ${{ success() }}
+      env:
+        CAPE_UI_BUCKET: ${{ secrets.CAPE_UI_BUCKET }}
+      run: scripts/download-ui.sh
+
     # We skip checking the docker version as GitHub actions does not use Docker
     # CE. Instead, they build their own version from the source of the moby
     # project. See more details here:

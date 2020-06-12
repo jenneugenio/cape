@@ -19,3 +19,6 @@ build/
 
 # For users using GoLand
 .idea/
+
+# UI assets, downloaded with `./scripts/download-ui.sh`
+coordinator/ui/assets

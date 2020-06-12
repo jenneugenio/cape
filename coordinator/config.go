@@ -18,6 +18,7 @@ type Config struct {
 	DB         *DBConfig        `json:"db" envconfig:"DB_URL"`
 	InstanceID primitives.Label `json:"instance_id,omitempty"`
 	Port       int              `json:"port"`
+	EnableUI   bool             `json:"enable_ui,omitempty"`
 
 	// RootKey is used to encrypted EncryptionKey and should
 	// be stored in a separate config file in a secret or
