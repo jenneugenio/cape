@@ -18,14 +18,19 @@ func init() {
 			"that you can use with subsequent commands. You can only run this command ONCE per Cape instance.",
 		Examples: []*Example{
 			{
-				Example:     "cape coordinator setup local http://localhost:8081",
+				Example:     "cape setup local http://localhost:8080",
 				Description: "Initialize an admin account on a local cape instance",
 			},
 		},
 		Arguments: []*Argument{CoordinatorLabelArg, ClusterURLArg},
+		Variables: []*EnvVar{capePasswordVar},
 		Command: &cli.Command{
 			Name:   "setup",
 			Action: setupCoordinatorCmd,
+			Flags: []cli.Flag{
+				nameFlag(),
+				emailFlag(),
+			},
 		},
 	}
 

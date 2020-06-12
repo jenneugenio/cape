@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/magefile/mage/mg"
+	"github.com/magefile/mage/sh"
 
 	"github.com/capeprivacy/cape/mage"
 )
@@ -197,6 +198,13 @@ func (l Local) Deploy(ctx context.Context) error {
 	}
 
 	return errors.Err()
+}
+
+// Setup deploys the cluster and then configures it
+func (l Local) Setup(ctx context.Context) error {
+	mg.SerialCtxDeps(ctx, Local.Create, Local.Push, Local.Deploy)
+
+	return sh.Run("bash", "scripts/setup.sh")
 }
 
 // Status returns the current status of the kubernetes cluster, services, and
