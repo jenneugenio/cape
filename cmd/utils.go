@@ -87,6 +87,11 @@ func formatInstanceID(serviceType, instanceID string) (primitives.Label, error) 
 }
 
 func getName(c *cli.Context, question string) (primitives.Name, error) {
+	nameStr := c.String("name")
+	if nameStr != "" {
+		return primitives.NewName(nameStr)
+	}
+
 	validateName := func(input string) error {
 		_, err := primitives.NewName(input)
 		if err != nil {
@@ -115,6 +120,11 @@ func getName(c *cli.Context, question string) (primitives.Name, error) {
 func getEmail(c *cli.Context, in string) (primitives.Email, error) {
 	if in != "" {
 		return primitives.NewEmail(in)
+	}
+
+	emailStr := c.String("email")
+	if emailStr != "" {
+		return primitives.NewEmail(emailStr)
 	}
 
 	provider := GetProvider(c.Context)
@@ -158,6 +168,14 @@ func getPassword(c *cli.Context) (primitives.Password, error) {
 }
 
 func getConfirmedPassword(c *cli.Context) (primitives.Password, error) {
+	// Password can be nil as it's an _optional_ environment variable. Nil
+	// cannot be cast to a primitives.Password so we need to check here to see
+	// if the casting worked.
+	pw, ok := EnvVariables(c.Context, capePasswordVar).(primitives.Password)
+	if ok && pw != "" {
+		return pw, nil
+	}
+
 	empty := primitives.Password("")
 	provider := GetProvider(c.Context)
 	u := provider.UI(c.Context)

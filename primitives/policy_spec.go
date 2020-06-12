@@ -182,7 +182,7 @@ func ParsePolicySpec(data []byte) (*PolicySpec, error) {
 type Transformation struct {
 	Field    Field                     `json:"field"`
 	Function string                    `json:"function"`
-	Args     transformations.Args      `json:"args"`
+	Args     transformations.Args      `json:"args,omitempty"`
 	Where    transformations.Condition `json:"where,omitempty"`
 }
 
