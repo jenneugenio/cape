@@ -15,7 +15,6 @@ import (
 // User represents a user of the system
 type User struct {
 	*IdentityImpl
-	Name Name `json:"name"`
 
 	// We never want to send Credentials over the wire!
 	Credentials *Credentials `json:"-" gqlgen:"-"`
@@ -59,11 +58,11 @@ func NewUser(name Name, email Email, creds *Credentials) (*User, error) {
 	}
 
 	user := &User{
-		Name:        name, // TODO: Figure out what to do about validation
 		Credentials: creds,
 		IdentityImpl: &IdentityImpl{
 			Primitive: p,
 			Email:     email,
+			Name:      name,
 		},
 	}
 
@@ -120,8 +119,6 @@ func (u *User) Decrypt(ctx context.Context, codec crypto.EncryptionCodec, data [
 	}
 
 	u.IdentityImpl = in.IdentityImpl
-	u.Name = in.Name
-
 	u.Credentials = creds
 	return nil
 }

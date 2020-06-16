@@ -15,6 +15,7 @@ interface Identity {
   email: Email!
   created_at: Time!
   updated_at: Time!
+  name: Name!
 }
 
 # ------------------------------------------------------------------

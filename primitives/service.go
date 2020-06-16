@@ -26,10 +26,12 @@ func NewService(email Email, typ ServiceType, endpoint *URL) (*Service, error) {
 		return nil, err
 	}
 
+	name := Name(email.String())
 	service := &Service{
 		IdentityImpl: &IdentityImpl{
 			Primitive: p,
 			Email:     email,
+			Name:      name,
 		},
 		Type:     typ,
 		Endpoint: endpoint,

@@ -1,6 +1,7 @@
 type Service implements Identity {
     id: ID!
     email: Email!
+    name: Name!
     type: ServiceType!
     endpoint: URL
     created_at: Time!

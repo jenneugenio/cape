@@ -8,6 +8,7 @@ import (
 type Identity interface {
 	database.Entity
 	GetEmail() Email
+	GetName() Name
 }
 
 // IdentityImpl implements the above interface and is a common
@@ -16,9 +17,14 @@ type Identity interface {
 type IdentityImpl struct {
 	*database.Primitive
 	Email Email `json:"email"`
+	Name  Name  `json:"name"`
 }
 
 // GetEmail implements Identity interface
 func (i *IdentityImpl) GetEmail() Email {
 	return i.Email
+}
+
+func (i *IdentityImpl) GetName() Name {
+	return i.Name
 }

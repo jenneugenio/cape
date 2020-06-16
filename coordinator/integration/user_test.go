@@ -69,4 +69,11 @@ func TestUsers(t *testing.T) {
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(secondUser).To(gm.BeNil())
 	})
+
+	t.Run("Can query ME and get my name", func(t *testing.T) {
+		me, err := client.Me(ctx)
+		gm.Expect(err).To(gm.BeNil())
+		name := me.GetName()
+		gm.Expect(name).To(gm.Equal(primitives.Name("admin")))
+	})
 }

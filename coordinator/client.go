@@ -54,6 +54,7 @@ func (c *Client) Me(ctx context.Context) (primitives.Identity, error) {
 			me {
 				id
 				email
+				name
 			}
 		}
 	`, nil, &resp)

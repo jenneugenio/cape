@@ -187,6 +187,7 @@ type ComplexityRoot struct {
 		Email     func(childComplexity int) int
 		Endpoint  func(childComplexity int) int
 		ID        func(childComplexity int) int
+		Name      func(childComplexity int) int
 		Roles     func(childComplexity int) int
 		Type      func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
@@ -1214,6 +1215,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Service.ID(childComplexity), true
 
+	case "Service.name":
+		if e.complexity.Service.Name == nil {
+			break
+		}
+
+		return e.complexity.Service.Name(childComplexity), true
+
 	case "Service.roles":
 		if e.complexity.Service.Roles == nil {
 			break
@@ -1643,6 +1651,7 @@ interface Identity {
   email: Email!
   created_at: Time!
   updated_at: Time!
+  name: Name!
 }
 
 # ------------------------------------------------------------------
@@ -1764,6 +1773,7 @@ scalar SchemaBlob
 	&ast.Source{Name: "coordinator/schema/services.graphql", Input: `type Service implements Identity {
     id: ID!
     email: Email!
+    name: Name!
     type: ServiceType!
     endpoint: URL
     created_at: Time!
@@ -7082,6 +7092,40 @@ func (ec *executionContext) _Service_email(ctx context.Context, field graphql.Co
 	return ec.marshalNEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐEmail(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Service_name(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Service",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(primitives.Name)
+	fc.Result = res
+	return ec.marshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐName(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Service_type(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -10518,6 +10562,11 @@ func (ec *executionContext) _Service(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "email":
 			out.Values[i] = ec._Service_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "name":
+			out.Values[i] = ec._Service_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
