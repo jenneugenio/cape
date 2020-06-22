@@ -9,6 +9,9 @@ type Project {
     description: Description!
     status: ProjectStatus!
     current_spec: ProjectSpec
+
+    created_at: Time!
+    updated_at: Time!
 }
 
 type ProjectSpec {

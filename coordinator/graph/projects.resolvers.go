@@ -206,7 +206,22 @@ func (r *queryResolver) Projects(ctx context.Context, status []primitives.Projec
 }
 
 func (r *queryResolver) Project(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error) {
-	panic(fmt.Errorf("not implemented"))
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	if id == nil && label == nil {
+		return nil, errs.New(InvalidParametersCause, "Must provide an id or label")
+	}
+
+	var project primitives.Project
+	if id != nil {
+		err := enforcer.Get(ctx, *id, &project)
+		return &project, err
+	}
+
+	// otherwise, get by label
+	err := enforcer.QueryOne(ctx, &project, database.NewFilter(database.Where{"label": label}, nil, nil))
+	return &project, err
 }
 
 // Project returns generated.ProjectResolver implementation.

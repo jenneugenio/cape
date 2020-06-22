@@ -4,12 +4,12 @@ package integration
 
 import (
 	"context"
-	"testing"
-
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/primitives"
 	gm "github.com/onsi/gomega"
 	"io/ioutil"
+	"testing"
+	"time"
 )
 
 func TestProjects(t *testing.T) {
@@ -37,6 +37,36 @@ func TestProjects(t *testing.T) {
 		gm.Expect(p.Name).To(gm.Equal(primitives.DisplayName("My Project")))
 		gm.Expect(p.Label).To(gm.Equal(primitives.Label("my-project")))
 		gm.Expect(p.Description).To(gm.Equal(primitives.Description("This project does great things")))
+	})
+
+	t.Run("Can get a project by id", func(t *testing.T) {
+		// time out of the database has ms rounded off of it, so testStart can be ahead of the db by a tiny amount of time
+		testStart := time.Now().AddDate(0, 0, -1)
+
+		p1, err := client.CreateProject(ctx, "Make Me", nil, "This project does great things")
+		gm.Expect(err).To(gm.BeNil())
+
+		p2, err := client.GetProject(ctx, &p1.ID, nil)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(p2.Name).To(gm.Equal(p1.Name))
+		gm.Expect(p2.Description).To(gm.Equal(p1.Description))
+		gm.Expect(p2.CreatedAt.After(testStart)).To(gm.BeTrue())
+		gm.Expect(p2.UpdatedAt.After(testStart)).To(gm.BeTrue())
+	})
+
+	t.Run("Can get a project by label", func(t *testing.T) {
+		// time out of the database has ms rounded off of it, so testStart can be ahead of the db by a tiny amount of time
+		testStart := time.Now().AddDate(0, 0, -1)
+
+		p1, err := client.CreateProject(ctx, "Make Me Please", nil, "This project does great things")
+		gm.Expect(err).To(gm.BeNil())
+
+		p2, err := client.GetProject(ctx, nil, &p1.Label)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(p2.Name).To(gm.Equal(p1.Name))
+		gm.Expect(p2.Description).To(gm.Equal(p1.Description))
+		gm.Expect(p2.CreatedAt.After(testStart)).To(gm.BeTrue())
+		gm.Expect(p2.UpdatedAt.After(testStart)).To(gm.BeTrue())
 	})
 
 	t.Run("Cannot create a project with the same name", func(t *testing.T) {
