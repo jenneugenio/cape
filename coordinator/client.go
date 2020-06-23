@@ -1187,6 +1187,41 @@ func (c *Client) ListProjects(ctx context.Context, status []primitives.ProjectSt
 	return resp.Projects, nil
 }
 
+type GetProjectResponse struct {
+	Project *primitives.Project `json:"project"`
+}
+
+func (c *Client) GetProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error) {
+	variables := make(map[string]interface{})
+	if id != nil {
+		variables["id"] = id
+	}
+
+	if label != nil {
+		variables["label"] = label
+	}
+
+	var resp GetProjectResponse
+	err := c.transport.Raw(ctx, `
+		query GetProjects($id: ID, $label: Label) {
+			project(id: $id, label: $label) {
+				id,
+				name,
+				label,
+				description,
+				status,
+				created_at,
+				updated_at
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Project, nil
+}
+
 type UpdateProjectSpecResponseBody struct {
 	*primitives.Project
 	ProjectSpec *primitives.ProjectSpec `json:"current_spec"`

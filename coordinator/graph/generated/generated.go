@@ -120,12 +120,14 @@ type ComplexityRoot struct {
 	}
 
 	Project struct {
+		CreatedAt   func(childComplexity int) int
 		CurrentSpec func(childComplexity int) int
 		Description func(childComplexity int) int
 		ID          func(childComplexity int) int
 		Label       func(childComplexity int) int
 		Name        func(childComplexity int) int
 		Status      func(childComplexity int) int
+		UpdatedAt   func(childComplexity int) int
 	}
 
 	ProjectSpec struct {
@@ -787,6 +789,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Policy.UpdatedAt(childComplexity), true
 
+	case "Project.created_at":
+		if e.complexity.Project.CreatedAt == nil {
+			break
+		}
+
+		return e.complexity.Project.CreatedAt(childComplexity), true
+
 	case "Project.current_spec":
 		if e.complexity.Project.CurrentSpec == nil {
 			break
@@ -828,6 +837,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Project.Status(childComplexity), true
+
+	case "Project.updated_at":
+		if e.complexity.Project.UpdatedAt == nil {
+			break
+		}
+
+		return e.complexity.Project.UpdatedAt(childComplexity), true
 
 	case "ProjectSpec.id":
 		if e.complexity.ProjectSpec.ID == nil {
@@ -1521,6 +1537,9 @@ type Project {
     description: Description!
     status: ProjectStatus!
     current_spec: ProjectSpec
+
+    created_at: Time!
+    updated_at: Time!
 }
 
 type ProjectSpec {
@@ -5058,6 +5077,74 @@ func (ec *executionContext) _Project_current_spec(ctx context.Context, field gra
 	res := resTmp.(*primitives.ProjectSpec)
 	fc.Result = res
 	return ec.marshalOProjectSpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProjectSpec(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Project_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Project) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Project",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Project_updated_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Project) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Project",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UpdatedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(time.Time)
+	fc.Result = res
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ProjectSpec_id(ctx context.Context, field graphql.CollectedField, obj *primitives.ProjectSpec) (ret graphql.Marshaler) {
@@ -10007,6 +10094,16 @@ func (ec *executionContext) _Project(ctx context.Context, sel ast.SelectionSet, 
 				res = ec._Project_current_spec(ctx, field, obj)
 				return res
 			})
+		case "created_at":
+			out.Values[i] = ec._Project_created_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "updated_at":
+			out.Values[i] = ec._Project_updated_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
