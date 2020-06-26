@@ -4,12 +4,13 @@ package integration
 
 import (
 	"context"
-	"github.com/capeprivacy/cape/coordinator/harness"
-	"github.com/capeprivacy/cape/primitives"
-	gm "github.com/onsi/gomega"
 	"io/ioutil"
 	"testing"
 	"time"
+
+	"github.com/capeprivacy/cape/coordinator/harness"
+	"github.com/capeprivacy/cape/primitives"
+	gm "github.com/onsi/gomega"
 )
 
 func TestProjects(t *testing.T) {
@@ -92,11 +93,25 @@ func TestProjects(t *testing.T) {
 		gm.Expect(updatedP.Description).To(gm.Equal(desc))
 	})
 
+	t.Run("Cannot update a project with the same name", func(t *testing.T) {
+		_, err := client.CreateProject(ctx, "Same Project", nil, "This project does great things")
+		gm.Expect(err).To(gm.BeNil())
+
+		p, err := client.CreateProject(ctx, "Not Same Project", nil, "This project does great things")
+		gm.Expect(err).To(gm.BeNil())
+
+		name := primitives.DisplayName("Same Project")
+		desc := primitives.Description("This project is now updated")
+
+		_, err = client.UpdateProject(ctx, nil, &p.Label, &name, &desc)
+		gm.Expect(err).NotTo(gm.BeNil())
+	})
+
 	t.Run("Can update name and description by id", func(t *testing.T) {
 		p, err := client.CreateProject(ctx, "Another Updatable Project", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
-		name := primitives.DisplayName("New Name")
+		name := primitives.DisplayName("New New Name")
 		desc := primitives.Description("This project is now updated")
 
 		updatedP, err := client.UpdateProject(ctx, &p.ID, nil, &name, &desc)
