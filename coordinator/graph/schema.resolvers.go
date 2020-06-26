@@ -331,7 +331,16 @@ func (r *queryResolver) User(ctx context.Context, id database.ID) (*primitives.U
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*primitives.User, error) {
-	return nil, errs.New(errs.NotImplementedCause, "Users query not implemented")
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	var users []*primitives.User
+	err := enforcer.Query(ctx, &users, database.NewEmptyFilter())
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func (r *queryResolver) Me(ctx context.Context) (primitives.Identity, error) {

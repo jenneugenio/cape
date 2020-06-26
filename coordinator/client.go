@@ -134,6 +134,33 @@ func (c *Client) CreateUser(ctx context.Context, name primitives.Name, email pri
 	return resp.Response.User, resp.Response.Password, nil
 }
 
+// ListUsers returns all of the users in the database
+func (c *Client) ListUsers(ctx context.Context) ([]*primitives.User, error) {
+	var resp struct {
+		Users []*primitives.User `json:"users"`
+	}
+
+	err := c.transport.Raw(ctx, `
+		query Users {
+			users {
+				id
+				name
+				email
+				roles {
+					id
+					label
+				}
+			}
+		}
+	`, nil, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Users, nil
+}
+
 func (c *Client) Authenticated() bool {
 	return c.transport.Authenticated()
 }
