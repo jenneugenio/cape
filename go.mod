@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	cloud.google.com/go v0.44.3 // indirect
-	github.com/99designs/gqlgen v0.11.2
+	github.com/99designs/gqlgen v0.11.3
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig v2.22.0+incompatible
@@ -26,12 +26,12 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
 	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
-	github.com/jackc/pgconn v1.3.2
-	github.com/jackc/pgproto3/v2 v2.0.1
-	github.com/jackc/pgtype v1.2.0
+	github.com/jackc/pgconn v1.6.1
+	github.com/jackc/pgproto3/v2 v2.0.2
+	github.com/jackc/pgtype v1.4.0
 	github.com/jackc/pgx v3.6.2+incompatible
-	github.com/jackc/pgx/v4 v4.4.1
-	github.com/jackc/tern v1.9.1
+	github.com/jackc/pgx/v4 v4.7.0
+	github.com/jackc/tern v1.12.1
 	github.com/jdkato/prose v1.1.1
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
@@ -53,6 +53,7 @@ require (
 	github.com/mitchellh/mapstructure v1.2.2
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/neurosnap/sentences v1.0.6 // indirect
+	github.com/oklog/ulid v1.3.1
 	github.com/onsi/gomega v1.9.0
 	github.com/rs/cors v1.7.0
 	github.com/rs/zerolog v1.18.0
@@ -61,8 +62,8 @@ require (
 	github.com/urfave/cli/v2 v2.1.1
 	github.com/vektah/gqlparser/v2 v2.0.1
 	go.opencensus.io v0.22.2 // indirect
-	go.uber.org/multierr v1.1.0
-	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	go.uber.org/multierr v1.5.0
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	google.golang.org/grpc v1.28.1
