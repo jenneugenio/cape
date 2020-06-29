@@ -4,12 +4,6 @@ type Source {
     type: SourceType!
     endpoint: DBURL!
     credentials: DBURL
-
-    # if a source has a linked service
-    service: Service
-
-    # User may request schema info as well
-    schema: Schema
 }
 
 input AddSourceRequest {

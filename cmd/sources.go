@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/capeprivacy/cape/cmd/ui"
-	"github.com/capeprivacy/cape/coordinator"
 	"github.com/urfave/cli/v2"
 
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -28,31 +27,6 @@ func init() {
 			Flags: []cli.Flag{
 				clusterFlag(),
 				linkFlag(),
-			},
-		},
-	}
-
-	sourcesUpdateCmd := &Command{
-		Usage:       "Modifies the configuration of an existing data source",
-		Description: "Modifies the configuration of an existing data source",
-		Arguments:   []*Argument{SourceLabelArg},
-		Examples: []*Example{
-			{
-				Example: "cape sources update transactions --set-data-connector service:dc@my-cape.org",
-				Description: "Modifies the configuration of the data source labelled `transactions` to link to " +
-					"the data connector service identified by `service:dc@my-cape.org`",
-			},
-		},
-		Command: &cli.Command{
-			Name:   "update",
-			Action: handleSessionOverrides(sourcesUpdate),
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:    "set-data-connector",
-					Usage:   "Link the source to the data connector `CONNECTOR`",
-					EnvVars: []string{"CAPE_DATA_CONNECTOR"},
-				},
-				yesFlag(),
 			},
 		},
 	}
@@ -106,7 +80,6 @@ func init() {
 			Name: "sources",
 			Subcommands: []*cli.Command{
 				sourcesAddCmd.Package(),
-				sourcesUpdateCmd.Package(),
 				sourcesRemoveCmd.Package(),
 				sourcesListCmd.Package(),
 				sourcesDescribeCmd.Package(),
@@ -126,73 +99,14 @@ func sourcesAdd(c *cli.Context) error {
 
 	label := Arguments(c.Context, SourceLabelArg).(primitives.Label)
 	credentials := Arguments(c.Context, SourcesCredentialsArg).(*primitives.DBURL)
-	linkEmail := c.String("link")
 
-	var serviceID *database.ID
-	if linkEmail != "" {
-		email, err := primitives.NewEmail(linkEmail)
-		if err != nil {
-			return err
-		}
-
-		service, err := client.GetServiceByEmail(c.Context, email)
-		if err != nil {
-			return err
-		}
-
-		serviceID = &service.ID
-	}
-
-	source, err := client.AddSource(c.Context, label, credentials, serviceID)
+	source, err := client.AddSource(c.Context, label, credentials)
 	if err != nil {
 		return err
 	}
 
 	u := provider.UI(c.Context)
 	return u.Template("Added source {{ . | bold }} to Cape\n", source.Label.String())
-}
-
-func sourcesUpdate(c *cli.Context) error {
-	skipConfirm := c.Bool("yes")
-	provider := GetProvider(c.Context)
-	u := provider.UI(c.Context)
-	client, err := provider.Client(c.Context)
-	if err != nil {
-		return err
-	}
-
-	label := Arguments(c.Context, SourceLabelArg).(primitives.Label)
-
-	serviceEmail := c.String("set-data-connector")
-
-	var serviceID *database.ID
-	if serviceEmail != "" {
-		email, err := primitives.NewEmail(serviceEmail)
-		if err != nil {
-			return err
-		}
-
-		service, err := client.GetServiceByEmail(c.Context, email)
-		if err != nil {
-			return err
-		}
-
-		serviceID = &service.ID
-	} else {
-		if !skipConfirm {
-			err := u.Confirm(fmt.Sprintf("Do you really want to unlink the service for this source %s", label))
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	source, err := client.UpdateSource(c.Context, label, serviceID)
-	if err != nil {
-		return err
-	}
-
-	return u.Template("Updated source {{ . | bold }} with data connector {{ . | bold }}\n", source.Label.String())
 }
 
 func sourcesRemove(c *cli.Context) error {
@@ -236,14 +150,10 @@ func sourcesList(c *cli.Context) error {
 	u := provider.UI(c.Context)
 
 	if len(sources) > 0 {
-		header := []string{"Name", "Type", "Host", "Data Connector"}
+		header := []string{"Name", "Type", "Host"}
 		body := make([][]string, len(sources))
 		for i, s := range sources {
-			body[i] = []string{s.Label.String(), s.Endpoint.Scheme, s.Endpoint.String(), ""}
-
-			if s.Service != nil {
-				body[i][3] = s.Service.Email.String()
-			}
+			body[i] = []string{s.Label.String(), s.Endpoint.Scheme, s.Endpoint.String()}
 		}
 
 		err = u.Table(header, body)
@@ -263,7 +173,7 @@ func sourcesDescribe(c *cli.Context) error {
 	}
 
 	label := Arguments(c.Context, SourceLabelArg).(primitives.Label)
-	s, err := client.GetSourceByLabel(c.Context, label, &coordinator.SourceOptions{WithSchema: true})
+	s, err := client.GetSourceByLabel(c.Context, label)
 	if err != nil {
 		return err
 	}
@@ -275,23 +185,5 @@ func sourcesDescribe(c *cli.Context) error {
 		"Host": s.Endpoint.String(),
 	}
 
-	if s.Service != nil {
-		details["Data Connector"] = s.Service.Email.String()
-	}
-
-	err = u.Details(details)
-	if err != nil {
-		return err
-	}
-
-	template := "\n{{ \"Schema\" | bold }}\n"
-	for tableName, table := range s.Schema.Blob {
-		template += fmt.Sprintf("%s\n", tableName)
-		for columnName, fieldType := range table {
-			template += fmt.Sprintf("\t%s:\t%s\n", columnName, fieldType)
-		}
-		template += "\n"
-	}
-
-	return u.Template(template, nil)
+	return u.Details(details)
 }

@@ -7,7 +7,7 @@ WORKDIR /go/src/github.com/capeprivacy/cape
 
 # Install base dependencies in a different layer so they can be cached
 # independent of the go related bits.
-RUN apk --no-cache add gcc musl-dev curl protoc protobuf-dev
+RUN apk --no-cache add gcc musl-dev curl
 
 # Then we address our actual files that we're copying in - this way we only
 # have to rebuild the system dep layer if we need to change the system

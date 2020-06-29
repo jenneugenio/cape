@@ -33,7 +33,7 @@ func TestServices(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("create service", func(t *testing.T) {
-		email, err := primitives.NewEmail("service@connector-cape.com")
+		email, err := primitives.NewEmail("service@cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
 		s, err := createServicePrimitive(email)
@@ -51,7 +51,7 @@ func TestServices(t *testing.T) {
 	})
 
 	t.Run("delete service", func(t *testing.T) {
-		email, err := primitives.NewEmail("deleted-service@connector-cape.com")
+		email, err := primitives.NewEmail("deleted-service@cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
 		s, err := createServicePrimitive(email)
@@ -103,43 +103,6 @@ func TestServices(t *testing.T) {
 		service, err := client.CreateService(ctx, s)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(service).To(gm.BeNil())
-	})
-
-	t.Run("can create data connector service", func(t *testing.T) {
-		email, err := primitives.NewEmail("dc@cape.com")
-		gm.Expect(err).To(gm.BeNil())
-
-		url, err := primitives.NewURL("https://cape.com")
-		gm.Expect(err).To(gm.BeNil())
-
-		s, err := primitives.NewService(email, primitives.DataConnectorServiceType, url)
-		gm.Expect(err).To(gm.BeNil())
-
-		service, err := client.CreateService(ctx, s)
-		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(service.Type).To(gm.Equal(s.Type))
-		gm.Expect(service.Endpoint).To(gm.Equal(s.Endpoint))
-
-		connectorRole, err := client.GetRoleByLabel(ctx, primitives.DataConnectorRole)
-		gm.Expect(err).To(gm.BeNil())
-
-		members, err := client.GetMembersRole(ctx, connectorRole.ID)
-		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(members[0].GetEmail()).To(gm.Equal(service.Email))
-	})
-
-	t.Run("can create a worker service", func(t *testing.T) {
-		email, err := primitives.NewEmail("worker@cape.com")
-		gm.Expect(err).To(gm.BeNil())
-
-		s, err := primitives.NewService(email, primitives.WorkerServiceType, nil)
-		gm.Expect(err).To(gm.BeNil())
-
-		service, err := client.CreateService(ctx, s)
-		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(service.Type).To(gm.Equal(s.Type))
 	})
 }
 
@@ -207,7 +170,7 @@ func createServicePrimitive(email primitives.Email) (*primitives.Service, error)
 		return nil, err
 	}
 
-	service, err := primitives.NewService(email, typ, nil)
+	service, err := primitives.NewService(email, typ)
 	if err != nil {
 		return nil, err
 	}

@@ -53,15 +53,6 @@ var (
 		},
 	}
 
-	PullQueryArgument = &Argument{
-		Name:        "query",
-		Description: "The SQL query to query the data with.",
-		Required:    true,
-		Processor: func(in string) (interface{}, error) {
-			return in, nil
-		},
-	}
-
 	TokenIdentityArg = &Argument{
 		Name:        "identity",
 		Description: "The identity for the owner of the token in the form of an email",

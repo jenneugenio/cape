@@ -22,10 +22,6 @@ models:
   Service:
     model: github.com/capeprivacy/cape/primitives.Service
   Source:
-    # Here we force a resolver to be generated for the credentials field. This helps
-    # us encapsulate some of the tricky bits of authorization where we only want to expose
-    # the credentials field (its a secret) to the linked data connector of a source. See the
-    # sources.resolvers.go file and specifically the Credentials resolver to dive in to the code.
     fields:
       credentials:
         resolver: true

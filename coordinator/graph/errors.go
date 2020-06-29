@@ -9,10 +9,6 @@ var (
 	// creating a role
 	MembersNotCreated = errors.NewCause(errors.BadRequestCategory, "members_not_created")
 
-	// MustBeDataConnector occurs when linking a service to a data source. The service must be
-	// of data connector type
-	MustBeDataConnector = errors.NewCause(errors.BadRequestCategory, "must_be_data_connector")
-
 	// CannotDeleteSystemRole occurs when deletion of a system role is attempted
 	CannotDeleteSystemRole = errors.NewCause(errors.ForbiddenCategory, "cannot_delete_system_role")
 

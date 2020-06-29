@@ -6,7 +6,6 @@ package graph
 import (
 	"context"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
@@ -136,38 +135,4 @@ func (r *mutationResolver) AttemptRecovery(ctx context.Context, input model.Atte
 
 	logger.Info().Msg("Successfully recovered account with a new password")
 	return nil, nil
-}
-
-func (r *mutationResolver) DeleteRecoveries(ctx context.Context, input model.DeleteRecoveriesRequest) (*string, error) {
-	logger := fw.Logger(ctx)
-	session := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(session, r.Backend)
-
-	// Only the worker can call this endpoint
-	err := enforcer.Delete(ctx, primitives.RecoveryType, input.Ids...)
-	if err != nil {
-		logger.Error().Err(err).Msg("Could not delete recoveries")
-		return nil, err
-	}
-
-	logger.Info().Msgf("Deleted %d recoveries", len(input.Ids))
-	return nil, nil
-}
-
-func (r *queryResolver) Recoveries(ctx context.Context) ([]*primitives.Recovery, error) {
-	logger := fw.Logger(ctx)
-	session := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(session, r.Backend)
-
-	// TODO: Add ability for worker to filter recoveries so we only return the
-	// recoveries we need to delete.
-	recoveries := []*primitives.Recovery{}
-	err := enforcer.Query(ctx, &recoveries, database.NewEmptyFilter())
-	if err != nil {
-		logger.Error().Err(err).Msg("Could not retrieve recoveries")
-		return nil, err
-	}
-
-	logger.Info().Msgf("Retrieved %d recoveries", len(recoveries))
-	return recoveries, nil
 }

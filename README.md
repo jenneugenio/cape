@@ -16,11 +16,6 @@ installed:
 - [docker](https://docs.docker.com/get-docker/) (version 18.0+)
 - [golang](https://golang.org/doc/install) (version 1.14+)
 
-In addition, if you plan on running tests or building Cape outside of a docker
-container, you'll need to install:
-
-- [protoc](https://developers.google.com/protocol-buffers/docs/downloads) (version 3.11.4+)
-
 Once you have the base dependencies available on your system you can bootstrap
 your local environment by running:
 
@@ -63,7 +58,7 @@ determine the state of the build.
 We're using [kind](https://kind.sigs.k8s.io/) for deploying Cape into kubernetes locally.
 
 To get started you need to first startup kind, build the docker images and deploy the
-helm charts to get the coordinator, the connector and the database running. This can be done with the
+helm charts to get the coordinator and the database running. This can be done with the
 following `mage` command:
 
 ```
@@ -79,12 +74,6 @@ NAMESPACE: default
 STATUS: deployed
 REVISION: 1
 TEST SUITE: None
-NAME: connector
-LAST DEPLOYED: Fri May 15 16:23:36 2020
-NAMESPACE: default
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
 ```
 
 to know it has completed successfully.
@@ -95,43 +84,6 @@ First, run setup to create an admin account, create the default roles and the de
 
 ```
 $ cape setup local http://localhost:8080
-```
-
-Next, create a service which can be used as the data connector. The connector won't actually be
-running until you complete this step has it requires the kubernetes secret inserted in the last command.
-
-```
-$ cape services create --type data-connector --endpoint https://localhost:8081 service:dc@my-cape.com
-$ export CONNECTOR_TOKEN=<TOKEN PRINTED OUT FROM THE LAST COMMAND>
-$ kubectl create secret generic connector-secret --from-literal=token=$CONNECTOR_TOKEN
-```
-
-Get a token that you can provide the worker to be able to auth with the connector & coordinator
-```
-$ cape services create --type worker service:worker@my-cape.com
-$ export WORKER_TOKEN=<TOKEN PRINTED OUT FROM THE LAST COMMAND>
-$ kubectl create secret generic worker-secret --from-literal=token=$WORKER_TOKEN
-```
-
-Create a data source and point it to some test data located in the local cluster. This needs to be
-explicitly linked with the data connector created above.
-
-```
-$ cape sources add --link service:dc@my-cape.com transactions postgres://postgres:dev@postgres-customer-postgresql:5434/customer
-```
-
-Create a policy so that the data is actually accessible. By default, access to data in the Cape is
-blocked unless there is a policy saying you can access it.
-
-```
-$ cape policies attach --from-file examples/allow-specific-fields.yaml allow-specific-fields global
-```
-
-Try to pull the data! If this command succeeds you should be good to continue experimenting and testing
-the system.
-
-```
-$ cape pull transactions "SELECT * FROM transactions"
 ```
 
 ## Troubleshooting

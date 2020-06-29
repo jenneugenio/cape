@@ -15,7 +15,7 @@ import (
 )
 
 func (r *mutationResolver) CreateService(ctx context.Context, input model.CreateServiceRequest) (*primitives.Service, error) {
-	service, err := primitives.NewService(input.Email, input.Type, input.Endpoint)
+	service, err := primitives.NewService(input.Email, input.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -29,16 +29,7 @@ func (r *mutationResolver) CreateService(ctx context.Context, input model.Create
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, tx)
 
-	// We're building up a list of role labels that we will create assignments
-	// for once we've gotten their objects
 	roleLabels := []primitives.Label{primitives.GlobalRole}
-	if input.Type == primitives.DataConnectorServiceType {
-		roleLabels = append(roleLabels, primitives.DataConnectorRole)
-	}
-
-	if input.Type == primitives.WorkerServiceType {
-		roleLabels = []primitives.Label{primitives.WorkerRole}
-	}
 
 	roles, err := getRolesByLabel(ctx, enforcer, roleLabels)
 	if err != nil {

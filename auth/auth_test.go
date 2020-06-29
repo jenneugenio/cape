@@ -107,47 +107,6 @@ func TestDefaultGlobalPolicy(t *testing.T) {
 	}
 }
 
-func TestDefaultDataConnectorPolicy(t *testing.T) {
-	gm.RegisterTestingT(t)
-
-	policy, err := loadPolicyFile(primitives.DefaultDataConnectorPolicy.String() + ".yaml")
-	gm.Expect(err).To(gm.BeNil())
-
-	user := &primitives.User{}
-	session, err := NewSession(&primitives.User{}, &primitives.Session{}, []*primitives.Policy{policy},
-		[]*primitives.Role{}, user)
-	gm.Expect(err).To(gm.BeNil())
-	gm.Expect(session).ToNot(gm.BeNil())
-
-	t.Run("allowed to read sources", func(t *testing.T) {
-		typ, ok := types.Get("sources")
-		gm.Expect(ok).To(gm.BeTrue())
-
-		err := session.Can(primitives.Read, typ)
-		gm.Expect(err).To(gm.BeNil())
-	})
-
-	deniedTestCases := []string{"users", "services", "assignments", "attachments", "roles", "policies", "sources"}
-
-	for _, primitive := range deniedTestCases {
-		t.Run(fmt.Sprintf("denied create for %s", primitive), func(t *testing.T) {
-			typ, ok := types.Get(primitive)
-			gm.Expect(ok).To(gm.BeTrue())
-
-			err := session.Can(primitives.Create, typ)
-			gm.Expect(err).NotTo(gm.BeNil())
-		})
-
-		t.Run(fmt.Sprintf("denied delete for %s", primitive), func(t *testing.T) {
-			typ, ok := types.Get(primitive)
-			gm.Expect(ok).To(gm.BeTrue())
-
-			err := session.Can(primitives.Delete, typ)
-			gm.Expect(err).NotTo(gm.BeNil())
-		})
-	}
-}
-
 func loadPolicyFile(file string) (*primitives.Policy, error) {
 	dir := pkger.Dir("/primitives/policies/default")
 	f, err := dir.Open(file)

@@ -132,7 +132,7 @@ func TestDeleteSystemRoles(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	systemRoles := []string{"admin", "global", "data-connector"}
+	systemRoles := []string{"admin", "global"}
 	for _, roleLabel := range systemRoles {
 		t.Run(fmt.Sprintf("can't delete %s role", roleLabel), func(t *testing.T) {
 			admin, err := primitives.NewLabel(roleLabel)
