@@ -1,5 +1,4 @@
-// Package primitives contains all the primitive data types used by the coordinator
-// and the connector.
+// Package primitives contains all the primitive data types used by the coordinator.
 package primitives
 
 import (

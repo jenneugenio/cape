@@ -10,8 +10,7 @@ import (
 // running a pipeline).
 type Service struct {
 	*IdentityImpl
-	Type     ServiceType `json:"type"`
-	Endpoint *URL        `json:"endpoint"`
+	Type ServiceType `json:"type"`
 }
 
 // GetType returns the type for this entity
@@ -20,7 +19,7 @@ func (s *Service) GetType() types.Type {
 }
 
 // NewService returns a mutable service struct
-func NewService(email Email, typ ServiceType, endpoint *URL) (*Service, error) {
+func NewService(email Email, typ ServiceType) (*Service, error) {
 	p, err := database.NewPrimitive(ServicePrimitiveType)
 	if err != nil {
 		return nil, err
@@ -33,8 +32,7 @@ func NewService(email Email, typ ServiceType, endpoint *URL) (*Service, error) {
 			Email:     email,
 			Name:      name,
 		},
-		Type:     typ,
-		Endpoint: endpoint,
+		Type: typ,
 	}
 
 	return service, service.Validate()
@@ -51,28 +49,11 @@ func (s *Service) Validate() error {
 	}
 
 	switch s.Type {
-	case DataConnectorServiceType:
-		if s.Endpoint == nil {
-			return errors.New(InvalidServiceCause, "Must specify endpoint with data-connector service type")
-		}
-
-		if err := s.Endpoint.Validate(); err != nil {
-			return err
-		}
-	case WorkerServiceType:
-		if s.Endpoint != nil {
-			return errors.New(InvalidServiceCause, "Can't specify endpoint on user service type")
-		}
 	case UserServiceType:
-		if s.Endpoint != nil {
-			return errors.New(InvalidServiceCause, "Can't specify endpoint on user service type")
-		}
-
+		return nil
 	default:
 		return errors.New(InvalidServiceCause, "Unrecognized type: %s", s.Type.String())
 	}
-
-	return nil
 }
 
 // GetEmail satisfies Identity interface

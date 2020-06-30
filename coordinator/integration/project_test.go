@@ -190,7 +190,7 @@ func TestProjectSpecCreate(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 	dbURL, err := primitives.NewDBURL("postgres://postgres:dev@my.cool.website:5432/mydb")
 	gm.Expect(err).To(gm.BeNil())
-	_, err = client.AddSource(ctx, l, dbURL, nil)
+	_, err = client.AddSource(ctx, l, dbURL)
 	gm.Expect(err).To(gm.BeNil())
 
 	f, err := ioutil.ReadFile("./testdata/project_spec.yaml")

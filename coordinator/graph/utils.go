@@ -126,17 +126,7 @@ func attachDefaultPolicy(ctx context.Context, db database.Querier) error {
 		return err
 	}
 
-	dcPolicy, err := loadPolicyFile(primitives.DefaultDataConnectorPolicy.String() + ".yaml")
-	if err != nil {
-		return err
-	}
-
-	wPolicy, err := loadPolicyFile(primitives.DefaultWorkerPolicy.String() + ".yaml")
-	if err != nil {
-		return err
-	}
-
-	err = db.Create(ctx, adminPolicy, globalPolicy, dcPolicy, wPolicy)
+	err = db.Create(ctx, adminPolicy, globalPolicy)
 	if err != nil {
 		return err
 	}
@@ -151,17 +141,7 @@ func attachDefaultPolicy(ctx context.Context, db database.Querier) error {
 		return err
 	}
 
-	dcAttachment, err := createAttachment(ctx, db, dcPolicy.ID, primitives.DataConnectorRole)
-	if err != nil {
-		return err
-	}
-
-	wAttachment, err := createAttachment(ctx, db, wPolicy.ID, primitives.WorkerRole)
-	if err != nil {
-		return err
-	}
-
-	err = db.Create(ctx, adminAttachment, globalAttachment, dcAttachment, wAttachment)
+	err = db.Create(ctx, adminAttachment, globalAttachment)
 	if err != nil {
 		return err
 	}

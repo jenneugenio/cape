@@ -42,7 +42,6 @@ type Source struct {
 type Manager struct {
 	h          *Harness
 	Admin      *User
-	Connector  *Service
 	TestSource *Source
 }
 
@@ -93,83 +92,16 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 	return client, nil
 }
 
-// ReportSchema will log in as the provided worker (through the API token)
-// and report the provided token as that worker
-func (m *Manager) ReportSchema(ctx context.Context, token *auth.APIToken, sourceID database.ID, schema primitives.SchemaBlob) error {
-	c, err := m.h.Client()
-	if err != nil {
-		return err
-	}
-
-	_, err = c.TokenLogin(ctx, token)
-	if err != nil {
-		return err
-	}
-
-	return c.ReportSchema(ctx, sourceID, schema)
-}
-
-// Registers a worker and returns a token for that worker
-func (m *Manager) CreateWorker(ctx context.Context) (*auth.APIToken, error) {
-	workerEmail, err := primitives.NewEmail("worker@cape.com")
-	if err != nil {
-		return nil, err
-	}
-
-	service, err := primitives.NewService(workerEmail, primitives.WorkerServiceType, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	worker, err := m.Admin.Client.CreateService(ctx, service)
-	if err != nil {
-		return nil, err
-	}
-
-	token, _, err := m.Admin.Client.CreateToken(ctx, worker)
-	return token, err
-}
-
 // CreateSource creates a source on the coordinator
 func (m *Manager) CreateSource(ctx context.Context, dbURL *primitives.DBURL, serviceID database.ID) error {
 	sourceLabel := primitives.Label("test-source")
-	_, err := m.Admin.Client.AddSource(ctx, sourceLabel, dbURL, &serviceID)
+	_, err := m.Admin.Client.AddSource(ctx, sourceLabel, dbURL)
 	if err != nil {
 		return err
 	}
 
 	m.TestSource = &Source{
 		Label: sourceLabel,
-	}
-
-	return nil
-}
-
-// CreateService creates a service on the coordinator with the given APIToken and URL
-func (m *Manager) CreateService(ctx context.Context, email string, serviceURL *primitives.URL) error {
-	e, err := primitives.NewEmail(email)
-	if err != nil {
-		return err
-	}
-
-	service, err := primitives.NewService(e, primitives.DataConnectorServiceType, serviceURL)
-	if err != nil {
-		return err
-	}
-
-	service, err = m.Admin.Client.CreateService(ctx, service)
-	if err != nil {
-		return err
-	}
-
-	apiToken, _, err := m.Admin.Client.CreateToken(ctx, service)
-	if err != nil {
-		return err
-	}
-
-	m.Connector = &Service{
-		ID:    service.ID,
-		Token: apiToken,
 	}
 
 	return nil

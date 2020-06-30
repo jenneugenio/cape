@@ -14,20 +14,13 @@ type ServiceType string
 var (
 	// UserServiceType is the user service type
 	UserServiceType ServiceType = "user"
-
-	// DataConnectorServiceType is the data connector service type
-	DataConnectorServiceType ServiceType = "data-connector"
-
-	WorkerServiceType ServiceType = "worker"
 )
 
 var typeRegistry map[ServiceType]string
 
 func init() {
 	typeRegistry = map[ServiceType]string{
-		UserServiceType:          UserServiceType.String(),
-		DataConnectorServiceType: DataConnectorServiceType.String(),
-		WorkerServiceType:        WorkerServiceType.String(),
+		UserServiceType: UserServiceType.String(),
 	}
 }
 
@@ -53,10 +46,6 @@ func (s *ServiceType) String() string {
 func (s *ServiceType) Validate() error {
 	switch *s {
 	case UserServiceType:
-		return nil
-	case DataConnectorServiceType:
-		return nil
-	case WorkerServiceType:
 		return nil
 	default:
 		return errors.New(InvalidServiceType, "%s is not a valid ServiceType", *s)

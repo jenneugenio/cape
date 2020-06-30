@@ -31,7 +31,6 @@ func TestNewSource(t *testing.T) {
 
 			endpoint:   "postgres://my.cool.website.com:5432/test",
 			sourceType: PostgresType,
-			serviceID:  nil,
 			success:    true,
 		},
 		"returns error if credentials is nil": {
@@ -50,7 +49,7 @@ func TestNewSource(t *testing.T) {
 				gm.Expect(err).To(gm.BeNil())
 			}
 
-			source, err := NewSource(test.label, u, test.serviceID)
+			source, err := NewSource(test.label, u)
 			if !test.success {
 				gm.Expect(errors.FromCause(err, test.cause)).To(gm.BeTrue())
 				return
@@ -58,7 +57,6 @@ func TestNewSource(t *testing.T) {
 
 			gm.Expect(source.Label).To(gm.Equal(test.label))
 			gm.Expect(source.Type).To(gm.Equal(test.sourceType))
-			gm.Expect(source.ServiceID).To(gm.Equal(test.serviceID))
 			gm.Expect(source.Credentials.String()).To(gm.Equal(test.credentials))
 			gm.Expect(source.Endpoint.String()).To(gm.Equal(test.endpoint))
 		})
@@ -68,7 +66,7 @@ func TestNewSource(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("marshal to json", func(t *testing.T) {
-		source, err := NewSource("helllllo", u, nil)
+		source, err := NewSource("helllllo", u)
 		gm.Expect(err).To(gm.BeNil())
 
 		_, err = json.Marshal(source)
@@ -76,7 +74,7 @@ func TestNewSource(t *testing.T) {
 	})
 
 	t.Run("unmarshal from json", func(t *testing.T) {
-		source, err := NewSource("heyaaaa", u, nil)
+		source, err := NewSource("heyaaaa", u)
 		gm.Expect(err).To(gm.BeNil())
 
 		b, err := json.Marshal(source)
@@ -90,10 +88,7 @@ func TestNewSource(t *testing.T) {
 	})
 
 	t.Run("test encrypt decrypt", func(t *testing.T) {
-		serviceID, err := database.GenerateID(ServicePrimitiveType)
-		gm.Expect(err).To(gm.BeNil())
-
-		source, err := NewSource("heyo", u, &serviceID)
+		source, err := NewSource("heyo", u)
 		gm.Expect(err).To(gm.BeNil())
 
 		key, err := crypto.NewBase64KeyURL(nil)

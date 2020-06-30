@@ -69,9 +69,8 @@ type CreateRoleRequest struct {
 }
 
 type CreateServiceRequest struct {
-	Email    primitives.Email       `json:"email"`
-	Type     primitives.ServiceType `json:"type"`
-	Endpoint *primitives.URL        `json:"endpoint"`
+	Email primitives.Email       `json:"email"`
+	Type  primitives.ServiceType `json:"type"`
 }
 
 type CreateTokenRequest struct {
@@ -124,11 +123,6 @@ type PolicyInput struct {
 
 type RemoveSourceRequest struct {
 	Label primitives.Label `json:"label"`
-}
-
-type ReportSchemaRequest struct {
-	SourceID     database.ID `json:"source_id"`
-	SourceSchema string      `json:"source_schema"`
 }
 
 type SessionRequest struct {

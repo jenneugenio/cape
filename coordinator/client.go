@@ -3,7 +3,6 @@ package coordinator
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/manifoldco/go-base64"
 
@@ -21,11 +20,6 @@ var NetworkCause = errors.NewCause(errors.RequestTimeoutCategory, "network_error
 // UnrecognizedIdentityType occurs when the client encounters an identity type
 // it doesn't recognize.
 var UnrecognizedIdentityType = errors.NewCause(errors.BadRequestCategory, "unrecognized_identity")
-
-// SourceOptions can be passed to some of the source routes to provide additional functionality
-type SourceOptions struct {
-	WithSchema bool
-}
 
 // Client is a wrapper around the graphql client that
 // connects to the coordinator and sends queries
@@ -451,13 +445,11 @@ func (c *Client) ListRoles(ctx context.Context) ([]*primitives.Role, error) {
 // We create a custom marshaller that encodes the endpoint as a string
 type SourceResponse struct {
 	*primitives.Source
-	Service *primitives.Service `json:"service"`
-	Schema  *primitives.Schema  `json:"schema"`
 }
 
 // AddSource adds a new source to the database
 func (c *Client) AddSource(ctx context.Context, label primitives.Label,
-	credentials *primitives.DBURL, serviceID *database.ID) (*SourceResponse, error) {
+	credentials *primitives.DBURL) (*SourceResponse, error) {
 	var resp struct {
 		Source SourceResponse `json:"addSource"`
 	}
@@ -465,53 +457,17 @@ func (c *Client) AddSource(ctx context.Context, label primitives.Label,
 	variables := make(map[string]interface{})
 	variables["label"] = label
 	variables["credentials"] = credentials.String()
-	variables["service_id"] = serviceID
 
 	err := c.transport.Raw(ctx, `
-		mutation AddSource($label: Label!, $credentials: DBURL!, $service_id: ID) {
-			  addSource(input: { label: $label, credentials: $credentials, service_id: $service_id}) {
+		mutation AddSource($label: Label!, $credentials: DBURL!) {
+			  addSource(input: { label: $label, credentials: $credentials}) {
 				id
 				label
 				type
 				credentials
 				endpoint
-				service {
-					id
-					email
-				}
 			  }
 			}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Source, nil
-}
-
-func (c *Client) UpdateSource(ctx context.Context, label primitives.Label, serviceID *database.ID) (*SourceResponse, error) {
-	var resp struct {
-		Source SourceResponse `json:"updateSource"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["source_label"] = label
-	variables["service_id"] = serviceID
-
-	err := c.transport.Raw(ctx, `
-		mutation UpdateSource($source_label: Label!, $service_id: ID) {
-			updateSource(input: { source_label: $source_label, service_id: $service_id }) {
-				id
-				label
-				type
-				credentials
-				endpoint
-				service {
-					id
-					email
-				}
-			}
-		}
 	`, variables, &resp)
 	if err != nil {
 		return nil, err
@@ -535,11 +491,6 @@ func (c *Client) ListSources(ctx context.Context) ([]*SourceResponse, error) {
 					credentials
 					type
 					endpoint
-					service {
-						id
-						email
-						endpoint
-					}
 				}
 			}
 	`, nil, &resp)
@@ -565,7 +516,7 @@ func (c *Client) RemoveSource(ctx context.Context, label primitives.Label) error
 }
 
 // GetSource returns a specific data source
-func (c *Client) GetSource(ctx context.Context, id database.ID, opts *SourceOptions) (*SourceResponse, error) {
+func (c *Client) GetSource(ctx context.Context, id database.ID) (*SourceResponse, error) {
 	var resp struct {
 		Source SourceResponse `json:"source"`
 	}
@@ -573,17 +524,7 @@ func (c *Client) GetSource(ctx context.Context, id database.ID, opts *SourceOpti
 	variables := make(map[string]interface{})
 	variables["id"] = id
 
-	// We will also request the schema if withSchema == true
-	describeClause := ""
-	if opts != nil && opts.WithSchema {
-		describeClause = `
-			schema {
-				blob
-			}
-		`
-	}
-
-	err := c.transport.Raw(ctx, fmt.Sprintf(`
+	err := c.transport.Raw(ctx, `
 		query SourceIDs($id: ID!) {
 				source(id: $id) {
 					id
@@ -591,14 +532,9 @@ func (c *Client) GetSource(ctx context.Context, id database.ID, opts *SourceOpti
 					type
 					credentials
 					endpoint
-					service {
-						id
-						email
-					}
-					%s
 				}
 			}
-	`, describeClause), variables, &resp)
+	`, variables, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -607,7 +543,7 @@ func (c *Client) GetSource(ctx context.Context, id database.ID, opts *SourceOpti
 }
 
 // GetSourceByLabel returns a specific data source given its label
-func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label, opts *SourceOptions) (*SourceResponse, error) {
+func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label) (*SourceResponse, error) {
 	var resp struct {
 		Source SourceResponse `json:"sourceByLabel"`
 	}
@@ -615,17 +551,7 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label, o
 	variables := make(map[string]interface{})
 	variables["label"] = label
 
-	// We will also request the schema if withSchema == true
-	describeClause := ""
-	if opts != nil && opts.WithSchema {
-		describeClause = `
-			schema {
-				blob
-			}
-		`
-	}
-
-	err := c.transport.Raw(ctx, fmt.Sprintf(`
+	err := c.transport.Raw(ctx, `
 		query SourceIDs($label: Label!) {
 				sourceByLabel(label: $label) {
 					id
@@ -633,14 +559,9 @@ func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label, o
 					type
 					credentials
 					endpoint
-					service {
-						id
-						email
-					}
-					%s
 				}
 			}
-	`, describeClause), variables, &resp)
+	`, variables, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -696,18 +617,12 @@ func (c *Client) CreateService(ctx context.Context, service *primitives.Service)
 	variables["email"] = service.Email
 	variables["type"] = service.Type
 
-	variables["endpoint"] = nil
-	if service.Endpoint != nil {
-		variables["endpoint"] = service.Endpoint.String()
-	}
-
 	err := c.transport.Raw(ctx, `
-		mutation CreateService($email: Email!, $type: ServiceType!, $endpoint: URL) {
-			createService(input: { email: $email, type: $type, endpoint: $endpoint }) {
+		mutation CreateService($email: Email!, $type: ServiceType!) {
+			createService(input: { email: $email, type: $type}) {
 				id
 				email
 				type
-				endpoint
 			}
 		}
 	`, variables, &resp)
@@ -746,7 +661,6 @@ func (c *Client) GetService(ctx context.Context, id database.ID) (*primitives.Se
 				id
 				email
 				type
-				endpoint
 			}
 		}
 	`, variables, &resp)
@@ -772,7 +686,6 @@ func (c *Client) GetServiceByEmail(ctx context.Context, email primitives.Email) 
 				id
 				email
 				type
-				endpoint
 			}
 		}
 	`, variables, &resp)
@@ -795,7 +708,6 @@ func (c *Client) ListServices(ctx context.Context) ([]*ServiceResponse, error) {
 				id
 				email
 				type
-				endpoint
 				roles {
 					id
 					label
@@ -1127,23 +1039,6 @@ func (c *Client) RemoveToken(ctx context.Context, tokenID database.ID) error {
 	return c.transport.Raw(ctx, `
 		mutation RemoveToken($id: ID!) {
 			removeToken(id: $id)
-		}
-    `, variables, nil)
-}
-
-func (c *Client) ReportSchema(ctx context.Context, sourceID database.ID, sourceSchema primitives.SchemaBlob) error {
-	schemaBlob, err := json.Marshal(sourceSchema)
-	if err != nil {
-		return err
-	}
-
-	variables := make(map[string]interface{})
-	variables["source_id"] = sourceID
-	variables["source_schema"] = string(schemaBlob)
-
-	return c.transport.Raw(ctx, `
-		mutation ReportSchema($source_id: ID!, $source_schema: String!) {
-			reportSchema(input: { source_id: $source_id, source_schema: $source_schema })
 		}
     `, variables, nil)
 }

@@ -18,19 +18,8 @@ input DeleteRecoveriesRequest {
   ids: [ID!]!
 }
 
-extend type Query {
-  # Only the worker can call the recoveries query to list existing recoveries
-  #
-  # TODO: Introduce ability to filter and paginate returned recoveries to the
-  # worker.
-  recoveries: [Recovery!]! @isAuthenticated()
-}
-
 extend type Mutation {
   # Create & attempt do not return any response as a non-error response is a success
   createRecovery(input: CreateRecoveryRequest!): String
   attemptRecovery(input: AttemptRecoveryRequest!): String
-
-  # Only the worker can attempt to delete a recovery attempt
-  deleteRecoveries(input: DeleteRecoveriesRequest!): String @isAuthenticated()
 }

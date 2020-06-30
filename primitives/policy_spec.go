@@ -6,12 +6,29 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/Knetic/govaluate"
 	"github.com/mitchellh/mapstructure"
 	"sigs.k8s.io/yaml"
 
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/transformations"
 )
+
+type Args map[string]interface{}
+
+type Condition string
+
+func (c Condition) String() string {
+	return string(c)
+}
+
+func (c Condition) Validate() error {
+	if c.String() != "" {
+		_, err := govaluate.NewEvaluableExpression(c.String())
+		return err
+	}
+
+	return nil
+}
 
 // PolicyVersion represents which version of policy we are using
 type PolicyVersion uint8
@@ -180,10 +197,10 @@ func ParsePolicySpec(data []byte) (*PolicySpec, error) {
 
 // Transformation represents a transform in the policy spec
 type Transformation struct {
-	Field    Field                     `json:"field"`
-	Function string                    `json:"function"`
-	Args     transformations.Args      `json:"args,omitempty"`
-	Where    transformations.Condition `json:"where,omitempty"`
+	Field    Field     `json:"field"`
+	Function string    `json:"function"`
+	Args     Args      `json:"args,omitempty"`
+	Where    Condition `json:"where,omitempty"`
 }
 
 // Validate that the policy spec is valids
@@ -193,20 +210,5 @@ func (t *Transformation) Validate() error {
 		return err
 	}
 
-	err = t.Where.Validate()
-	if err != nil {
-		return err
-	}
-
-	ctor, err := transformations.Get(t.Function)
-	if err != nil {
-		return err
-	}
-
-	transform, err := ctor(t.Field.String())
-	if err != nil {
-		return err
-	}
-
-	return transform.Validate(t.Args)
+	return t.Where.Validate()
 }

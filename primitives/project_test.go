@@ -1,10 +1,11 @@
 package primitives
 
 import (
+	"testing"
+
 	"github.com/capeprivacy/cape/coordinator/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	gm "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestProject(t *testing.T) {
@@ -82,7 +83,7 @@ func TestProject(t *testing.T) {
 		creds, err := NewDBURL("postgres://pg:admin@localhost:5432/mydb")
 		gm.Expect(err).To(gm.BeNil())
 
-		s, err := NewSource("my-source", creds, nil)
+		s, err := NewSource("my-source", creds)
 		gm.Expect(err).To(gm.BeNil())
 		sources := []database.ID{s.ID}
 

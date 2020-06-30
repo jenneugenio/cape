@@ -147,10 +147,7 @@ func TestTokens(t *testing.T) {
 		email, err := primitives.NewEmail("service:service@service.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		url, err := primitives.NewURL("https://localhost:8081")
-		gm.Expect(err).To(gm.BeNil())
-
-		service, err := primitives.NewService(email, primitives.DataConnectorServiceType, url)
+		service, err := primitives.NewService(email, primitives.UserServiceType)
 		gm.Expect(err).To(gm.BeNil())
 
 		service, err = client.CreateService(ctx, service)

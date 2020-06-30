@@ -215,7 +215,7 @@ graceful exit of the program. An error should be returned to the user
 indicating why the program exited. The program should exit with a exit code of
 1.
 
-If a `SIGHUP` is received by a daemon process (e.g. coordinator or connector)
+If a `SIGHUP` is received by a daemon process (e.g. coordinator)
 then it should re-read any configuration files and restart to the best of it's ability.
 Otherwise, a log line should be produced indicating that the `SIGHUP` was ignored.
 
