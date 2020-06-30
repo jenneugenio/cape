@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/prims"
 	"testing"
 
 	"github.com/capeprivacy/cape/cmd/ui"
@@ -13,7 +14,7 @@ import (
 func TestProjectsCreate(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	p, err := primitives.NewProject("My Project", "my-project", "What is this project even about")
+	p, err := prims.NewProject("My Project", "my-project", "What is this project even about")
 	gm.Expect(err).To(gm.BeNil())
 
 	resp := coordinator.CreateProjectResponse{
@@ -60,7 +61,7 @@ func TestProjectsCreate(t *testing.T) {
 	})
 
 	t.Run("Can update a project", func(t *testing.T) {
-		updatedP, err := primitives.NewProject("Updated Project", "my-project", "Update ME")
+		updatedP, err := prims.NewProject("Updated Project", "my-project", "Update ME")
 		gm.Expect(err).To(gm.BeNil())
 
 		updateResp := coordinator.UpdateProjectResponse{
@@ -86,7 +87,7 @@ func TestProjectsCreate(t *testing.T) {
 	})
 
 	t.Run("Can update a project without a description", func(t *testing.T) {
-		updatedP, err := primitives.NewProject("Updated Project", "my-project", "What is this project even about")
+		updatedP, err := prims.NewProject("Updated Project", "my-project", "What is this project even about")
 		gm.Expect(err).To(gm.BeNil())
 
 		updateResp := coordinator.UpdateProjectResponse{
@@ -112,7 +113,7 @@ func TestProjectsCreate(t *testing.T) {
 	})
 
 	t.Run("Can update a project spec", func(t *testing.T) {
-		project, err := primitives.NewProject("Project", "my-project", "What is this project even about")
+		project, err := prims.NewProject("Project", "my-project", "What is this project even about")
 		gm.Expect(err).To(gm.BeNil())
 
 		prim, err := database.NewPrimitive(primitives.ProjectSpecType)
@@ -152,14 +153,14 @@ func TestProjectsList(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	t.Run("Can list some projects", func(t *testing.T) {
-		p1, err := primitives.NewProject("My Project One", "my-project-one", "What is this project even about")
+		p1, err := prims.NewProject("My Project One", "my-project-one", "What is this project even about")
 		gm.Expect(err).To(gm.BeNil())
 
-		p2, err := primitives.NewProject("My Project Two", "my-project-two", "What is this project even about")
+		p2, err := prims.NewProject("My Project Two", "my-project-two", "What is this project even about")
 		gm.Expect(err).To(gm.BeNil())
 
 		resp := coordinator.ListProjectsResponse{
-			Projects: []*primitives.Project{p1, p2},
+			Projects: []*prims.Project{p1, p2},
 		}
 
 		app, u := NewHarness([]*coordinator.MockResponse{
@@ -176,7 +177,7 @@ func TestProjectsList(t *testing.T) {
 
 	t.Run("Works when there are no projects", func(t *testing.T) {
 		resp := coordinator.ListProjectsResponse{
-			Projects: []*primitives.Project{},
+			Projects: []*prims.Project{},
 		}
 
 		app, u := NewHarness([]*coordinator.MockResponse{

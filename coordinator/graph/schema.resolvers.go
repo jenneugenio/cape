@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
@@ -285,38 +284,6 @@ func (r *mutationResolver) DeleteSession(ctx context.Context, input model.Delete
 	return nil, nil
 }
 
-func (r *mutationResolver) ReportSchema(ctx context.Context, input model.ReportSchemaRequest) (*string, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	var schemaBlob primitives.SchemaBlob
-	err := json.Unmarshal([]byte(input.SourceSchema), &schemaBlob)
-	if err != nil {
-		return nil, err
-	}
-
-	err = schemaBlob.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	schema := &primitives.Schema{}
-	err = enforcer.QueryOne(ctx, schema, database.NewFilter(database.Where{"source_id": input.SourceID}, nil, nil))
-	if err != nil && errs.FromCause(err, database.NotFoundCause) {
-		// if not found, create it
-		s, err := primitives.NewSchema(input.SourceID, schemaBlob)
-		if err != nil {
-			return nil, err
-		}
-
-		schema = s
-	}
-
-	schema.Blob = schemaBlob
-	err = enforcer.Upsert(ctx, schema)
-	return nil, err
-}
-
 func (r *queryResolver) User(ctx context.Context, id database.ID) (*primitives.User, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
@@ -331,7 +298,16 @@ func (r *queryResolver) User(ctx context.Context, id database.ID) (*primitives.U
 }
 
 func (r *queryResolver) Users(ctx context.Context) ([]*primitives.User, error) {
-	return nil, errs.New(errs.NotImplementedCause, "Users query not implemented")
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	var users []*primitives.User
+	err := enforcer.Query(ctx, &users, database.NewEmptyFilter())
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func (r *queryResolver) Me(ctx context.Context) (primitives.Identity, error) {

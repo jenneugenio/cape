@@ -77,3 +77,48 @@ func TestUsers(t *testing.T) {
 		gm.Expect(name).To(gm.Equal(primitives.Name("admin")))
 	})
 }
+
+func TestListUsers(t *testing.T) {
+	gm.RegisterTestingT(t)
+
+	ctx := context.Background()
+	cfg, err := harness.NewConfig()
+	gm.Expect(err).To(gm.BeNil())
+
+	h, err := harness.NewHarness(cfg)
+	gm.Expect(err)
+
+	err = h.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	defer h.Teardown(ctx) // nolint: errcheck
+
+	m := h.Manager()
+	client, err := m.Setup(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	n, err := primitives.NewName("Lenny Bonedog")
+	gm.Expect(err).To(gm.BeNil())
+
+	e, err := primitives.NewEmail("bones@tails.com")
+	gm.Expect(err).To(gm.BeNil())
+
+	user, _, err := client.CreateUser(ctx, n, e)
+	gm.Expect(err).To(gm.BeNil())
+	gm.Expect(user).ToNot(gm.BeNil())
+
+	nTwo, err := primitives.NewName("Julio Tails")
+	gm.Expect(err).To(gm.BeNil())
+
+	e2, err := primitives.NewEmail("bones2@tails.com")
+	gm.Expect(err).To(gm.BeNil())
+
+	_, _, err = client.CreateUser(ctx, nTwo, e2)
+	gm.Expect(err).To(gm.BeNil())
+
+	users, err := client.ListUsers(ctx)
+	gm.Expect(err).To(gm.BeNil())
+
+	// created two here plus admin
+	gm.Expect(len(users)).To(gm.Equal(3))
+}

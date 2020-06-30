@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/capeprivacy/cape/prims"
 	"reflect"
 	"time"
 
@@ -26,6 +27,10 @@ type postgresQuerier struct {
 
 	// codec can be nil. A nil codec means no encryption will be performed
 	codec crypto.EncryptionCodec
+}
+
+func (q *postgresQuerier) CreateProject(ctx context.Context, project *prims.Project) error {
+	return nil
 }
 
 // Create an entity inside the database

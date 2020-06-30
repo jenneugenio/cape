@@ -8,4 +8,6 @@ const (
 	Read   Action = "read"
 	Update Action = "update"
 	Delete Action = "delete"
+
+	CreateProject Action = "createProject"
 )

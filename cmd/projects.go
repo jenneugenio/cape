@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/capeprivacy/cape/prims"
 
 	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/capeprivacy/cape/primitives"
@@ -94,7 +95,7 @@ func projectsCreate(c *cli.Context) error {
 	}
 
 	name := Arguments(c.Context, ProjectNameArg).(primitives.DisplayName)
-	desc, _ := Arguments(c.Context, ProjectDescriptionArg).(primitives.Description)
+	desc, _ := Arguments(c.Context, ProjectDescriptionArg).(prims.Description)
 
 	project, err := client.CreateProject(c.Context, name, nil, desc)
 	if err != nil {
@@ -205,7 +206,7 @@ func projectsUpdate(c *cli.Context) error {
 	label := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
 
 	var name *primitives.DisplayName
-	var desc *primitives.Description
+	var desc *prims.Description
 
 	nameFlag, err := primitives.NewDisplayName(c.String("name"))
 	if err != nil {
@@ -214,7 +215,7 @@ func projectsUpdate(c *cli.Context) error {
 	if nameFlag != "" {
 		name = &nameFlag
 	}
-	descFlag, err := primitives.NewDescription(c.String("description"))
+	descFlag, err := prims.NewDescription(c.String("description"))
 	if err != nil {
 		return err
 	}

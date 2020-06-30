@@ -4,12 +4,22 @@ package integration
 
 import (
 	"context"
+<<<<<<< HEAD
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/primitives"
 	gm "github.com/onsi/gomega"
 	"io/ioutil"
 	"testing"
 	"time"
+=======
+	"io/ioutil"
+	"testing"
+	"time"
+
+	"github.com/capeprivacy/cape/coordinator/harness"
+	"github.com/capeprivacy/cape/primitives"
+	gm "github.com/onsi/gomega"
+>>>>>>> a6c80fec0da68aacb8f2f501f1e0352ddd2ce585
 )
 
 func TestProjects(t *testing.T) {
@@ -32,18 +42,18 @@ func TestProjects(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("Can create a project", func(t *testing.T) {
-		p, err := client.CreateProject(ctx, "My Project", nil, "This project does great things")
+		p, err := client.CreateProject(ctx, "My Project", nil, "This project does great prims")
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(p.Name).To(gm.Equal(primitives.DisplayName("My Project")))
 		gm.Expect(p.Label).To(gm.Equal(primitives.Label("my-project")))
-		gm.Expect(p.Description).To(gm.Equal(primitives.Description("This project does great things")))
+		gm.Expect(p.Description).To(gm.Equal(primitives.Description("This project does great prims")))
 	})
 
 	t.Run("Can get a project by id", func(t *testing.T) {
 		// time out of the database has ms rounded off of it, so testStart can be ahead of the db by a tiny amount of time
 		testStart := time.Now().AddDate(0, 0, -1)
 
-		p1, err := client.CreateProject(ctx, "Make Me", nil, "This project does great things")
+		p1, err := client.CreateProject(ctx, "Make Me", nil, "This project does great prims")
 		gm.Expect(err).To(gm.BeNil())
 
 		p2, err := client.GetProject(ctx, &p1.ID, nil)
@@ -58,7 +68,7 @@ func TestProjects(t *testing.T) {
 		// time out of the database has ms rounded off of it, so testStart can be ahead of the db by a tiny amount of time
 		testStart := time.Now().AddDate(0, 0, -1)
 
-		p1, err := client.CreateProject(ctx, "Make Me Please", nil, "This project does great things")
+		p1, err := client.CreateProject(ctx, "Make Me Please", nil, "This project does great prims")
 		gm.Expect(err).To(gm.BeNil())
 
 		p2, err := client.GetProject(ctx, nil, &p1.Label)
@@ -70,16 +80,16 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("Cannot create a project with the same name", func(t *testing.T) {
-		_, err := client.CreateProject(ctx, "Duplicate Me", nil, "This project does great things")
+		_, err := client.CreateProject(ctx, "Duplicate Me", nil, "This project does great prims")
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.CreateProject(ctx, "Duplicate Me", nil, "This project does great things")
+		_, err = client.CreateProject(ctx, "Duplicate Me", nil, "This project does great prims")
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: entity already exists"))
 	})
 
 	t.Run("Can update name and description by label", func(t *testing.T) {
-		p, err := client.CreateProject(ctx, "Updatable Project", nil, "This project does great things")
+		p, err := client.CreateProject(ctx, "Updatable Project", nil, "This project does great prims")
 		gm.Expect(err).To(gm.BeNil())
 
 		name := primitives.DisplayName("New Name")
@@ -92,11 +102,25 @@ func TestProjects(t *testing.T) {
 		gm.Expect(updatedP.Description).To(gm.Equal(desc))
 	})
 
-	t.Run("Can update name and description by id", func(t *testing.T) {
-		p, err := client.CreateProject(ctx, "Another Updatable Project", nil, "This project does great things")
+	t.Run("Cannot update a project with the same name", func(t *testing.T) {
+		_, err := client.CreateProject(ctx, "Same Project", nil, "This project does great prims")
 		gm.Expect(err).To(gm.BeNil())
 
-		name := primitives.DisplayName("New Name")
+		p, err := client.CreateProject(ctx, "Not Same Project", nil, "This project does great prims")
+		gm.Expect(err).To(gm.BeNil())
+
+		name := primitives.DisplayName("Same Project")
+		desc := primitives.Description("This project is now updated")
+
+		_, err = client.UpdateProject(ctx, nil, &p.Label, &name, &desc)
+		gm.Expect(err).NotTo(gm.BeNil())
+	})
+
+	t.Run("Can update name and description by id", func(t *testing.T) {
+		p, err := client.CreateProject(ctx, "Another Updatable Project", nil, "This project does great prims")
+		gm.Expect(err).To(gm.BeNil())
+
+		name := primitives.DisplayName("New New Name")
 		desc := primitives.Description("This project is now updated")
 
 		updatedP, err := client.UpdateProject(ctx, &p.ID, nil, &name, &desc)
@@ -170,14 +194,6 @@ func TestProjectSpecCreate(t *testing.T) {
 	p, err := client.CreateProject(ctx, "My Project", nil, "This is my project")
 	gm.Expect(err).To(gm.BeNil())
 
-	// seed a source
-	l, err := primitives.NewLabel("transactions")
-	gm.Expect(err).To(gm.BeNil())
-	dbURL, err := primitives.NewDBURL("postgres://postgres:dev@my.cool.website:5432/mydb")
-	gm.Expect(err).To(gm.BeNil())
-	_, err = client.AddSource(ctx, l, dbURL, nil)
-	gm.Expect(err).To(gm.BeNil())
-
 	f, err := ioutil.ReadFile("./testdata/project_spec.yaml")
 	gm.Expect(err).To(gm.BeNil())
 
@@ -196,22 +212,5 @@ func TestProjectSpecCreate(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(p.Status).To(gm.Equal(primitives.ProjectActive))
 		gm.Expect(p.CurrentSpecID).To(gm.Equal(&s.ID))
-	})
-
-	t.Run("Cannot create a spec for a source that doesn't exist", func(t *testing.T) {
-		spec.Sources = []primitives.Label{"iamprettysureiwontbeinthedatabase"}
-		p, _, err := client.UpdateProjectSpec(ctx, p.Label, spec)
-		gm.Expect(err).ToNot(gm.BeNil())
-		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: One or more sources declared in the project spec do not exist"))
-		gm.Expect(p).To(gm.BeNil())
-	})
-
-	t.Run("Cannot update a spec with a source with at least one non existant source", func(t *testing.T) {
-		spec, err = primitives.ParseProjectSpecFile(f)
-		gm.Expect(err).To(gm.BeNil())
-		spec.Sources = append(spec.Sources, "imnotreal")
-		_, _, err = client.UpdateProjectSpec(ctx, p.Label, spec)
-		gm.Expect(err).ToNot(gm.BeNil())
-		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: One or more sources declared in the project spec do not exist"))
 	})
 }

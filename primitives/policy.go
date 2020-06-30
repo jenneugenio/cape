@@ -7,10 +7,8 @@ import (
 )
 
 const (
-	DefaultAdminPolicy         = Label("default-admin")
-	DefaultGlobalPolicy        = Label("default-global")
-	DefaultDataConnectorPolicy = Label("default-data-connector")
-	DefaultWorkerPolicy        = Label("default-worker")
+	DefaultAdminPolicy  = Label("default-admin")
+	DefaultGlobalPolicy = Label("default-global")
 )
 
 // Policy is a single defined policy

@@ -21,7 +21,7 @@ func init() {
 				Description: "Creates a token for the current user",
 			},
 			{
-				Example:     "cape tokens create service:data-connector@cape.com",
+				Example:     "cape tokens create service:user@cape.com",
 				Description: "Creates a token for the service labelled my-service",
 			},
 		},
@@ -40,8 +40,8 @@ func init() {
 				Description: "Lists the token ids for the current user",
 			},
 			{
-				Example:     "cape tokens create service:data-connector@cape.com",
-				Description: "Lists the token ids for the service with email service:data-connector@cape.com",
+				Example:     "cape tokens create service:data-user@cape.com",
+				Description: "Lists the token ids for the service with email service:data-user@cape.com",
 			},
 		},
 		Arguments: []*Argument{TokenIdentityArg},

@@ -1,7 +1,0 @@
-FROM capeprivacy/cape:latest
-
-WORKDIR /root/
-
-COPY coordinator/worker/migrations coordinator/migrations
-
-ENTRYPOINT ["cape", "update"]

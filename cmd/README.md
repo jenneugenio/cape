@@ -1,18 +1,18 @@
 # CLI
 
-This module contains the code for adding commands to our CLI for the coordinator, connector and client CLI.
+This module contains the code for adding commands to our CLI for the coordinator and client CLI.
 
 ## Adding a new command
 
-The first step to adding a command is familiarizing yourself with the [CLI Style Guide](style-guide.md). 
+The first step to adding a command is familiarizing yourself with the [CLI Style Guide](style-guide.md).
 The style guide must be adhered to to the best of our abilities so that we have a great and consistent CLI experience.
 
-When creating a new high level command, a new file should be created where the file name is the name of the command 
-(e.g. `cape update` would result in a `cmd/update.go` file). 
+When creating a new high level command, a new file should be created where the file name is the name of the command
+(e.g. `cape update` would result in a `cmd/update.go` file).
 All sub-commands can live in this file or be pulled out into other files as needed.
 
-In each high-level file there will be `init` block that initializes the high-level command and any sub-commands. 
-Once the commands are initialized the high-level command is append to the commands list which is then used by the `cmd/root.go` 
+In each high-level file there will be `init` block that initializes the high-level command and any sub-commands.
+Once the commands are initialized the high-level command is append to the commands list which is then used by the `cmd/root.go`
 file to add the commands to the app.
 
 ```
@@ -79,6 +79,6 @@ Again, the `UI` is automatically provided to you via middleware. You can get acc
 ```go
 provider := GetProvider(c.Context)
 u := provider.UI(c.Context)
-``` 
+```
 
 `cmd/tokens.go` has a good examples of different ways you can use the `ui` class.

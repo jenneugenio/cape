@@ -1,9 +1,10 @@
-package primitives
+package prims
 
 import (
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 const maxDescriptionSize = 5000
@@ -12,7 +13,7 @@ type Description string
 
 func (d Description) Validate() error {
 	if len(d) > maxDescriptionSize {
-		return errors.New(InvalidProjectDescriptionCause, "%d exceeds max description size of %d", len(d), maxDescriptionSize)
+		return errors.New(primitives.InvalidProjectDescriptionCause, "%d exceeds max description size of %d", len(d), maxDescriptionSize)
 	}
 
 	return nil
@@ -49,18 +50,17 @@ func (p ProjectStatus) Validate() error {
 		return nil
 	}
 
-	return errors.New(InvalidProjectStatusCause, "Invalid project status: %s", p)
+	return errors.New(primitives.InvalidProjectStatusCause, "Invalid project status: %s", p)
 }
 
 type Project struct {
-	*database.Primitive
-	Name        DisplayName   `json:"name"`
-	Label       Label         `json:"label"`
-	Description Description   `json:"description"`
-	Status      ProjectStatus `json:"status"`
+	Name        primitives.DisplayName `json:"name",stbl:"name"`
+	Label       primitives.Label       `json:"label"stbl:"label"`
+	Description Description            `json:"description",stbl:"description"`
+	Status      ProjectStatus          `json:"status",stbl:"status"`
 
 	// The active spec (this references a ProjectSpec)
-	CurrentSpecID *database.ID
+	CurrentSpecID *database.ID `stbl:"current_spec_id"`
 }
 
 func (p *Project) Validate() error {
@@ -82,8 +82,8 @@ func (p *Project) Validate() error {
 			return err
 		}
 
-		if t != ProjectSpecType {
-			return errors.New(InvalidIDCause, "CurrentSpecID can only be a ProjectSpec")
+		if t != primitives.ProjectSpecType {
+			return errors.New(primitives.InvalidIDCause, "CurrentSpecID can only be a ProjectSpec")
 		}
 	}
 
@@ -99,25 +99,14 @@ func (p *Project) Validate() error {
 }
 
 func (p *Project) GetType() types.Type {
-	return ProjectType
+	return primitives.ProjectType
 }
 
-func NewProject(name DisplayName, label Label, description Description) (*Project, error) {
-	p, err := database.NewPrimitive(ProjectType)
-	if err != nil {
-		return nil, err
-	}
-
-	project := &Project{
-		Primitive:   p,
+func NewProject(name primitives.DisplayName, label primitives.Label, description Description) *Project {
+	return &Project{
 		Name:        name,
 		Label:       label,
 		Description: description,
 		Status:      ProjectPending,
 	}
-
-	if err := project.Validate(); err != nil {
-		return nil, err
-	}
-	return project, nil
 }

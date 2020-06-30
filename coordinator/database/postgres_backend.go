@@ -2,9 +2,12 @@ package database
 
 import (
 	"context"
+	"database/sql"
+	"github.com/Masterminds/squirrel"
 	"net/url"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	_ "github.com/lib/pq"
 
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
 )
@@ -30,6 +33,7 @@ func (p *PostgresBackend) Open(ctx context.Context) error {
 	// interface over both a pgconn.Conn and pgxpool.Pool
 	p.conn = c // inherited from postgresQuerier
 	p.pool = c
+
 	return nil
 }
 

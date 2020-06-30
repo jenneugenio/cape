@@ -1,43 +1,44 @@
 package primitives
 
 import (
-	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/prims"
+	"testing"
+
 	errors "github.com/capeprivacy/cape/partyerrors"
 	gm "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestProject(t *testing.T) {
 	gm.RegisterTestingT(t)
 	t.Run("Can create a new project with valid arguments", func(t *testing.T) {
-		p, err := NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
+		p, err := prims.NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(p).ToNot(gm.BeNil())
 	})
 
 	t.Run("New projects start in a pending state", func(t *testing.T) {
-		p, err := NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
+		p, err := prims.NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(p.Status).To(gm.Equal(ProjectPending))
+		gm.Expect(p.Status).To(gm.Equal(prims.ProjectPending))
 	})
 
 	t.Run("New projects get an ID", func(t *testing.T) {
-		p, err := NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
+		p, err := prims.NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(p.ID).ToNot(gm.BeNil())
 	})
 
 	t.Run("New projects returns the appropriate type", func(t *testing.T) {
-		p, err := NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
+		p, err := prims.NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(p.GetType()).To(gm.Equal(ProjectType))
 	})
 
 	t.Run("Cannot set a fake status", func(t *testing.T) {
-		p, err := NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
+		p, err := prims.NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
 		gm.Expect(err).To(gm.BeNil())
 
-		p.Status = ProjectStatus(":O")
+		p.Status = prims.ProjectStatus(":O")
 		err = p.Validate()
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(errors.CausedBy(err, InvalidProjectStatusCause)).To(gm.BeTrue())
@@ -45,19 +46,19 @@ func TestProject(t *testing.T) {
 
 	t.Run("Cannot use a huge description", func(t *testing.T) {
 		myDesc := ""
-		for i := 0; i <= maxDescriptionSize+1; i++ {
+		for i := 0; i <= prims.maxDescriptionSize+1; i++ {
 			myDesc += "x"
 		}
 
-		desc := Description(myDesc)
-		p, err := NewProject("Credit Card Recommendations", "credit-card-recommendations", desc)
+		desc := prims.Description(myDesc)
+		p, err := prims.NewProject("Credit Card Recommendations", "credit-card-recommendations", desc)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(errors.CausedBy(err, InvalidProjectDescriptionCause)).To(gm.BeTrue())
 		gm.Expect(p).To(gm.BeNil())
 	})
 
 	t.Run("Validation fails if the `current` value is not a project spec", func(t *testing.T) {
-		p, err := NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
+		p, err := prims.NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
 		gm.Expect(err).To(gm.BeNil())
 
 		email, err := NewEmail("hacker@cape.com")
@@ -76,20 +77,13 @@ func TestProject(t *testing.T) {
 	})
 
 	t.Run("Passes validation when `current` is a project spec", func(t *testing.T) {
-		p, err := NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
+		p, err := prims.NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
 		gm.Expect(err).To(gm.BeNil())
-
-		creds, err := NewDBURL("postgres://pg:admin@localhost:5432/mydb")
-		gm.Expect(err).To(gm.BeNil())
-
-		s, err := NewSource("my-source", creds, nil)
-		gm.Expect(err).To(gm.BeNil())
-		sources := []database.ID{s.ID}
 
 		policy, err := samplePolicySpec()
 		gm.Expect(err).To(gm.BeNil())
 
-		projectSpec, err := NewProjectSpec(p.ID, nil, sources, policy.Rules)
+		projectSpec, err := NewProjectSpec(p.ID, nil, policy.Rules)
 		gm.Expect(err).To(gm.BeNil())
 
 		p.CurrentSpecID = &projectSpec.ID
@@ -105,7 +99,7 @@ func TestInvalidProjects(t *testing.T) {
 		Name          string
 		ProjectName   DisplayName
 		Label         Label
-		Description   Description
+		Description   prims.Description
 		ExpectedCause errors.Cause
 	}{
 		{
@@ -127,7 +121,7 @@ func TestInvalidProjects(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			p, err := NewProject(test.ProjectName, test.Label, test.Description)
+			p, err := prims.NewProject(test.ProjectName, test.Label, test.Description)
 			gm.Expect(p).To(gm.BeNil())
 			gm.Expect(err).ToNot(gm.BeNil())
 			gm.Expect(errors.CausedBy(err, test.ExpectedCause)).To(gm.BeTrue())
@@ -142,7 +136,7 @@ func TestValidProjectNames(t *testing.T) {
 		Name        string
 		ProjectName DisplayName
 		Label       Label
-		Description Description
+		Description prims.Description
 	}{
 		{
 			Name:        "Regular name",
@@ -154,7 +148,7 @@ func TestValidProjectNames(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			p, err := NewProject(test.ProjectName, test.Label, test.Description)
+			p, err := prims.NewProject(test.ProjectName, test.Label, test.Description)
 			gm.Expect(err).To(gm.BeNil())
 			gm.Expect(p).ToNot(gm.BeNil())
 		})
@@ -165,7 +159,7 @@ func TestProjectStatus(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	t.Run("Cannot make a fake status", func(t *testing.T) {
-		p := ProjectStatus("haha not real!")
+		p := prims.ProjectStatus("haha not real!")
 		err := p.Validate()
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(errors.CausedBy(err, InvalidProjectStatusCause)).To(gm.BeTrue())
@@ -176,11 +170,11 @@ func TestProjectDescription(t *testing.T) {
 	gm.RegisterTestingT(t)
 	t.Run("Cannot max a huge fake status", func(t *testing.T) {
 		myDesc := ""
-		for i := 0; i <= maxDescriptionSize+1; i++ {
+		for i := 0; i <= prims.maxDescriptionSize+1; i++ {
 			myDesc += "x"
 		}
 
-		_, err := NewDescription(myDesc)
+		_, err := prims.NewDescription(myDesc)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(errors.CausedBy(err, InvalidProjectDescriptionCause)).To(gm.BeTrue())
 	})

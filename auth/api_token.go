@@ -136,7 +136,7 @@ func ParseAPIToken(in string) (*APIToken, error) {
 }
 
 // GenerateToken should _not_ be used in any production use case. It only
-// exists to simplify the creation of tests for things that take an APIToken as
+// exists to simplify the creation of tests for prims that take an APIToken as
 // an input.
 func GenerateToken() (*APIToken, error) {
 	password, err := primitives.GeneratePassword()

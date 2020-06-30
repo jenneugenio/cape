@@ -1,5 +1,4 @@
-// Package primitives contains all the primitive data types used by the coordinator
-// and the connector.
+// Package primitives contains all the primitive data types used by the coordinator.
 package primitives
 
 import (
@@ -43,8 +42,7 @@ var (
 	// ProjectType represents the root collaborative entity inside of Cape
 	ProjectType types.Type = 0x011
 
-	// ProjectSpecType represents a version of a projects available data
-	// sources and policeis.
+	// ProjectSpecType represents a version of a projects available policies
 	ProjectSpecType types.Type = 0x012
 
 	// RecoveryType represents an attempt by a user to recover their lost account.
@@ -60,7 +58,6 @@ func init() {
 	types.Register(AttachmentType, "attachments", false)
 	types.Register(AssignmentType, "assignments", false)
 	types.Register(SessionType, "sessions", true)
-	types.Register(SourcePrimitiveType, "sources", true)
 	types.Register(ConfigType, "config", true)
 	types.Register(SchemaPrimitiveType, "source_schema", true)
 	types.Register(ProjectType, "projects", true)

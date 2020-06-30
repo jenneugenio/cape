@@ -32,20 +32,6 @@ var charts = []*mage.Chart{
 		Atomic:  true,
 	},
 	{
-		Name:    "postgres-worker",
-		Chart:   "bitnami/postgresql",
-		Version: "8.9.4",
-		Values:  "mage/config/postgres-worker-values.yaml",
-		Atomic:  true,
-	},
-	{
-		Name:    "postgres-customer",
-		Chart:   "bitnami/postgresql",
-		Version: "8.9.4",
-		Values:  "mage/config/postgres-customer-values.yaml",
-		Atomic:  true,
-	},
-	{
 		Name:    "coordinator",
 		Chart:   "charts/coordinator",
 		Version: "0.0.1",
@@ -56,35 +42,6 @@ var charts = []*mage.Chart{
 			"includeUI":             envOrDefault("CAPE_INCLUDE_UI", "false"),
 		},
 		Atomic: true,
-	},
-	{
-		Name:    "connector",
-		Chart:   "charts/connector",
-		Version: "0.0.1",
-		Values:  "mage/config/connector-values.yaml",
-		AdditionalValues: map[string]string{
-			"annotations.rollme":    fmt.Sprintf("r%d", time.Now().UnixNano()),
-			"podAnnotations.rollme": fmt.Sprintf("r%d", time.Now().UnixNano()),
-		},
-		Atomic: false,
-	},
-	{
-		Name:    "worker",
-		Chart:   "charts/worker",
-		Version: "0.0.1",
-		Values:  "mage/config/worker-values.yaml",
-		AdditionalValues: map[string]string{
-			"annotations.rollme":    fmt.Sprintf("r%d", time.Now().UnixNano()),
-			"podAnnotations.rollme": fmt.Sprintf("r%d", time.Now().UnixNano()),
-		},
-		Atomic: false,
-	},
-	{
-		Name:    "customer-migration",
-		Chart:   "charts/customer",
-		Version: "0.0.1",
-		Values:  "mage/config/customer-migration-values.yaml",
-		Atomic:  false,
 	},
 }
 

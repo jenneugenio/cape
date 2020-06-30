@@ -1,7 +1,0 @@
-version: 1
-label: default-data-connector
-rules:
-  # Only a data connector assigned to a source can retrieve the credentials (no admin or users can fetch credentials)
-  - target: "sources:*"
-    action: read
-    effect: allow

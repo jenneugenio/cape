@@ -21,7 +21,6 @@ func init() {
 		MustKind(dockerdep, MustKubectl("1.11"), "0.8"),
 		MustDockerRegistry(dockerdep),
 		MustGolang("github.com/capeprivacy/cape", "1.14"),
-		MustProtoc("3.11.0", "connector/proto/proto.go", "connector/proto/data_connector.proto", "connector/proto/data_connector.pb.go"),
 		MustHelm("3.2", map[string]string{
 			"bitnami": "https://charts.bitnami.com/bitnami",
 		}),

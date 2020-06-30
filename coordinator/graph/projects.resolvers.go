@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	"github.com/capeprivacy/cape/prims"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
@@ -17,9 +18,20 @@ import (
 	"github.com/gosimple/slug"
 )
 
-func (r *mutationResolver) CreateProject(ctx context.Context, project model.CreateProjectRequest) (*primitives.Project, error) {
+// CreateProject has been changed to represent a new flow
+func (r *mutationResolver) CreateProject(ctx context.Context, project model.CreateProjectRequest) (*prims.Project, error) {
 	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	// Enforcer is no longer a proxy to the database, it is just used to check permissions
+	enforcer := auth.GetEnforcer()
+
+	// Methods on the enforcer are more granular, so rather than getting a bunch of policies attached to a session,
+	// We can ask the enforcer if we can do exactly what we are trying to do. In this case, create a project.
+	// In contrast, the older system would eventually boil the check to see if the user had a write permission
+	// on the projects table
+	if err := enforcer.CreateProject(currSession); err != nil {
+		return nil, err
+	}
 
 	var label primitives.Label
 	if project.Label != nil {
@@ -34,22 +46,32 @@ func (r *mutationResolver) CreateProject(ctx context.Context, project model.Crea
 		label = l
 	}
 
-	p, err := primitives.NewProject(project.Name, label, project.Description)
-	if err != nil {
+	// Other proposed change, is that primitive constructors can no longer error. The main motivation
+	// for this is that writing tests with primitives this way is annoying. You could argue the ctor is safer,
+	// but you could also just skip the ctor and instantiate the struct directly to get around the error
+	p := prims.NewProject(project.Name, label, project.Description)
+	// Still though, check that the primitive is valid
+	if err := p.Validate(); err != nil {
 		return nil, err
 	}
 
-	if err := enforcer.Create(ctx, p); err != nil {
+	// Not using `Backend` anymore. Eventually Backend would not be used then deleted.
+	if err := r.Database.CreateProject(ctx, p); err != nil {
 		return nil, err
 	}
+
 	return p, nil
 }
 
-func (r *mutationResolver) UpdateProject(ctx context.Context, id *database.ID, label *primitives.Label, update model.UpdateProjectRequest) (*primitives.Project, error) {
+func (r *mutationResolver) UpdateProject(ctx context.Context, id *database.ID, label *primitives.Label, update model.UpdateProjectRequest) (*prims.Project, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	project := &primitives.Project{}
+	// The way I did this would require us to update all of the routes around a project at once
+	// Alternatively, we could have a primitives.Project & a prims.Project, then delete primitives.Project once ALL
+	// of the routes are fixed. For most objects we could do everything at once (kinda sketchy to have both versions
+	// around for any significant amount of time).
+	project := &prims.Project{}
 	if id != nil {
 		err := enforcer.Get(ctx, *id, project)
 		if err != nil {
@@ -80,42 +102,18 @@ func (r *mutationResolver) UpdateProject(ctx context.Context, id *database.ID, l
 	return project, nil
 }
 
-func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, projectLabel *primitives.Label, projectID *database.ID, request primitives.ProjectSpecFile) (*primitives.Project, error) {
+func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, projectLabel *primitives.Label, projectID *database.ID, request primitives.ProjectSpecFile) (*prims.Project, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	// The client passes source labels via the spec file, so we need to find all of the sources
-	// that this file refers to and convert them to IDs
-	var project primitives.Project
+	var project prims.Project
 	err := enforcer.QueryOne(ctx, &project, database.NewFilter(database.Where{"label": projectLabel.String()}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
-
-	labels := make(database.In, len(request.Sources))
-	for i, l := range request.Sources {
-		labels[i] = l.String()
-	}
-
-	var sources []*primitives.Source
-	err = enforcer.Query(ctx, &sources, database.NewFilter(database.Where{"label": labels}, nil, nil))
-	if err != nil {
-		return nil, err
-	}
-
-	// If we didn't find as many sources as we got labels, they have a bad file
-	if len(sources) != len(request.Sources) {
-		return nil, errs.New(InvalidSource, "One or more sources declared in the project spec do not exist")
-	}
-
-	sourceIds := make([]database.ID, len(sources))
-	for i, s := range sources {
-		sourceIds[i] = s.ID
-	}
-
 	// Insert the spec
 	// TODO -- How do you specify the parent? This concept doesn't make sense until we have proposals & diffing
-	spec, err := primitives.NewProjectSpec(project.ID, nil, sourceIds, request.Policy)
+	spec, err := primitives.NewProjectSpec(project.ID, nil, request.Policy)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +133,7 @@ func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, projectLabel *
 	// Make this spec active on the project
 	project.CurrentSpecID = &spec.ID
 	// A spec makes the project active!
-	project.Status = primitives.ProjectActive
+	project.Status = prims.ProjectActive
 	err = enforcer.Update(ctx, &project)
 	if err != nil {
 		return nil, err
@@ -149,15 +147,15 @@ func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, projectLabel *
 	return &project, nil
 }
 
-func (r *mutationResolver) ArchiveProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error) {
+func (r *mutationResolver) ArchiveProject(ctx context.Context, id *database.ID, label *primitives.Label) (*prims.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) UnarchiveProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error) {
+func (r *mutationResolver) UnarchiveProject(ctx context.Context, id *database.ID, label *primitives.Label) (*prims.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *projectResolver) CurrentSpec(ctx context.Context, obj *primitives.Project) (*primitives.ProjectSpec, error) {
+func (r *projectResolver) CurrentSpec(ctx context.Context, obj *prims.Project) (*primitives.ProjectSpec, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -170,7 +168,7 @@ func (r *projectResolver) CurrentSpec(ctx context.Context, obj *primitives.Proje
 	return &projectSpec, err
 }
 
-func (r *projectSpecResolver) Project(ctx context.Context, obj *primitives.ProjectSpec) (*primitives.Project, error) {
+func (r *projectSpecResolver) Project(ctx context.Context, obj *primitives.ProjectSpec) (*prims.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
@@ -178,25 +176,11 @@ func (r *projectSpecResolver) Parent(ctx context.Context, obj *primitives.Projec
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *projectSpecResolver) Sources(ctx context.Context, obj *primitives.ProjectSpec) ([]*primitives.Source, error) {
+func (r *queryResolver) Projects(ctx context.Context, status []prims.ProjectStatus) ([]*prims.Project, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	ids := make(database.In, len(obj.SourceIDs))
-	for i, s := range obj.SourceIDs {
-		ids[i] = s.String()
-	}
-
-	var sources []*primitives.Source
-	err := enforcer.Query(ctx, &sources, database.NewFilter(database.Where{"id": ids}, nil, nil))
-	return sources, err
-}
-
-func (r *queryResolver) Projects(ctx context.Context, status []primitives.ProjectStatus) ([]*primitives.Project, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	var projects []*primitives.Project
+	var projects []*prims.Project
 	err := enforcer.Query(ctx, &projects, database.NewEmptyFilter())
 	if err != nil {
 		return nil, err
@@ -205,7 +189,7 @@ func (r *queryResolver) Projects(ctx context.Context, status []primitives.Projec
 	return projects, nil
 }
 
-func (r *queryResolver) Project(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error) {
+func (r *queryResolver) Project(ctx context.Context, id *database.ID, label *primitives.Label) (*prims.Project, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -213,7 +197,7 @@ func (r *queryResolver) Project(ctx context.Context, id *database.ID, label *pri
 		return nil, errs.New(InvalidParametersCause, "Must provide an id or label")
 	}
 
-	var project primitives.Project
+	var project prims.Project
 	if id != nil {
 		err := enforcer.Get(ctx, *id, &project)
 		return &project, err

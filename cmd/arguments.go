@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/capeprivacy/cape/prims"
 
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
@@ -12,7 +13,6 @@ var (
 	CoordinatorLabelArg = LabelArg("coordinator")
 	RoleLabelArg        = LabelArg("role")
 	PolicyLabelArg      = LabelArg("policy")
-	SourceLabelArg      = LabelArg("source")
 	ProjectLabelArg     = LabelArg("project-label")
 
 	ClusterURLArg = &Argument{
@@ -41,24 +41,6 @@ var (
 		Processor: func(in string) (interface{}, error) {
 			// validates!!
 			return primitives.NewEmail(in)
-		},
-	}
-
-	SourcesCredentialsArg = &Argument{
-		Name:        "connection-string",
-		Description: "The connection string for the database.",
-		Required:    true,
-		Processor: func(in string) (interface{}, error) {
-			return primitives.NewDBURL(in)
-		},
-	}
-
-	PullQueryArgument = &Argument{
-		Name:        "query",
-		Description: "The SQL query to query the data with.",
-		Required:    true,
-		Processor: func(in string) (interface{}, error) {
-			return in, nil
 		},
 	}
 
@@ -94,7 +76,7 @@ var (
 		Description: "Describe what your project is for",
 		Required:    false,
 		Processor: func(in string) (interface{}, error) {
-			return primitives.NewDescription(in)
+			return prims.NewDescription(in)
 		},
 	}
 )

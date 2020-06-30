@@ -35,16 +35,6 @@ var dockerImages = []*mage.DockerImage{
 		Tag:  "latest",
 		File: "dockerfiles/Dockerfile.coordinator_migrations",
 	},
-	{
-		Name: "capeprivacy/worker_migrations",
-		Tag:  "latest",
-		File: "dockerfiles/Dockerfile.worker_migrations",
-	},
-	{
-		Name: "capeprivacy/customer_migrations",
-		Tag:  "latest",
-		File: "tools/seed/Dockerfile.customer_migrations",
-	},
 }
 
 func init() {
@@ -99,14 +89,9 @@ func (b Build) Binary(ctx context.Context) error {
 
 // Generate generates any required files to build the binary (GraphQL, gRPC, Protobuf)
 func (b Build) Generate(ctx context.Context) error {
-	err := mage.Dependencies.Run([]string{"go", "protoc"}, func(d mage.Dependency) error {
+	err := mage.Dependencies.Run([]string{"go"}, func(d mage.Dependency) error {
 		return d.Check(ctx)
 	})
-	if err != nil {
-		return err
-	}
-
-	deps, err := mage.Dependencies.Get([]string{"protoc"})
 	if err != nil {
 		return err
 	}
@@ -124,7 +109,7 @@ func (b Build) Generate(ctx context.Context) error {
 	errors := mage.NewErrors()
 	wg := &sync.WaitGroup{}
 
-	generators := []mage.Generator{gql, pkger, deps[0].(mage.Generator)}
+	generators := []mage.Generator{gql, pkger}
 	for _, g := range generators {
 		generator := g
 		wg.Add(1)

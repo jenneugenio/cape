@@ -8,37 +8,32 @@ require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/Masterminds/squirrel v1.4.0
+	github.com/Masterminds/structable v0.0.0-20170407152004-a1a302ef78ec // indirect
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad
-	github.com/bgentry/que-go v1.0.1
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gofrs/uuid v3.2.0+incompatible
-	github.com/golang/protobuf v1.4.0
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.27.0
 	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
 	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/gosimple/slug v1.9.0
 	github.com/gostaticanalysis/analysisutil v0.0.3 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20190118093823-f849b5445de4
 	github.com/imdario/mergo v0.3.9 // indirect
-	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgconn v1.3.2
-	github.com/jackc/pgproto3/v2 v2.0.1
-	github.com/jackc/pgtype v1.2.0
-	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/jackc/pgx/v4 v4.4.1
 	github.com/jackc/tern v1.9.1
-	github.com/jdkato/prose v1.1.1
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
 	github.com/justinas/alice v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/leekchan/gtf v0.0.0-20190214083521-5fba33c5b00b
+	github.com/lib/pq v1.7.0
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/machinebox/graphql v0.2.2
 	github.com/magefile/mage v1.9.0
@@ -52,7 +47,6 @@ require (
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mitchellh/mapstructure v1.2.2
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
-	github.com/neurosnap/sentences v1.0.6 // indirect
 	github.com/onsi/gomega v1.9.0
 	github.com/rs/cors v1.7.0
 	github.com/rs/zerolog v1.18.0
@@ -65,10 +59,8 @@ require (
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
-	google.golang.org/grpc v1.28.1
-	google.golang.org/protobuf v1.21.0
+	google.golang.org/grpc v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.55.0 // indirect
-	gopkg.in/neurosnap/sentences.v1 v1.0.6 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1
 	helm.sh/helm/v3 v3.2.0
 	mvdan.cc/unparam v0.0.0-20200314162735-0ac8026f7d06 // indirect

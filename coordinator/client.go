@@ -3,7 +3,7 @@ package coordinator
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"github.com/capeprivacy/cape/prims"
 
 	"github.com/manifoldco/go-base64"
 
@@ -21,11 +21,6 @@ var NetworkCause = errors.NewCause(errors.RequestTimeoutCategory, "network_error
 // UnrecognizedIdentityType occurs when the client encounters an identity type
 // it doesn't recognize.
 var UnrecognizedIdentityType = errors.NewCause(errors.BadRequestCategory, "unrecognized_identity")
-
-// SourceOptions can be passed to some of the source routes to provide additional functionality
-type SourceOptions struct {
-	WithSchema bool
-}
 
 // Client is a wrapper around the graphql client that
 // connects to the coordinator and sends queries
@@ -132,6 +127,33 @@ func (c *Client) CreateUser(ctx context.Context, name primitives.Name, email pri
 	}
 
 	return resp.Response.User, resp.Response.Password, nil
+}
+
+// ListUsers returns all of the users in the database
+func (c *Client) ListUsers(ctx context.Context) ([]*primitives.User, error) {
+	var resp struct {
+		Users []*primitives.User `json:"users"`
+	}
+
+	err := c.transport.Raw(ctx, `
+		query Users {
+			users {
+				id
+				name
+				email
+				roles {
+					id
+					label
+				}
+			}
+		}
+	`, nil, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Users, nil
 }
 
 func (c *Client) Authenticated() bool {
@@ -415,212 +437,6 @@ func (c *Client) ListRoles(ctx context.Context) ([]*primitives.Role, error) {
 	return resp.Roles, nil
 }
 
-// Source Routes
-
-// SourceResponse is an alias of primitives.Source
-// This is needed because the graphQL client cannot leverage the marshallers we have written
-// for the URL properties of source (e.g. the Endpoint)
-//
-// We create a custom marshaller that encodes the endpoint as a string
-type SourceResponse struct {
-	*primitives.Source
-	Service *primitives.Service `json:"service"`
-	Schema  *primitives.Schema  `json:"schema"`
-}
-
-// AddSource adds a new source to the database
-func (c *Client) AddSource(ctx context.Context, label primitives.Label,
-	credentials *primitives.DBURL, serviceID *database.ID) (*SourceResponse, error) {
-	var resp struct {
-		Source SourceResponse `json:"addSource"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["label"] = label
-	variables["credentials"] = credentials.String()
-	variables["service_id"] = serviceID
-
-	err := c.transport.Raw(ctx, `
-		mutation AddSource($label: Label!, $credentials: DBURL!, $service_id: ID) {
-			  addSource(input: { label: $label, credentials: $credentials, service_id: $service_id}) {
-				id
-				label
-				type
-				credentials
-				endpoint
-				service {
-					id
-					email
-				}
-			  }
-			}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Source, nil
-}
-
-func (c *Client) UpdateSource(ctx context.Context, label primitives.Label, serviceID *database.ID) (*SourceResponse, error) {
-	var resp struct {
-		Source SourceResponse `json:"updateSource"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["source_label"] = label
-	variables["service_id"] = serviceID
-
-	err := c.transport.Raw(ctx, `
-		mutation UpdateSource($source_label: Label!, $service_id: ID) {
-			updateSource(input: { source_label: $source_label, service_id: $service_id }) {
-				id
-				label
-				type
-				credentials
-				endpoint
-				service {
-					id
-					email
-				}
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Source, nil
-}
-
-type ListSourcesResponse struct {
-	Sources []*SourceResponse `json:"sources"`
-}
-
-// ListSources returns all of the data sources in the database that you
-func (c *Client) ListSources(ctx context.Context) ([]*SourceResponse, error) {
-	var resp ListSourcesResponse
-	err := c.transport.Raw(ctx, `
-		query SourceIDs {
-				sources {
-					id
-					label
-					credentials
-					type
-					endpoint
-					service {
-						id
-						email
-						endpoint
-					}
-				}
-			}
-	`, nil, &resp)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Sources, nil
-}
-
-func (c *Client) RemoveSource(ctx context.Context, label primitives.Label) error {
-	variables := make(map[string]interface{})
-	variables["label"] = label
-
-	// We only care if this errors
-	var resp interface{}
-	return c.transport.Raw(ctx, `
-		mutation RemoveSource($label: Label!) {
-			  removeSource(input: { label: $label })
-			}
-	`, variables, &resp)
-}
-
-// GetSource returns a specific data source
-func (c *Client) GetSource(ctx context.Context, id database.ID, opts *SourceOptions) (*SourceResponse, error) {
-	var resp struct {
-		Source SourceResponse `json:"source"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["id"] = id
-
-	// We will also request the schema if withSchema == true
-	describeClause := ""
-	if opts != nil && opts.WithSchema {
-		describeClause = `
-			schema {
-				blob
-			}
-		`
-	}
-
-	err := c.transport.Raw(ctx, fmt.Sprintf(`
-		query SourceIDs($id: ID!) {
-				source(id: $id) {
-					id
-					label
-					type
-					credentials
-					endpoint
-					service {
-						id
-						email
-					}
-					%s
-				}
-			}
-	`, describeClause), variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Source, nil
-}
-
-// GetSourceByLabel returns a specific data source given its label
-func (c *Client) GetSourceByLabel(ctx context.Context, label primitives.Label, opts *SourceOptions) (*SourceResponse, error) {
-	var resp struct {
-		Source SourceResponse `json:"sourceByLabel"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["label"] = label
-
-	// We will also request the schema if withSchema == true
-	describeClause := ""
-	if opts != nil && opts.WithSchema {
-		describeClause = `
-			schema {
-				blob
-			}
-		`
-	}
-
-	err := c.transport.Raw(ctx, fmt.Sprintf(`
-		query SourceIDs($label: Label!) {
-				sourceByLabel(label: $label) {
-					id
-					label
-					type
-					credentials
-					endpoint
-					service {
-						id
-						email
-					}
-					%s
-				}
-			}
-	`, describeClause), variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Source, nil
-}
-
 // Setup calls the setup command to bootstrap cape
 func (c *Client) Setup(ctx context.Context, name primitives.Name, email primitives.Email, password primitives.Password) (*primitives.User, error) {
 	var resp struct {
@@ -669,18 +485,12 @@ func (c *Client) CreateService(ctx context.Context, service *primitives.Service)
 	variables["email"] = service.Email
 	variables["type"] = service.Type
 
-	variables["endpoint"] = nil
-	if service.Endpoint != nil {
-		variables["endpoint"] = service.Endpoint.String()
-	}
-
 	err := c.transport.Raw(ctx, `
-		mutation CreateService($email: Email!, $type: ServiceType!, $endpoint: URL) {
-			createService(input: { email: $email, type: $type, endpoint: $endpoint }) {
+		mutation CreateService($email: Email!, $type: ServiceType!) {
+			createService(input: { email: $email, type: $type}) {
 				id
 				email
 				type
-				endpoint
 			}
 		}
 	`, variables, &resp)
@@ -719,7 +529,6 @@ func (c *Client) GetService(ctx context.Context, id database.ID) (*primitives.Se
 				id
 				email
 				type
-				endpoint
 			}
 		}
 	`, variables, &resp)
@@ -745,7 +554,6 @@ func (c *Client) GetServiceByEmail(ctx context.Context, email primitives.Email) 
 				id
 				email
 				type
-				endpoint
 			}
 		}
 	`, variables, &resp)
@@ -768,7 +576,6 @@ func (c *Client) ListServices(ctx context.Context) ([]*ServiceResponse, error) {
 				id
 				email
 				type
-				endpoint
 				roles {
 					id
 					label
@@ -1104,32 +911,15 @@ func (c *Client) RemoveToken(ctx context.Context, tokenID database.ID) error {
     `, variables, nil)
 }
 
-func (c *Client) ReportSchema(ctx context.Context, sourceID database.ID, sourceSchema primitives.SchemaBlob) error {
-	schemaBlob, err := json.Marshal(sourceSchema)
-	if err != nil {
-		return err
-	}
-
-	variables := make(map[string]interface{})
-	variables["source_id"] = sourceID
-	variables["source_schema"] = string(schemaBlob)
-
-	return c.transport.Raw(ctx, `
-		mutation ReportSchema($source_id: ID!, $source_schema: String!) {
-			reportSchema(input: { source_id: $source_id, source_schema: $source_schema })
-		}
-    `, variables, nil)
-}
-
 type CreateProjectResponse struct {
-	Project *primitives.Project `json:"createProject"`
+	Project *prims.Project `json:"createProject"`
 }
 
 func (c *Client) CreateProject(
 	ctx context.Context,
 	name primitives.DisplayName,
 	label *primitives.Label,
-	desc primitives.Description) (*primitives.Project, error) {
+	desc prims.Description) (*prims.Project, error) {
 	createReq := &model.CreateProjectRequest{
 		Name:        name,
 		Label:       label,
@@ -1161,10 +951,10 @@ func (c *Client) CreateProject(
 }
 
 type ListProjectsResponse struct {
-	Projects []*primitives.Project `json:"projects"`
+	Projects []*prims.Project `json:"projects"`
 }
 
-func (c *Client) ListProjects(ctx context.Context, status []primitives.ProjectStatus) ([]*primitives.Project, error) {
+func (c *Client) ListProjects(ctx context.Context, status []prims.ProjectStatus) ([]*prims.Project, error) {
 	variables := make(map[string]interface{})
 	variables["status"] = status
 
@@ -1188,11 +978,10 @@ func (c *Client) ListProjects(ctx context.Context, status []primitives.ProjectSt
 }
 
 type GetProjectResponse struct {
-	Project *primitives.Project `json:"project"`
-
+	Project *prims.Project `json:"project"`
 }
 
-func (c *Client) GetProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error) {
+func (c *Client) GetProject(ctx context.Context, id *database.ID, label *primitives.Label) (*prims.Project, error) {
 	variables := make(map[string]interface{})
 	if id != nil {
 		variables["id"] = id
@@ -1224,7 +1013,7 @@ func (c *Client) GetProject(ctx context.Context, id *database.ID, label *primiti
 }
 
 type UpdateProjectSpecResponseBody struct {
-	*primitives.Project
+	*prims.Project
 	ProjectSpec *primitives.ProjectSpec `json:"current_spec"`
 }
 
@@ -1232,7 +1021,7 @@ type UpdateProjectSpecResponse struct {
 	UpdateProjectSpecResponseBody `json:"updateProjectSpec"`
 }
 
-func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel primitives.Label, spec *primitives.ProjectSpecFile) (*primitives.Project, *primitives.ProjectSpec, error) {
+func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel primitives.Label, spec *primitives.ProjectSpecFile) (*prims.Project, *primitives.ProjectSpec, error) {
 	variables := make(map[string]interface{})
 	variables["project"] = &projectLabel
 	variables["projectSpecFile"] = spec
@@ -1247,11 +1036,7 @@ func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel primitives.
 				status,
 				current_spec {
 					id,
-					policy,
-					sources {
-						id,
-						label
-					}
+					policy
 				}
 			}
 		}
@@ -1268,7 +1053,7 @@ func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel primitives.
 }
 
 type UpdateProjectResponse struct {
-	Project *primitives.Project `json:"updateProject"`
+	Project *prims.Project `json:"updateProject"`
 }
 
 func (c *Client) UpdateProject(
@@ -1276,7 +1061,7 @@ func (c *Client) UpdateProject(
 	id *database.ID,
 	label *primitives.Label,
 	name *primitives.DisplayName,
-	desc *primitives.Description) (*primitives.Project, error) {
+	desc *prims.Description) (*prims.Project, error) {
 	updateReq := &model.UpdateProjectRequest{
 		Name:        name,
 		Description: desc,

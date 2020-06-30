@@ -33,12 +33,25 @@ type Enforcer struct {
 	db database.Querier
 }
 
+// TODO -- we likely want this to be an interface for testing
+type Enforcer2 struct {
+
+}
+
 // NewEnforcer creates a new enforcer
 func NewEnforcer(c Canner, db database.Querier) *Enforcer {
 	return &Enforcer{
 		c:  c,
 		db: db,
 	}
+}
+
+func GetEnforcer() *Enforcer2 {
+	return &Enforcer2{}
+}
+
+func (e *Enforcer2) CreateProject(session *Session) error {
+	return nil
 }
 
 // Create calls down to the underlying db function as long as the contained policies

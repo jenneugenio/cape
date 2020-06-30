@@ -28,11 +28,12 @@ import (
 // Coordinator is the central brain of Cape.  It keeps track of system
 // users, policy, etc
 type Coordinator struct {
-	cfg     *Config
-	backend database.Backend
-	handler http.Handler
-	logger  *zerolog.Logger
-	mailer  mailer.Mailer
+	cfg      *Config
+	database database.Database
+	backend  database.Backend
+	handler  http.Handler
+	logger   *zerolog.Logger
+	mailer   mailer.Mailer
 
 	tokenAuth          *auth.TokenAuthority
 	credentialProducer auth.CredentialProducer
@@ -52,6 +53,11 @@ func (c *Coordinator) Setup(ctx context.Context) (http.Handler, error) {
 			return c.handler, nil
 		}
 
+		return nil, err
+	}
+
+	err = c.database.Connect(ctx)
+	if err != nil {
 		return nil, err
 	}
 
@@ -158,7 +164,9 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		return nil, errors.New(InvalidConfigCause, "Unknown credential producer algorithm supplied")
 	}
 
+	db := database.NewPgxDatabase(cfg.DB.Addr.ToURL().String())
 	config := &generated.Config{Resolvers: &graph.Resolver{
+		Database:           db,
 		Backend:            backend,
 		TokenAuthority:     tokenAuth,
 		RootKey:            rootKey,
@@ -200,6 +208,7 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 	return &Coordinator{
 		cfg:                cfg,
 		handler:            chain,
+		database:           db,
 		backend:            backend,
 		logger:             logger,
 		tokenAuth:          tokenAuth,

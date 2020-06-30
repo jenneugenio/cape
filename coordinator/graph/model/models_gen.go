@@ -3,18 +3,13 @@
 package model
 
 import (
+	"github.com/capeprivacy/cape/prims"
 	"time"
 
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/manifoldco/go-base64"
 )
-
-type AddSourceRequest struct {
-	Label       primitives.Label `json:"label"`
-	Credentials primitives.DBURL `json:"credentials"`
-	ServiceID   *database.ID     `json:"service_id"`
-}
 
 type AssignRoleRequest struct {
 	RoleID     database.ID `json:"role_id"`
@@ -56,7 +51,7 @@ type CreatePolicyRequest struct {
 type CreateProjectRequest struct {
 	Name        primitives.DisplayName `json:"name"`
 	Label       *primitives.Label      `json:"label"`
-	Description primitives.Description `json:"Description"`
+	Description prims.Description      `json:"Description"`
 }
 
 type CreateRecoveryRequest struct {
@@ -69,9 +64,8 @@ type CreateRoleRequest struct {
 }
 
 type CreateServiceRequest struct {
-	Email    primitives.Email       `json:"email"`
-	Type     primitives.ServiceType `json:"type"`
-	Endpoint *primitives.URL        `json:"endpoint"`
+	Email primitives.Email       `json:"email"`
+	Type  primitives.ServiceType `json:"type"`
 }
 
 type CreateTokenRequest struct {
@@ -122,15 +116,6 @@ type PolicyInput struct {
 	Label primitives.Label `json:"label"`
 }
 
-type RemoveSourceRequest struct {
-	Label primitives.Label `json:"label"`
-}
-
-type ReportSchemaRequest struct {
-	SourceID     database.ID `json:"source_id"`
-	SourceSchema string      `json:"source_schema"`
-}
-
 type SessionRequest struct {
 	Email   *primitives.Email   `json:"email"`
 	TokenID *database.ID        `json:"token_id"`
@@ -145,10 +130,5 @@ type SetupRequest struct {
 
 type UpdateProjectRequest struct {
 	Name        *primitives.DisplayName `json:"name"`
-	Description *primitives.Description `json:"description"`
-}
-
-type UpdateSourceRequest struct {
-	SourceLabel primitives.Label `json:"source_label"`
-	ServiceID   *database.ID     `json:"service_id"`
+	Description *prims.Description      `json:"description"`
 }

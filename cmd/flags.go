@@ -133,14 +133,6 @@ func serviceTypeFlag() cli.Flag {
 	}
 }
 
-func dataConnectorEndpointFlag() cli.Flag {
-	return &cli.StringFlag{
-		Name:    "endpoint",
-		Usage:   "The endpoint to connect to a data connector. Must be supplied when creating a data-connector",
-		EnvVars: []string{"CAPE_ENDPOINT"},
-	}
-}
-
 func membersFlag() cli.Flag {
 	usage := "Members to assign the specified role to"
 	return &cli.StringSliceFlag{
@@ -151,47 +143,11 @@ func membersFlag() cli.Flag {
 	}
 }
 
-func linkFlag() cli.Flag {
-	usage := "Members to assign the specified role to"
-	return &cli.StringFlag{
-		Name:    "link",
-		Aliases: []string{"l"},
-		Usage:   usage,
-		EnvVars: []string{"CAPE_LINK"},
-	}
-}
-
 func fileFlag() cli.Flag {
 	return &cli.StringFlag{
 		Name:    "from-file",
 		Usage:   "Loads a policy from a file and creates it",
 		EnvVars: []string{"CAPE_FILEPATH"},
-	}
-}
-
-func outFlag() cli.Flag {
-	return &cli.StringFlag{
-		Name:    "out",
-		Usage:   "File to write results to",
-		EnvVars: []string{"CAPE_OUTPUT"},
-	}
-}
-
-func limitFlag() cli.Flag {
-	return &cli.Int64Flag{
-		Name:    "limit",
-		Usage:   "Limit the number of row returned",
-		Value:   50,
-		EnvVars: []string{"CAPE_LIMIT"},
-	}
-}
-
-func offsetFlag() cli.Flag {
-	return &cli.Int64Flag{
-		Name:    "offset",
-		Usage:   "The offset to start returning rows from. Can be used for pagination",
-		Value:   0,
-		EnvVars: []string{"CAPE_OFFSET"},
 	}
 }
 

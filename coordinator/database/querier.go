@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-
 	"github.com/capeprivacy/cape/coordinator/database/types"
 )
 
