@@ -217,6 +217,7 @@ func (h *Harness) Teardown(ctx context.Context) error {
 
 	err = db.Teardown(ctx)
 	if err != nil {
+		h.logger.Error().Msgf("Could not tear down db: %s", err)
 		return err
 	}
 

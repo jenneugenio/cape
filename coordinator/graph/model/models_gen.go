@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -28,11 +29,11 @@ type AttachPolicyRequest struct {
 }
 
 type Attachment struct {
-	ID        database.ID        `json:"id"`
-	CreatedAt time.Time          `json:"created_at"`
-	UpdatedAt time.Time          `json:"updated_at"`
-	Role      *primitives.Role   `json:"role"`
-	Policy    *primitives.Policy `json:"policy"`
+	ID        database.ID      `json:"id"`
+	CreatedAt time.Time        `json:"created_at"`
+	UpdatedAt time.Time        `json:"updated_at"`
+	Role      *primitives.Role `json:"role"`
+	Policy    *models.Policy   `json:"policy"`
 }
 
 type AttemptRecoveryRequest struct {
@@ -42,8 +43,8 @@ type AttemptRecoveryRequest struct {
 }
 
 type CreatePolicyRequest struct {
-	Label primitives.Label      `json:"label"`
-	Spec  primitives.PolicySpec `json:"spec"`
+	Label primitives.Label  `json:"label"`
+	Spec  models.PolicySpec `json:"spec"`
 }
 
 type CreateProjectRequest struct {
@@ -81,7 +82,7 @@ type CreateUserResponse struct {
 }
 
 type DeletePolicyRequest struct {
-	ID database.ID `json:"id"`
+	ID string `json:"id"`
 }
 
 type DeleteRecoveriesRequest struct {

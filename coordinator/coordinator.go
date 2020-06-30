@@ -3,11 +3,13 @@ package coordinator
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/NYTimes/gziphandler"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/justinas/alice"
 	"github.com/manifoldco/go-base64"
 	"github.com/manifoldco/healthz"
@@ -17,6 +19,7 @@ import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
+	capepg "github.com/capeprivacy/cape/coordinator/db/postgres"
 	"github.com/capeprivacy/cape/coordinator/graph"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/mailer"
@@ -33,6 +36,7 @@ type Coordinator struct {
 	handler http.Handler
 	logger  *zerolog.Logger
 	mailer  mailer.Mailer
+	pool    *pgxpool.Pool
 
 	tokenAuth          *auth.TokenAuthority
 	credentialProducer auth.CredentialProducer
@@ -66,6 +70,7 @@ func (c *Coordinator) Setup(ctx context.Context) (http.Handler, error) {
 
 // Teardown the coordinator taking it back to it's start state!
 func (c *Coordinator) Teardown(ctx context.Context) error {
+	c.pool.Close()
 	return c.backend.Close()
 }
 
@@ -160,13 +165,17 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		return nil, errors.New(InvalidConfigCause, "Unknown credential producer algorithm supplied")
 	}
 
-	config := &generated.Config{Resolvers: &graph.Resolver{
-		Backend:            backend,
-		TokenAuthority:     tokenAuth,
-		RootKey:            rootKey,
-		CredentialProducer: cp,
-		Mailer:             mailer,
-	}}
+	pgxPool := mustPgxPool(cfg.DB.Addr.ToURL().String(), cfg.InstanceID.String())
+
+	config := &generated.Config{
+		Resolvers: &graph.Resolver{
+			Database:           capepg.New(pgxPool),
+			Backend:            backend,
+			TokenAuthority:     tokenAuth,
+			RootKey:            rootKey,
+			CredentialProducer: cp,
+			Mailer:             mailer,
+		}}
 
 	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(*config))
 	gqlHandler.SetErrorPresenter(errorPresenter)
@@ -209,6 +218,7 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		logger:             logger,
 		tokenAuth:          tokenAuth,
 		mailer:             mailer,
+		pool:               pgxPool,
 		credentialProducer: cp,
 	}, nil
 }
@@ -233,4 +243,24 @@ func getDatabaseConfig(ctx context.Context, db database.Backend) (*primitives.Co
 	// it gets the job done.
 	err := db.QueryOne(ctx, cfg, database.NewFilter(database.Where{"setup": "true"}, nil, nil))
 	return cfg, err
+}
+
+func mustPgxPool(url, name string) *pgxpool.Pool {
+	cfg, err := pgxpool.ParseConfig(url)
+	if err != nil {
+		log.Fatalf("error parsing database config: %s", err.Error())
+	}
+
+	// Set the application name which can be used for identifying which service
+	// is connecting to postgres
+	cfg.ConnConfig.RuntimeParams = map[string]string{
+		"application_name": name,
+	}
+
+	c, err := pgxpool.ConnectConfig(context.TODO(), cfg)
+	if err != nil {
+		log.Fatalf("error connecting to database: %s", err.Error())
+	}
+
+	return c
 }

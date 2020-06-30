@@ -8,33 +8,35 @@ import (
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
+	"github.com/capeprivacy/cape/models"
+	modelmigration "github.com/capeprivacy/cape/models/migration"
+	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
 
-func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*primitives.Policy, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
+func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*models.Policy, error) {
+	label := models.Label(input.Label.String())
 
-	policy, err := primitives.NewPolicy(input.Label, &input.Spec)
+	policy := models.NewPolicy(label, &input.Spec)
+	err := r.Database.Policies().Create(ctx, policy)
+	if err == db.ErrDuplicateKey {
+		return nil, ErrDuplicateKey
+	}
 	if err != nil {
-		return nil, err
+		// TODO: Log this error and update metrics
+		return nil, errs.New(errs.UnknownCause, "error saving policy")
 	}
 
-	err = enforcer.Create(ctx, policy)
-	if err != nil {
-		return nil, err
-	}
-
-	return policy, nil
+	return &policy, nil
 }
 
 func (r *mutationResolver) DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
+	id := models.Label(input.ID)
 
-	err := enforcer.Delete(ctx, primitives.PolicyType, input.ID)
+	err := r.Database.Policies().Delete(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -83,12 +85,19 @@ func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachP
 	return nil, nil
 }
 
-func (r *queryResolver) Policy(ctx context.Context, id database.ID) (*primitives.Policy, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
+func (r *queryResolver) Policy(ctx context.Context, id string) (*models.Policy, error) {
+	policy, err := r.Database.Policies().Get(ctx, models.Label(id))
+	if err != nil {
+		// TODO(thor): Log internal error messages and swallow them before
+		// returning to the client.
+		return nil, err
+	}
 
-	policy := &primitives.Policy{}
-	err := enforcer.Get(ctx, id, policy)
+	return policy, nil
+}
+
+func (r *queryResolver) PolicyByLabel(ctx context.Context, label string) (*models.Policy, error) {
+	policy, err := r.Database.Policies().Get(ctx, models.Label(label))
 	if err != nil {
 		return nil, err
 	}
@@ -96,33 +105,22 @@ func (r *queryResolver) Policy(ctx context.Context, id database.ID) (*primitives
 	return policy, nil
 }
 
-func (r *queryResolver) PolicyByLabel(ctx context.Context, label primitives.Label) (*primitives.Policy, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	policy := &primitives.Policy{}
-	err := enforcer.QueryOne(ctx, policy, database.NewFilter(database.Where{"label": label}, nil, nil))
+func (r *queryResolver) Policies(ctx context.Context) ([]*models.Policy, error) {
+	pols, err := r.Database.Policies().List(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return policy, nil
-}
-
-func (r *queryResolver) Policies(ctx context.Context) ([]*primitives.Policy, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	var policies []*primitives.Policy
-	err := enforcer.Query(ctx, &policies, database.NewEmptyFilter())
-	if err != nil {
-		return nil, err
+	policies := make([]*models.Policy, 0, len(pols))
+	for _, pol := range pols {
+		p := pol
+		policies = append(policies, &p)
 	}
 
 	return policies, nil
 }
 
-func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error) {
+func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([]*models.Policy, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -134,7 +132,7 @@ func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([
 
 	var policies []*primitives.Policy
 	if len(attachments) == 0 {
-		return policies, nil
+		return modelmigration.PoliciesFromPrimitive(policies), nil
 	}
 
 	policyIDs := database.InFromEntities(attachments, func(e interface{}) interface{} {
@@ -145,14 +143,21 @@ func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([
 		return nil, err
 	}
 
-	return policies, nil
+	retVal := modelmigration.PoliciesFromPrimitive(policies)
+	return retVal, nil
 }
 
-func (r *queryResolver) UserPolicies(ctx context.Context, userID database.ID) ([]*primitives.Policy, error) {
+func (r *queryResolver) UserPolicies(ctx context.Context, userID database.ID) ([]*models.Policy, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	return fw.QueryUserPolicies(ctx, enforcer, userID)
+	policies, err := fw.QueryUserPolicies(ctx, enforcer, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	retVal := modelmigration.PoliciesFromPrimitive(policies)
+	return retVal, nil
 }
 
 func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error) {

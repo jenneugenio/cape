@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/urfave/cli/v2"
 )
@@ -104,14 +105,14 @@ func policyAttachCmd(c *cli.Context) error {
 		return err
 	}
 
-	var policy *primitives.Policy
+	var policy *models.Policy
 	if file != "" {
 		data, err := ioutil.ReadFile(file)
 		if err != nil {
 			return err
 		}
 
-		policyInput, err := primitives.ParsePolicy(data)
+		policyInput, err := models.ParsePolicy(data)
 		if err != nil {
 			return err
 		}
@@ -123,7 +124,7 @@ func policyAttachCmd(c *cli.Context) error {
 
 		policy = p
 	} else {
-		p, err := client.GetPolicyByLabel(c.Context, policyLabel)
+		p, err := client.GetPolicyByLabel(c.Context, policyLabel.String())
 		if err != nil {
 			return err
 		}
@@ -140,8 +141,8 @@ func policyAttachCmd(c *cli.Context) error {
 		Policy string
 		Role   string
 	}{
-		policyLabel.String(),
-		roleLabel.String(),
+		string(policyLabel),
+		string(roleLabel),
 	}
 	u := provider.UI(c.Context)
 	return u.Template("The policy {{ .Policy | bold }} has been attached to the role {{ .Role | bold }}\n", args)
@@ -173,7 +174,7 @@ func policyDetachCmd(c *cli.Context) error {
 		return err
 	}
 
-	policy, err := client.GetPolicyByLabel(c.Context, policyLabel)
+	policy, err := client.GetPolicyByLabel(c.Context, policyLabel.String())
 	if err != nil {
 		return err
 	}
@@ -211,7 +212,7 @@ func policiesListCmd(c *cli.Context) error {
 	header := []string{"Label"}
 	body := make([][]string, len(policies))
 	for i, p := range policies {
-		body[i] = []string{p.Label.String()}
+		body[i] = []string{string(p.Label)}
 	}
 
 	return u.Table(header, body)

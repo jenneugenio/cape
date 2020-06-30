@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/capeprivacy/cape/models"
 	"github.com/manifoldco/go-base64"
 
 	"github.com/capeprivacy/cape/framework"
@@ -377,8 +378,8 @@ func (c *Client) Setup(ctx context.Context, name primitives.Name, email primitiv
 	return user, nil
 }
 
-// CreatePolicy creates a policy on the coordinator
-func (c *Client) CreatePolicy(ctx context.Context, policy *primitives.Policy) (*primitives.Policy, error) {
+// CreateDeprecatedPolicy creates a policy on the coordinator
+func (c *Client) CreateDeprecatedPolicy(ctx context.Context, policy *primitives.Policy) (*primitives.Policy, error) {
 	var resp struct {
 		Policy primitives.Policy `json:"createPolicy"`
 	}
@@ -388,7 +389,33 @@ func (c *Client) CreatePolicy(ctx context.Context, policy *primitives.Policy) (*
 	variables["spec"] = policy.Spec
 
 	err := c.transport.Raw(ctx, `
-		mutation CreatePolicy($label: Label!, $spec: PolicySpec!) {
+		mutation CreateDeprecatedPolicy($label: Label!, $spec: PolicySpec!) {
+			createPolicy(input: { label: $label, spec: $spec }) {
+				id
+				label
+			}
+		}
+	`, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Policy, nil
+}
+
+// CreatePolicy creates a policy on the coordinator
+func (c *Client) CreatePolicy(ctx context.Context, policy *models.Policy) (*models.Policy, error) {
+	var resp struct {
+		Policy models.Policy `json:"createPolicy"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["label"] = policy.Label
+	variables["spec"] = policy.Spec
+
+	err := c.transport.Raw(ctx, `
+		mutation CreateDeprecatedPolicy($label: Label!, $spec: PolicySpec!) {
 			createPolicy(input: { label: $label, spec: $spec }) {
 				id
 				label
@@ -404,28 +431,28 @@ func (c *Client) CreatePolicy(ctx context.Context, policy *primitives.Policy) (*
 }
 
 // DeletePolicy deletes a policy on the coordinator
-func (c *Client) DeletePolicy(ctx context.Context, id database.ID) error {
+func (c *Client) DeletePolicy(ctx context.Context, id string) error {
 	variables := make(map[string]interface{})
 	variables["id"] = id
 
 	return c.transport.Raw(ctx, `
-		mutation DeletePolicy($id: ID!) {
+		mutation DeletePolicy($id: String!) {
 			deletePolicy(input: { id: $id })
 		}
 	`, variables, nil)
 }
 
 // GetPolicy returns a policy by id
-func (c *Client) GetPolicy(ctx context.Context, id database.ID) (*primitives.Policy, error) {
+func (c *Client) GetPolicy(ctx context.Context, id string) (*models.Policy, error) {
 	var resp struct {
-		Policy primitives.Policy `json:"policy"`
+		Policy models.Policy `json:"policy"`
 	}
 
 	variables := make(map[string]interface{})
 	variables["id"] = id
 
 	err := c.transport.Raw(ctx, `
-		query Policy($id: ID!) {
+		query Policy($id: String!) {
 			policy(id: $id) {
 				id
 				label
@@ -440,16 +467,16 @@ func (c *Client) GetPolicy(ctx context.Context, id database.ID) (*primitives.Pol
 }
 
 // GetPolicyByLabel returns a specific policy by label
-func (c *Client) GetPolicyByLabel(ctx context.Context, label primitives.Label) (*primitives.Policy, error) {
+func (c *Client) GetPolicyByLabel(ctx context.Context, label string) (*models.Policy, error) {
 	var resp struct {
-		Policy primitives.Policy `json:"policyByLabel"`
+		Policy models.Policy `json:"policyByLabel"`
 	}
 
 	variables := make(map[string]interface{})
 	variables["label"] = label
 
 	err := c.transport.Raw(ctx, `
-		query PolicyByLabel($label: Label!) {
+		query PolicyByLabel($label: String!) {
 			policyByLabel(label: $label) {
 				id
 				label
@@ -464,9 +491,9 @@ func (c *Client) GetPolicyByLabel(ctx context.Context, label primitives.Label) (
 }
 
 // ListPolicies returns all policies
-func (c *Client) ListPolicies(ctx context.Context) ([]*primitives.Policy, error) {
+func (c *Client) ListPolicies(ctx context.Context) ([]*models.Policy, error) {
 	var resp struct {
-		Policies []*primitives.Policy `json:"policies"`
+		Policies []*models.Policy `json:"policies"`
 	}
 
 	err := c.transport.Raw(ctx, `
@@ -486,7 +513,7 @@ func (c *Client) ListPolicies(ctx context.Context) ([]*primitives.Policy, error)
 }
 
 // AttachPolicy attaches a policy to a role
-func (c *Client) AttachPolicy(ctx context.Context, policyID database.ID,
+func (c *Client) AttachPolicy(ctx context.Context, policyID string,
 	roleID database.ID) (*model.Attachment, error) {
 	var resp struct {
 		Attachment model.Attachment `json:"attachPolicy"`
@@ -518,13 +545,13 @@ func (c *Client) AttachPolicy(ctx context.Context, policyID database.ID,
 }
 
 // DetachPolicy unattaches a policy from a role
-func (c *Client) DetachPolicy(ctx context.Context, policyID database.ID, roleID database.ID) error {
+func (c *Client) DetachPolicy(ctx context.Context, policyID string, roleID database.ID) error {
 	variables := make(map[string]interface{})
 	variables["role_id"] = roleID
 	variables["policy_id"] = policyID
 
 	return c.transport.Raw(ctx, `
-		mutation detachPolicy($role_id: ID!, $policy_id: ID!) {
+		mutation detachPolicy($role_id: ID!, $policy_id: String!) {
 			detachPolicy(input: { role_id: $role_id, policy_id: $policy_id })
 		}
 	`, variables, nil)

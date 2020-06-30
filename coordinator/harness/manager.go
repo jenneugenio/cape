@@ -7,6 +7,7 @@ import (
 	"github.com/manifoldco/go-base64"
 
 	"github.com/capeprivacy/cape/coordinator"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -85,7 +86,7 @@ func (m *Manager) CreatePolicy(ctx context.Context, policyPath string) error {
 		return err
 	}
 
-	policy, err := primitives.ParsePolicy(data)
+	policy, err := models.ParsePolicy(data)
 	if err != nil {
 		return err
 	}

@@ -8,6 +8,7 @@ require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/Masterminds/squirrel v1.4.0
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
@@ -24,6 +25,7 @@ require (
 	github.com/gostaticanalysis/analysisutil v0.0.3 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
 	github.com/jackc/pgconn v1.3.2
+	github.com/jackc/pgproto3/v2 v2.0.1
 	github.com/jackc/pgx/v4 v4.4.1
 	github.com/jackc/tern v1.9.1
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
@@ -45,6 +47,7 @@ require (
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mitchellh/mapstructure v1.2.2
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
+	github.com/oklog/ulid v1.3.1
 	github.com/onsi/gomega v1.9.0
 	github.com/rs/cors v1.7.0
 	github.com/rs/zerolog v1.18.0
@@ -60,6 +63,7 @@ require (
 	google.golang.org/grpc v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.55.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1
+	gopkg.in/yaml.v2 v2.2.8
 	helm.sh/helm/v3 v3.2.0
 	mvdan.cc/unparam v0.0.0-20200314162735-0ac8026f7d06 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect

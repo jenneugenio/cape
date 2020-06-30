@@ -2,11 +2,11 @@ scalar PolicySpec
 scalar Rule
 
 type Policy {
-  id: ID!
+  id: String!
   created_at: Time!
   updated_at: Time!
 
-  label: Label!
+  label: ModelLabel!
   spec: PolicySpec!
 }
 
@@ -25,7 +25,7 @@ input CreatePolicyRequest {
 }
 
 input DeletePolicyRequest {
-  id: ID!
+  id: String!
 }
 
 input PolicyInput {
@@ -43,8 +43,8 @@ input DetachPolicyRequest {
 }
 
 extend type Query {
-  policy(id: ID!): Policy!
-  policyByLabel(label: Label!): Policy!
+  policy(id: String!): Policy!
+  policyByLabel(label: String!): Policy!
 
   policies: [Policy!]
   rolePolicies(role_id: ID!): [Policy!]

@@ -34,9 +34,11 @@ models:
   AuthCredentials:
     model: github.com/capeprivacy/cape/primitives.AuthCredentials
   Policy:
-    model: github.com/capeprivacy/cape/primitives.Policy
+    model: github.com/capeprivacy/cape/models.Policy
   Label:
     model: github.com/capeprivacy/cape/primitives.Label
+  ModelLabel:
+    model: github.com/capeprivacy/cape/models.Label
   Name:
     model: github.com/capeprivacy/cape/primitives.Name
   Email:
@@ -44,7 +46,7 @@ models:
   EmailType:
     model: github.com/capeprivacy/cape/primitives.EmailType
   PolicySpec:
-    model: github.com/capeprivacy/cape/primitives.PolicySpec
+    model: github.com/capeprivacy/cape/models.PolicySpec
   Rule:
     model: github.com/capeprivacy/cape/primitives.Rule
   Token:

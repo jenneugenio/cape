@@ -15,6 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/manifoldco/go-base64"
 	gqlparser "github.com/vektah/gqlparser/v2"
@@ -128,8 +129,8 @@ type ComplexityRoot struct {
 		Identities    func(childComplexity int, emails []*primitives.Email) int
 		Me            func(childComplexity int) int
 		Policies      func(childComplexity int) int
-		Policy        func(childComplexity int, id database.ID) int
-		PolicyByLabel func(childComplexity int, label primitives.Label) int
+		Policy        func(childComplexity int, id string) int
+		PolicyByLabel func(childComplexity int, label string) int
 		Project       func(childComplexity int, id *database.ID, label *primitives.Label) int
 		Projects      func(childComplexity int, status []primitives.ProjectStatus) int
 		Role          func(childComplexity int, id database.ID) int
@@ -182,7 +183,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.CreateUserRequest) (*model.CreateUserResponse, error)
-	CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*primitives.Policy, error)
+	CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*models.Policy, error)
 	DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error)
 	AttachPolicy(ctx context.Context, input model.AttachPolicyRequest) (*model.Attachment, error)
 	DetachPolicy(ctx context.Context, input model.DetachPolicyRequest) (*string, error)
@@ -212,11 +213,11 @@ type QueryResolver interface {
 	Users(ctx context.Context) ([]*primitives.User, error)
 	Me(ctx context.Context) (*primitives.User, error)
 	Identities(ctx context.Context, emails []*primitives.Email) ([]*primitives.User, error)
-	Policy(ctx context.Context, id database.ID) (*primitives.Policy, error)
-	PolicyByLabel(ctx context.Context, label primitives.Label) (*primitives.Policy, error)
-	Policies(ctx context.Context) ([]*primitives.Policy, error)
-	RolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error)
-	UserPolicies(ctx context.Context, userID database.ID) ([]*primitives.Policy, error)
+	Policy(ctx context.Context, id string) (*models.Policy, error)
+	PolicyByLabel(ctx context.Context, label string) (*models.Policy, error)
+	Policies(ctx context.Context) ([]*models.Policy, error)
+	RolePolicies(ctx context.Context, roleID database.ID) ([]*models.Policy, error)
+	UserPolicies(ctx context.Context, userID database.ID) ([]*models.Policy, error)
 	Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error)
 	Projects(ctx context.Context, status []primitives.ProjectStatus) ([]*primitives.Project, error)
 	Project(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error)
@@ -726,7 +727,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Policy(childComplexity, args["id"].(database.ID)), true
+		return e.complexity.Query.Policy(childComplexity, args["id"].(string)), true
 
 	case "Query.policyByLabel":
 		if e.complexity.Query.PolicyByLabel == nil {
@@ -738,7 +739,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.PolicyByLabel(childComplexity, args["label"].(primitives.Label)), true
+		return e.complexity.Query.PolicyByLabel(childComplexity, args["label"].(string)), true
 
 	case "Query.project":
 		if e.complexity.Query.Project == nil {
@@ -1077,11 +1078,11 @@ var sources = []*ast.Source{
 scalar Rule
 
 type Policy {
-  id: ID!
+  id: String!
   created_at: Time!
   updated_at: Time!
 
-  label: Label!
+  label: ModelLabel!
   spec: PolicySpec!
 }
 
@@ -1100,7 +1101,7 @@ input CreatePolicyRequest {
 }
 
 input DeletePolicyRequest {
-  id: ID!
+  id: String!
 }
 
 input PolicyInput {
@@ -1118,8 +1119,8 @@ input DetachPolicyRequest {
 }
 
 extend type Query {
-  policy(id: ID!): Policy!
-  policyByLabel(label: Label!): Policy!
+  policy(id: String!): Policy!
+  policyByLabel(label: String!): Policy!
 
   policies: [Policy!]
   rolePolicies(role_id: ID!): [Policy!]
@@ -1343,7 +1344,10 @@ scalar EmailType
 scalar Email
 scalar SourceType
 scalar Password
-`, BuiltIn: false},
+
+# Migration scalars
+
+scalar ModelLabel`, BuiltIn: false},
 	&ast.Source{Name: "coordinator/schema/tokens.graphql", Input: `type Token {
     id: ID!
     user_id: ID!
@@ -1727,9 +1731,9 @@ func (ec *executionContext) field_Query_identities_args(ctx context.Context, raw
 func (ec *executionContext) field_Query_policyByLabel_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 primitives.Label
+	var arg0 string
 	if tmp, ok := rawArgs["label"]; ok {
-		arg0, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1741,9 +1745,9 @@ func (ec *executionContext) field_Query_policyByLabel_args(ctx context.Context, 
 func (ec *executionContext) field_Query_policy_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 database.ID
+	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2257,9 +2261,9 @@ func (ec *executionContext) _Attachment_policy(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.Policy)
+	res := resTmp.(*models.Policy)
 	fc.Result = res
-	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
+	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CreateTokenResponse_secret(ctx context.Context, field graphql.CollectedField, obj *model.CreateTokenResponse) (ret graphql.Marshaler) {
@@ -2475,9 +2479,9 @@ func (ec *executionContext) _Mutation_createPolicy(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.Policy)
+	res := resTmp.(*models.Policy)
 	fc.Result = res
-	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
+	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deletePolicy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3118,7 +3122,7 @@ func (ec *executionContext) _Mutation_removeToken(ctx context.Context, field gra
 	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _Policy_id(ctx context.Context, field graphql.CollectedField, obj *models.Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3147,12 +3151,12 @@ func (ec *executionContext) _Policy_id(ctx context.Context, field graphql.Collec
 		}
 		return graphql.Null
 	}
-	res := resTmp.(database.ID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _Policy_created_at(ctx context.Context, field graphql.CollectedField, obj *models.Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3186,7 +3190,7 @@ func (ec *executionContext) _Policy_created_at(ctx context.Context, field graphq
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_updated_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _Policy_updated_at(ctx context.Context, field graphql.CollectedField, obj *models.Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3220,7 +3224,7 @@ func (ec *executionContext) _Policy_updated_at(ctx context.Context, field graphq
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_label(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _Policy_label(ctx context.Context, field graphql.CollectedField, obj *models.Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3249,12 +3253,12 @@ func (ec *executionContext) _Policy_label(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(primitives.Label)
+	res := resTmp.(models.Label)
 	fc.Result = res
-	return ec.marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
+	return ec.marshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_spec(ctx context.Context, field graphql.CollectedField, obj *primitives.Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _Policy_spec(ctx context.Context, field graphql.CollectedField, obj *models.Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3283,9 +3287,9 @@ func (ec *executionContext) _Policy_spec(ctx context.Context, field graphql.Coll
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.PolicySpec)
+	res := resTmp.(*models.PolicySpec)
 	fc.Result = res
-	return ec.marshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx, field.Selections, res)
+	return ec.marshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Project_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Project) (ret graphql.Marshaler) {
@@ -3858,7 +3862,7 @@ func (ec *executionContext) _Query_policy(ctx context.Context, field graphql.Col
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Policy(rctx, args["id"].(database.ID))
+		return ec.resolvers.Query().Policy(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3870,9 +3874,9 @@ func (ec *executionContext) _Query_policy(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.Policy)
+	res := resTmp.(*models.Policy)
 	fc.Result = res
-	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
+	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_policyByLabel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3899,7 +3903,7 @@ func (ec *executionContext) _Query_policyByLabel(ctx context.Context, field grap
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().PolicyByLabel(rctx, args["label"].(primitives.Label))
+		return ec.resolvers.Query().PolicyByLabel(rctx, args["label"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3911,9 +3915,9 @@ func (ec *executionContext) _Query_policyByLabel(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.Policy)
+	res := resTmp.(*models.Policy)
 	fc.Result = res
-	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx, field.Selections, res)
+	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_policies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3942,9 +3946,9 @@ func (ec *executionContext) _Query_policies(ctx context.Context, field graphql.C
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*primitives.Policy)
+	res := resTmp.([]*models.Policy)
 	fc.Result = res
-	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
+	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicyᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_rolePolicies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3980,9 +3984,9 @@ func (ec *executionContext) _Query_rolePolicies(ctx context.Context, field graph
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*primitives.Policy)
+	res := resTmp.([]*models.Policy)
 	fc.Result = res
-	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
+	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicyᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_userPolicies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4018,9 +4022,9 @@ func (ec *executionContext) _Query_userPolicies(ctx context.Context, field graph
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*primitives.Policy)
+	res := resTmp.([]*models.Policy)
 	fc.Result = res
-	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicyᚄ(ctx, field.Selections, res)
+	return ec.marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicyᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6262,7 +6266,7 @@ func (ec *executionContext) unmarshalInputCreatePolicyRequest(ctx context.Contex
 			}
 		case "spec":
 			var err error
-			it.Spec, err = ec.unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx, v)
+			it.Spec, err = ec.unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6394,7 +6398,7 @@ func (ec *executionContext) unmarshalInputDeletePolicyRequest(ctx context.Contex
 		switch k {
 		case "id":
 			var err error
-			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
+			it.ID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6850,7 +6854,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 var policyImplementors = []string{"Policy"}
 
-func (ec *executionContext) _Policy(ctx context.Context, sel ast.SelectionSet, obj *primitives.Policy) graphql.Marshaler {
+func (ec *executionContext) _Policy(ctx context.Context, sel ast.SelectionSet, obj *models.Policy) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, policyImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -7984,6 +7988,21 @@ func (ec *executionContext) marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋpr
 	return v
 }
 
+func (ec *executionContext) unmarshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx context.Context, v interface{}) (models.Label, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	return models.Label(tmp), err
+}
+
+func (ec *executionContext) marshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx context.Context, sel ast.SelectionSet, v models.Label) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
 func (ec *executionContext) unmarshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐName(ctx context.Context, v interface{}) (primitives.Name, error) {
 	var res primitives.Name
 	return res, res.UnmarshalGQL(v)
@@ -8008,11 +8027,11 @@ func (ec *executionContext) marshalNPassword2githubᚗcomᚋcapeprivacyᚋcape�
 	return res
 }
 
-func (ec *executionContext) marshalNPolicy2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx context.Context, sel ast.SelectionSet, v primitives.Policy) graphql.Marshaler {
+func (ec *executionContext) marshalNPolicy2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicy(ctx context.Context, sel ast.SelectionSet, v models.Policy) graphql.Marshaler {
 	return ec._Policy(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx context.Context, sel ast.SelectionSet, v *primitives.Policy) graphql.Marshaler {
+func (ec *executionContext) marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicy(ctx context.Context, sel ast.SelectionSet, v *models.Policy) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8022,24 +8041,24 @@ func (ec *executionContext) marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcape�
 	return ec._Policy(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, v interface{}) (primitives.PolicySpec, error) {
-	var res primitives.PolicySpec
+func (ec *executionContext) unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx context.Context, v interface{}) (models.PolicySpec, error) {
+	var res models.PolicySpec
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v primitives.PolicySpec) graphql.Marshaler {
+func (ec *executionContext) marshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v models.PolicySpec) graphql.Marshaler {
 	return v
 }
 
-func (ec *executionContext) unmarshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, v interface{}) (*primitives.PolicySpec, error) {
+func (ec *executionContext) unmarshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx context.Context, v interface{}) (*models.PolicySpec, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx, v)
+	res, err := ec.unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx, v)
 	return &res, err
 }
 
-func (ec *executionContext) marshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v *primitives.PolicySpec) graphql.Marshaler {
+func (ec *executionContext) marshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v *models.PolicySpec) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -8682,7 +8701,7 @@ func (ec *executionContext) marshalOLabel2ᚖgithubᚗcomᚋcapeprivacyᚋcape�
 	return v
 }
 
-func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicyᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Policy) graphql.Marshaler {
+func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicyᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Policy) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -8709,7 +8728,7 @@ func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋca
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPolicy(ctx, sel, v[i])
+			ret[i] = ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicy(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
