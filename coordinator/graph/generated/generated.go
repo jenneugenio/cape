@@ -44,6 +44,7 @@ type ResolverRoot interface {
 	Project() ProjectResolver
 	ProjectSpec() ProjectSpecResolver
 	Query() QueryResolver
+	Role() RoleResolver
 	Service() ServiceResolver
 	Source() SourceResolver
 	User() UserResolver
@@ -137,7 +138,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Attachment       func(childComplexity int, roleID database.ID, policyID database.ID) int
+		Attachment       func(childComplexity int, roleID string, policyID database.ID) int
 		Identities       func(childComplexity int, emails []*primitives.Email) int
 		IdentityPolicies func(childComplexity int, identityID database.ID) int
 		Me               func(childComplexity int) int
@@ -146,10 +147,10 @@ type ComplexityRoot struct {
 		PolicyByLabel    func(childComplexity int, label primitives.Label) int
 		Project          func(childComplexity int, id *database.ID, label *primitives.Label) int
 		Projects         func(childComplexity int, status []primitives.ProjectStatus) int
-		Role             func(childComplexity int, id database.ID) int
+		Role             func(childComplexity int, id string) int
 		RoleByLabel      func(childComplexity int, label primitives.Label) int
-		RoleMembers      func(childComplexity int, roleID database.ID) int
-		RolePolicies     func(childComplexity int, roleID database.ID) int
+		RoleMembers      func(childComplexity int, roleID string) int
+		RolePolicies     func(childComplexity int, roleID string) int
 		Roles            func(childComplexity int) int
 		Service          func(childComplexity int, id database.ID) int
 		ServiceByEmail   func(childComplexity int, email primitives.Email) int
@@ -169,11 +170,9 @@ type ComplexityRoot struct {
 	}
 
 	Role struct {
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Label     func(childComplexity int) int
-		System    func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
+		ID     func(childComplexity int) int
+		Label  func(childComplexity int) int
+		System func(childComplexity int) int
 	}
 
 	Service struct {
@@ -262,15 +261,15 @@ type QueryResolver interface {
 	Policy(ctx context.Context, id database.ID) (*primitives.Policy, error)
 	PolicyByLabel(ctx context.Context, label primitives.Label) (*primitives.Policy, error)
 	Policies(ctx context.Context) ([]*primitives.Policy, error)
-	RolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error)
+	RolePolicies(ctx context.Context, roleID string) ([]*primitives.Policy, error)
 	IdentityPolicies(ctx context.Context, identityID database.ID) ([]*primitives.Policy, error)
-	Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error)
+	Attachment(ctx context.Context, roleID string, policyID database.ID) (*model.Attachment, error)
 	Projects(ctx context.Context, status []primitives.ProjectStatus) ([]*primitives.Project, error)
 	Project(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error)
-	Role(ctx context.Context, id database.ID) (*primitives.Role, error)
+	Role(ctx context.Context, id string) (*primitives.Role, error)
 	RoleByLabel(ctx context.Context, label primitives.Label) (*primitives.Role, error)
 	Roles(ctx context.Context) ([]*primitives.Role, error)
-	RoleMembers(ctx context.Context, roleID database.ID) ([]primitives.Identity, error)
+	RoleMembers(ctx context.Context, roleID string) ([]primitives.Identity, error)
 	Service(ctx context.Context, id database.ID) (*primitives.Service, error)
 	ServiceByEmail(ctx context.Context, email primitives.Email) (*primitives.Service, error)
 	Services(ctx context.Context) ([]*primitives.Service, error)
@@ -278,6 +277,9 @@ type QueryResolver interface {
 	Source(ctx context.Context, id database.ID) (*primitives.Source, error)
 	SourceByLabel(ctx context.Context, label primitives.Label) (*primitives.Source, error)
 	Tokens(ctx context.Context, identityID database.ID) ([]database.ID, error)
+}
+type RoleResolver interface {
+	ID(ctx context.Context, obj *primitives.Role) (string, error)
 }
 type ServiceResolver interface {
 	Roles(ctx context.Context, obj *primitives.Service) ([]*primitives.Role, error)
@@ -850,7 +852,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Attachment(childComplexity, args["role_id"].(database.ID), args["policy_id"].(database.ID)), true
+		return e.complexity.Query.Attachment(childComplexity, args["role_id"].(string), args["policy_id"].(database.ID)), true
 
 	case "Query.identities":
 		if e.complexity.Query.Identities == nil {
@@ -948,7 +950,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Role(childComplexity, args["id"].(database.ID)), true
+		return e.complexity.Query.Role(childComplexity, args["id"].(string)), true
 
 	case "Query.roleByLabel":
 		if e.complexity.Query.RoleByLabel == nil {
@@ -972,7 +974,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.RoleMembers(childComplexity, args["role_id"].(database.ID)), true
+		return e.complexity.Query.RoleMembers(childComplexity, args["role_id"].(string)), true
 
 	case "Query.rolePolicies":
 		if e.complexity.Query.RolePolicies == nil {
@@ -984,7 +986,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.RolePolicies(childComplexity, args["role_id"].(database.ID)), true
+		return e.complexity.Query.RolePolicies(childComplexity, args["role_id"].(string)), true
 
 	case "Query.roles":
 		if e.complexity.Query.Roles == nil {
@@ -1107,13 +1109,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Recovery.UpdatedAt(childComplexity), true
 
-	case "Role.created_at":
-		if e.complexity.Role.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.Role.CreatedAt(childComplexity), true
-
 	case "Role.id":
 		if e.complexity.Role.ID == nil {
 			break
@@ -1134,13 +1129,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Role.System(childComplexity), true
-
-	case "Role.updated_at":
-		if e.complexity.Role.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.Role.UpdatedAt(childComplexity), true
 
 	case "Service.created_at":
 		if e.complexity.Service.CreatedAt == nil {
@@ -1417,12 +1405,12 @@ input PolicyInput {
 
 input AttachPolicyRequest {
   policy_id: ID!
-  role_id: ID!
+  role_id: String!
 }
 
 input DetachPolicyRequest {
   policy_id: ID!
-  role_id: ID!
+  role_id: String!
 }
 
 extend type Query {
@@ -1430,10 +1418,10 @@ extend type Query {
   policyByLabel(label: Label!): Policy! @isAuthenticated()
 
   policies: [Policy!] @isAuthenticated()
-  rolePolicies(role_id: ID!): [Policy!] @isAuthenticated()
+  rolePolicies(role_id: String!): [Policy!] @isAuthenticated()
   identityPolicies(identity_id: ID!): [Policy!] @isAuthenticated()
 
-  attachment(role_id: ID!, policy_id: ID!): Attachment! @isAuthenticated()
+  attachment(role_id: String!, policy_id: ID!): Attachment! @isAuthenticated()
 }
 
 extend type Mutation {
@@ -1524,11 +1512,9 @@ extend type Mutation {
 }
 `, BuiltIn: false},
 	&ast.Source{Name: "coordinator/schema/roles.graphql", Input: `type Role {
-  id: ID!
+  id: String!
   label: Label!
   system: Boolean!
-  created_at: Time!
-  updated_at: Time!
 }
 
 input CreateRoleRequest {
@@ -1537,19 +1523,19 @@ input CreateRoleRequest {
 }
 
 input DeleteRoleRequest {
-  id: ID!
+  id: String!
 }
 
 input AssignRoleRequest {
-  role_id: ID!
+  role_id: String!
   identity_id: ID!
 }
 
 extend type Query {
-  role(id: ID!): Role! @isAuthenticated()
+  role(id: String!): Role! @isAuthenticated()
   roleByLabel(label: Label!): Role! @isAuthenticated()
   roles: [Role!] @isAuthenticated()
-  roleMembers(role_id: ID!): [Identity!] @isAuthenticated()
+  roleMembers(role_id: String!): [Identity!] @isAuthenticated()
 }
 
 extend type Mutation {
@@ -2208,9 +2194,9 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_attachment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 database.ID
+	var arg0 string
 	if tmp, ok := rawArgs["role_id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2336,9 +2322,9 @@ func (ec *executionContext) field_Query_roleByLabel_args(ctx context.Context, ra
 func (ec *executionContext) field_Query_roleMembers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 database.ID
+	var arg0 string
 	if tmp, ok := rawArgs["role_id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2350,9 +2336,9 @@ func (ec *executionContext) field_Query_roleMembers_args(ctx context.Context, ra
 func (ec *executionContext) field_Query_rolePolicies_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 database.ID
+	var arg0 string
 	if tmp, ok := rawArgs["role_id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2364,9 +2350,9 @@ func (ec *executionContext) field_Query_rolePolicies_args(ctx context.Context, r
 func (ec *executionContext) field_Query_role_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 database.ID
+	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -5478,7 +5464,7 @@ func (ec *executionContext) _Query_rolePolicies(ctx context.Context, field graph
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().RolePolicies(rctx, args["role_id"].(database.ID))
+			return ec.resolvers.Query().RolePolicies(rctx, args["role_id"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAuthenticated == nil {
@@ -5594,7 +5580,7 @@ func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Attachment(rctx, args["role_id"].(database.ID), args["policy_id"].(database.ID))
+			return ec.resolvers.Query().Attachment(rctx, args["role_id"].(string), args["policy_id"].(database.ID))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAuthenticated == nil {
@@ -5774,7 +5760,7 @@ func (ec *executionContext) _Query_role(ctx context.Context, field graphql.Colle
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().Role(rctx, args["id"].(database.ID))
+			return ec.resolvers.Query().Role(rctx, args["id"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAuthenticated == nil {
@@ -5947,7 +5933,7 @@ func (ec *executionContext) _Query_roleMembers(ctx context.Context, field graphq
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Query().RoleMembers(rctx, args["role_id"].(database.ID))
+			return ec.resolvers.Query().RoleMembers(rctx, args["role_id"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			if ec.directives.IsAuthenticated == nil {
@@ -6572,13 +6558,13 @@ func (ec *executionContext) _Role_id(ctx context.Context, field graphql.Collecte
 		Object:   "Role",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return ec.resolvers.Role().ID(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6590,9 +6576,9 @@ func (ec *executionContext) _Role_id(ctx context.Context, field graphql.Collecte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(database.ID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Role_label(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
@@ -6661,74 +6647,6 @@ func (ec *executionContext) _Role_system(ctx context.Context, field graphql.Coll
 	res := resTmp.(bool)
 	fc.Result = res
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Role_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Role",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Role_updated_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Role",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Service_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Service) (ret graphql.Marshaler) {
@@ -8665,7 +8583,7 @@ func (ec *executionContext) unmarshalInputAssignRoleRequest(ctx context.Context,
 		switch k {
 		case "role_id":
 			var err error
-			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
+			it.RoleID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8695,7 +8613,7 @@ func (ec *executionContext) unmarshalInputAttachPolicyRequest(ctx context.Contex
 			}
 		case "role_id":
 			var err error
-			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
+			it.RoleID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8941,7 +8859,7 @@ func (ec *executionContext) unmarshalInputDeleteRoleRequest(ctx context.Context,
 		switch k {
 		case "id":
 			var err error
-			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
+			it.ID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9001,7 +8919,7 @@ func (ec *executionContext) unmarshalInputDetachPolicyRequest(ctx context.Contex
 			}
 		case "role_id":
 			var err error
-			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
+			it.RoleID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -10053,29 +9971,28 @@ func (ec *executionContext) _Role(ctx context.Context, sel ast.SelectionSet, obj
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Role")
 		case "id":
-			out.Values[i] = ec._Role_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Role_id(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "label":
 			out.Values[i] = ec._Role_label(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "system":
 			out.Values[i] = ec._Role_system(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "created_at":
-			out.Values[i] = ec._Role_created_at(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "updated_at":
-			out.Values[i] = ec._Role_updated_at(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))

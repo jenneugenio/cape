@@ -5,12 +5,14 @@ package graph
 import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database2"
 	"github.com/capeprivacy/cape/coordinator/mailer"
 )
 
 // Resolver is used by graphql to resolve queries/mutations
 type Resolver struct {
 	Backend            database.Backend
+	Database           *database2.Database
 	TokenAuthority     *auth.TokenAuthority
 	CredentialProducer auth.CredentialProducer
 	RootKey            [32]byte

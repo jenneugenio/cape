@@ -34,12 +34,12 @@ input PolicyInput {
 
 input AttachPolicyRequest {
   policy_id: ID!
-  role_id: ID!
+  role_id: String!
 }
 
 input DetachPolicyRequest {
   policy_id: ID!
-  role_id: ID!
+  role_id: String!
 }
 
 extend type Query {
@@ -47,10 +47,10 @@ extend type Query {
   policyByLabel(label: Label!): Policy! @isAuthenticated()
 
   policies: [Policy!] @isAuthenticated()
-  rolePolicies(role_id: ID!): [Policy!] @isAuthenticated()
+  rolePolicies(role_id: String!): [Policy!] @isAuthenticated()
   identityPolicies(identity_id: ID!): [Policy!] @isAuthenticated()
 
-  attachment(role_id: ID!, policy_id: ID!): Attachment! @isAuthenticated()
+  attachment(role_id: String!, policy_id: ID!): Attachment! @isAuthenticated()
 }
 
 extend type Mutation {

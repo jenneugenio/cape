@@ -1,9 +1,7 @@
 type Role {
-  id: ID!
+  id: String!
   label: Label!
   system: Boolean!
-  created_at: Time!
-  updated_at: Time!
 }
 
 input CreateRoleRequest {
@@ -12,19 +10,19 @@ input CreateRoleRequest {
 }
 
 input DeleteRoleRequest {
-  id: ID!
+  id: String!
 }
 
 input AssignRoleRequest {
-  role_id: ID!
+  role_id: String!
   identity_id: ID!
 }
 
 extend type Query {
-  role(id: ID!): Role! @isAuthenticated()
+  role(id: String!): Role! @isAuthenticated()
   roleByLabel(label: Label!): Role! @isAuthenticated()
   roles: [Role!] @isAuthenticated()
-  roleMembers(role_id: ID!): [Identity!] @isAuthenticated()
+  roleMembers(role_id: String!): [Identity!] @isAuthenticated()
 }
 
 extend type Mutation {

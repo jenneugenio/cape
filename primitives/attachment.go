@@ -4,13 +4,14 @@ import (
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/oklog/ulid"
 )
 
 // Attachment represents a policy being applied/attached to a role
 type Attachment struct {
 	*database.Primitive
 	PolicyID database.ID `json:"policy_id"`
-	RoleID   database.ID `json:"role_id"`
+	RoleID   ulid.ULID   `json:"role_id"`
 }
 
 func (a *Attachment) Validate() error {
@@ -31,19 +32,6 @@ func (a *Attachment) Validate() error {
 		return errors.New(InvalidAttachmentCause, "Invalid Policy ID provider")
 	}
 
-	if err := a.RoleID.Validate(); err != nil {
-		return errors.New(InvalidAttachmentCause, "Attachment role ID must be valid")
-	}
-
-	typ, err = a.RoleID.Type()
-	if err != nil {
-		return errors.New(InvalidAttachmentCause, "Invalid Role ID provided")
-	}
-
-	if typ != RoleType {
-		return errors.New(InvalidAttachmentCause, "Invalid Role ID provided")
-	}
-
 	return nil
 }
 
@@ -53,8 +41,13 @@ func (a *Attachment) GetType() types.Type {
 }
 
 // NewAttachment returns a new attachment
-func NewAttachment(policyID, roleID database.ID) (*Attachment, error) {
+func NewAttachment(policyID database.ID, roleID string) (*Attachment, error) {
 	p, err := database.NewPrimitive(AttachmentType)
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := ulid.Parse(roleID)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +57,7 @@ func NewAttachment(policyID, roleID database.ID) (*Attachment, error) {
 	a := &Attachment{
 		Primitive: p,
 		PolicyID:  policyID,
-		RoleID:    roleID,
+		RoleID:    u,
 	}
 
 	ID, err := database.DeriveID(a)

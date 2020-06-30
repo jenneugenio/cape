@@ -5,9 +5,11 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	errs "github.com/capeprivacy/cape/partyerrors"
@@ -15,29 +17,26 @@ import (
 )
 
 func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error) {
-	role, err := primitives.NewRole(input.Label, false)
+	fmt.Println("HELLOOOOOO??????")
+	id := r.Database.GetID().String()
+	role, err := primitives.NewRole(id, input.Label, false)
 	if err != nil {
 		return nil, err
 	}
 
-	tx, err := r.Backend.Transaction(ctx)
+	_, err = r.Database.Pool.Exec(ctx, "INSERT INTO roles (id, label, system) VALUES ($1, $2, $3)", id, role.Label, false)
 	if err != nil {
+		fmt.Println("BOO", err)
 		return nil, err
 	}
-	defer tx.Rollback(ctx) // nolint: errcheck
 
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	err = enforcer.Create(ctx, role)
-	if err != nil {
-		return nil, err
-	}
-
 	if len(input.IdentityIds) > 0 {
 		assignments := make([]database.Entity, len(input.IdentityIds))
 		for i, id := range input.IdentityIds {
-			assignment, err := primitives.NewAssignment(id, role.ID)
+			assignment, err := primitives.NewAssignment(id, role.ID.String())
 			if err != nil {
 				return nil, err
 			}
@@ -49,31 +48,17 @@ func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRol
 		}
 	}
 
-	err = tx.Commit(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	return role, nil
 }
 
 func (r *mutationResolver) DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	role := &primitives.Role{}
-	err := enforcer.Get(ctx, input.ID, role)
+	tag, err := r.Database.Pool.Exec(ctx, "DELETE FROM roles WHERE id = $1 AND system != true", input.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	if role.System {
-		return nil, errs.New(CannotDeleteSystemRole, "Role %s is a system role. Cannot delete", role.Label)
-	}
-
-	err = enforcer.Delete(ctx, primitives.RoleType, input.ID)
-	if err != nil {
-		return nil, err
+	if tag.RowsAffected() != 1 {
+		return nil, errs.New(CannotDeleteSystemRole, "Role %s is a system role or doesn't exist. Cannot delete", input.ID)
 	}
 
 	return nil, nil
@@ -93,8 +78,16 @@ func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRol
 		return nil, err
 	}
 
-	role := &primitives.Role{}
-	err = enforcer.Get(ctx, input.RoleID, role)
+	row := r.Database.Pool.QueryRow(ctx, "SELECT label, system FROM roles WHERE id = $1", input.RoleID)
+
+	var label primitives.Label
+	var system bool
+	err = row.Scan(&label, &system)
+	if err != nil {
+		return nil, err
+	}
+
+	role, err := primitives.NewRole(input.RoleID, label, system)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +125,7 @@ func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignR
 	assignment := &primitives.Assignment{}
 
 	filter := database.NewFilter(database.Where{
-		"role_id":     input.RoleID.String(),
+		"role_id":     input.RoleID,
 		"identity_id": input.IdentityID.String(),
 	}, nil, nil)
 
@@ -149,25 +142,17 @@ func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignR
 	return nil, nil
 }
 
-func (r *queryResolver) Role(ctx context.Context, id database.ID) (*primitives.Role, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
+func (r *queryResolver) Role(ctx context.Context, id string) (*primitives.Role, error) {
+	row := r.Database.Pool.QueryRow(ctx, "SELECT label, system FROM roles WHERE id = $1", id)
 
-	var primitive primitives.Role
-	err := enforcer.Get(ctx, id, &primitive)
+	var label primitives.Label
+	var system bool
+	err := row.Scan(&label, &system)
 	if err != nil {
 		return nil, err
 	}
 
-	return &primitive, nil
-}
-
-func (r *queryResolver) RoleByLabel(ctx context.Context, label primitives.Label) (*primitives.Role, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	role := &primitives.Role{}
-	err := enforcer.QueryOne(ctx, role, database.NewFilter(database.Where{"label": label}, nil, nil))
+	role, err := primitives.NewRole(id, label, system)
 	if err != nil {
 		return nil, err
 	}
@@ -175,25 +160,20 @@ func (r *queryResolver) RoleByLabel(ctx context.Context, label primitives.Label)
 	return role, nil
 }
 
-func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	var roles []*primitives.Role
-	err := enforcer.Query(ctx, &roles, database.NewEmptyFilter())
-	if err != nil {
-		return nil, err
-	}
-
-	return roles, nil
+func (r *queryResolver) RoleByLabel(ctx context.Context, label primitives.Label) (*primitives.Role, error) {
+	return nil, nil
 }
 
-func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]primitives.Identity, error) {
+func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
+	return nil, nil
+}
+
+func (r *queryResolver) RoleMembers(ctx context.Context, roleID string) ([]primitives.Identity, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
 	var assignments []*primitives.Assignment
-	err := enforcer.Query(ctx, &assignments, database.NewFilter(database.Where{"role_id": roleID.String()}, nil, nil))
+	err := enforcer.Query(ctx, &assignments, database.NewFilter(database.Where{"role_id": roleID}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
@@ -240,3 +220,12 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 
 	return identities, nil
 }
+
+func (r *roleResolver) ID(ctx context.Context, obj *primitives.Role) (string, error) {
+	return obj.ID.String(), nil
+}
+
+// Role returns generated.RoleResolver implementation.
+func (r *Resolver) Role() generated.RoleResolver { return &roleResolver{r} }
+
+type roleResolver struct{ *Resolver }

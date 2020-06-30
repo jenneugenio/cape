@@ -1,9 +1,11 @@
 package primitives
 
 import (
-	"github.com/capeprivacy/cape/coordinator/database"
+	"fmt"
+
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/oklog/ulid"
 )
 
 const (
@@ -18,16 +20,12 @@ var SystemRoles = []Label{AdminRole, GlobalRole}
 
 // Role in a role in the system (e.g. Admin, user, etc)
 type Role struct {
-	*database.Primitive
+	ID     ulid.ULID
 	Label  Label `json:"label"`
 	System bool  `json:"system"`
 }
 
 func (r *Role) Validate() error {
-	if err := r.Primitive.Validate(); err != nil {
-		return err
-	}
-
 	if err := r.Label.Validate(); err != nil {
 		return errors.Wrap(InvalidRoleCause, err)
 	}
@@ -41,16 +39,17 @@ func (r *Role) GetType() types.Type {
 }
 
 // NewRole returns a mutable role struct
-func NewRole(label Label, system bool) (*Role, error) {
-	p, err := database.NewPrimitive(RoleType)
+func NewRole(id string, label Label, system bool) (*Role, error) {
+	fmt.Println("HI", id, "HELLO")
+	u, err := ulid.Parse(id)
 	if err != nil {
+		fmt.Println(id, err)
 		return nil, err
 	}
-
 	role := &Role{
-		Primitive: p,
-		Label:     label,
-		System:    system,
+		ID:     u,
+		Label:  label,
+		System: system,
 	}
 
 	return role, role.Validate()

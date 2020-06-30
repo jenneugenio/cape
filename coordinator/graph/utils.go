@@ -11,8 +11,8 @@ import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
+	"github.com/capeprivacy/cape/coordinator/database2"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
-	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -35,16 +35,15 @@ func getCredentialProvider(ctx context.Context, q database.Querier, input model.
 
 // buildAttachment takes a primitives attachment and builds at graphql
 // model representation of it
-func buildAttachment(ctx context.Context, db *auth.Enforcer,
+func buildAttachment(ctx context.Context, enforcer *auth.Enforcer, db *database2.Database,
 	attachment *primitives.Attachment) (*model.Attachment, error) {
-	role := &primitives.Role{}
-	err := db.Get(ctx, attachment.RoleID, role)
+	role, err := queryRole(ctx, db, attachment.RoleID.String())
 	if err != nil {
 		return nil, err
 	}
 
 	policy := &primitives.Policy{}
-	err = db.Get(ctx, attachment.PolicyID, policy)
+	err = enforcer.Get(ctx, attachment.PolicyID, policy)
 	if err != nil {
 		return nil, err
 	}
@@ -61,38 +60,21 @@ func buildAttachment(ctx context.Context, db *auth.Enforcer,
 // createSystemRoles is a helper intended to be used by the Setup graphql route.
 // It creates all the roles given by the list of role labels and makes sure
 // they are system roles
-func createSystemRoles(ctx context.Context, db database.Querier) error {
-	entities := make([]database.Entity, len(primitives.SystemRoles))
-	for i, roleLabel := range primitives.SystemRoles {
-		role, err := primitives.NewRole(roleLabel, true)
+func createSystemRoles(ctx context.Context, db *database2.Database) ([]*primitives.Role, error) {
+	var roles []*primitives.Role
+	for _, roleLabel := range primitives.SystemRoles {
+		id := db.GetID()
+		_, err := db.Pool.Exec(ctx, "INSERT INTO roles (id, label, system) VALUES ($1, $2, $3)", id.String(), roleLabel, true)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		entities[i] = role
-	}
+		role, err := primitives.NewRole(id.String(), roleLabel, true)
+		if err != nil {
+			return nil, err
+		}
 
-	return db.Create(ctx, entities...)
-}
-
-// getRolesByLabel is a helper to retrieve a specific role from the database. This is
-// useful for getting a system role from the database.
-func getRolesByLabel(ctx context.Context, db database.Querier, labels []primitives.Label) ([]*primitives.Role, error) {
-	in := make(database.In, len(labels))
-	for i, label := range labels {
-		in[i] = label
-	}
-
-	f := database.NewFilter(database.Where{"label": in}, nil, nil)
-	var roles []*primitives.Role
-
-	err := db.Query(ctx, &roles, f)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(labels) != len(roles) {
-		return nil, errors.New(NotFoundCause, "Could not find a role")
+		roles = append(roles, role)
 	}
 
 	return roles, nil
@@ -104,7 +86,7 @@ func createAssignments(ctx context.Context, db database.Querier,
 	identity primitives.Identity, roles []*primitives.Role) error {
 	assignments := make([]database.Entity, len(roles))
 	for i, role := range roles {
-		assignment, err := primitives.NewAssignment(identity.GetID(), role.ID)
+		assignment, err := primitives.NewAssignment(identity.GetID(), role.ID.String())
 		if err != nil {
 			return err
 		}
@@ -115,7 +97,7 @@ func createAssignments(ctx context.Context, db database.Querier,
 	return db.Create(ctx, assignments...)
 }
 
-func attachDefaultPolicy(ctx context.Context, db database.Querier) error {
+func attachDefaultPolicy(ctx context.Context, enforcer database.Querier, db *database2.Database) error {
 	adminPolicy, err := loadPolicyFile(primitives.DefaultAdminPolicy.String() + ".yaml")
 	if err != nil {
 		return err
@@ -126,7 +108,7 @@ func attachDefaultPolicy(ctx context.Context, db database.Querier) error {
 		return err
 	}
 
-	err = db.Create(ctx, adminPolicy, globalPolicy)
+	err = enforcer.Create(ctx, adminPolicy, globalPolicy)
 	if err != nil {
 		return err
 	}
@@ -141,7 +123,7 @@ func attachDefaultPolicy(ctx context.Context, db database.Querier) error {
 		return err
 	}
 
-	err = db.Create(ctx, adminAttachment, globalAttachment)
+	err = enforcer.Create(ctx, adminAttachment, globalAttachment)
 	if err != nil {
 		return err
 	}
@@ -149,14 +131,14 @@ func attachDefaultPolicy(ctx context.Context, db database.Querier) error {
 	return nil
 }
 
-func createAttachment(ctx context.Context, db database.Querier, policyID database.ID,
+func createAttachment(ctx context.Context, db *database2.Database, policyID database.ID,
 	roleLabel primitives.Label) (*primitives.Attachment, error) {
-	roles, err := getRolesByLabel(ctx, db, []primitives.Label{roleLabel})
+	role, err := queryRoleByLabel(ctx, db, roleLabel)
 	if err != nil {
 		return nil, err
 	}
 
-	attachment, err := primitives.NewAttachment(policyID, roles[0].ID)
+	attachment, err := primitives.NewAttachment(policyID, role.ID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -222,4 +204,30 @@ func createConfig(rootKey [32]byte) (*primitives.Config, *crypto.KeyURL, *auth.K
 	}
 
 	return config, encryptionKey, keypair, nil
+}
+
+func queryRole(ctx context.Context, db *database2.Database, id string) (*primitives.Role, error) {
+	row := db.Pool.QueryRow(ctx, "SELECT label, system FROM roles WHERE id = $1", id)
+
+	var label primitives.Label
+	var system bool
+	err := row.Scan(&label, &system)
+	if err != nil {
+		return nil, err
+	}
+
+	return primitives.NewRole(id, label, system)
+}
+
+func queryRoleByLabel(ctx context.Context, db *database2.Database, label primitives.Label) (*primitives.Role, error) {
+	row := db.Pool.QueryRow(ctx, "SELECT id, system FROM roles WHERE label = $1", label)
+
+	var id string
+	var system bool
+	err := row.Scan(&id, &system)
+	if err != nil {
+		return nil, err
+	}
+
+	return primitives.NewRole(id, label, system)
 }

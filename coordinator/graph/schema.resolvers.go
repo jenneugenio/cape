@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
@@ -81,24 +82,16 @@ func (r *mutationResolver) Setup(ctx context.Context, input model.SetupRequest) 
 			return nil, err
 		}
 
-		err = createSystemRoles(ctx, tx)
+		roles, err := createSystemRoles(ctx, r.Database)
 		if err != nil {
 			logger.Error().Err(err).Msg("Could not insert roles into database")
 			return nil, err
 		}
+		fmt.Println(roles)
 
-		err = attachDefaultPolicy(ctx, tx)
+		err = attachDefaultPolicy(ctx, tx, r.Database)
 		if err != nil {
 			logger.Error().Err(err).Msg("Could not attach default policies inside database")
-			return nil, err
-		}
-
-		roles, err := getRolesByLabel(ctx, tx, []primitives.Label{
-			primitives.GlobalRole,
-			primitives.AdminRole,
-		})
-		if err != nil {
-			logger.Error().Err(err).Msg("Could not retrieve roles")
 			return nil, err
 		}
 
@@ -157,9 +150,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 
 	// We need to get the system roles back from the database so we can
 	// assignment them to this user appropriately.
-	systemRoles, err := getRolesByLabel(ctx, tx, []primitives.Label{
-		primitives.GlobalRole,
-	})
+	systemRole, err := queryRoleByLabel(ctx, r.Database, primitives.GlobalRole)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +160,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 		return nil, err
 	}
 
-	err = createAssignments(ctx, tx, user, systemRoles)
+	err = createAssignments(ctx, tx, user, []*primitives.Role{systemRole})
 	if err != nil {
 		return nil, err
 	}
@@ -362,7 +353,7 @@ func (r *userResolver) Roles(ctx context.Context, obj *primitives.User) ([]*prim
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	return fw.QueryRoles(ctx, enforcer, obj.ID)
+	return fw.QueryRoles(ctx, enforcer, r.Database, obj.ID)
 }
 
 // Mutation returns generated.MutationResolver implementation.

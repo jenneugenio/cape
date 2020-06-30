@@ -59,7 +59,7 @@ func TestRoles(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		// make sure the role is deleted
-		role, err = client.GetRole(ctx, role.ID)
+		_, err = client.GetRole(ctx, role.ID)
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 

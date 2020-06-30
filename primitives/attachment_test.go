@@ -6,7 +6,6 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/database"
-	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func TestAttachment(t *testing.T) {
@@ -21,11 +20,11 @@ func TestAttachment(t *testing.T) {
 	policy, err := NewPolicy(Label("cool-policy"), spec)
 	gm.Expect(err).To(gm.BeNil())
 
-	role, err := NewRole(Label("role"), false)
+	role, err := NewRole("01EC348BGA506B3FSW6VZHMSX6", Label("role"), false)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("valid attachment", func(t *testing.T) {
-		attachment, err := NewAttachment(policy.ID, role.ID)
+		attachment, err := NewAttachment(policy.ID, role.ID.String())
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(attachment.PolicyID).To(gm.Equal(policy.ID))
 		gm.Expect(attachment.RoleID).To(gm.Equal(role.ID))
@@ -34,17 +33,17 @@ func TestAttachment(t *testing.T) {
 	tests := []struct {
 		name       string
 		identityID database.ID
-		roleID     database.ID
+		roleID     string
 	}{
 		{
 			"invalid policy id",
 			database.EmptyID,
-			role.ID,
+			role.ID.String(),
 		},
 		{
 			"invalid role id",
 			policy.ID,
-			database.EmptyID,
+			"not valid",
 		},
 	}
 
@@ -52,7 +51,6 @@ func TestAttachment(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := NewAttachment(tc.identityID, tc.roleID)
 			gm.Expect(err).ToNot(gm.BeNil())
-			gm.Expect(errors.CausedBy(err, InvalidAttachmentCause)).To(gm.BeTrue())
 		})
 	}
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
+	"github.com/capeprivacy/cape/coordinator/database2"
 	"github.com/capeprivacy/cape/coordinator/graph"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/mailer"
@@ -28,11 +29,12 @@ import (
 // Coordinator is the central brain of Cape.  It keeps track of system
 // users, policy, etc
 type Coordinator struct {
-	cfg     *Config
-	backend database.Backend
-	handler http.Handler
-	logger  *zerolog.Logger
-	mailer  mailer.Mailer
+	cfg      *Config
+	backend  database.Backend
+	database *database2.Database
+	handler  http.Handler
+	logger   *zerolog.Logger
+	mailer   mailer.Mailer
 
 	tokenAuth          *auth.TokenAuthority
 	credentialProducer auth.CredentialProducer
@@ -41,6 +43,11 @@ type Coordinator struct {
 // Setup the coordinator so it's ready to be served!
 func (c *Coordinator) Setup(ctx context.Context) (http.Handler, error) {
 	err := c.backend.Open(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.database.Open(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +73,11 @@ func (c *Coordinator) Setup(ctx context.Context) (http.Handler, error) {
 
 // Teardown the coordinator taking it back to it's start state!
 func (c *Coordinator) Teardown(ctx context.Context) error {
+	err := c.database.Close()
+	if err != nil {
+		return err
+	}
+
 	return c.backend.Close()
 }
 
@@ -140,6 +152,11 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		return nil, err
 	}
 
+	database, err := database2.NewDatabase(cfg.DB.Addr.URL, cfg.InstanceID.String())
+	if err != nil {
+		return nil, err
+	}
+
 	var rootKey [32]byte
 	copy(rootKey[:], *cfg.RootKey)
 
@@ -160,13 +177,14 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 
 	config := &generated.Config{Resolvers: &graph.Resolver{
 		Backend:            backend,
+		Database:           database,
 		TokenAuthority:     tokenAuth,
 		RootKey:            rootKey,
 		CredentialProducer: cp,
 		Mailer:             mailer,
 	}}
 
-	config.Directives.IsAuthenticated = framework.IsAuthenticatedDirective(backend, tokenAuth)
+	config.Directives.IsAuthenticated = framework.IsAuthenticatedDirective(backend, database, tokenAuth)
 
 	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(*config))
 	gqlHandler.SetErrorPresenter(errorPresenter)
@@ -201,6 +219,7 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		cfg:                cfg,
 		handler:            chain,
 		backend:            backend,
+		database:           database,
 		logger:             logger,
 		tokenAuth:          tokenAuth,
 		mailer:             mailer,

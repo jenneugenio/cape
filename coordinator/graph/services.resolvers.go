@@ -29,9 +29,7 @@ func (r *mutationResolver) CreateService(ctx context.Context, input model.Create
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, tx)
 
-	roleLabels := []primitives.Label{primitives.GlobalRole}
-
-	roles, err := getRolesByLabel(ctx, enforcer, roleLabels)
+	role, err := queryRoleByLabel(ctx, r.Database, primitives.GlobalRole)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +39,7 @@ func (r *mutationResolver) CreateService(ctx context.Context, input model.Create
 		return nil, err
 	}
 
-	err = createAssignments(ctx, enforcer, service, roles)
+	err = createAssignments(ctx, enforcer, service, []*primitives.Role{role})
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +107,7 @@ func (r *serviceResolver) Roles(ctx context.Context, obj *primitives.Service) ([
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	return fw.QueryRoles(ctx, enforcer, obj.ID)
+	return fw.QueryRoles(ctx, enforcer, r.Database, obj.ID)
 }
 
 // Service returns generated.ServiceResolver implementation.

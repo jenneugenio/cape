@@ -17,7 +17,7 @@ type AddSourceRequest struct {
 }
 
 type AssignRoleRequest struct {
-	RoleID     database.ID `json:"role_id"`
+	RoleID     string      `json:"role_id"`
 	IdentityID database.ID `json:"identity_id"`
 }
 
@@ -31,7 +31,7 @@ type Assignment struct {
 
 type AttachPolicyRequest struct {
 	PolicyID database.ID `json:"policy_id"`
-	RoleID   database.ID `json:"role_id"`
+	RoleID   string      `json:"role_id"`
 }
 
 type Attachment struct {
@@ -101,7 +101,7 @@ type DeleteRecoveriesRequest struct {
 }
 
 type DeleteRoleRequest struct {
-	ID database.ID `json:"id"`
+	ID string `json:"id"`
 }
 
 type DeleteServiceRequest struct {
@@ -114,7 +114,7 @@ type DeleteSessionRequest struct {
 
 type DetachPolicyRequest struct {
 	PolicyID database.ID `json:"policy_id"`
-	RoleID   database.ID `json:"role_id"`
+	RoleID   string      `json:"role_id"`
 }
 
 type PolicyInput struct {

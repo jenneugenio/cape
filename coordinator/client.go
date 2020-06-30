@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/manifoldco/go-base64"
+	"github.com/oklog/ulid"
 
 	errors "github.com/capeprivacy/cape/partyerrors"
 
@@ -207,28 +208,28 @@ func (c *Client) CreateRole(ctx context.Context, label primitives.Label, identit
 }
 
 // DeleteRole deletes a role with the given id
-func (c *Client) DeleteRole(ctx context.Context, id database.ID) error {
+func (c *Client) DeleteRole(ctx context.Context, id ulid.ULID) error {
 	variables := make(map[string]interface{})
-	variables["id"] = id
+	variables["id"] = id.String()
 
 	return c.transport.Raw(ctx, `
-		mutation DeleteRole($id: ID!) {
+		mutation DeleteRole($id: String!) {
 			deleteRole(input: { id: $id })
 		}
 	`, variables, nil)
 }
 
 // GetRole returns a specific role
-func (c *Client) GetRole(ctx context.Context, id database.ID) (*primitives.Role, error) {
+func (c *Client) GetRole(ctx context.Context, id ulid.ULID) (*primitives.Role, error) {
 	var resp struct {
 		Role primitives.Role `json:"role"`
 	}
 
 	variables := make(map[string]interface{})
-	variables["id"] = id
+	variables["id"] = id.String()
 
 	err := c.transport.Raw(ctx, `
-		query Role($id: ID!) {
+		query Role($id: String!) {
 			role(id: $id) {
 				id
 				label
@@ -267,16 +268,16 @@ func (c *Client) GetRoleByLabel(ctx context.Context, label primitives.Label) (*p
 }
 
 // GetMembersRole returns the members of a role
-func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]primitives.Identity, error) {
+func (c *Client) GetMembersRole(ctx context.Context, roleID ulid.ULID) ([]primitives.Identity, error) {
 	var resp struct {
 		Identities []*primitives.IdentityImpl `json:"roleMembers"`
 	}
 
 	variables := make(map[string]interface{})
-	variables["role_id"] = roleID
+	variables["role_id"] = roleID.String()
 
 	err := c.transport.Raw(ctx, `
-		query GetMembersRole($role_id: ID!) {
+		query GetMembersRole($role_id: String!) {
 			roleMembers(role_id: $role_id) {
 				id
 				email
@@ -369,17 +370,17 @@ func (a *AssignmentResponse) UnmarshalJSON(data []byte) error {
 
 // AssignRole assigns a role to an identity
 func (c *Client) AssignRole(ctx context.Context, identityID database.ID,
-	roleID database.ID) (*model.Assignment, error) {
+	roleID ulid.ULID) (*model.Assignment, error) {
 	var resp struct {
 		Assignment AssignmentResponse `json:"assignRole"`
 	}
 
 	variables := make(map[string]interface{})
-	variables["role_id"] = roleID
+	variables["role_id"] = roleID.String()
 	variables["identity_id"] = identityID
 
 	err := c.transport.Raw(ctx, `
-		mutation AssignRole($role_id: ID!, $identity_id: ID!) {
+		mutation AssignRole($role_id: String!, $identity_id: ID!) {
 			assignRole(input: { role_id: $role_id, identity_id: $identity_id }) {
 				role {
 					id
@@ -401,13 +402,13 @@ func (c *Client) AssignRole(ctx context.Context, identityID database.ID,
 }
 
 // UnassignRole unassigns a role from an identity
-func (c *Client) UnassignRole(ctx context.Context, identityID database.ID, roleID database.ID) error {
+func (c *Client) UnassignRole(ctx context.Context, identityID database.ID, roleID ulid.ULID) error {
 	variables := make(map[string]interface{})
-	variables["role_id"] = roleID
+	variables["role_id"] = roleID.String()
 	variables["identity_id"] = identityID
 
 	return c.transport.Raw(ctx, `
-		mutation UnassignRole($role_id: ID!, $identity_id: ID!) {
+		mutation UnassignRole($role_id: String!, $identity_id: ID!) {
 			unassignRole(input: { role_id: $role_id, identity_id: $identity_id })
 		}
 	`, variables, nil)
@@ -833,17 +834,17 @@ func (c *Client) ListPolicies(ctx context.Context) ([]*primitives.Policy, error)
 
 // AttachPolicy attaches a policy to a role
 func (c *Client) AttachPolicy(ctx context.Context, policyID database.ID,
-	roleID database.ID) (*model.Attachment, error) {
+	roleID ulid.ULID) (*model.Attachment, error) {
 	var resp struct {
 		Attachment model.Attachment `json:"attachPolicy"`
 	}
 
 	variables := make(map[string]interface{})
-	variables["role_id"] = roleID
+	variables["role_id"] = roleID.String()
 	variables["policy_id"] = policyID
 
 	err := c.transport.Raw(ctx, `
-		mutation AttachPolicy($role_id: ID!, $policy_id: ID!) {
+		mutation AttachPolicy($role_id: String!, $policy_id: ID!) {
 			attachPolicy(input: { role_id: $role_id, policy_id: $policy_id }) {
 				role {
 					id
@@ -864,29 +865,29 @@ func (c *Client) AttachPolicy(ctx context.Context, policyID database.ID,
 }
 
 // DetachPolicy unattaches a policy from a role
-func (c *Client) DetachPolicy(ctx context.Context, policyID database.ID, roleID database.ID) error {
+func (c *Client) DetachPolicy(ctx context.Context, policyID database.ID, roleID ulid.ULID) error {
 	variables := make(map[string]interface{})
-	variables["role_id"] = roleID
+	variables["role_id"] = roleID.String()
 	variables["policy_id"] = policyID
 
 	return c.transport.Raw(ctx, `
-		mutation detachPolicy($role_id: ID!, $policy_id: ID!) {
+		mutation detachPolicy($role_id: String!, $policy_id: ID!) {
 			detachPolicy(input: { role_id: $role_id, policy_id: $policy_id })
 		}
 	`, variables, nil)
 }
 
 // GetRolePolicies returns all policies attached to a role
-func (c *Client) GetRolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error) {
+func (c *Client) GetRolePolicies(ctx context.Context, roleID ulid.ULID) ([]*primitives.Policy, error) {
 	var resp struct {
 		Policies []*primitives.Policy `json:"rolePolicies"`
 	}
 
 	variables := make(map[string]interface{})
-	variables["role_id"] = roleID
+	variables["role_id"] = roleID.String()
 
 	err := c.transport.Raw(ctx, `
-		query RolePolicies($role_id: ID!) {
+		query RolePolicies($role_id: String!) {
 			rolePolicies(role_id: $role_id) {
 				id
 				label

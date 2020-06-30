@@ -7,6 +7,7 @@ import (
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/database2"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -14,7 +15,7 @@ import (
 type IsAuthenticatedFn func(context.Context, interface{}, graphql.Resolver) (interface{}, error)
 
 // IsAuthenticatedDirective checks to make sure a query is authenticated
-func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAuthority) IsAuthenticatedFn {
+func IsAuthenticatedDirective(db database.Backend, db2 *database2.Database, tokenAuthority *auth.TokenAuthority) IsAuthenticatedFn {
 	return func(ctx context.Context, obj interface{}, next graphql.Resolver) (interface{}, error) {
 		logger := Logger(ctx)
 		token := AuthToken(ctx)
@@ -101,7 +102,7 @@ func IsAuthenticatedDirective(db database.Backend, tokenAuthority *auth.TokenAut
 			return nil, err
 		}
 
-		roles, err := QueryRoles(ctx, db, identity.GetID())
+		roles, err := QueryRoles(ctx, db, db2, identity.GetID())
 		if err != nil {
 			return nil, err
 		}

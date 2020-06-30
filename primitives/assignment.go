@@ -1,16 +1,19 @@
 package primitives
 
 import (
+	"fmt"
+
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/types"
 	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/oklog/ulid"
 )
 
 // Assignment represents a policy being applied/attached to a role
 type Assignment struct {
 	*database.Primitive
 	IdentityID database.ID `json:"identity_id"`
-	RoleID     database.ID `json:"role_id"`
+	RoleID     ulid.ULID   `json:"role_id"`
 }
 
 func (a *Assignment) Validate() error {
@@ -31,19 +34,6 @@ func (a *Assignment) Validate() error {
 		return errors.New(InvalidAssignmentCause, "Invalid Identity ID provided")
 	}
 
-	if err := a.RoleID.Validate(); err != nil {
-		return errors.New(InvalidAssignmentCause, "Assignment role id must be valid")
-	}
-
-	typ, err = a.RoleID.Type()
-	if err != nil {
-		return errors.New(InvalidAssignmentCause, "Invalid Role ID provider")
-	}
-
-	if typ != RoleType {
-		return errors.New(InvalidAssignmentCause, "Invalid Role ID provider")
-	}
-
 	return nil
 }
 
@@ -53,9 +43,16 @@ func (a *Assignment) GetType() types.Type {
 }
 
 // NewAssignment returns a new Assignment
-func NewAssignment(identityID, roleID database.ID) (*Assignment, error) {
+func NewAssignment(identityID database.ID, roleID string) (*Assignment, error) {
 	p, err := database.NewPrimitive(AssignmentType)
 	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf(roleID)
+	u, err := ulid.Parse(roleID)
+	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
@@ -64,7 +61,7 @@ func NewAssignment(identityID, roleID database.ID) (*Assignment, error) {
 	a := &Assignment{
 		Primitive:  p,
 		IdentityID: identityID,
-		RoleID:     roleID,
+		RoleID:     u,
 	}
 
 	ID, err := database.DeriveID(a)

@@ -56,7 +56,7 @@ func (r *mutationResolver) AttachPolicy(ctx context.Context, input model.AttachP
 		return nil, err
 	}
 
-	return buildAttachment(ctx, enforcer, attachment)
+	return buildAttachment(ctx, enforcer, r.Database, attachment)
 }
 
 func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachPolicyRequest) (*string, error) {
@@ -66,7 +66,7 @@ func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachP
 	attachment := &primitives.Attachment{}
 
 	filter := database.NewFilter(database.Where{
-		"role_id":   input.RoleID.String(),
+		"role_id":   input.RoleID,
 		"policy_id": input.PolicyID.String(),
 	}, nil, nil)
 
@@ -122,12 +122,12 @@ func (r *queryResolver) Policies(ctx context.Context) ([]*primitives.Policy, err
 	return policies, nil
 }
 
-func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error) {
+func (r *queryResolver) RolePolicies(ctx context.Context, roleID string) ([]*primitives.Policy, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
 	var attachments []*primitives.Attachment
-	err := enforcer.Query(ctx, &attachments, database.NewFilter(database.Where{"role_id": roleID.String()}, nil, nil))
+	err := enforcer.Query(ctx, &attachments, database.NewFilter(database.Where{"role_id": roleID}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func (r *queryResolver) IdentityPolicies(ctx context.Context, identityID databas
 	return fw.QueryIdentityPolicies(ctx, enforcer, identityID)
 }
 
-func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error) {
+func (r *queryResolver) Attachment(ctx context.Context, roleID string, policyID database.ID) (*model.Attachment, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -171,5 +171,5 @@ func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, poli
 		return nil, err
 	}
 
-	return buildAttachment(ctx, enforcer, attachment)
+	return buildAttachment(ctx, enforcer, r.Database, attachment)
 }

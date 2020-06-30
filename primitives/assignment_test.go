@@ -6,7 +6,6 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/database"
-	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func TestAssignment(t *testing.T) {
@@ -15,11 +14,11 @@ func TestAssignment(t *testing.T) {
 	_, user, err := GenerateUser("name", "email@email.com")
 	gm.Expect(err).To(gm.BeNil())
 
-	role, err := NewRole(Label("role"), false)
+	role, err := NewRole("01EC348BGA506B3FSW6VZHMSX6", Label("role"), false)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("valid assignment", func(t *testing.T) {
-		assignment, err := NewAssignment(user.ID, role.ID)
+		assignment, err := NewAssignment(user.ID, role.ID.String())
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(assignment.IdentityID).To(gm.Equal(user.ID))
 		gm.Expect(assignment.RoleID).To(gm.Equal(role.ID))
@@ -28,17 +27,17 @@ func TestAssignment(t *testing.T) {
 	tests := []struct {
 		name       string
 		identityID database.ID
-		roleID     database.ID
+		roleID     string
 	}{
 		{
 			"invalid identity id",
 			database.EmptyID,
-			role.ID,
+			role.ID.String(),
 		},
 		{
 			"invalid role id",
 			user.ID,
-			database.EmptyID,
+			"not valid",
 		},
 	}
 
@@ -46,7 +45,6 @@ func TestAssignment(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := NewAssignment(tc.identityID, tc.roleID)
 			gm.Expect(err).ToNot(gm.BeNil())
-			gm.Expect(errors.CausedBy(err, InvalidAssignmentCause)).To(gm.BeTrue())
 		})
 	}
 }
