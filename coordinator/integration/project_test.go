@@ -185,14 +185,6 @@ func TestProjectSpecCreate(t *testing.T) {
 	p, err := client.CreateProject(ctx, "My Project", nil, "This is my project")
 	gm.Expect(err).To(gm.BeNil())
 
-	// seed a source
-	l, err := primitives.NewLabel("transactions")
-	gm.Expect(err).To(gm.BeNil())
-	dbURL, err := primitives.NewDBURL("postgres://postgres:dev@my.cool.website:5432/mydb")
-	gm.Expect(err).To(gm.BeNil())
-	_, err = client.AddSource(ctx, l, dbURL)
-	gm.Expect(err).To(gm.BeNil())
-
 	f, err := ioutil.ReadFile("./testdata/project_spec.yaml")
 	gm.Expect(err).To(gm.BeNil())
 
@@ -211,22 +203,5 @@ func TestProjectSpecCreate(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(p.Status).To(gm.Equal(primitives.ProjectActive))
 		gm.Expect(p.CurrentSpecID).To(gm.Equal(&s.ID))
-	})
-
-	t.Run("Cannot create a spec for a source that doesn't exist", func(t *testing.T) {
-		spec.Sources = []primitives.Label{"iamprettysureiwontbeinthedatabase"}
-		p, _, err := client.UpdateProjectSpec(ctx, p.Label, spec)
-		gm.Expect(err).ToNot(gm.BeNil())
-		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: One or more sources declared in the project spec do not exist"))
-		gm.Expect(p).To(gm.BeNil())
-	})
-
-	t.Run("Cannot update a spec with a source with at least one non existant source", func(t *testing.T) {
-		spec, err = primitives.ParseProjectSpecFile(f)
-		gm.Expect(err).To(gm.BeNil())
-		spec.Sources = append(spec.Sources, "imnotreal")
-		_, _, err = client.UpdateProjectSpec(ctx, p.Label, spec)
-		gm.Expect(err).ToNot(gm.BeNil())
-		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: One or more sources declared in the project spec do not exist"))
 	})
 }

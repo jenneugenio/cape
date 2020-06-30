@@ -215,8 +215,4 @@ func TestServiceLogin(t *testing.T) {
 
 	_, err = serviceClient.TokenLogin(ctx, apiToken)
 	gm.Expect(err).To(gm.BeNil())
-
-	sources, err := serviceClient.ListSources(ctx)
-	gm.Expect(err).To(gm.BeNil())
-	gm.Expect(len(sources)).To(gm.Equal(0))
 }

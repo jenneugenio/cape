@@ -84,38 +84,14 @@ func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, projectLabel *
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	// The client passes source labels via the spec file, so we need to find all of the sources
-	// that this file refers to and convert them to IDs
 	var project primitives.Project
 	err := enforcer.QueryOne(ctx, &project, database.NewFilter(database.Where{"label": projectLabel.String()}, nil, nil))
 	if err != nil {
 		return nil, err
 	}
-
-	labels := make(database.In, len(request.Sources))
-	for i, l := range request.Sources {
-		labels[i] = l.String()
-	}
-
-	var sources []*primitives.Source
-	err = enforcer.Query(ctx, &sources, database.NewFilter(database.Where{"label": labels}, nil, nil))
-	if err != nil {
-		return nil, err
-	}
-
-	// If we didn't find as many sources as we got labels, they have a bad file
-	if len(sources) != len(request.Sources) {
-		return nil, errs.New(InvalidSource, "One or more sources declared in the project spec do not exist")
-	}
-
-	sourceIds := make([]database.ID, len(sources))
-	for i, s := range sources {
-		sourceIds[i] = s.ID
-	}
-
 	// Insert the spec
 	// TODO -- How do you specify the parent? This concept doesn't make sense until we have proposals & diffing
-	spec, err := primitives.NewProjectSpec(project.ID, nil, sourceIds, request.Policy)
+	spec, err := primitives.NewProjectSpec(project.ID, nil, request.Policy)
 	if err != nil {
 		return nil, err
 	}
@@ -176,20 +152,6 @@ func (r *projectSpecResolver) Project(ctx context.Context, obj *primitives.Proje
 
 func (r *projectSpecResolver) Parent(ctx context.Context, obj *primitives.ProjectSpec) (*primitives.ProjectSpec, error) {
 	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *projectSpecResolver) Sources(ctx context.Context, obj *primitives.ProjectSpec) ([]*primitives.Source, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	ids := make(database.In, len(obj.SourceIDs))
-	for i, s := range obj.SourceIDs {
-		ids[i] = s.String()
-	}
-
-	var sources []*primitives.Source
-	err := enforcer.Query(ctx, &sources, database.NewFilter(database.Where{"id": ids}, nil, nil))
-	return sources, err
 }
 
 func (r *queryResolver) Projects(ctx context.Context, status []primitives.ProjectStatus) ([]*primitives.Project, error) {

@@ -40,10 +40,3 @@ rules:
   - target: "policies:*"
     action: read
     effect: allow
-  # All identities can list all source but cannot retrieve their credentials
-  - target: "sources:*"
-    action: read
-    effect: allow
-  - target: "source_schema:*"
-    action: read
-    effect: allow
