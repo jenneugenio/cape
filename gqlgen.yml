@@ -51,7 +51,7 @@ models:
   IdentityImpl:
     model: github.com/capeprivacy/cape/primitives.IdentityImpl
   Policy:
-    model: github.com/capeprivacy/cape/primitives.Policy
+    model: github.com/capeprivacy/cape/models.Policy
   Label:
     model: github.com/capeprivacy/cape/primitives.Label
   Name:
@@ -61,7 +61,7 @@ models:
   EmailType:
     model: github.com/capeprivacy/cape/primitives.EmailType
   PolicySpec:
-    model: github.com/capeprivacy/cape/primitives.PolicySpec
+    model: github.com/capeprivacy/cape/models.PolicySpec
   Rule:
     model: github.com/capeprivacy/cape/primitives.Rule
   Token:

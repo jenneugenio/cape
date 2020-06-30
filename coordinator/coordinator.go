@@ -2,7 +2,9 @@ package coordinator
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -158,13 +160,20 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		return nil, errors.New(InvalidConfigCause, "Unknown credential producer algorithm supplied")
 	}
 
-	config := &generated.Config{Resolvers: &graph.Resolver{
-		Backend:            backend,
-		TokenAuthority:     tokenAuth,
-		RootKey:            rootKey,
-		CredentialProducer: cp,
-		Mailer:             mailer,
-	}}
+	db, err := sql.Open("a db connect string")
+	if err != nil {
+		return nil, fmt.Errorf("error connecting to database: %w", err)
+	}
+
+	config := &generated.Config{
+		Resolvers: &graph.Resolver{
+			Database:           capepg.New(db),
+			Backend:            backend,
+			TokenAuthority:     tokenAuth,
+			RootKey:            rootKey,
+			CredentialProducer: cp,
+			Mailer:             mailer,
+		}}
 
 	config.Directives.IsAuthenticated = framework.IsAuthenticatedDirective(backend, tokenAuth)
 

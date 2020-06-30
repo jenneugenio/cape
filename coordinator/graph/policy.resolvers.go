@@ -5,29 +5,28 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
-func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*primitives.Policy, error) {
+func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*models.Policy, error) {
 	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	policy, err := primitives.NewPolicy(input.Label, &input.Spec)
+	label := models.Label(input.Label.String())
+
+	policy, err := r.Database.Policies().Create(ctx, models.NewPolicy(label, input.Spec))
 	if err != nil {
 		return nil, err
 	}
 
-	err = enforcer.Create(ctx, policy)
-	if err != nil {
-		return nil, err
-	}
-
-	return policy, nil
+	return &policy, nil
 }
 
 func (r *mutationResolver) DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error) {
@@ -83,7 +82,15 @@ func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachP
 	return nil, nil
 }
 
-func (r *queryResolver) Policy(ctx context.Context, id database.ID) (*primitives.Policy, error) {
+func (r *policyResolver) ID(ctx context.Context, obj *models.Policy) (database.ID, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *policyResolver) Label(ctx context.Context, obj *models.Policy) (primitives.Label, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) Policy(ctx context.Context, id database.ID) (*models.Policy, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -96,7 +103,7 @@ func (r *queryResolver) Policy(ctx context.Context, id database.ID) (*primitives
 	return policy, nil
 }
 
-func (r *queryResolver) PolicyByLabel(ctx context.Context, label primitives.Label) (*primitives.Policy, error) {
+func (r *queryResolver) PolicyByLabel(ctx context.Context, label primitives.Label) (*models.Policy, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -109,7 +116,7 @@ func (r *queryResolver) PolicyByLabel(ctx context.Context, label primitives.Labe
 	return policy, nil
 }
 
-func (r *queryResolver) Policies(ctx context.Context) ([]*primitives.Policy, error) {
+func (r *queryResolver) Policies(ctx context.Context) ([]*models.Policy, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -122,7 +129,7 @@ func (r *queryResolver) Policies(ctx context.Context) ([]*primitives.Policy, err
 	return policies, nil
 }
 
-func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error) {
+func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([]*models.Policy, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -148,7 +155,7 @@ func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([
 	return policies, nil
 }
 
-func (r *queryResolver) IdentityPolicies(ctx context.Context, identityID database.ID) ([]*primitives.Policy, error) {
+func (r *queryResolver) IdentityPolicies(ctx context.Context, identityID database.ID) ([]*models.Policy, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -172,4 +179,19 @@ func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, poli
 	}
 
 	return buildAttachment(ctx, enforcer, attachment)
+}
+
+// Policy returns generated.PolicyResolver implementation.
+func (r *Resolver) Policy() generated.PolicyResolver { return &policyResolver{r} }
+
+type policyResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *policyResolver) Spec(ctx context.Context, obj *primitives.Policy) (*models.PolicySpec, error) {
+	panic(fmt.Errorf("not implemented"))
 }
