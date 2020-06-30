@@ -4,14 +4,6 @@ package integration
 
 import (
 	"context"
-<<<<<<< HEAD
-	"github.com/capeprivacy/cape/coordinator/harness"
-	"github.com/capeprivacy/cape/primitives"
-	gm "github.com/onsi/gomega"
-	"io/ioutil"
-	"testing"
-	"time"
-=======
 	"io/ioutil"
 	"testing"
 	"time"
@@ -19,7 +11,6 @@ import (
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/primitives"
 	gm "github.com/onsi/gomega"
->>>>>>> a6c80fec0da68aacb8f2f501f1e0352ddd2ce585
 )
 
 func TestProjects(t *testing.T) {
@@ -42,18 +33,18 @@ func TestProjects(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("Can create a project", func(t *testing.T) {
-		p, err := client.CreateProject(ctx, "My Project", nil, "This project does great prims")
+		p, err := client.CreateProject(ctx, "My Project", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(p.Name).To(gm.Equal(primitives.DisplayName("My Project")))
 		gm.Expect(p.Label).To(gm.Equal(primitives.Label("my-project")))
-		gm.Expect(p.Description).To(gm.Equal(primitives.Description("This project does great prims")))
+		gm.Expect(p.Description).To(gm.Equal(primitives.Description("This project does great things")))
 	})
 
 	t.Run("Can get a project by id", func(t *testing.T) {
 		// time out of the database has ms rounded off of it, so testStart can be ahead of the db by a tiny amount of time
 		testStart := time.Now().AddDate(0, 0, -1)
 
-		p1, err := client.CreateProject(ctx, "Make Me", nil, "This project does great prims")
+		p1, err := client.CreateProject(ctx, "Make Me", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
 		p2, err := client.GetProject(ctx, &p1.ID, nil)
@@ -68,7 +59,7 @@ func TestProjects(t *testing.T) {
 		// time out of the database has ms rounded off of it, so testStart can be ahead of the db by a tiny amount of time
 		testStart := time.Now().AddDate(0, 0, -1)
 
-		p1, err := client.CreateProject(ctx, "Make Me Please", nil, "This project does great prims")
+		p1, err := client.CreateProject(ctx, "Make Me Please", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
 		p2, err := client.GetProject(ctx, nil, &p1.Label)
@@ -80,16 +71,16 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("Cannot create a project with the same name", func(t *testing.T) {
-		_, err := client.CreateProject(ctx, "Duplicate Me", nil, "This project does great prims")
+		_, err := client.CreateProject(ctx, "Duplicate Me", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.CreateProject(ctx, "Duplicate Me", nil, "This project does great prims")
+		_, err = client.CreateProject(ctx, "Duplicate Me", nil, "This project does great things")
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: entity already exists"))
 	})
 
 	t.Run("Can update name and description by label", func(t *testing.T) {
-		p, err := client.CreateProject(ctx, "Updatable Project", nil, "This project does great prims")
+		p, err := client.CreateProject(ctx, "Updatable Project", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
 		name := primitives.DisplayName("New Name")
@@ -103,10 +94,10 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("Cannot update a project with the same name", func(t *testing.T) {
-		_, err := client.CreateProject(ctx, "Same Project", nil, "This project does great prims")
+		_, err := client.CreateProject(ctx, "Same Project", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
-		p, err := client.CreateProject(ctx, "Not Same Project", nil, "This project does great prims")
+		p, err := client.CreateProject(ctx, "Not Same Project", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
 		name := primitives.DisplayName("Same Project")
@@ -117,7 +108,7 @@ func TestProjects(t *testing.T) {
 	})
 
 	t.Run("Can update name and description by id", func(t *testing.T) {
-		p, err := client.CreateProject(ctx, "Another Updatable Project", nil, "This project does great prims")
+		p, err := client.CreateProject(ctx, "Another Updatable Project", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
 		name := primitives.DisplayName("New New Name")
