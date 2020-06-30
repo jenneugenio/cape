@@ -143,16 +143,6 @@ func membersFlag() cli.Flag {
 	}
 }
 
-func linkFlag() cli.Flag {
-	usage := "Members to assign the specified role to"
-	return &cli.StringFlag{
-		Name:    "link",
-		Aliases: []string{"l"},
-		Usage:   usage,
-		EnvVars: []string{"CAPE_LINK"},
-	}
-}
-
 func fileFlag() cli.Flag {
 	return &cli.StringFlag{
 		Name:    "from-file",

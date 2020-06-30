@@ -3,7 +3,6 @@ package primitives
 import (
 	"testing"
 
-	"github.com/capeprivacy/cape/coordinator/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	gm "github.com/onsi/gomega"
 )
@@ -80,17 +79,10 @@ func TestProject(t *testing.T) {
 		p, err := NewProject("Credit Card Recommendations", "credit-card-recommendations", "cool project")
 		gm.Expect(err).To(gm.BeNil())
 
-		creds, err := NewDBURL("postgres://pg:admin@localhost:5432/mydb")
-		gm.Expect(err).To(gm.BeNil())
-
-		s, err := NewSource("my-source", creds)
-		gm.Expect(err).To(gm.BeNil())
-		sources := []database.ID{s.ID}
-
 		policy, err := samplePolicySpec()
 		gm.Expect(err).To(gm.BeNil())
 
-		projectSpec, err := NewProjectSpec(p.ID, nil, sources, policy.Rules)
+		projectSpec, err := NewProjectSpec(p.ID, nil, policy.Rules)
 		gm.Expect(err).To(gm.BeNil())
 
 		p.CurrentSpecID = &projectSpec.ID

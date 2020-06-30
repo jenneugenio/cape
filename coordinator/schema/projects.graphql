@@ -19,7 +19,6 @@ type ProjectSpec {
     project: Project!
     parent: ProjectSpec
     policy: [Rule!]!
-    sources: [Source!]!
 }
 
 input CreateProjectRequest {
@@ -34,7 +33,6 @@ input UpdateProjectRequest {
 }
 
 input ProjectSpecFile {
-    sources: [Label!]!
     policy: [Rule!]!
 }
 
