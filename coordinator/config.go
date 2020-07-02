@@ -31,6 +31,12 @@ type Config struct {
 	// In future when we support more than one production algorithm we can
 	// expose this feature to customers.
 	CredentialProducerAlg primitives.CredentialsAlgType `json:"-"`
+
+	// CertFile contains a path to the coordinators Certificate file.
+	CertFile string `json:"tls_cert,omitempty" envconfig:"TLS_CERT"`
+
+	// KeyFile contains a path to the coordinators TLS private key.
+	KeyFile string `json:"tls_key,omitempty" envconfig:"TLS_KEY"`
 }
 
 // DBConfig represent the database configuration

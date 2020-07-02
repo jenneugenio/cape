@@ -238,6 +238,7 @@ type Cluster struct {
 	AuthToken string           `json:"auth_token,omitempty"`
 	URL       *primitives.URL  `json:"url"`
 	Label     primitives.Label `json:"label"`
+	CertFile  string           `json:"tls_cert,omitempty"`
 }
 
 // Validate returns an error if the cluster configuration is invalid
@@ -299,7 +300,7 @@ func (c *Cluster) Transport() (coordinator.ClientTransport, error) {
 		return nil, err
 	}
 
-	return coordinator.NewHTTPTransport(clusterURL, token), nil
+	return coordinator.NewHTTPTransport(clusterURL, token, c.CertFile), nil
 }
 
 // Path returns the path to local configuration yaml file.

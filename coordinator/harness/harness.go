@@ -71,7 +71,7 @@ func NewHarness(cfg *Config) (*Harness, error) {
 	}, nil
 }
 
-// Start sets up the testing harness to test the Coordinator component
+// Setup sets up the testing harness to test the Coordinator component
 func (h *Harness) Setup(ctx context.Context) error {
 	logger := framework.TestLogger()
 
@@ -231,7 +231,7 @@ func (h *Harness) Client() (*coordinator.Client, error) {
 		return nil, err
 	}
 
-	transport := coordinator.NewHTTPTransport(u, nil)
+	transport := coordinator.NewHTTPTransport(u, nil, "")
 	return coordinator.NewClient(transport), nil
 }
 
