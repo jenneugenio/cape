@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/models"
 	"time"
 )
@@ -81,15 +82,15 @@ func (p *pgPolicy) Get(ctx context.Context, label models.Label) (*models.Policy,
 	return &policy, err
 }
 
-func (p *pgPolicy) List(ctx context.Context, opt *ListPolicyOptions) ([]*models.Policy, error) {
+func (p *pgPolicy) List(ctx context.Context, opts *db.ListPolicyOptions) ([]*models.Policy, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
 	s, args, err := sq.Select("data").
 		From("policies").
 		OrderBy("data->>'created_at'").
-		Limit(opt.Limit).
-		Offset(opt.Offset).
+		Limit(opts.Limit).
+		Offset(opts.Offset).
 		ToSql()
 
 	if err != nil {
@@ -116,9 +117,4 @@ func (p *pgPolicy) List(ctx context.Context, opt *ListPolicyOptions) ([]*models.
 	}
 
 	return policies, nil
-}
-
-type ListPolicyOptions struct {
-	Limit  uint64
-	Offset uint64
 }
