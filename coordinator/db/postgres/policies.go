@@ -3,7 +3,10 @@ package capepg
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	sq "github.com/Masterminds/squirrel"
+	"github.com/capeprivacy/cape/models"
 	"time"
 )
 
@@ -12,60 +15,110 @@ type pgPolicy struct {
 	timeout time.Duration
 }
 
-var _ db.PolicyDB = &pgPolicy{}
-
-func (p *pgPolicyDB) Create(ctx context.Context, policy models.Policy) error {
+func (p *pgPolicy) Create(ctx context.Context, policy *models.Policy) error {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
-	err := p.db.Exec("INSERT INTO policies (label, spec) VALUES ($1, $2)", policy.Label, policy.String())
+	policyBlob, err := json.Marshal(policy)
+	if err != nil {
+		return err
+	}
+
+	s, args, err := sq.Insert("policies").
+		Columns("data").
+		Values(policyBlob).
+		ToSql()
+
+	_, err = p.db.ExecContext(ctx, s, args)
 	if err != nil {
 		return fmt.Errorf("error creating policy: %w", err)
 	}
 	return nil
 }
 
-func (p *pgPolicyDB) Delete(ctx context.Context, l models.Label) error {
+func (p *pgPolicy) Delete(ctx context.Context, label models.Label) error {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
-	err := p.db.ExecContext("DELETE FROM policies WHERE label=$1", l)
+	s, args, err := sq.Delete("policies").
+		Where(sq.Eq{"data->>'label'": label}).
+		ToSql()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = p.db.ExecContext(ctx, s, args)
 	if err != nil {
 		return fmt.Errorf("error deleting policy: %w", err)
 	}
 	return nil
 }
 
-func (p *pgPolicyDB) Get(context.Context, models.Label) (models.Policy, error) {
-}
-
-func (p *pgPolicyDB) List(ctx context.Context, opt ListPolicyOptions) ([]models.Policy, error) {
+func (p *pgPolicy) Get(ctx context.Context, label models.Label) (*models.Policy, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
-	rows, err := p.db.QueryContext("SELECT spec FROM policies ORDER BY created_at LIMIT $1 OFFSET $2", opt.Limit, opt.Offset)
+	s, args, err := sq.Select("data").
+		From("policies").
+		Where(sq.Eq{"data->>'label'": label}).
+		ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
+	row := p.db.QueryRowContext(ctx, s, args)
+	var policyBlob []byte
+	err = row.Scan(policyBlob)
+	if err != nil {
+		return nil, err
+	}
+
+	var policy models.Policy
+	err = json.Unmarshal(policyBlob, &policy)
+
+	return &policy, err
+}
+
+func (p *pgPolicy) List(ctx context.Context, opt *ListPolicyOptions) ([]*models.Policy, error) {
+	ctx, cancel := context.WithTimeout(ctx, p.timeout)
+	defer cancel()
+
+	s, args, err := sq.Select("data").
+		From("policies").
+		OrderBy("data->>'created_at'").
+		Limit(opt.Limit).
+		Offset(opt.Offset).
+		ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := p.db.QueryContext(ctx,s, args)
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving policies: %w", err)
 	}
 	defer rows.Close()
 
-	var p []models.Policy
+	var policies []*models.Policy
 	for rows.Next() {
 		var policyString string
 		if err := rows.Scan(&policyString); err != nil {
-			return fmt.Errorf("TODO: be more graceful when a policy errors like %w", err)
+			return nil, fmt.Errorf("TODO: be more graceful when a policy errors like %w", err)
 		}
-		policy, err := models.ParsePolicy(policyString)
+		policy, err := models.ParsePolicy([]byte(policyString))
 		if err != nil {
-			return fmt.Errorf("malformed policy encountered: %w", err)
+			return nil, fmt.Errorf("malformed policy encountered: %w", err)
 		}
-		p = append(p, policy)
+		policies = append(policies, policy)
 	}
 
-	return p, nil
+	return policies, nil
 }
 
 type ListPolicyOptions struct {
-	Limit  int
-	Offset int
+	Limit  uint64
+	Offset uint64
 }

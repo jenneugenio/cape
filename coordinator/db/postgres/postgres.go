@@ -1,13 +1,14 @@
 package capepg
 
-import "database/sql"
+import (
+	"database/sql"
+	"github.com/capeprivacy/cape/coordinator/db"
+)
 
 // CapePg is a postgresql implementation of the cape database interface
 type CapePg struct {
 	db *sql.DB
 }
-
-var _ db.Interface = &CapePg{}
 
 func New(db *sql.DB) *CapePg {
 	return &CapePg{
