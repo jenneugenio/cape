@@ -61,7 +61,7 @@ func (r *mutationResolver) UpdateProject(ctx context.Context, id *database.ID, l
 			return nil, err
 		}
 	} else {
-		return nil, errs.New(InvalidParametersCause, "Either id or label must be supplied to updateProject")
+		return nil, errs.New(fw.InvalidParametersCause, "Either id or label must be supplied to updateProject")
 	}
 
 	if update.Name != nil {
@@ -172,7 +172,7 @@ func (r *queryResolver) Project(ctx context.Context, id *database.ID, label *pri
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
 	if id == nil && label == nil {
-		return nil, errs.New(InvalidParametersCause, "Must provide an id or label")
+		return nil, errs.New(fw.InvalidParametersCause, "Must provide an id or label")
 	}
 
 	var project primitives.Project

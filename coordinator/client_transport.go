@@ -2,16 +2,22 @@ package coordinator
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/manifoldco/go-base64"
 
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/primitives"
 )
 
 // ClientTransport is an interface that describes how a coordinator client should communicate with a coordinator
 type ClientTransport interface {
 	Raw(ctx context.Context, query string, variables map[string]interface{}, resp interface{}) error
+
+	// Post does a raw http POST to the specified url
+	Post(url string, req interface{}) ([]byte, error)
+
 	Authenticated() bool
 	URL() *primitives.URL
 	SetToken(*base64.Value)
@@ -24,55 +30,45 @@ type ClientTransport interface {
 }
 
 func tokenLogin(ctx context.Context, transport ClientTransport, apiToken *auth.APIToken) (*primitives.Session, error) {
-	var resp SessionResponse
-
-	variables := map[string]interface{}{
-		"token_id": apiToken.TokenID,
-		"secret":   apiToken.Secret.Password(),
+	req := framework.LoginRequest{
+		TokenID: &apiToken.TokenID,
+		Secret:  apiToken.Secret.Password(),
 	}
 
-	err := transport.Raw(ctx, `
-	mutation CreateSession($token_id: ID, $secret: Password!) {
-		createSession(input: { token_id: $token_id, secret: $secret }) {
-			id
-			identity_id
-			expires_at
-			token
-		}
-	}
-	`, variables, &resp)
+	body, err := transport.Post(transport.URL().String()+"/v1/login", req)
 	if err != nil {
 		return nil, err
 	}
 
-	transport.SetToken(resp.Session.Token)
-	return &resp.Session, nil
+	session := &primitives.Session{}
+	err = json.Unmarshal(body, session)
+	if err != nil {
+		return nil, err
+	}
+
+	transport.SetToken(session.Token)
+	return session, nil
 }
 
 func emailLogin(ctx context.Context, transport ClientTransport, email primitives.Email, password primitives.Password) (*primitives.Session, error) {
-	var resp SessionResponse
-
-	variables := map[string]interface{}{
-		"email":  email,
-		"secret": password,
+	req := framework.LoginRequest{
+		Email:  &email,
+		Secret: password,
 	}
 
-	err := transport.Raw(ctx, `
-		mutation CreateSession($email: Email, $secret: Password!) {
-			createSession(input: { email: $email, secret: $secret }) {
-				id
-				identity_id
-				expires_at
-				token
-			}
-		}
-	`, variables, &resp)
+	body, err := transport.Post(transport.URL().String()+"/v1/login", req)
 	if err != nil {
 		return nil, err
 	}
 
-	transport.SetToken(resp.Session.Token)
-	return &resp.Session, nil
+	session := &primitives.Session{}
+	err = json.Unmarshal(body, session)
+	if err != nil {
+		return nil, err
+	}
+	transport.SetToken(session.Token)
+
+	return session, nil
 }
 
 func logout(ctx context.Context, transport ClientTransport, authToken *base64.Value) error {

@@ -18,14 +18,14 @@ input DeleteServiceRequest {
 }
 
 extend type Query {
-    service(id: ID!): Service! @isAuthenticated()
-    serviceByEmail(email: Email!): Service! @isAuthenticated()
-    services: [Service!] @isAuthenticated()
+    service(id: ID!): Service!
+    serviceByEmail(email: Email!): Service!
+    services: [Service!]
 }
 
 extend type Mutation {
-    createService(input: CreateServiceRequest!): Service! @isAuthenticated()
-    deleteService(input: DeleteServiceRequest!): String @isAuthenticated()
+    createService(input: CreateServiceRequest!): Service!
+    deleteService(input: DeleteServiceRequest!): String
 }
 
 scalar ServiceType

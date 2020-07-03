@@ -43,9 +43,10 @@ func createHTTPTransport(ts *httptest.Server, clientURL *primitives.URL, client 
 
 	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(client))
 	ct := &HTTPTransport{
-		client:    gql,
-		authToken: base64.New([]byte("faketoken")),
-		url:       clientURL,
+		client:     gql,
+		authToken:  base64.New([]byte("faketoken")),
+		url:        clientURL,
+		httpClient: client,
 	}
 
 	return ct

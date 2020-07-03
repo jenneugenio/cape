@@ -43,20 +43,20 @@ input DetachPolicyRequest {
 }
 
 extend type Query {
-  policy(id: ID!): Policy! @isAuthenticated()
-  policyByLabel(label: Label!): Policy! @isAuthenticated()
+  policy(id: ID!): Policy!
+  policyByLabel(label: Label!): Policy!
 
-  policies: [Policy!] @isAuthenticated()
-  rolePolicies(role_id: ID!): [Policy!] @isAuthenticated()
-  identityPolicies(identity_id: ID!): [Policy!] @isAuthenticated()
+  policies: [Policy!]
+  rolePolicies(role_id: ID!): [Policy!]
+  identityPolicies(identity_id: ID!): [Policy!]
 
-  attachment(role_id: ID!, policy_id: ID!): Attachment! @isAuthenticated()
+  attachment(role_id: ID!, policy_id: ID!): Attachment!
 }
 
 extend type Mutation {
-  createPolicy(input: CreatePolicyRequest!): Policy! @isAuthenticated()
-  deletePolicy(input: DeletePolicyRequest!): String @isAuthenticated()
+  createPolicy(input: CreatePolicyRequest!): Policy!
+  deletePolicy(input: DeletePolicyRequest!): String
 
-  attachPolicy(input: AttachPolicyRequest!): Attachment! @isAuthenticated()
-  detachPolicy(input: DetachPolicyRequest!): String @isAuthenticated()
+  attachPolicy(input: AttachPolicyRequest!): Attachment!
+  detachPolicy(input: DetachPolicyRequest!): String
 }

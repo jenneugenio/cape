@@ -6,6 +6,7 @@ import (
 
 	"github.com/manifoldco/go-base64"
 
+	"github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
 
 	"github.com/capeprivacy/cape/auth"
@@ -438,34 +439,24 @@ func (c *Client) ListRoles(ctx context.Context) ([]*primitives.Role, error) {
 
 // Setup calls the setup command to bootstrap cape
 func (c *Client) Setup(ctx context.Context, name primitives.Name, email primitives.Email, password primitives.Password) (*primitives.User, error) {
-	var resp struct {
-		User *primitives.User `json:"setup"`
-	}
-
-	in := &model.SetupRequest{
+	req := framework.SetupRequest{
 		Name:     name,
 		Email:    email,
 		Password: password,
 	}
 
-	variables := make(map[string]interface{})
-	variables["input"] = in
-
-	err := c.transport.Raw(ctx, `
-		mutation CreateUser($input: SetupRequest!) {
-			setup(input: $input) {
-				id
-				name
-				email
-			}
-		}
-	`, variables, &resp)
-
+	body, err := c.transport.Post(c.transport.URL().String()+"/v1/setup", req)
 	if err != nil {
 		return nil, err
 	}
 
-	return resp.User, nil
+	user := &primitives.User{}
+	err = json.Unmarshal(body, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 // ServiceResponse is a primitive Service with an extra Roles field

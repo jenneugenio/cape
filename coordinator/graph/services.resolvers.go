@@ -31,7 +31,7 @@ func (r *mutationResolver) CreateService(ctx context.Context, input model.Create
 
 	roleLabels := []primitives.Label{primitives.GlobalRole}
 
-	roles, err := getRolesByLabel(ctx, enforcer, roleLabels)
+	roles, err := fw.GetRolesByLabel(ctx, enforcer, roleLabels)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (r *mutationResolver) CreateService(ctx context.Context, input model.Create
 		return nil, err
 	}
 
-	err = createAssignments(ctx, enforcer, service, roles)
+	err = fw.CreateAssignments(ctx, enforcer, service, roles)
 	if err != nil {
 		return nil, err
 	}

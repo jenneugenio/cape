@@ -21,16 +21,16 @@ input AssignRoleRequest {
 }
 
 extend type Query {
-  role(id: ID!): Role! @isAuthenticated()
-  roleByLabel(label: Label!): Role! @isAuthenticated()
-  roles: [Role!] @isAuthenticated()
-  roleMembers(role_id: ID!): [Identity!] @isAuthenticated()
+  role(id: ID!): Role!
+  roleByLabel(label: Label!): Role!
+  roles: [Role!]
+  roleMembers(role_id: ID!): [Identity!]
 }
 
 extend type Mutation {
-  createRole(input: CreateRoleRequest!): Role! @isAuthenticated()
-  deleteRole(input: DeleteRoleRequest!): String @isAuthenticated()
+  createRole(input: CreateRoleRequest!): Role!
+  deleteRole(input: DeleteRoleRequest!): String
 
-  assignRole(input: AssignRoleRequest!): Assignment! @isAuthenticated()
-  unassignRole(input: AssignRoleRequest!): String @isAuthenticated()
+  assignRole(input: AssignRoleRequest!): Assignment!
+  unassignRole(input: AssignRoleRequest!): String
 }

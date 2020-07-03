@@ -14,6 +14,7 @@ require (
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
+	github.com/go-openapi/runtime v0.19.4
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
 	github.com/golangci/golangci-lint v1.27.0

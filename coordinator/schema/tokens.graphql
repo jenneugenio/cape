@@ -13,10 +13,10 @@ input CreateTokenRequest {
 }
 
 extend type Query {
-    tokens(identity_id: ID!): [ID!]! @isAuthenticated()
+    tokens(identity_id: ID!): [ID!]!
 }
 
 extend type Mutation {
-    createToken(input: CreateTokenRequest!): CreateTokenResponse! @isAuthenticated()
-    removeToken(id: ID!): ID! @isAuthenticated()
+    createToken(input: CreateTokenRequest!): CreateTokenResponse!
+    removeToken(id: ID!): ID!
 }

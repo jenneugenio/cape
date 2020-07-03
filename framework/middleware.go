@@ -14,7 +14,9 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/coordinator/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
+	"github.com/capeprivacy/cape/primitives"
 )
 
 // ContextKey is a type alias used for storing data in a context
@@ -206,5 +208,130 @@ func respondWithJSON(rw http.ResponseWriter, code int, out interface{}) {
 	enc := json.NewEncoder(rw)
 	if err := enc.Encode(out); err != nil {
 		panic(fmt.Sprintf("Could not marshal json to response: %s", err))
+	}
+}
+
+// IsAuthenticatedDirective checks to make sure a query is authenticated
+func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAuthority) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			ctx := req.Context()
+
+			logger := Logger(ctx)
+			token := AuthToken(ctx)
+
+			if token == nil {
+				msg := "Could not authenticate. Token missing"
+				logger.Info().Msg(msg)
+				respondWithGQLError(rw, auth.ErrAuthentication)
+				return
+			}
+
+			id, err := tokenAuthority.Verify(token)
+			if err != nil {
+				msg := "Could not authenticate. Unable to verify auth token"
+				logger.Info().Err(err).Msg(msg)
+				respondWithGQLError(rw, auth.ErrAuthentication)
+				return
+			}
+
+			session := &primitives.Session{}
+			err = db.Get(ctx, id, session)
+			if err != nil {
+				msg := "Could not authenticate. Unable to find session"
+				logger.Info().Err(err).Msg(msg)
+				respondWithGQLError(rw, auth.ErrAuthentication)
+				return
+			}
+
+			ownerType, err := session.OwnerID.Type()
+			if err != nil {
+				msg := "Could not authenticate. Unable get credentialProvider type"
+				logger.Info().Err(err).Msg(msg)
+				respondWithGQLError(rw, auth.ErrAuthentication)
+				return
+			}
+
+			identityType, err := session.IdentityID.Type()
+			if err != nil {
+				msg := "Could not authenticate. Unable get credentialProvider type"
+				logger.Info().Err(err).Msg(msg)
+				respondWithGQLError(rw, auth.ErrAuthentication)
+				return
+			}
+
+			var credentialProvider primitives.CredentialProvider
+			if ownerType == primitives.UserType {
+				user := &primitives.User{}
+				err = db.Get(ctx, session.IdentityID, user)
+				if err != nil {
+					msg := "Could not authenticate. Unable to find credentialProvider"
+					logger.Error().Err(err).Msg(msg)
+					respondWithGQLError(rw, auth.ErrAuthentication)
+					return
+				}
+				credentialProvider = user
+			} else if ownerType == primitives.TokenPrimitiveType {
+				token := &primitives.Token{}
+				err = db.Get(ctx, session.OwnerID, token)
+				if err != nil {
+					msg := "Could not authenticate. Unable to find credentialProvider"
+					logger.Error().Err(err).Msg(msg)
+					respondWithGQLError(rw, auth.ErrAuthentication)
+					return
+				}
+				credentialProvider = token
+			}
+
+			var identity primitives.Identity
+			if identityType == primitives.UserType {
+				user := &primitives.User{}
+				err = db.Get(ctx, session.IdentityID, user)
+				if err != nil {
+					msg := "Could not authenticate. Unable to find identity"
+					logger.Error().Err(err).Msg(msg)
+					respondWithGQLError(rw, auth.ErrAuthentication)
+					return
+				}
+				identity = user
+			} else if identityType == primitives.ServicePrimitiveType {
+				service := &primitives.Service{}
+				err = db.Get(ctx, session.IdentityID, service)
+				if err != nil {
+					msg := "Could not authenticate. Unable to find identity"
+					logger.Error().Err(err).Msg(msg)
+					respondWithGQLError(rw, auth.ErrAuthentication)
+					return
+				}
+				identity = service
+			}
+
+			policies, err := QueryIdentityPolicies(ctx, db, identity.GetID())
+			if err != nil {
+				respondWithGQLError(rw, err)
+				return
+			}
+
+			roles, err := QueryRoles(ctx, db, identity.GetID())
+			if err != nil {
+				respondWithGQLError(rw, err)
+				return
+			}
+
+			aSession, err := auth.NewSession(identity, session, policies, roles, credentialProvider)
+			if err != nil {
+				respondWithGQLError(rw, err)
+				return
+			}
+
+			logger = logger.With().Str("identity_id", aSession.GetID().String()).Logger()
+
+			ctx = context.WithValue(ctx, LoggerContextKey, logger)
+			ctx = context.WithValue(ctx, SessionContextKey, aSession)
+
+			req = req.WithContext(ctx)
+
+			next.ServeHTTP(rw, req)
+		})
 	}
 }

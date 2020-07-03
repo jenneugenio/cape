@@ -1,9 +1,11 @@
 package coordinator
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net"
@@ -22,9 +24,10 @@ import (
 // HTTPTransport is a ClientTransport that interacts with the Coordinator via
 // GraphQL over HTTP.
 type HTTPTransport struct {
-	client    *graphql.Client
-	authToken *base64.Value
-	url       *primitives.URL
+	client     *graphql.Client
+	authToken  *base64.Value
+	url        *primitives.URL
+	httpClient *http.Client
 }
 
 // NewHTTPTransport returns a ClientTransport configured to make requests via
@@ -41,9 +44,10 @@ func NewHTTPTransport(coordinatorURL *primitives.URL, authToken *base64.Value, c
 
 	client := graphql.NewClient(coordinatorURL.String()+"/v1/query", graphql.WithHTTPClient(httpClient))
 	return &HTTPTransport{
-		client:    client,
-		authToken: authToken,
-		url:       coordinatorURL,
+		client:     client,
+		httpClient: httpClient,
+		authToken:  authToken,
+		url:        coordinatorURL,
 	}
 }
 
@@ -143,4 +147,38 @@ func httpsClient(certFile string) *http.Client {
 	}
 
 	return &http.Client{Transport: tr}
+}
+
+// Post does a raw http POST to the specified url
+func (c *HTTPTransport) Post(url string, req interface{}) ([]byte, error) {
+	contentType := "application/json; charset=utf-8"
+
+	by, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := c.httpClient.Post(url, contentType, bytes.NewBuffer(by))
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode != http.StatusOK {
+		e := &errors.Error{}
+		err := json.Unmarshal(body, e)
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, e
+	}
+
+	return body, nil
 }

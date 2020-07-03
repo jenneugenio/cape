@@ -168,15 +168,17 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		Mailer:             mailer,
 	}}
 
-	config.Directives.IsAuthenticated = framework.IsAuthenticatedDirective(backend, tokenAuth)
-
 	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(*config))
 	gqlHandler.SetErrorPresenter(errorPresenter)
 
+	authenticated := framework.IsAuthenticatedMiddleware(backend, tokenAuth)
+
 	root := http.NewServeMux()
 	root.Handle("/v1", playground.Handler("GraphQL playground", "/query"))
-	root.Handle("/v1/query", framework.AuthTokenMiddleware(gqlHandler))
+	root.Handle("/v1/query", framework.AuthTokenMiddleware(authenticated(gqlHandler)))
 	root.Handle("/v1/version", framework.VersionHandler(cfg.InstanceID.String()))
+	root.Handle("/v1/login", framework.LoginHandler(backend, cp, tokenAuth))
+	root.Handle("/v1/setup", framework.SetupHandler(backend, cp, tokenAuth, rootKey))
 
 	health := healthz.NewHandler(root)
 	chain := alice.New(

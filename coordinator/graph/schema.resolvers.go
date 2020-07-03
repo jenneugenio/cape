@@ -8,122 +8,12 @@ import (
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
-	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
-
-func (r *mutationResolver) Setup(ctx context.Context, input model.SetupRequest) (*primitives.User, error) {
-	logger := fw.Logger(ctx)
-
-	// Since we set some key state as a part of this flow, we need to roll it back in
-	// the event of an error.
-	cleanup := func(err error) error {
-		r.Backend.SetEncryptionCodec(nil)
-		r.TokenAuthority.SetKeyPair(nil)
-		return err
-	}
-
-	doWork := func() (*primitives.User, error) {
-		// We must create the config and load up the state before we can make
-		// requests against the backend that requires the encryptionKey.
-		config, encryptionKey, kp, err := createConfig(r.RootKey)
-		if err != nil {
-			logger.Error().Err(err).Msg("Could not generate config")
-			return nil, err
-		}
-
-		// if setup has been run we create and add the codec here
-		kms, err := crypto.LoadKMS(encryptionKey)
-		if err != nil {
-			logger.Error().Err(err).Msg("Could not load KMS w/ Encryption Key")
-			return nil, err
-		}
-
-		// XXX: Note - if you are running more than one coordinator this _will
-		// not_ work. This is a big bug that we _must_ fix prior to launch.
-		//
-		// See: https://github.com/capeprivacy/planning/issues/1176
-		r.Backend.SetEncryptionCodec(crypto.NewSecretBoxCodec(kms))
-		r.TokenAuthority.SetKeyPair(kp)
-
-		tx, err := r.Backend.Transaction(ctx)
-		if err != nil {
-			logger.Error().Err(err).Msg("Could not create transaction")
-			return nil, err
-		}
-		defer tx.Rollback(ctx) // nolint: errcheck
-
-		err = tx.Create(ctx, config)
-		if err != nil {
-			logger.Error().Err(err).Msg("Could not create config in database")
-			return nil, err
-		}
-
-		creds, err := r.CredentialProducer.Generate(input.Password)
-		if err != nil {
-			logger.Info().Err(err).Msg("Could not generate credentials")
-			return nil, err
-		}
-
-		user, err := primitives.NewUser(input.Name, input.Email, creds)
-		if err != nil {
-			logger.Info().Err(err).Msg("Could not create user")
-			return nil, err
-		}
-
-		err = tx.Create(ctx, user)
-		if err != nil {
-			logger.Error().Err(err).Msg("Could not insert user into database")
-			return nil, err
-		}
-
-		err = createSystemRoles(ctx, tx)
-		if err != nil {
-			logger.Error().Err(err).Msg("Could not insert roles into database")
-			return nil, err
-		}
-
-		err = attachDefaultPolicy(ctx, tx)
-		if err != nil {
-			logger.Error().Err(err).Msg("Could not attach default policies inside database")
-			return nil, err
-		}
-
-		roles, err := getRolesByLabel(ctx, tx, []primitives.Label{
-			primitives.GlobalRole,
-			primitives.AdminRole,
-		})
-		if err != nil {
-			logger.Error().Err(err).Msg("Could not retrieve roles")
-			return nil, err
-		}
-
-		err = createAssignments(ctx, tx, user, roles)
-		if err != nil {
-			logger.Error().Err(err).Msg("Could not create assignments in database")
-			return nil, err
-		}
-
-		err = tx.Commit(ctx)
-		if err != nil {
-			logger.Error().Err(err).Msg("Could not commit transaction")
-			return nil, err
-		}
-
-		return user, nil
-	}
-
-	user, err := doWork()
-	if err != nil {
-		return nil, cleanup(err)
-	}
-
-	return user, nil
-}
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserRequest) (*model.CreateUserResponse, error) {
 	logger := fw.Logger(ctx)
@@ -157,7 +47,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 
 	// We need to get the system roles back from the database so we can
 	// assignment them to this user appropriately.
-	systemRoles, err := getRolesByLabel(ctx, tx, []primitives.Label{
+	systemRoles, err := fw.GetRolesByLabel(ctx, tx, []primitives.Label{
 		primitives.GlobalRole,
 	})
 	if err != nil {
@@ -169,7 +59,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 		return nil, err
 	}
 
-	err = createAssignments(ctx, tx, user, systemRoles)
+	err = fw.CreateAssignments(ctx, tx, user, systemRoles)
 	if err != nil {
 		return nil, err
 	}
@@ -183,68 +73,6 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 		Password: password,
 		User:     user,
 	}, nil
-}
-
-func (r *mutationResolver) CreateSession(ctx context.Context, input model.SessionRequest) (*primitives.Session, error) {
-	logger := fw.Logger(ctx)
-
-	if input.Email != nil {
-		if err := input.Email.Validate(); err != nil {
-			return nil, err
-		}
-	}
-
-	if input.TokenID != nil {
-		if err := input.TokenID.Validate(); err != nil {
-			return nil, err
-		}
-	}
-
-	if input.Email == nil && input.TokenID == nil {
-		return nil, errs.New(InvalidParametersCause, "An email or token_id must be provided")
-	}
-	if input.Email != nil && input.TokenID != nil {
-		return nil, errs.New(InvalidParametersCause, "You can only provide an email or a token_id.")
-	}
-
-	provider, err := getCredentialProvider(ctx, r.Backend, input)
-	if err != nil {
-		logger.Info().Err(err).Msgf("Could not retrieve identity for create session request, email: %s token_id: %s", input.Email, input.TokenID)
-		return nil, auth.ErrAuthentication
-	}
-
-	creds, err := provider.GetCredentials()
-	if err != nil {
-		logger.Info().Err(err).Msg("Could not retrieve credential provider")
-		return nil, err
-	}
-
-	err = r.CredentialProducer.Compare(input.Secret, creds)
-	if err != nil {
-		logger.Info().Err(err).Msgf("Invalid credentials provided")
-		return nil, auth.ErrAuthentication
-	}
-
-	session, err := primitives.NewSession(provider)
-	if err != nil {
-		logger.Info().Err(err).Msg("Could not create session")
-		return nil, auth.ErrAuthentication
-	}
-
-	token, expiresAt, err := r.TokenAuthority.Generate(session.ID)
-	if err != nil {
-		logger.Info().Err(err).Msg("Failed to generate auth token")
-		return nil, auth.ErrAuthentication
-	}
-
-	session.SetToken(token, expiresAt)
-	err = r.Backend.Create(ctx, session)
-	if err != nil {
-		logger.Error().Err(err).Msg("Failed to create session in database")
-		return nil, auth.ErrAuthentication
-	}
-
-	return session, nil
 }
 
 func (r *mutationResolver) DeleteSession(ctx context.Context, input model.DeleteSessionRequest) (*string, error) {

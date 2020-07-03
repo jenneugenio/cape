@@ -6,6 +6,8 @@ import (
 
 	"github.com/manifoldco/go-base64"
 
+	"encoding/json"
+
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -13,6 +15,7 @@ import (
 type MockRequest struct {
 	Query     string
 	Variables map[string]interface{}
+	Body      interface{}
 }
 
 type MockResponse struct {
@@ -91,4 +94,29 @@ func (m *MockClientTransport) EmailLogin(ctx context.Context, email primitives.E
 
 func (m *MockClientTransport) Logout(ctx context.Context, authToken *base64.Value) error {
 	return logout(ctx, m, authToken)
+}
+
+// Post does a raw http POST to the specified url
+func (m *MockClientTransport) Post(url string, req interface{}) ([]byte, error) {
+	m.Requests = append(m.Requests, &MockRequest{
+		Body: req,
+	})
+
+	if len(m.Responses) == 0 {
+		return nil, nil
+	}
+
+	r := m.Responses[m.Counter]
+	m.Counter++
+
+	if r.Error != nil {
+		return nil, r.Error
+	}
+
+	by, err := json.Marshal(r)
+	if err != nil {
+		return nil, err
+	}
+
+	return by, nil
 }

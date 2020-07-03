@@ -37,15 +37,15 @@ input ProjectSpecFile {
 }
 
 extend type Query {
-    projects(status: [ProjectStatus!]): [Project!]! @isAuthenticated
-    project(id: ID, label: Label): Project @isAuthenticated
+    projects(status: [ProjectStatus!]): [Project!]!
+    project(id: ID, label: Label): Project
 }
 
 extend type Mutation {
-    createProject(project: CreateProjectRequest!): Project! @isAuthenticated
-    updateProject(id: ID, label: Label, update: UpdateProjectRequest!): Project! @isAuthenticated
-    updateProjectSpec(project_label: Label, project_id: ID, request: ProjectSpecFile!): Project! @isAuthenticated
+    createProject(project: CreateProjectRequest!): Project!
+    updateProject(id: ID, label: Label, update: UpdateProjectRequest!): Project!
+    updateProjectSpec(project_label: Label, project_id: ID, request: ProjectSpecFile!): Project!
 
-    archiveProject(id: ID, label: Label): Project! @isAuthenticated
-    unarchiveProject(id: ID, label: Label): Project! @isAuthenticated
+    archiveProject(id: ID, label: Label): Project!
+    unarchiveProject(id: ID, label: Label): Project!
 }

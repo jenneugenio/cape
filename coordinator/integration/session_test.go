@@ -60,7 +60,7 @@ func TestSessions(t *testing.T) {
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(session).To(gm.BeNil())
 
-		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Failed to authenticate"))
+		gm.Expect(err.Error()).To(gm.Equal("authentication_failure: Failed to authenticate"))
 	})
 
 	t.Run("test incorrect credentials", func(t *testing.T) {
@@ -77,7 +77,7 @@ func TestSessions(t *testing.T) {
 		gm.Expect(session).To(gm.BeNil())
 
 		gm.Expect(err).ToNot(gm.BeNil())
-		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Failed to authenticate"))
+		gm.Expect(err.Error()).To(gm.Equal("authentication_failure: Failed to authenticate"))
 	})
 
 	t.Run("test delete session", func(t *testing.T) {

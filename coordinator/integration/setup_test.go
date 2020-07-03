@@ -45,7 +45,7 @@ func TestSetup(t *testing.T) {
 
 		_, err = client.EmailLogin(ctx, email, password)
 		gm.Expect(err).ToNot(gm.BeNil())
-		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Failed to authenticate"))
+		gm.Expect(err.Error()).To(gm.Equal("authentication_failure: Failed to authenticate"))
 	})
 
 	t.Run("Setup cape", func(t *testing.T) {

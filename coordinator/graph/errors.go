@@ -16,12 +16,6 @@ var (
 	// Must either supply policy ID or a policy input object
 	PolicyNotSupplied = errors.NewCause(errors.BadRequestCategory, "policy_not_supplied")
 
-	// NotFoundCause occurs when an entity we were looking for could not be found
-	NotFoundCause = errors.NewCause(errors.BadRequestCategory, "not_found")
-
-	// InvalidParametersCause happens when you pass invalid input
-	InvalidParametersCause = errors.NewCause(errors.BadRequestCategory, "invalid_input_parameters")
-
 	InvalidSource = errors.NewCause(errors.BadRequestCategory, "invalid_source")
 
 	NoActiveSpecCause = errors.NewCause(errors.BadRequestCategory, "no_active_spec")
