@@ -12,6 +12,7 @@ import (
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
+	modelmigration "github.com/capeprivacy/cape/models/migration"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -49,12 +50,14 @@ func buildAttachment(ctx context.Context, db *auth.Enforcer,
 		return nil, err
 	}
 
+	modelPolicy := modelmigration.PolicyFromPrimitive(policy)
+
 	return &model.Attachment{
 		ID:        attachment.ID,
 		CreatedAt: attachment.CreatedAt,
 		UpdatedAt: attachment.UpdatedAt,
 		Role:      role,
-		Policy:    policy,
+		Policy:    &modelPolicy,
 	}, nil
 }
 

@@ -12,22 +12,27 @@ type Interface interface {
 }
 
 type PolicyDB interface {
-	Create(context.Context, models.Policy) (models.Policy, error)
+	Create(context.Context, models.Policy) error
 	Delete(context.Context, models.Label) error
-	Get(context.Context, models.Label) (models.Policy, error)
+	Get(context.Context, models.Label) (*models.Policy, error)
 	List(context.Context, ListPolicyOptions) ([]models.Policy, error)
 }
 
 type RoleDB interface {
-	Create(context.Context, models.Policy) (models.Policy, error)
+	Create(context.Context, models.Role) error
 	Delete(context.Context, models.Label) error
-	Get(context.Context, models.Label) (models.Policy, error)
-	List(context.Context, ListPolicyOptions) ([]models.Policy, error)
+	Get(context.Context, models.Label) (models.Role, error)
+	List(context.Context, ListRoleOptions) ([]models.Role, error)
 	AttachPolicy(context.Context, models.Label) error
 	DetachPolicy(context.Context, models.Label) error
 }
 
 type ListPolicyOptions struct {
 	Offset int
-	Limit int
+	Limit  int
+}
+
+type ListRoleOptions struct {
+	Offset int
+	Limit  int
 }
