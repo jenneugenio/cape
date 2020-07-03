@@ -5,8 +5,8 @@ package graph
 import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
-	"github.com/capeprivacy/cape/coordinator/mailer"
 	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/coordinator/mailer"
 )
 
 // Resolver is used by graphql to resolve queries/mutations

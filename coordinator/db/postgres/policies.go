@@ -2,19 +2,22 @@ package capepg
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
+	"time"
+
 	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/models"
-	"time"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type pgPolicy struct {
-	db      *sql.DB
+	pool    *pgxpool.Pool
 	timeout time.Duration
 }
+
+var _ db.PolicyDB = &pgPolicy{}
 
 func (p *pgPolicy) Create(ctx context.Context, policy *models.Policy) error {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
@@ -30,46 +33,49 @@ func (p *pgPolicy) Create(ctx context.Context, policy *models.Policy) error {
 		Values(policyBlob).
 		ToSql()
 
-	_, err = p.db.ExecContext(ctx, s, args)
+	_, err = p.pool.Exec(ctx, s, args)
 	if err != nil {
 		return fmt.Errorf("error creating policy: %w", err)
 	}
+
 	return nil
 }
 
-func (p *pgPolicy) Delete(ctx context.Context, label models.Label) error {
+
+func (p *pgPolicy) Delete(ctx context.Context, l models.Label) error {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
 	s, args, err := sq.Delete("policies").
-		Where(sq.Eq{"data->>'label'": label}).
+		Where(sq.Eq{"data->>'label'": l}).
 		ToSql()
 
 	if err != nil {
 		return err
 	}
 
-	_, err = p.db.ExecContext(ctx, s, args)
+	_, err = p.pool.Exec(ctx, s, args)
+
 	if err != nil {
 		return fmt.Errorf("error deleting policy: %w", err)
 	}
 	return nil
 }
 
-func (p *pgPolicy) Get(ctx context.Context, label models.Label) (*models.Policy, error) {
+func (p *pgPolicy) Get(ctx context.Context, l models.Label) (*models.Policy, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
 	s, args, err := sq.Select("data").
 		From("policies").
-		Where(sq.Eq{"data->>'label'": label}).
+		Where(sq.Eq{"data->>'label'": l}).
 		ToSql()
 
 	if err != nil {
 		return nil, err
 	}
 
-	row := p.db.QueryRowContext(ctx, s, args)
+	row := p.pool.QueryRow(ctx, s, args)
 	var policyBlob []byte
 	err = row.Scan(policyBlob)
 	if err != nil {
@@ -97,15 +103,12 @@ func (p *pgPolicy) List(ctx context.Context, opts *db.ListPolicyOptions) ([]*mod
 		return nil, err
 	}
 
-	rows, err := p.db.QueryContext(ctx,s, args)
-	if err != nil {
-		return nil, fmt.Errorf("error retrieving policies: %w", err)
-	}
+	rows, err := p.pool.Query(ctx, s, args)
 	defer rows.Close()
 
 	var policies []*models.Policy
 	for rows.Next() {
-		var policyString string
+		var policyString []byte
 		if err := rows.Scan(&policyString); err != nil {
 			return nil, fmt.Errorf("TODO: be more graceful when a policy errors like %w", err)
 		}

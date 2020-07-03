@@ -25,10 +25,6 @@ type Policy struct {
 
 // Validate that the policy is valid
 func (p Policy) Validate() error {
-	//if err := p.ID.Validate(); err != nil {
-	//	return err
-	//}
-
 	if p.Version < 1 {
 		return errors.New("Version must be greater than zero")
 	}

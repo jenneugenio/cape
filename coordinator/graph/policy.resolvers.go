@@ -13,17 +13,19 @@ import (
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
+	modelmigration "github.com/capeprivacy/cape/models/migration"
+	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
 
 func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*models.Policy, error) {
-	currSession := fw.Session(ctx)
-
 	label := models.Label(input.Label.String())
 
-	policy, err := r.Database.Policies().Create(ctx, models.NewPolicy(label, input.Spec))
+	policy := models.NewPolicy(label, input.Spec)
+	err := r.Database.Policies().Create(ctx, policy)
 	if err != nil {
-		return nil, err
+		// TODO: Log this error and update metrics
+		return nil, errors.New(errors.UnknownCause, "error saving policy")
 	}
 
 	return &policy, nil
@@ -100,7 +102,8 @@ func (r *queryResolver) Policy(ctx context.Context, id database.ID) (*models.Pol
 		return nil, err
 	}
 
-	return policy, nil
+	retVal := modelmigration.PolicyFromPrimitive(policy)
+	return &retVal, nil
 }
 
 func (r *queryResolver) PolicyByLabel(ctx context.Context, label primitives.Label) (*models.Policy, error) {
@@ -113,7 +116,8 @@ func (r *queryResolver) PolicyByLabel(ctx context.Context, label primitives.Labe
 		return nil, err
 	}
 
-	return policy, nil
+	retVal := modelmigration.PolicyFromPrimitive(policy)
+	return &retVal, nil
 }
 
 func (r *queryResolver) Policies(ctx context.Context) ([]*models.Policy, error) {
@@ -126,7 +130,8 @@ func (r *queryResolver) Policies(ctx context.Context) ([]*models.Policy, error) 
 		return nil, err
 	}
 
-	return policies, nil
+	retVal := modelmigration.PoliciesFromPrimitive(policies)
+	return retVal, nil
 }
 
 func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([]*models.Policy, error) {
@@ -141,7 +146,7 @@ func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([
 
 	var policies []*primitives.Policy
 	if len(attachments) == 0 {
-		return policies, nil
+		return modelmigration.PoliciesFromPrimitive(policies), nil
 	}
 
 	policyIDs := database.InFromEntities(attachments, func(e interface{}) interface{} {
@@ -152,14 +157,21 @@ func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([
 		return nil, err
 	}
 
-	return policies, nil
+	retVal := modelmigration.PoliciesFromPrimitive(policies)
+	return retVal, nil
 }
 
 func (r *queryResolver) IdentityPolicies(ctx context.Context, identityID database.ID) ([]*models.Policy, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	return fw.QueryIdentityPolicies(ctx, enforcer, identityID)
+	policies, err := fw.QueryIdentityPolicies(ctx, enforcer, identityID)
+	if err != nil {
+		return nil, err
+	}
+
+	retVal := modelmigration.PoliciesFromPrimitive(policies)
+	return retVal, nil
 }
 
 func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error) {

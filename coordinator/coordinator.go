@@ -2,14 +2,14 @@ package coordinator
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
-	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/NYTimes/gziphandler"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/justinas/alice"
 	"github.com/manifoldco/go-base64"
 	"github.com/manifoldco/healthz"
@@ -19,6 +19,7 @@ import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
+	capepg "github.com/capeprivacy/cape/coordinator/db/postgres"
 	"github.com/capeprivacy/cape/coordinator/graph"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/mailer"
@@ -162,14 +163,11 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		return nil, errors.New(InvalidConfigCause, "Unknown credential producer algorithm supplied")
 	}
 
-	db, err := sql.Open("a db connect string")
-	if err != nil {
-		return nil, fmt.Errorf("error connecting to database: %w", err)
-	}
+	pgxPool := mustPgxPool(cfg.DB.Addr.ToURL().String(), cfg.InstanceID.String())
 
 	config := &generated.Config{
 		Resolvers: &graph.Resolver{
-			Database:           capepg.New(db),
+			Database:           capepg.New(pgxPool),
 			Backend:            backend,
 			TokenAuthority:     tokenAuth,
 			RootKey:            rootKey,
@@ -239,4 +237,24 @@ func getDatabaseConfig(ctx context.Context, db database.Backend) (*primitives.Co
 	// it gets the job done.
 	err := db.QueryOne(ctx, cfg, database.NewFilter(database.Where{"setup": "true"}, nil, nil))
 	return cfg, err
+}
+
+func mustPgxPool(url, name string) *pgxpool.Pool {
+	cfg, err := pgxpool.ParseConfig(url)
+	if err != nil {
+		log.Fatalf("error parsing database config: %s", err.Error())
+	}
+
+	// Set the application name which can be used for identifying which service
+	// is connecting to postgres
+	cfg.ConnConfig.RuntimeParams = map[string]string{
+		"application_name": name,
+	}
+
+	c, err := pgxpool.ConnectConfig(context.TODO(), cfg)
+	if err != nil {
+		log.Fatalf("error connecting to database: %s", err.Error())
+	}
+
+	return c
 }

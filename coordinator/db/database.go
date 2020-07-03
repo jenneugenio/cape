@@ -23,6 +23,7 @@ type RoleDB interface {
 	Delete(context.Context, models.Label) error
 	Get(context.Context, models.Label) (*models.Policy, error)
 	List(context.Context, *ListPolicyOptions) ([]*models.Policy, error)
+
 	AttachPolicy(context.Context, models.Label) error
 	DetachPolicy(context.Context, models.Label) error
 }
