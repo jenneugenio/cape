@@ -50,12 +50,12 @@ func (p Policy) Validate() error {
 }
 
 // NewPolicy returns a mutable policy struct
-func NewPolicy(label Label, spec PolicySpec) Policy {
-	return Policy{
+func NewPolicy(label Label, spec *PolicySpec) *Policy {
+	return &Policy{
 		ID:        NewID(),
 		Version:   modelVersion,
 		Label:     label,
-		Spec:      &spec,
+		Spec:      spec,
 		CreatedAt: now(),
 	}
 }

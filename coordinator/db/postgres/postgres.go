@@ -19,6 +19,7 @@ var _ db.Interface = &CapePg{}
 func New(pool *pgxpool.Pool) *CapePg {
 	return &CapePg{
 		pool: pool,
+		timeout: 5 * time.Second,
 	}
 }
 

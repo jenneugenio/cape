@@ -2,11 +2,11 @@ scalar PolicySpec
 scalar Rule
 
 type Policy {
-  id: ID!
+  id: String!
   created_at: Time!
   updated_at: Time!
 
-  label: Label!
+  label: ModelLabel!
   spec: PolicySpec!
 }
 

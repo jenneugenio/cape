@@ -120,3 +120,7 @@ scalar EmailType
 scalar Email
 scalar SourceType
 scalar Password
+
+# Migration scalars
+
+scalar ModelLabel

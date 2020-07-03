@@ -23,24 +23,19 @@ func (p *pgPolicy) Create(ctx context.Context, policy *models.Policy) error {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
-	policyBlob, err := json.Marshal(policy)
-	if err != nil {
-		return err
-	}
-
 	s, args, err := sq.Insert("policies").
+		PlaceholderFormat(sq.Dollar).
 		Columns("data").
-		Values(policyBlob).
+		Values(policy).
 		ToSql()
 
-	_, err = p.pool.Exec(ctx, s, args)
+	_, err = p.pool.Exec(ctx, s, args...)
 	if err != nil {
 		return fmt.Errorf("error creating policy: %w", err)
 	}
 
 	return nil
 }
-
 
 func (p *pgPolicy) Delete(ctx context.Context, l models.Label) error {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)

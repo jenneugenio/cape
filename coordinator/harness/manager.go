@@ -86,7 +86,7 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 	return client, nil
 }
 
-// CreatePolicy creates a policy on the coordinator!
+// CreateDeprecatedPolicy creates a policy on the coordinator!
 func (m *Manager) CreatePolicy(ctx context.Context, policyPath string) error {
 	data, err := ioutil.ReadFile(policyPath)
 	if err != nil {
@@ -98,7 +98,7 @@ func (m *Manager) CreatePolicy(ctx context.Context, policyPath string) error {
 		return err
 	}
 
-	policy, err = m.Admin.Client.CreatePolicy(ctx, policy)
+	policy, err = m.Admin.Client.CreateDeprecatedPolicy(ctx, policy)
 	if err != nil {
 		return err
 	}

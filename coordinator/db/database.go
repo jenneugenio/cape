@@ -19,16 +19,21 @@ type PolicyDB interface {
 }
 
 type RoleDB interface {
-	Create(context.Context, *models.Policy) (*models.Policy, error)
+	Create(context.Context, *models.Role) error
 	Delete(context.Context, models.Label) error
-	Get(context.Context, models.Label) (*models.Policy, error)
-	List(context.Context, *ListPolicyOptions) ([]*models.Policy, error)
+	Get(context.Context, models.Label) (*models.Role, error)
+	List(context.Context, *ListRoleOptions) ([]*models.Role, error)
 
 	AttachPolicy(context.Context, models.Label) error
 	DetachPolicy(context.Context, models.Label) error
 }
 
 type ListPolicyOptions struct {
+	Offset uint64
+	Limit uint64
+}
+
+type ListRoleOptions struct {
 	Offset uint64
 	Limit uint64
 }

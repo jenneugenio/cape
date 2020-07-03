@@ -116,7 +116,7 @@ func policyAttachCmd(c *cli.Context) error {
 			return err
 		}
 
-		p, err := client.CreatePolicy(c.Context, policyInput)
+		p, err := client.CreateDeprecatedPolicy(c.Context, policyInput)
 		if err != nil {
 			return err
 		}

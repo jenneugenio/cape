@@ -5,30 +5,28 @@ package graph
 
 import (
 	"context"
-	"fmt"
+	errs "github.com/capeprivacy/cape/partyerrors"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
-	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 	modelmigration "github.com/capeprivacy/cape/models/migration"
-	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
 
 func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*models.Policy, error) {
 	label := models.Label(input.Label.String())
 
-	policy := models.NewPolicy(label, input.Spec)
+	policy := models.NewPolicy(label, &input.Spec)
 	err := r.Database.Policies().Create(ctx, policy)
 	if err != nil {
 		// TODO: Log this error and update metrics
-		return nil, errors.New(errors.UnknownCause, "error saving policy")
+		return nil, errs.New(errs.UnknownCause, "error saving policy")
 	}
 
-	return &policy, nil
+	return policy, nil
 }
 
 func (r *mutationResolver) DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error) {
@@ -82,14 +80,6 @@ func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachP
 	}
 
 	return nil, nil
-}
-
-func (r *policyResolver) ID(ctx context.Context, obj *models.Policy) (database.ID, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *policyResolver) Label(ctx context.Context, obj *models.Policy) (primitives.Label, error) {
-	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) Policy(ctx context.Context, id database.ID) (*models.Policy, error) {
@@ -191,19 +181,4 @@ func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, poli
 	}
 
 	return buildAttachment(ctx, enforcer, attachment)
-}
-
-// Policy returns generated.PolicyResolver implementation.
-func (r *Resolver) Policy() generated.PolicyResolver { return &policyResolver{r} }
-
-type policyResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *policyResolver) Spec(ctx context.Context, obj *primitives.Policy) (*models.PolicySpec, error) {
-	panic(fmt.Errorf("not implemented"))
 }

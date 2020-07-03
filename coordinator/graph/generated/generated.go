@@ -42,7 +42,6 @@ type Config struct {
 
 type ResolverRoot interface {
 	Mutation() MutationResolver
-	Policy() PolicyResolver
 	Project() ProjectResolver
 	ProjectSpec() ProjectSpecResolver
 	Query() QueryResolver
@@ -227,11 +226,6 @@ type MutationResolver interface {
 	DeleteService(ctx context.Context, input model.DeleteServiceRequest) (*string, error)
 	CreateToken(ctx context.Context, input model.CreateTokenRequest) (*model.CreateTokenResponse, error)
 	RemoveToken(ctx context.Context, id database.ID) (database.ID, error)
-}
-type PolicyResolver interface {
-	ID(ctx context.Context, obj *models.Policy) (database.ID, error)
-
-	Label(ctx context.Context, obj *models.Policy) (primitives.Label, error)
 }
 type ProjectResolver interface {
 	CurrentSpec(ctx context.Context, obj *primitives.Project) (*primitives.ProjectSpec, error)
@@ -1256,11 +1250,11 @@ var sources = []*ast.Source{
 scalar Rule
 
 type Policy {
-  id: ID!
+  id: String!
   created_at: Time!
   updated_at: Time!
 
-  label: Label!
+  label: ModelLabel!
   spec: PolicySpec!
 }
 
@@ -1551,7 +1545,10 @@ scalar EmailType
 scalar Email
 scalar SourceType
 scalar Password
-`, BuiltIn: false},
+
+# Migration scalars
+
+scalar ModelLabel`, BuiltIn: false},
 	&ast.Source{Name: "coordinator/schema/services.graphql", Input: `type Service implements Identity {
     id: ID!
     email: Email!
@@ -4046,13 +4043,13 @@ func (ec *executionContext) _Policy_id(ctx context.Context, field graphql.Collec
 		Object:   "Policy",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Policy().ID(rctx, obj)
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4064,9 +4061,9 @@ func (ec *executionContext) _Policy_id(ctx context.Context, field graphql.Collec
 		}
 		return graphql.Null
 	}
-	res := resTmp.(database.ID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Policy_created_at(ctx context.Context, field graphql.CollectedField, obj *models.Policy) (ret graphql.Marshaler) {
@@ -4148,13 +4145,13 @@ func (ec *executionContext) _Policy_label(ctx context.Context, field graphql.Col
 		Object:   "Policy",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Policy().Label(rctx, obj)
+		return obj.Label, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4166,9 +4163,9 @@ func (ec *executionContext) _Policy_label(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(primitives.Label)
+	res := resTmp.(models.Label)
 	fc.Result = res
-	return ec.marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
+	return ec.marshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Policy_spec(ctx context.Context, field graphql.CollectedField, obj *models.Policy) (ret graphql.Marshaler) {
@@ -8623,47 +8620,29 @@ func (ec *executionContext) _Policy(ctx context.Context, sel ast.SelectionSet, o
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Policy")
 		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Policy_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Policy_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "created_at":
 			out.Values[i] = ec._Policy_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "updated_at":
 			out.Values[i] = ec._Policy_updated_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "label":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Policy_label(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Policy_label(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "spec":
 			out.Values[i] = ec._Policy_spec(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9887,6 +9866,21 @@ func (ec *executionContext) unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋ
 
 func (ec *executionContext) marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx context.Context, sel ast.SelectionSet, v primitives.Label) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx context.Context, v interface{}) (models.Label, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	return models.Label(tmp), err
+}
+
+func (ec *executionContext) marshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx context.Context, sel ast.SelectionSet, v models.Label) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐName(ctx context.Context, v interface{}) (primitives.Name, error) {

@@ -3,7 +3,7 @@ package coordinator
 import (
 	"context"
 	"encoding/json"
-
+	"github.com/capeprivacy/cape/models"
 	"github.com/manifoldco/go-base64"
 
 	errors "github.com/capeprivacy/cape/partyerrors"
@@ -590,8 +590,8 @@ func (c *Client) ListServices(ctx context.Context) ([]*ServiceResponse, error) {
 	return resp.Services, nil
 }
 
-// CreatePolicy creates a policy on the coordinator
-func (c *Client) CreatePolicy(ctx context.Context, policy *primitives.Policy) (*primitives.Policy, error) {
+// CreateDeprecatedPolicy creates a policy on the coordinator
+func (c *Client) CreateDeprecatedPolicy(ctx context.Context, policy *primitives.Policy) (*primitives.Policy, error) {
 	var resp struct {
 		Policy primitives.Policy `json:"createPolicy"`
 	}
@@ -601,7 +601,33 @@ func (c *Client) CreatePolicy(ctx context.Context, policy *primitives.Policy) (*
 	variables["spec"] = policy.Spec
 
 	err := c.transport.Raw(ctx, `
-		mutation CreatePolicy($label: Label!, $spec: PolicySpec!) {
+		mutation CreateDeprecatedPolicy($label: Label!, $spec: PolicySpec!) {
+			createPolicy(input: { label: $label, spec: $spec }) {
+				id
+				label
+			}
+		}
+	`, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Policy, nil
+}
+
+// CreatePolicy creates a policy on the coordinator
+func (c *Client) CreatePolicy(ctx context.Context, policy *models.Policy) (*models.Policy, error) {
+	var resp struct {
+		Policy models.Policy `json:"createPolicy"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["label"] = policy.Label
+	variables["spec"] = policy.Spec
+
+	err := c.transport.Raw(ctx, `
+		mutation CreateDeprecatedPolicy($label: Label!, $spec: PolicySpec!) {
 			createPolicy(input: { label: $label, spec: $spec }) {
 				id
 				label
