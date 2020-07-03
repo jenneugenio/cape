@@ -2,8 +2,14 @@ package coordinator
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
+	"log"
 	"net"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/machinebox/graphql"
 	"github.com/manifoldco/go-base64"
@@ -23,12 +29,17 @@ type HTTPTransport struct {
 
 // NewHTTPTransport returns a ClientTransport configured to make requests via
 // GraphQL over HTTP
-func NewHTTPTransport(coordinatorURL *primitives.URL, authToken *base64.Value) ClientTransport {
+func NewHTTPTransport(coordinatorURL *primitives.URL, authToken *base64.Value, certFile string) ClientTransport {
+	httpClient := &http.Client{}
+	if certFile != "" {
+		httpClient = httpsClient(certFile)
+	}
+
 	if authToken != nil && len(authToken.String()) == 0 {
 		authToken = nil
 	}
 
-	client := graphql.NewClient(coordinatorURL.String() + "/v1/query")
+	client := graphql.NewClient(coordinatorURL.String()+"/v1/query", graphql.WithHTTPClient(httpClient))
 	return &HTTPTransport{
 		client:    client,
 		authToken: authToken,
@@ -103,4 +114,33 @@ func (c *HTTPTransport) Token() *base64.Value {
 
 func convertError(err error) error {
 	return errors.New(errors.UnknownCause, strings.TrimPrefix(err.Error(), "graphql: "))
+}
+
+func httpsClient(certFile string) *http.Client {
+	caCert, err := ioutil.ReadFile(certFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	tlsConfig := &tls.Config{RootCAs: caCertPool}
+
+	// The below configuration is borrowed from the DefaultTransport
+	//
+	tr := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+		TLSClientConfig:       tlsConfig,
+	}
+
+	return &http.Client{Transport: tr}
 }

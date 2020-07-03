@@ -74,6 +74,8 @@ func (c *Coordinator) Teardown(ctx context.Context) error {
 // CertFiles implements the Component interface. Coordinator doesn't support
 // TLS right now so not needed!
 func (c *Coordinator) CertFiles() (certFile string, keyFile string) {
+	certFile = c.cfg.CertFile
+	keyFile = c.cfg.KeyFile
 	return
 }
 

@@ -11,12 +11,6 @@ import (
 	"github.com/manifoldco/go-base64"
 )
 
-type AddSourceRequest struct {
-	Label       primitives.Label `json:"label"`
-	Credentials primitives.DBURL `json:"credentials"`
-	ServiceID   *database.ID     `json:"service_id"`
-}
-
 type AssignRoleRequest struct {
 	RoleID     database.ID `json:"role_id"`
 	IdentityID database.ID `json:"identity_id"`
@@ -122,10 +116,6 @@ type PolicyInput struct {
 	Label primitives.Label `json:"label"`
 }
 
-type RemoveSourceRequest struct {
-	Label primitives.Label `json:"label"`
-}
-
 type SessionRequest struct {
 	Email   *primitives.Email   `json:"email"`
 	TokenID *database.ID        `json:"token_id"`
@@ -141,9 +131,4 @@ type SetupRequest struct {
 type UpdateProjectRequest struct {
 	Name        *primitives.DisplayName `json:"name"`
 	Description *primitives.Description `json:"description"`
-}
-
-type UpdateSourceRequest struct {
-	SourceLabel primitives.Label `json:"source_label"`
-	ServiceID   *database.ID     `json:"service_id"`
 }

@@ -12,7 +12,6 @@ var (
 	CoordinatorLabelArg = LabelArg("coordinator")
 	RoleLabelArg        = LabelArg("role")
 	PolicyLabelArg      = LabelArg("policy")
-	SourceLabelArg      = LabelArg("source")
 	ProjectLabelArg     = LabelArg("project-label")
 
 	ClusterURLArg = &Argument{
@@ -41,15 +40,6 @@ var (
 		Processor: func(in string) (interface{}, error) {
 			// validates!!
 			return primitives.NewEmail(in)
-		},
-	}
-
-	SourcesCredentialsArg = &Argument{
-		Name:        "connection-string",
-		Description: "The connection string for the database.",
-		Required:    true,
-		Processor: func(in string) (interface{}, error) {
-			return primitives.NewDBURL(in)
 		},
 	}
 

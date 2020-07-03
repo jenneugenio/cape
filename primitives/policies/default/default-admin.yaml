@@ -49,18 +49,6 @@ rules:
   - target: "policies:*"
     action: delete
     effect: allow
-  # Only an admin can create a source
-  - target: "sources:*"
-    action: create
-    effect: allow
-  # Only an admin can update a source
-  - target: "sources:*"
-    action: update
-    effect: allow
-  # Only an admin can remove a source
-  - target: "sources:*"
-    action: delete
-    effect: allow
   - target: "tokens:*"
     action: create
     effect: allow
@@ -71,9 +59,6 @@ rules:
     action: delete
     effect: allow
   - target: "sessions:*"
-    action: read
-    effect: allow
-  - target: "source_schema:*"
     action: read
     effect: allow
   # Projects

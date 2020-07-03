@@ -8,8 +8,7 @@ import (
 )
 
 type ProjectSpecFile struct {
-	Sources []Label `json:"sources"`
-	Policy  []*Rule `json:"policy"`
+	Policy []*Rule `json:"policy"`
 }
 
 func ParseProjectSpecFile(data []byte) (*ProjectSpecFile, error) {
@@ -25,7 +24,6 @@ type ProjectSpec struct {
 	*database.Primitive
 	ProjectID database.ID
 	ParentID  *database.ID
-	SourceIDs []database.ID
 	Policy    []*Rule `json:"policy"`
 }
 
@@ -61,21 +59,6 @@ func (p *ProjectSpec) Validate() error {
 		}
 	}
 
-	for _, s := range p.SourceIDs {
-		if err := s.Validate(); err != nil {
-			return err
-		}
-
-		t, err := s.Type()
-		if err != nil {
-			return err
-		}
-
-		if t != SourcePrimitiveType {
-			return errors.New(InvalidIDCause, "SourceIDs can only contain Source IDs")
-		}
-	}
-
 	if len(p.Policy) == 0 {
 		return errors.New(InvalidProjectSpecCause, "ProjectSpecs must define at least one policy")
 	}
@@ -93,7 +76,6 @@ func (p *ProjectSpec) Validate() error {
 func NewProjectSpec(
 	projectID database.ID,
 	parent *database.ID,
-	sources []database.ID,
 	policy []*Rule,
 ) (*ProjectSpec, error) {
 	p, err := database.NewPrimitive(ProjectSpecType)
@@ -105,7 +87,6 @@ func NewProjectSpec(
 		Primitive: p,
 		ProjectID: projectID,
 		ParentID:  parent,
-		SourceIDs: sources,
 		Policy:    policy,
 	}
 

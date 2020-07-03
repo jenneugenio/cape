@@ -30,19 +30,13 @@ type Service struct {
 	Token *auth.APIToken
 }
 
-// Source represents a source on the cape coordinator
-type Source struct {
-	Label primitives.Label
-}
-
 // Manager represents an application state manager on-top of the Coordinator's
 // harness. It's job is to provide convenience functions for setting up a
 // coordinator's application state, managing users, and other utilities that
 // make it write end-to-end integration tests.
 type Manager struct {
-	h          *Harness
-	Admin      *User
-	TestSource *Source
+	h     *Harness
+	Admin *User
 }
 
 // Setup sets up the application state for the cluster (e.g. the `setup`
@@ -90,21 +84,6 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 	m.Admin = user
 
 	return client, nil
-}
-
-// CreateSource creates a source on the coordinator
-func (m *Manager) CreateSource(ctx context.Context, dbURL *primitives.DBURL, serviceID database.ID) error {
-	sourceLabel := primitives.Label("test-source")
-	_, err := m.Admin.Client.AddSource(ctx, sourceLabel, dbURL)
-	if err != nil {
-		return err
-	}
-
-	m.TestSource = &Source{
-		Label: sourceLabel,
-	}
-
-	return nil
 }
 
 // CreatePolicy creates a policy on the coordinator!
