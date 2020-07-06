@@ -211,7 +211,7 @@ func respondWithJSON(rw http.ResponseWriter, code int, out interface{}) {
 	}
 }
 
-// IsAuthenticatedDirective checks to make sure a query is authenticated
+// IsAuthenticatedMiddleware checks to make sure a query is authenticated
 func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAuthority) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
