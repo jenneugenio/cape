@@ -116,13 +116,13 @@ func AuthTokenMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
-		authHeader := req.Header.Get("Authorization")
-		if authHeader == "" {
+		cookie, err := req.Cookie("token")
+		if err != nil {
 			next.ServeHTTP(rw, req)
 			return
 		}
 
-		token, err := auth.GetBearerToken(authHeader)
+		token, err := base64.NewFromString(cookie.Value)
 		if err != nil {
 			respondWithGQLError(rw, err)
 			return

@@ -6,6 +6,7 @@ import (
 	goerrors "errors"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httptest"
 	"reflect"
 	"testing"
@@ -40,6 +41,9 @@ func createHTTPTransport(ts *httptest.Server, clientURL *primitives.URL, client 
 	if client == nil {
 		client = ts.Client()
 	}
+
+	jar, _ := cookiejar.New(nil)
+	client.Jar = jar
 
 	gql := graphql.NewClient(ts.URL+"/v1/query", graphql.WithHTTPClient(client))
 	ct := &HTTPTransport{

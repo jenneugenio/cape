@@ -128,7 +128,7 @@ func TestAuthTokenMiddleware(t *testing.T) {
 		})
 
 		header := &http.Header{}
-		header.Add("Authorization", "Bearer "+expID.String())
+		header.Add("Cookie", "token="+expID.String())
 
 		mw := AuthTokenMiddleware(next)
 		runMiddleware(mw, header)
@@ -139,14 +139,13 @@ func TestAuthTokenMiddleware(t *testing.T) {
 	t.Run("bad auth token", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		expID := base64.New([]byte("cool-auth-token"))
 		wasCalled := false
 		next := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			wasCalled = true
 		})
 
 		header := http.Header{}
-		header.Add("Authorization", expID.String())
+		header.Add("Cookie", "token=////+auth+token")
 
 		mw := AuthTokenMiddleware(next)
 		req := httptest.NewRequest("GET", "http://my.capeprivacy.com", nil)
@@ -166,6 +165,6 @@ func TestAuthTokenMiddleware(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(len(gResp.Errors)).To(gm.Equal(1))
 
-		gm.Expect(gResp.Errors[0].Message).To(gm.Equal("Unable to parse auth header"))
+		gm.Expect(gResp.Errors[0].Message).To(gm.Equal("Encountered an unknown error"))
 	})
 }

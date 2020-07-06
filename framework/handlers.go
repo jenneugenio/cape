@@ -114,6 +114,14 @@ func LoginHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.Toke
 			return
 		}
 
+		cookie := &http.Cookie{
+			Name:     "token",
+			Value:    token.String(),
+			Secure:   true,
+			HttpOnly: true,
+		}
+		http.SetCookie(w, cookie)
+
 		respondWithJSON(w, http.StatusOK, session)
 	})
 }

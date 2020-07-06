@@ -10,6 +10,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/http/cookiejar"
 	"strings"
 	"time"
 
@@ -33,7 +34,9 @@ type HTTPTransport struct {
 // NewHTTPTransport returns a ClientTransport configured to make requests via
 // GraphQL over HTTP
 func NewHTTPTransport(coordinatorURL *primitives.URL, authToken *base64.Value, certFile string) ClientTransport {
-	httpClient := &http.Client{}
+	// this function never actually returns an error...
+	jar, _ := cookiejar.New(nil)
+	httpClient := &http.Client{Jar: jar}
 	if certFile != "" {
 		httpClient = httpsClient(certFile)
 	}
@@ -66,7 +69,11 @@ func (c *HTTPTransport) Raw(ctx context.Context, query string, variables map[str
 	}
 
 	if c.authToken != nil {
-		req.Header.Add("Authorization", "Bearer "+c.authToken.String())
+		cookie := &http.Cookie{
+			Name:  "token",
+			Value: c.authToken.String(),
+		}
+		c.httpClient.Jar.SetCookies(c.url.URL, []*http.Cookie{cookie})
 	}
 
 	err := c.client.Run(ctx, req, resp)
