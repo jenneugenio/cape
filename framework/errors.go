@@ -10,4 +10,6 @@ var (
 
 	// NotFoundCause occurs when an entity we were looking for could not be found
 	NotFoundCause = errors.NewCause(errors.BadRequestCategory, "not_found")
+
+	BadJSONCause = errors.NewCause(errors.BadRequestCategory, "bad_json_cause")
 )

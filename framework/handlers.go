@@ -42,7 +42,7 @@ func LoginHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.Toke
 
 		err := decodeJSONBody(w, r, &input)
 		if err != nil {
-			respondWithError(w, err)
+			respondWithError(w, errors.Wrap(BadJSONCause, err))
 			return
 		}
 
