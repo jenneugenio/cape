@@ -35,7 +35,7 @@ var (
 
 	TokenUserArg = &Argument{
 		Name:        "user",
-		Description: "The user for the owner of the token in the form of an email",
+		Description: "The email of the user for this token",
 		Required:    false,
 		Processor: func(in string) (interface{}, error) {
 			return primitives.NewEmail(in)
