@@ -148,11 +148,11 @@ func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([
 	return policies, nil
 }
 
-func (r *queryResolver) IdentityPolicies(ctx context.Context, identityID database.ID) ([]*primitives.Policy, error) {
+func (r *queryResolver) UserPolicies(ctx context.Context, userID database.ID) ([]*primitives.Policy, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	return fw.QueryIdentityPolicies(ctx, enforcer, identityID)
+	return fw.QueryUserPolicies(ctx, enforcer, userID)
 }
 
 func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error) {

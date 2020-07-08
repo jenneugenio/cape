@@ -18,10 +18,6 @@ import (
 // NetworkCause occurs when the client cannot reach the server
 var NetworkCause = errors.NewCause(errors.RequestTimeoutCategory, "network_error")
 
-// UnrecognizedIdentityType occurs when the client encounters an identity type
-// it doesn't recognize.
-var UnrecognizedIdentityType = errors.NewCause(errors.BadRequestCategory, "unrecognized_identity")
-
 // Client is a wrapper around the graphql client that
 // connects to the coordinator and sends queries
 type Client struct {
@@ -37,11 +33,11 @@ func NewClient(transport ClientTransport) *Client {
 }
 
 type MeResponse struct {
-	Identity *primitives.IdentityImpl `json:"me"`
+	User *primitives.User `json:"me"`
 }
 
-// Me returns the identity of the current authenticated session
-func (c *Client) Me(ctx context.Context) (primitives.Identity, error) {
+// Me returns the user of the current authenticated session
+func (c *Client) Me(ctx context.Context) (*primitives.User, error) {
 	var resp MeResponse
 
 	err := c.transport.Raw(ctx, `
@@ -57,7 +53,7 @@ func (c *Client) Me(ctx context.Context) (primitives.Identity, error) {
 		return nil, err
 	}
 
-	return identityImplToIdentity(resp.Identity)
+	return resp.User, nil
 }
 
 // UserResponse is a primitive User with an extra Roles field that maps to the
@@ -182,18 +178,18 @@ func (c *Client) SessionToken() *base64.Value {
 // Role Routes
 
 // CreateRole creates a new role with a label
-func (c *Client) CreateRole(ctx context.Context, label primitives.Label, identityIDs []database.ID) (*primitives.Role, error) {
+func (c *Client) CreateRole(ctx context.Context, label primitives.Label, userIDs []database.ID) (*primitives.Role, error) {
 	var resp struct {
 		Role primitives.Role `json:"createRole"`
 	}
 
 	variables := make(map[string]interface{})
-	variables["ids"] = identityIDs
+	variables["ids"] = userIDs
 	variables["label"] = label
 
 	err := c.transport.Raw(ctx, `
 		mutation CreateRole($label: Label!, $ids: [ID!]) {
-			createRole(input: { label: $label, identity_ids: $ids }) {
+			createRole(input: { label: $label, user_ids: $ids }) {
 				id
 				label
 				system
@@ -268,9 +264,9 @@ func (c *Client) GetRoleByLabel(ctx context.Context, label primitives.Label) (*p
 }
 
 // GetMembersRole returns the members of a role
-func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]primitives.Identity, error) {
+func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]*primitives.User, error) {
 	var resp struct {
-		Identities []*primitives.IdentityImpl `json:"roleMembers"`
+		Users []*primitives.User `json:"roleMembers"`
 	}
 
 	variables := make(map[string]interface{})
@@ -288,105 +284,28 @@ func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]prim
 		return nil, err
 	}
 
-	return clientIdentitiesToPrimitive(resp.Identities)
+	return resp.Users, nil
 }
 
-func clientIdentitiesToPrimitive(identities []*primitives.IdentityImpl) ([]primitives.Identity, error) {
-	out := make([]primitives.Identity, len(identities))
-	for i, identity := range identities {
-		result, err := identityImplToIdentity(identity)
-		if err != nil {
-			return nil, err
-		}
-
-		out[i] = result
-	}
-
-	return out, nil
-}
-
-func identityImplToIdentity(identity *primitives.IdentityImpl) (primitives.Identity, error) {
-	typ, err := identity.ID.Type()
-	if err != nil {
-		return nil, err
-	}
-
-	switch typ {
-	case primitives.UserType:
-		return &primitives.User{IdentityImpl: identity}, nil
-	case primitives.ServicePrimitiveType:
-		return &primitives.Service{IdentityImpl: identity}, nil
-	default:
-		return nil, errors.New(UnrecognizedIdentityType, "Unknown Type: %s", typ.String())
-	}
-}
-
-// AssignmentResponse is a type alias to easily decode the
-// identity field to either a user or a service
-type AssignmentResponse model.Assignment
-
-// MarshalJSON marshaller impl for AssignmentResponse
-func (a *AssignmentResponse) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&model.Assignment{
-		ID:        a.ID,
-		Role:      a.Role,
-		Identity:  a.Identity,
-		CreatedAt: a.CreatedAt,
-		UpdatedAt: a.UpdatedAt,
-	})
-}
-
-// UnmarshalJSON is the marshaller implementation for AssignmentResponse
-func (a *AssignmentResponse) UnmarshalJSON(data []byte) error {
-	aux := &struct {
-		Identity *primitives.IdentityImpl `json:"identity"`
-		Role     *primitives.Role         `json:"role"`
-	}{}
-
-	err := json.Unmarshal(data, aux)
-	if err != nil {
-		return err
-	}
-
-	typ, err := aux.Identity.ID.Type()
-	if err != nil {
-		return err
-	}
-
-	if typ == primitives.UserType {
-		a.Identity = &primitives.User{
-			IdentityImpl: aux.Identity,
-		}
-	} else if typ == primitives.ServicePrimitiveType {
-		a.Identity = &primitives.Service{
-			IdentityImpl: aux.Identity,
-		}
-	}
-
-	a.Role = aux.Role
-
-	return nil
-}
-
-// AssignRole assigns a role to an identity
-func (c *Client) AssignRole(ctx context.Context, identityID database.ID,
+// AssignRole assigns a role to an user
+func (c *Client) AssignRole(ctx context.Context, userID database.ID,
 	roleID database.ID) (*model.Assignment, error) {
 	var resp struct {
-		Assignment AssignmentResponse `json:"assignRole"`
+		Assignment model.Assignment `json:"assignRole"`
 	}
 
 	variables := make(map[string]interface{})
 	variables["role_id"] = roleID
-	variables["identity_id"] = identityID
+	variables["user_id"] = userID
 
 	err := c.transport.Raw(ctx, `
-		mutation AssignRole($role_id: ID!, $identity_id: ID!) {
-			assignRole(input: { role_id: $role_id, identity_id: $identity_id }) {
+		mutation AssignRole($role_id: ID!, $user_id: ID!) {
+			assignRole(input: { role_id: $role_id, user_id: $user_id }) {
 				role {
 					id
 					label
 				}
-				identity {
+				user {
 					id
 					email
 				}
@@ -397,19 +316,18 @@ func (c *Client) AssignRole(ctx context.Context, identityID database.ID,
 		return nil, err
 	}
 
-	assignment := model.Assignment(resp.Assignment)
-	return &assignment, nil
+	return &resp.Assignment, nil
 }
 
-// UnassignRole unassigns a role from an identity
-func (c *Client) UnassignRole(ctx context.Context, identityID database.ID, roleID database.ID) error {
+// UnassignRole unassigns a role from an user
+func (c *Client) UnassignRole(ctx context.Context, userID database.ID, roleID database.ID) error {
 	variables := make(map[string]interface{})
 	variables["role_id"] = roleID
-	variables["identity_id"] = identityID
+	variables["user_id"] = userID
 
 	return c.transport.Raw(ctx, `
-		mutation UnassignRole($role_id: ID!, $identity_id: ID!) {
-			unassignRole(input: { role_id: $role_id, identity_id: $identity_id })
+		mutation UnassignRole($role_id: ID!, $user_id: ID!) {
+			unassignRole(input: { role_id: $role_id, user_id: $user_id })
 		}
 	`, variables, nil)
 }
@@ -457,128 +375,6 @@ func (c *Client) Setup(ctx context.Context, name primitives.Name, email primitiv
 	}
 
 	return user, nil
-}
-
-// ServiceResponse is a primitive Service with an extra Roles field
-type ServiceResponse struct {
-	*primitives.Service
-	Roles []*primitives.Role `json:"roles"`
-}
-
-// CreateService creates a new service
-func (c *Client) CreateService(ctx context.Context, service *primitives.Service) (*primitives.Service, error) {
-	var resp struct {
-		Service ServiceResponse `json:"createService"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["email"] = service.Email
-	variables["type"] = service.Type
-
-	err := c.transport.Raw(ctx, `
-		mutation CreateService($email: Email!, $type: ServiceType!) {
-			createService(input: { email: $email, type: $type}) {
-				id
-				email
-				type
-			}
-		}
-	`, variables, &resp)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Service.Service, nil
-}
-
-// DeleteService deletes a service
-func (c *Client) DeleteService(ctx context.Context, id database.ID) error {
-	variables := make(map[string]interface{})
-	variables["id"] = id
-
-	return c.transport.Raw(ctx, `
-		mutation DeleteService($id: ID!) {
-			deleteService(input: { id: $id })
-		}
-	`, variables, nil)
-}
-
-// GetService returns a service by id
-func (c *Client) GetService(ctx context.Context, id database.ID) (*primitives.Service, error) {
-	var resp struct {
-		Service ServiceResponse `json:"service"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["id"] = id
-
-	err := c.transport.Raw(ctx, `
-		query Service($id: ID!) {
-			service(id: $id) {
-				id
-				email
-				type
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Service.Service, nil
-}
-
-// GetServiceByEmail returns a service by email
-func (c *Client) GetServiceByEmail(ctx context.Context, email primitives.Email) (*primitives.Service, error) {
-	var resp struct {
-		Service ServiceResponse `json:"serviceByEmail"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["email"] = email
-
-	err := c.transport.Raw(ctx, `
-		query Service($email: Email!) {
-			serviceByEmail(email: $email) {
-				id
-				email
-				type
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Service.Service, nil
-}
-
-// ListServices returns all services
-func (c *Client) ListServices(ctx context.Context) ([]*ServiceResponse, error) {
-	var resp struct {
-		Services []*ServiceResponse `json:"services"`
-	}
-
-	err := c.transport.Raw(ctx, `
-		query Services {
-			services {
-				id
-				email
-				type
-				roles {
-					id
-					label
-				}
-			}
-		}
-	`, nil, &resp)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Services, nil
 }
 
 // CreatePolicy creates a policy on the coordinator
@@ -758,18 +554,18 @@ func (c *Client) GetRolePolicies(ctx context.Context, roleID database.ID) ([]*pr
 	return resp.Policies, nil
 }
 
-// GetIdentityPolicies returns all policies related to an identity
-func (c *Client) GetIdentityPolicies(ctx context.Context, identityID database.ID) ([]*primitives.Policy, error) {
+// GetUserPolicies returns all policies related to an user
+func (c *Client) GetUserPolicies(ctx context.Context, userID database.ID) ([]*primitives.Policy, error) {
 	var resp struct {
-		Policies []*primitives.Policy `json:"identityPolicies"`
+		Policies []*primitives.Policy `json:"userPolicies"`
 	}
 
 	variables := make(map[string]interface{})
-	variables["identity_id"] = identityID
+	variables["user_id"] = userID
 
 	err := c.transport.Raw(ctx, `
-		query IdentityPolicies($identity_id: ID!) {
-			identityPolicies(identity_id: $identity_id) {
+		query UserPolicies($user_id: ID!) {
+			userPolicies(user_id: $user_id) {
 				id
 				label
 				spec
@@ -783,17 +579,17 @@ func (c *Client) GetIdentityPolicies(ctx context.Context, identityID database.ID
 	return resp.Policies, nil
 }
 
-// GetIdentities returns all identities for the given emails
-func (c *Client) GetIdentities(ctx context.Context, emails []primitives.Email) ([]primitives.Identity, error) {
+// GetUsers returns all users for the given emails
+func (c *Client) GetUsers(ctx context.Context, emails []primitives.Email) ([]*primitives.User, error) {
 	var resp struct {
-		Identities []*primitives.IdentityImpl `json:"identities"`
+		Users []*primitives.User `json:"identities"`
 	}
 
 	variables := make(map[string]interface{})
 	variables["emails"] = emails
 
 	err := c.transport.Raw(ctx, `
-		query IdentityPolicies($emails: [Email!]) {
+		query GetUsers($emails: [Email!]) {
 			identities(emails: $emails) {
 				id
 				email
@@ -804,7 +600,7 @@ func (c *Client) GetIdentities(ctx context.Context, emails []primitives.Email) (
 		return nil, err
 	}
 
-	return clientIdentitiesToPrimitive(resp.Identities)
+	return resp.Users, nil
 }
 
 type CreateTokenMutation struct {
@@ -816,25 +612,25 @@ type CreateTokenResponse struct {
 	Response *CreateTokenMutation `json:"createToken"`
 }
 
-// CreateToken creates a new API token for the provided identity. You can pass nil and it will return a token for you
-func (c *Client) CreateToken(ctx context.Context, identity primitives.Identity) (*auth.APIToken, *primitives.Token, error) {
-	// If the user provides no identity, we will make a token for the current session user
-	if identity == nil {
+// CreateToken creates a new API token for the provided user. You can pass nil and it will return a token for you
+func (c *Client) CreateToken(ctx context.Context, user *primitives.User) (*auth.APIToken, *primitives.Token, error) {
+	// If the user provides no user, we will make a token for the current session user
+	if user == nil {
 		i, err := c.Me(ctx)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		identity = i
+		user = i
 	}
 
 	variables := make(map[string]interface{})
-	variables["identity_id"] = identity.GetID().String()
+	variables["user_id"] = user.GetID().String()
 
 	resp := &CreateTokenResponse{}
 	err := c.transport.Raw(ctx, `
-		mutation CreateToken($identity_id: ID!) {
-			createToken(input: { identity_id: $identity_id }) {
+		mutation CreateToken($user_id: ID!) {
+			createToken(input: { user_id: $user_id }) {
 				secret
 				token {
 					id
@@ -859,26 +655,26 @@ type ListTokensResponse struct {
 	IDs []database.ID `json:"tokens"`
 }
 
-// ListTokens lists all of the auth tokens for the provided identity
-func (c *Client) ListTokens(ctx context.Context, identity primitives.Identity) ([]database.ID, error) {
-	// If the user provides no identity, we will make a token for the current session user
-	if identity == nil {
+// ListTokens lists all of the auth tokens for the provided user
+func (c *Client) ListTokens(ctx context.Context, user *primitives.User) ([]database.ID, error) {
+	// If the user provides no user, we will make a token for the current session user
+	if user == nil {
 		i, err := c.Me(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		identity = i
+		user = i
 	}
 
 	var resp ListTokensResponse
 
 	variables := make(map[string]interface{})
-	variables["identity_id"] = identity.GetID()
+	variables["user_id"] = user.GetID()
 
 	err := c.transport.Raw(ctx, `
-		query Tokens($identity_id: ID!) {
-			tokens(identity_id: $identity_id)
+		query Tokens($user_id: ID!) {
+			tokens(user_id: $user_id)
 		}
     `, variables, &resp)
 

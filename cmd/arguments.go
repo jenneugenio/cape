@@ -33,19 +33,9 @@ var (
 		},
 	}
 
-	ServiceIdentifierArg = &Argument{
-		Name:        "identifier",
-		Description: "An identifier for a service in the form of an email",
-		Required:    true,
-		Processor: func(in string) (interface{}, error) {
-			// validates!!
-			return primitives.NewEmail(in)
-		},
-	}
-
-	TokenIdentityArg = &Argument{
-		Name:        "identity",
-		Description: "The identity for the owner of the token in the form of an email",
+	TokenUserArg = &Argument{
+		Name:        "user",
+		Description: "The user for the owner of the token in the form of an email",
 		Required:    false,
 		Processor: func(in string) (interface{}, error) {
 			return primitives.NewEmail(in)

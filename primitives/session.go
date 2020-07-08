@@ -17,10 +17,10 @@ import (
 // calls with the server
 type Session struct {
 	*database.Primitive
-	IdentityID database.ID   `json:"identity_id"`
-	OwnerID    database.ID   `json:"owner_id"`
-	ExpiresAt  time.Time     `json:"expires_at"`
-	Token      *base64.Value `json:"token"`
+	UserID    database.ID   `json:"user_id"`
+	OwnerID   database.ID   `json:"owner_id"`
+	ExpiresAt time.Time     `json:"expires_at"`
+	Token     *base64.Value `json:"token"`
 }
 
 type encryptedSession struct {
@@ -33,16 +33,15 @@ func (s *Session) Validate() error {
 		return errors.Wrap(InvalidSessionCause, err)
 	}
 
-	if err := s.IdentityID.Validate(); err != nil {
+	if err := s.UserID.Validate(); err != nil {
 		return errors.Wrap(InvalidSessionCause, err)
 	}
 
-	identityTypes := []types.Type{
+	userTypes := []types.Type{
 		UserType,
-		ServicePrimitiveType,
 	}
-	if !s.IdentityID.OneOf(identityTypes) {
-		return errors.New(InvalidSessionCause, "Identity ID is not a user or service")
+	if !s.UserID.OneOf(userTypes) {
+		return errors.New(InvalidSessionCause, "User ID is not a user")
 	}
 
 	if err := s.OwnerID.Validate(); err != nil {
@@ -62,16 +61,16 @@ func (s *Session) GetType() types.Type {
 }
 
 // NewSession returns a new Session struct
-func NewSession(identity CredentialProvider) (*Session, error) {
+func NewSession(cp CredentialProvider) (*Session, error) {
 	p, err := database.NewPrimitive(SessionType)
 	if err != nil {
 		return nil, err
 	}
 
 	session := &Session{
-		Primitive:  p,
-		IdentityID: identity.GetIdentityID(),
-		OwnerID:    identity.GetID(),
+		Primitive: p,
+		UserID:    cp.GetUserID(),
+		OwnerID:   cp.GetID(),
 	}
 
 	id, err := database.DeriveID(session)
@@ -110,7 +109,7 @@ func (s *Session) Decrypt(ctx context.Context, codec crypto.EncryptionCodec, dat
 	}
 
 	s.Primitive = in.Primitive
-	s.IdentityID = in.IdentityID
+	s.UserID = in.UserID
 	s.OwnerID = in.OwnerID
 	s.ExpiresAt = in.ExpiresAt
 

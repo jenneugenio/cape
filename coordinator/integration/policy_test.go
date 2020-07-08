@@ -4,10 +4,11 @@ package integration
 
 import (
 	"context"
-	"github.com/capeprivacy/cape/coordinator/database"
-	errors "github.com/capeprivacy/cape/partyerrors"
 	"io/ioutil"
 	"testing"
+
+	"github.com/capeprivacy/cape/coordinator/database"
+	errors "github.com/capeprivacy/cape/partyerrors"
 
 	gm "github.com/onsi/gomega"
 
@@ -238,7 +239,7 @@ func TestAttachments(t *testing.T) {
 		gm.Expect(len(policies)).To(gm.Equal(0))
 	})
 
-	t.Run("test get policies for identity", func(t *testing.T) {
+	t.Run("test get policies for user", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
 		label, err := primitives.NewLabel("cio-allowed")
@@ -259,7 +260,7 @@ func TestAttachments(t *testing.T) {
 		_, err = client.AttachPolicy(ctx, policy.ID, role.ID)
 		gm.Expect(err).To(gm.BeNil())
 
-		policies, err := client.GetIdentityPolicies(ctx, m.Admin.User.ID)
+		policies, err := client.GetUserPolicies(ctx, m.Admin.User.ID)
 		gm.Expect(err).To(gm.BeNil())
 
 		// 3 because of 1 create here plus global and admin default policies

@@ -14,7 +14,7 @@ import (
 
 type Token struct {
 	*database.Primitive
-	IdentityID database.ID `json:"identity_id"`
+	UserID database.ID `json:"user_id"`
 
 	// We never want to send Credentials over the wire!
 	Credentials *Credentials `json:"-" gqlgen:"-"`
@@ -38,31 +38,31 @@ func (tc *Token) Validate() error {
 		return errors.New(InvalidTokenCause, "Credentials must be non-nil")
 	}
 
-	if err := tc.IdentityID.Validate(); err != nil {
+	if err := tc.UserID.Validate(); err != nil {
 		return err
 	}
 
-	t, err := tc.IdentityID.Type()
+	t, err := tc.UserID.Type()
 	if err != nil {
 		return err
 	}
 
-	if t != UserType && t != ServicePrimitiveType {
-		return errors.New(InvalidTokenCause, "IdentityID must be a user or service")
+	if t != UserType {
+		return errors.New(InvalidTokenCause, "UserID must be a user")
 	}
 
 	return tc.Credentials.Validate()
 }
 
-func (tc *Token) GetIdentityID() database.ID {
-	return tc.IdentityID
+func (tc *Token) GetUserID() database.ID {
+	return tc.UserID
 }
 
 func (tc *Token) GetCredentials() (*Credentials, error) {
 	return tc.Credentials, nil
 }
 
-func NewToken(identityID database.ID, creds *Credentials) (*Token, error) {
+func NewToken(userID database.ID, creds *Credentials) (*Token, error) {
 	p, err := database.NewPrimitive(TokenPrimitiveType)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func NewToken(identityID database.ID, creds *Credentials) (*Token, error) {
 
 	tc := &Token{
 		Primitive:   p,
-		IdentityID:  identityID,
+		UserID:      userID,
 		Credentials: creds,
 	}
 
@@ -119,7 +119,7 @@ func (tc *Token) Decrypt(ctx context.Context, codec crypto.EncryptionCodec, data
 	}
 
 	tc.Primitive = in.Primitive
-	tc.IdentityID = in.IdentityID
+	tc.UserID = in.UserID
 
 	tc.Credentials = creds
 	return nil
@@ -132,7 +132,7 @@ func (tc *Token) GetEncryptable() bool {
 // GenerateToken returns an instantiated token for use in unit testing.
 //
 // This function _should only ever_ be used inside of a test.
-func GenerateToken(identity Identity) (Password, *Token, error) {
+func GenerateToken(user *User) (Password, *Token, error) {
 	password, err := GeneratePassword()
 	if err != nil {
 		return EmptyPassword, nil, err
@@ -143,6 +143,6 @@ func GenerateToken(identity Identity) (Password, *Token, error) {
 		return EmptyPassword, nil, err
 	}
 
-	token, err := NewToken(identity.GetID(), c)
+	token, err := NewToken(user.GetID(), c)
 	return password, token, err
 }

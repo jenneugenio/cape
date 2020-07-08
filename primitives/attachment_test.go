@@ -32,9 +32,9 @@ func TestAttachment(t *testing.T) {
 	})
 
 	tests := []struct {
-		name       string
-		identityID database.ID
-		roleID     database.ID
+		name   string
+		userID database.ID
+		roleID database.ID
 	}{
 		{
 			"invalid policy id",
@@ -50,7 +50,7 @@ func TestAttachment(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := NewAttachment(tc.identityID, tc.roleID)
+			_, err := NewAttachment(tc.userID, tc.roleID)
 			gm.Expect(err).ToNot(gm.BeNil())
 			gm.Expect(errors.CausedBy(err, InvalidAttachmentCause)).To(gm.BeTrue())
 		})

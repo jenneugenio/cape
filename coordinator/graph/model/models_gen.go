@@ -11,16 +11,16 @@ import (
 )
 
 type AssignRoleRequest struct {
-	RoleID     database.ID `json:"role_id"`
-	IdentityID database.ID `json:"identity_id"`
+	RoleID database.ID `json:"role_id"`
+	UserID database.ID `json:"user_id"`
 }
 
 type Assignment struct {
-	ID        database.ID         `json:"id"`
-	Role      *primitives.Role    `json:"role"`
-	Identity  primitives.Identity `json:"identity"`
-	CreatedAt time.Time           `json:"created_at"`
-	UpdatedAt time.Time           `json:"updated_at"`
+	ID        database.ID      `json:"id"`
+	Role      *primitives.Role `json:"role"`
+	User      *primitives.User `json:"user"`
+	CreatedAt time.Time        `json:"created_at"`
+	UpdatedAt time.Time        `json:"updated_at"`
 }
 
 type AttachPolicyRequest struct {
@@ -58,17 +58,12 @@ type CreateRecoveryRequest struct {
 }
 
 type CreateRoleRequest struct {
-	Label       primitives.Label `json:"label"`
-	IdentityIds []database.ID    `json:"identity_ids"`
-}
-
-type CreateServiceRequest struct {
-	Email primitives.Email       `json:"email"`
-	Type  primitives.ServiceType `json:"type"`
+	Label   primitives.Label `json:"label"`
+	UserIds []database.ID    `json:"user_ids"`
 }
 
 type CreateTokenRequest struct {
-	IdentityID database.ID `json:"identity_id"`
+	UserID database.ID `json:"user_id"`
 }
 
 type CreateTokenResponse struct {
@@ -95,10 +90,6 @@ type DeleteRecoveriesRequest struct {
 }
 
 type DeleteRoleRequest struct {
-	ID database.ID `json:"id"`
-}
-
-type DeleteServiceRequest struct {
 	ID database.ID `json:"id"`
 }
 

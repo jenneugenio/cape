@@ -22,11 +22,11 @@ import (
 	pkgerrors "errors"
 )
 
-// QueryIdentityPolicies is a helper function to query all roles assigned to an identity and then
+// QueryUserPolicies is a helper function to query all roles assigned to an user and then
 // all policies attached to those roles.
-func QueryIdentityPolicies(ctx context.Context, db database.Querier, identityID database.ID) ([]*primitives.Policy, error) {
+func QueryUserPolicies(ctx context.Context, db database.Querier, userID database.ID) ([]*primitives.Policy, error) {
 	var assignments []*primitives.Assignment
-	assignmentFilter := database.NewFilter(database.Where{"identity_id": identityID.String()}, nil, nil)
+	assignmentFilter := database.NewFilter(database.Where{"user_id": userID.String()}, nil, nil)
 	err := db.Query(ctx, &assignments, assignmentFilter)
 	if err != nil {
 		return nil, err
@@ -64,10 +64,10 @@ func QueryIdentityPolicies(ctx context.Context, db database.Querier, identityID 
 	return policies, nil
 }
 
-func QueryRoles(ctx context.Context, db database.Querier, identityID database.ID) ([]*primitives.Role, error) {
+func QueryRoles(ctx context.Context, db database.Querier, userID database.ID) ([]*primitives.Role, error) {
 	var assignments []*primitives.Assignment
 	filter := database.NewFilter(database.Where{
-		"identity_id": identityID,
+		"user_id": userID,
 	}, nil, nil)
 	err := db.Query(ctx, &assignments, filter)
 	if err != nil {
@@ -312,12 +312,12 @@ func GetRolesByLabel(ctx context.Context, db database.Querier, labels []primitiv
 }
 
 // CreateAssignments is a helper function that makes it easy to assign roles to
-// a given identity.
+// a given user.
 func CreateAssignments(ctx context.Context, db database.Querier,
-	identity primitives.Identity, roles []*primitives.Role) error {
+	user *primitives.User, roles []*primitives.Role) error {
 	assignments := make([]database.Entity, len(roles))
 	for i, role := range roles {
-		assignment, err := primitives.NewAssignment(identity.GetID(), role.ID)
+		assignment, err := primitives.NewAssignment(user.GetID(), role.ID)
 		if err != nil {
 			return err
 		}

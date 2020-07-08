@@ -14,18 +14,18 @@ import (
 
 func init() {
 	tokensCreateCmd := &Command{
-		Usage: "Creates a token for the specified identity",
+		Usage: "Creates a token for the specified user",
 		Examples: []*Example{
 			{
 				Example:     "cape tokens create",
 				Description: "Creates a token for the current user",
 			},
 			{
-				Example:     "cape tokens create service:user@cape.com",
-				Description: "Creates a token for the service labelled my-service",
+				Example:     "cape tokens create user@cape.com",
+				Description: "Creates a token for the user with the email user@cape.com",
 			},
 		},
-		Arguments: []*Argument{TokenIdentityArg},
+		Arguments: []*Argument{TokenUserArg},
 		Command: &cli.Command{
 			Name:   "create",
 			Action: handleSessionOverrides(createTokenCmd),
@@ -33,18 +33,18 @@ func init() {
 	}
 
 	tokensListCmd := &Command{
-		Usage: "Lists the tokens ids for a specified identity",
+		Usage: "Lists the tokens ids for a specified user",
 		Examples: []*Example{
 			{
 				Example:     "cape tokens list",
 				Description: "Lists the token ids for the current user",
 			},
 			{
-				Example:     "cape tokens create service:data-user@cape.com",
-				Description: "Lists the token ids for the service with email service:data-user@cape.com",
+				Example:     "cape tokens create data-user@cape.com",
+				Description: "Lists the token ids for the user with email data-user@cape.com",
 			},
 		},
-		Arguments: []*Argument{TokenIdentityArg},
+		Arguments: []*Argument{TokenUserArg},
 		Command: &cli.Command{
 			Name:   "list",
 			Action: handleSessionOverrides(listTokenCmd),
@@ -81,30 +81,30 @@ func init() {
 	commands = append(commands, tokensCmd.Package())
 }
 
-func getIdentity(ctx context.Context, client *coordinator.Client) (primitives.Identity, error) {
-	var identity primitives.Identity
-	identifier, ok := Arguments(ctx, TokenIdentityArg).(primitives.Email)
+func getUser(ctx context.Context, client *coordinator.Client) (*primitives.User, error) {
+	var user *primitives.User
+	identifier, ok := Arguments(ctx, TokenUserArg).(primitives.Email)
 	if ok {
-		identities, err := client.GetIdentities(ctx, []primitives.Email{identifier})
+		users, err := client.GetUsers(ctx, []primitives.Email{identifier})
 		if err != nil {
 			return nil, err
 		}
 
-		if len(identities) == 0 {
-			return nil, errors.New(NoIdentityCause, "Identity with email %s not found", identifier.String())
+		if len(users) == 0 {
+			return nil, errors.New(NoUserCause, "User with email %s not found", identifier.String())
 		}
 
-		identity = identities[0]
+		user = users[0]
 	} else {
 		i, err := client.Me(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		identity = i
+		user = i
 	}
 
-	return identity, nil
+	return user, nil
 }
 
 func createTokenCmd(c *cli.Context) error {
@@ -114,18 +114,18 @@ func createTokenCmd(c *cli.Context) error {
 		return err
 	}
 
-	identity, err := getIdentity(c.Context, client)
+	user, err := getUser(c.Context, client)
 	if err != nil {
 		return err
 	}
 
-	apiToken, _, err := client.CreateToken(c.Context, identity)
+	apiToken, _, err := client.CreateToken(c.Context, user)
 	if err != nil {
 		return err
 	}
 
 	u := provider.UI(c.Context)
-	err = u.Template("A token for {{ . | bold }} has been created!\n\n", identity.GetEmail().String())
+	err = u.Template("A token for {{ . | bold }} has been created!\n\n", user.GetEmail().String())
 	if err != nil {
 		return err
 	}
@@ -150,12 +150,12 @@ func listTokenCmd(c *cli.Context) error {
 		return err
 	}
 
-	identity, err := getIdentity(c.Context, client)
+	user, err := getUser(c.Context, client)
 	if err != nil {
 		return err
 	}
 
-	tokenIDs, err := client.ListTokens(c.Context, identity)
+	tokenIDs, err := client.ListTokens(c.Context, user)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/coordinator/database"
@@ -73,12 +74,12 @@ func init() {
 	}
 
 	membersCmd := &Command{
-		Usage:     "Lists all the identities assigned a role",
+		Usage:     "Lists all the users assigned a role",
 		Arguments: []*Argument{RoleLabelArg},
 		Examples: []*Example{
 			{
 				Example:     "cape roles members admin",
-				Description: "Lists all the identities assigned role admin",
+				Description: "Lists all the users assigned role admin",
 			},
 		},
 		Command: &cli.Command{
@@ -126,17 +127,17 @@ func rolesCreateCmd(c *cli.Context) error {
 		emails[i] = email
 	}
 
-	identities, err := client.GetIdentities(c.Context, emails)
+	users, err := client.GetUsers(c.Context, emails)
 	if err != nil {
 		return err
 	}
 
-	identityIDs := make([]database.ID, len(identities))
-	for i, identity := range identities {
-		identityIDs[i] = identity.GetID()
+	userIDs := make([]database.ID, len(users))
+	for i, user := range users {
+		userIDs[i] = user.GetID()
 	}
 
-	_, err = client.CreateRole(c.Context, label, identityIDs)
+	_, err = client.CreateRole(c.Context, label, userIDs)
 	if err != nil {
 		return err
 	}
@@ -221,27 +222,15 @@ func rolesMembersCmd(c *cli.Context) error {
 		return err
 	}
 
-	identities, err := client.GetMembersRole(c.Context, role.ID)
+	users, err := client.GetMembersRole(c.Context, role.ID)
 	if err != nil {
 		return err
 	}
 
-	header := []string{"Type", "Email"}
-	body := make([][]string, len(identities))
-	for i, identity := range identities {
-		typ, err := identity.GetID().Type()
-		if err != nil {
-			return err
-		}
-
-		typeStr := ""
-		if typ == primitives.UserType {
-			typeStr = primitives.UserType.String()
-		} else if typ == primitives.ServicePrimitiveType {
-			typeStr = primitives.ServicePrimitiveType.String()
-		}
-
-		body[i] = []string{typeStr, identity.GetEmail().String()}
+	header := []string{"Email"}
+	body := make([][]string, len(users))
+	for i, user := range users {
+		body[i] = []string{user.GetEmail().String()}
 	}
 
 	return u.Table(header, body)

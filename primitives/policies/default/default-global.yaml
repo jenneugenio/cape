@@ -11,22 +11,19 @@ rules:
   - target: "tokens:*"
     action: read
     effect: allow
-  # Identities can create a session for themselves
+  # Users can create a session for themselves
   - target: "sessions:*"
     action: create
     effect: allow
-  # Identities can delete a session for themselves
+  # Users can delete a session for themselves
   - target: "sessions:*"
     action: delete
     effect: allow
-  # All identities can list all users and services
+  # All users can list all users
   - target: "users:*"
     action: read
     effect: allow
-  - target: "services:*"
-    action: read
-    effect: allow
-  # All identities can list all roles, their attachments, and assignments
+  # All users can list all roles, their attachments, and assignments
   - target: "roles:*"
     action: read
     effect: allow
@@ -36,7 +33,7 @@ rules:
   - target: "assignments:*"
     action: read
     effect: allow
-  # All identities can list all policies and their attachments
+  # All users can list all policies and their attachments
   - target: "policies:*"
     action: read
     effect: allow

@@ -8,7 +8,7 @@ type Role {
 
 input CreateRoleRequest {
   label: Label!
-  identity_ids: [ID!]
+  user_ids: [ID!]
 }
 
 input DeleteRoleRequest {
@@ -17,14 +17,14 @@ input DeleteRoleRequest {
 
 input AssignRoleRequest {
   role_id: ID!
-  identity_id: ID!
+  user_id: ID!
 }
 
 extend type Query {
   role(id: ID!): Role!
   roleByLabel(label: Label!): Role!
   roles: [Role!]
-  roleMembers(role_id: ID!): [Identity!]
+  roleMembers(role_id: ID!): [User!]
 }
 
 extend type Mutation {

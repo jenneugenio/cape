@@ -1,24 +1,10 @@
 # ------------------------------------------------------------------
-# BEGIN INTERFACES
-#
-# These are common values on our types
-# ------------------------------------------------------------------
-
-interface Identity {
-  id: ID!
-  email: Email!
-  created_at: Time!
-  updated_at: Time!
-  name: Name!
-}
-
-# ------------------------------------------------------------------
 # BEGIN PRIMITIVES
 #
 # These map to objects in the primitives package
 # ------------------------------------------------------------------
 
-type User implements Identity {
+type User {
   id: ID!
   name: Name!
   email: Email!
@@ -34,7 +20,7 @@ type CreateUserResponse {
 
 type Session {
   id: ID!
-  identity_id: ID!
+  user_id: ID!
   owner_id: ID!
   expires_at: Time!
   token: Base64!
@@ -43,7 +29,7 @@ type Session {
 type Assignment {
   id: ID!
   role: Role!
-  identity: Identity!
+  user: User!
   created_at: Time!
   updated_at: Time!
 }
@@ -87,9 +73,9 @@ input DeleteSessionRequest {
 type Query {
   user(id: ID!): User!
   users: [User!]
-  me: Identity!
+  me: User!
 
-  identities(emails: [Email!]): [Identity!]
+  identities(emails: [Email!]): [User!]
 }
 
 type Mutation {

@@ -73,7 +73,7 @@ func LoginHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.Toke
 
 		provider, err := getCredentialProvider(r.Context(), db, input)
 		if err != nil {
-			logger.Info().Err(err).Msgf("Could not retrieve identity for create session request, email: %s token_id: %s", input.Email, input.TokenID)
+			logger.Info().Err(err).Msgf("Could not retrieve user for create session request, email: %s token_id: %s", input.Email, input.TokenID)
 			respondWithError(w, auth.ErrAuthentication)
 			return
 		}

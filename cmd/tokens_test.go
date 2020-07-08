@@ -20,7 +20,7 @@ func TestCreateToken(t *testing.T) {
 	creds, err := primitives.GenerateCredentials()
 	gm.Expect(err).To(gm.BeNil())
 
-	me := coordinator.MeResponse{Identity: &primitives.IdentityImpl{
+	me := coordinator.MeResponse{User: &primitives.User{
 		Primitive: &database.Primitive{
 			ID: user.ID,
 		},
@@ -54,7 +54,7 @@ func TestCreateToken(t *testing.T) {
 		gm.Expect(len(u.Calls)).To(gm.Equal(3))
 
 		gm.Expect(u.Calls[0].Name).To(gm.Equal("template"))
-		gm.Expect(u.Calls[0].Args[1]).To(gm.Equal(me.Identity.Email.String()))
+		gm.Expect(u.Calls[0].Args[1]).To(gm.Equal(me.User.Email.String()))
 
 		gm.Expect(u.Calls[1].Name).To(gm.Equal("details"))
 		gm.Expect(u.Calls[2].Name).To(gm.Equal("notify"))

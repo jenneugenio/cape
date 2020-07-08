@@ -5,8 +5,6 @@ import (
 )
 
 var (
-	InvalidServiceCause            = errors.NewCause(errors.BadRequestCategory, "invalid_service")
-	InvalidServiceType             = errors.NewCause(errors.BadRequestCategory, "invalid_service_type")
 	InvalidTokenType               = errors.NewCause(errors.BadRequestCategory, "invalid_token_type")
 	InvalidSourceType              = errors.NewCause(errors.BadRequestCategory, "invalid_source_type")
 	InvalidSourceCause             = errors.NewCause(errors.BadRequestCategory, "invalid_source")

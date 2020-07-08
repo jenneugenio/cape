@@ -9,14 +9,6 @@ rules:
   - target: "users:*"
     action: delete
     effect: allow
-  # Only admins can create services
-  - target: "services:*"
-    action: create
-    effect: allow
-  # Only an admin can delete a service
-  - target: "services:*"
-    action: delete
-    effect: allow
   # Only an admin can create a role
   - target: "roles:*"
     action: create

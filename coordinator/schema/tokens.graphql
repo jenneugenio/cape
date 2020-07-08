@@ -1,6 +1,6 @@
 type Token {
     id: ID!
-    identity_id: ID!
+    user_id: ID!
 }
 
 type CreateTokenResponse {
@@ -9,11 +9,11 @@ type CreateTokenResponse {
 }
 
 input CreateTokenRequest {
-    identity_id: ID!
+    user_id: ID!
 }
 
 extend type Query {
-    tokens(identity_id: ID!): [ID!]!
+    tokens(user_id: ID!): [ID!]!
 }
 
 extend type Mutation {

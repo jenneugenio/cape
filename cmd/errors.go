@@ -15,9 +15,9 @@ var (
 	// ClusterExistsCause happens when you try to create a new cluster that already exists
 	ClusterExistsCause = errors.NewCause(errors.BadRequestCategory, "cluster_already_exists")
 
-	// NoIdentityCause happens when you try to do something on an identity that you do not have access to
+	// NoUserCause happens when you try to do something on an user that you do not have access to
 	// or does not exist
-	NoIdentityCause = errors.NewCause(errors.BadRequestCategory, "identity_not_found")
+	NoUserCause = errors.NewCause(errors.BadRequestCategory, "user_not_found")
 
 	InvalidPortCause = errors.NewCause(errors.BadRequestCategory, "invalid_port")
 

@@ -14,7 +14,9 @@ import (
 
 // User represents a user of the system
 type User struct {
-	*IdentityImpl
+	*database.Primitive
+	Name  Name  `json:"name"`
+	Email Email `json:"email"`
 
 	// We never want to send Credentials over the wire!
 	Credentials *Credentials `json:"-" gqlgen:"-"`
@@ -59,26 +61,24 @@ func NewUser(name Name, email Email, creds *Credentials) (*User, error) {
 
 	user := &User{
 		Credentials: creds,
-		IdentityImpl: &IdentityImpl{
-			Primitive: p,
-			Email:     email,
-			Name:      name,
-		},
+		Primitive:   p,
+		Email:       email,
+		Name:        name,
 	}
 
 	return user, user.Validate()
 }
 
-func (u *User) GetIdentityID() database.ID {
+func (u *User) GetUserID() database.ID {
 	return u.ID
 }
 
-// GetCredentials satisfies Identity interface
+// GetCredentials returns the credentials
 func (u *User) GetCredentials() (*Credentials, error) {
 	return u.Credentials, nil
 }
 
-// GetEmail satisfies the Identity interface
+// GetEmail returns the email
 func (u *User) GetEmail() Email {
 	return u.Email
 }
@@ -118,7 +118,9 @@ func (u *User) Decrypt(ctx context.Context, codec crypto.EncryptionCodec, data [
 		return err
 	}
 
-	u.IdentityImpl = in.IdentityImpl
+	u.Email = in.Email
+	u.Name = in.Name
+	u.Primitive = in.Primitive
 	u.Credentials = creds
 	return nil
 }

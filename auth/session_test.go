@@ -21,7 +21,7 @@ func TestCan(t *testing.T) {
 	creds, err := DefaultSHA256Producer.Generate(password)
 	gm.Expect(err).To(gm.BeNil())
 
-	t.Run("GetID returns the identity id", func(t *testing.T) {
+	t.Run("GetID returns the user id", func(t *testing.T) {
 		_, user, err := primitives.GenerateUser("hiho", "jerry@berry.jerry")
 		gm.Expect(err).To(gm.BeNil())
 

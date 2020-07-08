@@ -73,7 +73,7 @@ func TestUsers(t *testing.T) {
 	t.Run("Can query ME and get my name", func(t *testing.T) {
 		me, err := client.Me(ctx)
 		gm.Expect(err).To(gm.BeNil())
-		name := me.GetName()
+		name := me.Name
 		gm.Expect(name).To(gm.Equal(primitives.Name("admin")))
 	})
 }

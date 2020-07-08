@@ -252,26 +252,17 @@ func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAu
 				return
 			}
 
-			identityType, err := session.IdentityID.Type()
+			var credentialProvider primitives.CredentialProvider
+			user := &primitives.User{}
+			err = db.Get(ctx, session.UserID, user)
 			if err != nil {
-				msg := "Could not authenticate. Unable get credentialProvider type"
-				logger.Info().Err(err).Msg(msg)
+				msg := "Could not authenticate. Unable to find credentialProvider"
+				logger.Error().Err(err).Msg(msg)
 				respondWithGQLError(rw, auth.ErrAuthentication)
 				return
 			}
 
-			var credentialProvider primitives.CredentialProvider
-			if ownerType == primitives.UserType {
-				user := &primitives.User{}
-				err = db.Get(ctx, session.IdentityID, user)
-				if err != nil {
-					msg := "Could not authenticate. Unable to find credentialProvider"
-					logger.Error().Err(err).Msg(msg)
-					respondWithGQLError(rw, auth.ErrAuthentication)
-					return
-				}
-				credentialProvider = user
-			} else if ownerType == primitives.TokenPrimitiveType {
+			if ownerType == primitives.TokenPrimitiveType {
 				token := &primitives.Token{}
 				err = db.Get(ctx, session.OwnerID, token)
 				if err != nil {
@@ -281,50 +272,29 @@ func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAu
 					return
 				}
 				credentialProvider = token
+			} else {
+				credentialProvider = user
 			}
 
-			var identity primitives.Identity
-			if identityType == primitives.UserType {
-				user := &primitives.User{}
-				err = db.Get(ctx, session.IdentityID, user)
-				if err != nil {
-					msg := "Could not authenticate. Unable to find identity"
-					logger.Error().Err(err).Msg(msg)
-					respondWithGQLError(rw, auth.ErrAuthentication)
-					return
-				}
-				identity = user
-			} else if identityType == primitives.ServicePrimitiveType {
-				service := &primitives.Service{}
-				err = db.Get(ctx, session.IdentityID, service)
-				if err != nil {
-					msg := "Could not authenticate. Unable to find identity"
-					logger.Error().Err(err).Msg(msg)
-					respondWithGQLError(rw, auth.ErrAuthentication)
-					return
-				}
-				identity = service
-			}
-
-			policies, err := QueryIdentityPolicies(ctx, db, identity.GetID())
+			policies, err := QueryUserPolicies(ctx, db, user.GetID())
 			if err != nil {
 				respondWithGQLError(rw, err)
 				return
 			}
 
-			roles, err := QueryRoles(ctx, db, identity.GetID())
+			roles, err := QueryRoles(ctx, db, user.GetID())
 			if err != nil {
 				respondWithGQLError(rw, err)
 				return
 			}
 
-			aSession, err := auth.NewSession(identity, session, policies, roles, credentialProvider)
+			aSession, err := auth.NewSession(user, session, policies, roles, credentialProvider)
 			if err != nil {
 				respondWithGQLError(rw, err)
 				return
 			}
 
-			logger = logger.With().Str("identity_id", aSession.GetID().String()).Logger()
+			logger = logger.With().Str("user_id", aSession.GetID().String()).Logger()
 
 			ctx = context.WithValue(ctx, LoggerContextKey, logger)
 			ctx = context.WithValue(ctx, SessionContextKey, aSession)

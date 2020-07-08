@@ -72,11 +72,11 @@ func TestRoles(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(role).ToNot(gm.BeNil())
 
-		identities, err := client.GetMembersRole(ctx, role.ID)
+		users, err := client.GetMembersRole(ctx, role.ID)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(len(identities)).To(gm.Equal(1))
+		gm.Expect(len(users)).To(gm.Equal(1))
 
-		gm.Expect(identities[0].GetID()).To(gm.Equal(m.Admin.User.ID))
+		gm.Expect(users[0].GetID()).To(gm.Equal(m.Admin.User.ID))
 	})
 
 	t.Run("create role with multiple members", func(t *testing.T) {
@@ -98,12 +98,12 @@ func TestRoles(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(role).ToNot(gm.BeNil())
 
-		identities, err := client.GetMembersRole(ctx, role.ID)
+		users, err := client.GetMembersRole(ctx, role.ID)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(len(identities)).To(gm.Equal(2))
+		gm.Expect(len(users)).To(gm.Equal(2))
 
-		gm.Expect(identities[0].GetID()).To(gm.Equal(m.Admin.User.ID))
-		gm.Expect(identities[1].GetID()).To(gm.Equal(user.ID))
+		gm.Expect(users[0].GetID()).To(gm.Equal(m.Admin.User.ID))
+		gm.Expect(users[1].GetID()).To(gm.Equal(user.ID))
 	})
 
 	t.Run("Roles will not default to system roles", func(t *testing.T) {
@@ -204,15 +204,15 @@ func TestAssignments(t *testing.T) {
 		assignment, err := client.AssignRole(ctx, m.Admin.User.ID, role.ID)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(assignment).NotTo(gm.BeNil())
-		gm.Expect(assignment.Identity.GetID()).To(gm.Equal(m.Admin.User.ID))
+		gm.Expect(assignment.User.GetID()).To(gm.Equal(m.Admin.User.ID))
 		gm.Expect(assignment.Role.Label).To(gm.Equal(label))
 
-		identities, err := client.GetMembersRole(ctx, role.ID)
+		users, err := client.GetMembersRole(ctx, role.ID)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(len(identities)).To(gm.Equal(1))
+		gm.Expect(len(users)).To(gm.Equal(1))
 
-		gm.Expect(identities[0].GetID()).To(gm.Equal(m.Admin.User.ID))
+		gm.Expect(users[0].GetID()).To(gm.Equal(m.Admin.User.ID))
 	})
 
 	t.Run("unassign role", func(t *testing.T) {
@@ -230,9 +230,9 @@ func TestAssignments(t *testing.T) {
 		err = client.UnassignRole(ctx, m.Admin.User.ID, role.ID)
 		gm.Expect(err).To(gm.BeNil())
 
-		identities, err := client.GetMembersRole(ctx, role.ID)
+		users, err := client.GetMembersRole(ctx, role.ID)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(len(identities)).To(gm.Equal(0))
+		gm.Expect(len(users)).To(gm.Equal(0))
 	})
 }

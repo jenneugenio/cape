@@ -9,8 +9,8 @@ import (
 // Assignment represents a policy being applied/attached to a role
 type Assignment struct {
 	*database.Primitive
-	IdentityID database.ID `json:"identity_id"`
-	RoleID     database.ID `json:"role_id"`
+	UserID database.ID `json:"user_id"`
+	RoleID database.ID `json:"role_id"`
 }
 
 func (a *Assignment) Validate() error {
@@ -18,17 +18,17 @@ func (a *Assignment) Validate() error {
 		return errors.Wrap(InvalidAssignmentCause, err)
 	}
 
-	if err := a.IdentityID.Validate(); err != nil {
-		return errors.New(InvalidAssignmentCause, "Assignment identity id must be valid")
+	if err := a.UserID.Validate(); err != nil {
+		return errors.New(InvalidAssignmentCause, "Assignment user id must be valid")
 	}
 
-	typ, err := a.IdentityID.Type()
+	typ, err := a.UserID.Type()
 	if err != nil {
-		return errors.New(InvalidAssignmentCause, "Invalid Identity ID provided")
+		return errors.New(InvalidAssignmentCause, "Invalid User ID provided")
 	}
 
-	if typ != UserType && typ != ServicePrimitiveType {
-		return errors.New(InvalidAssignmentCause, "Invalid Identity ID provided")
+	if typ != UserType {
+		return errors.New(InvalidAssignmentCause, "Invalid User ID provided")
 	}
 
 	if err := a.RoleID.Validate(); err != nil {
@@ -53,7 +53,7 @@ func (a *Assignment) GetType() types.Type {
 }
 
 // NewAssignment returns a new Assignment
-func NewAssignment(identityID, roleID database.ID) (*Assignment, error) {
+func NewAssignment(userID, roleID database.ID) (*Assignment, error) {
 	p, err := database.NewPrimitive(AssignmentType)
 	if err != nil {
 		return nil, err
@@ -62,9 +62,9 @@ func NewAssignment(identityID, roleID database.ID) (*Assignment, error) {
 	// An Assignment is considered an immutable type in our object system (as
 	// defined by the type)
 	a := &Assignment{
-		Primitive:  p,
-		IdentityID: identityID,
-		RoleID:     roleID,
+		Primitive: p,
+		UserID:    userID,
+		RoleID:    roleID,
 	}
 
 	ID, err := database.DeriveID(a)

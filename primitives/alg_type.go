@@ -35,7 +35,7 @@ func (c *CredentialsAlgType) String() string {
 	return string(*c)
 }
 
-// Validate checks to see if the service type is valid
+// Validate checks to see if the algorithm type is valid
 func (c *CredentialsAlgType) Validate() error {
 	switch *c {
 	case Argon2ID:

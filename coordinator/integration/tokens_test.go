@@ -142,27 +142,4 @@ func TestTokens(t *testing.T) {
 			gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Can only create a token for yourself"))
 		})
 	})
-
-	t.Run("service tokens", func(t *testing.T) {
-		email, err := primitives.NewEmail("service:service@service.com")
-		gm.Expect(err).To(gm.BeNil())
-
-		service, err := primitives.NewService(email, primitives.UserServiceType)
-		gm.Expect(err).To(gm.BeNil())
-
-		service, err = client.CreateService(ctx, service)
-		gm.Expect(err).To(gm.BeNil())
-
-		t.Run("admin can create service token", func(t *testing.T) {
-			apiToken, token, err := client.CreateToken(ctx, service)
-			gm.Expect(err).To(gm.BeNil())
-			gm.Expect(token).ToNot(gm.BeNil())
-			gm.Expect(apiToken).ToNot(gm.BeNil())
-		})
-
-		t.Run("regular use cannot create a service token", func(t *testing.T) {
-			_, _, err := userClient.CreateToken(ctx, service)
-			gm.Expect(err).NotTo(gm.BeNil())
-		})
-	})
 }

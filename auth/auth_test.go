@@ -25,7 +25,7 @@ func TestDefaultAdminPolicy(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(session).ToNot(gm.BeNil())
 
-	testCases := []string{"users", "services", "assignments", "attachments", "roles", "policies", "tokens"}
+	testCases := []string{"users", "assignments", "attachments", "roles", "policies", "tokens"}
 
 	for _, primitive := range testCases {
 		t.Run(fmt.Sprintf("allowed create for %s", primitive), func(t *testing.T) {
@@ -69,7 +69,6 @@ func TestDefaultGlobalPolicy(t *testing.T) {
 		{"sessions", primitives.Create},
 		{"sessions", primitives.Delete},
 		{"users", primitives.Read},
-		{"services", primitives.Read},
 		{"attachments", primitives.Read},
 		{"roles", primitives.Read},
 		{"policies", primitives.Read},
@@ -85,7 +84,7 @@ func TestDefaultGlobalPolicy(t *testing.T) {
 		})
 	}
 
-	deniedTestCases := []string{"users", "services", "assignments", "attachments", "roles", "policies"}
+	deniedTestCases := []string{"users", "assignments", "attachments", "roles", "policies"}
 
 	for _, primitive := range deniedTestCases {
 		t.Run(fmt.Sprintf("denied create for %s", primitive), func(t *testing.T) {

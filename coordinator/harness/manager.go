@@ -6,9 +6,7 @@ import (
 
 	"github.com/manifoldco/go-base64"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator"
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -22,12 +20,6 @@ type User struct {
 	User     *primitives.User
 	Password primitives.Password
 	Token    *base64.Value
-}
-
-// Service represents a service in the cape coordinator
-type Service struct {
-	ID    database.ID
-	Token *auth.APIToken
 }
 
 // Manager represents an application state manager on-top of the Coordinator's

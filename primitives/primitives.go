@@ -9,13 +9,10 @@ var (
 	// UserType represents a user (ie a person)
 	UserType types.Type = 0x000
 
-	// ServicePrimitiveType is a service (e.g. another machine)
-	ServicePrimitiveType types.Type = 0x001
-
 	// TokenPrimitiveType is a token representing an authenticated user
 	TokenPrimitiveType types.Type = 0x002
 
-	// RoleType represents a role, which is attached to users/services to determine what they can or cannot do
+	// RoleType represents a role, which is attached to users to determine what they can or cannot do
 	RoleType types.Type = 0x003
 
 	// PolicyType represents a policy, which dictates how roles must be use
@@ -24,10 +21,10 @@ var (
 	// AttachmentType represents a policy being attached to a role
 	AttachmentType types.Type = 0x005
 
-	// AssignmentType represents a role being applied to an identity
+	// AssignmentType represents a role being applied to a user
 	AssignmentType types.Type = 0x006
 
-	// SessionType represents a session between a user/services & the system
+	// SessionType represents a session between a user & the system
 	SessionType types.Type = 0x007
 
 	// SourcePrimitiveType represents an external database/dataset
@@ -51,7 +48,6 @@ var (
 
 func init() {
 	types.Register(UserType, "users", true)
-	types.Register(ServicePrimitiveType, "services", true)
 	types.Register(TokenPrimitiveType, "tokens", false)
 	types.Register(RoleType, "roles", true)
 	types.Register(PolicyType, "policies", true)

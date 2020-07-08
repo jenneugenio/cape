@@ -34,9 +34,9 @@ func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRol
 		return nil, err
 	}
 
-	if len(input.IdentityIds) > 0 {
-		assignments := make([]database.Entity, len(input.IdentityIds))
-		for i, id := range input.IdentityIds {
+	if len(input.UserIds) > 0 {
+		assignments := make([]database.Entity, len(input.UserIds))
+		for i, id := range input.UserIds {
 			assignment, err := primitives.NewAssignment(id, role.ID)
 			if err != nil {
 				return nil, err
@@ -83,7 +83,7 @@ func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRol
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	assignment, err := primitives.NewAssignment(input.IdentityID, input.RoleID)
+	assignment, err := primitives.NewAssignment(input.UserID, input.RoleID)
 	if err != nil {
 		return nil, err
 	}
@@ -99,19 +99,8 @@ func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRol
 		return nil, err
 	}
 
-	typ, err := input.IdentityID.Type()
-	if err != nil {
-		return nil, err
-	}
-
-	var identity primitives.Identity
-	if typ == primitives.UserType {
-		identity = &primitives.User{}
-	} else if typ == primitives.ServicePrimitiveType {
-		identity = &primitives.Service{}
-	}
-
-	err = enforcer.Get(ctx, input.IdentityID, identity)
+	user := &primitives.User{}
+	err = enforcer.Get(ctx, input.UserID, user)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +110,7 @@ func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRol
 		CreatedAt: assignment.CreatedAt,
 		UpdatedAt: assignment.UpdatedAt,
 		Role:      role,
-		Identity:  identity,
+		User:      user,
 	}, nil
 }
 
@@ -132,8 +121,8 @@ func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignR
 	assignment := &primitives.Assignment{}
 
 	filter := database.NewFilter(database.Where{
-		"role_id":     input.RoleID.String(),
-		"identity_id": input.IdentityID.String(),
+		"role_id": input.RoleID.String(),
+		"user_id": input.UserID.String(),
 	}, nil, nil)
 
 	err := enforcer.QueryOne(ctx, assignment, filter)
@@ -188,7 +177,7 @@ func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
 	return roles, nil
 }
 
-func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]primitives.Identity, error) {
+func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]*primitives.User, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -199,18 +188,8 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 	}
 
 	userIDs := database.In{}
-	serviceIDs := database.In{}
 	for _, assignment := range assignments {
-		typ, err := assignment.IdentityID.Type()
-		if err != nil {
-			return nil, err
-		}
-
-		if typ == primitives.UserType {
-			userIDs = append(userIDs, assignment.IdentityID)
-		} else if typ == primitives.ServicePrimitiveType {
-			serviceIDs = append(serviceIDs, assignment.IdentityID)
-		}
+		userIDs = append(userIDs, assignment.UserID)
 	}
 
 	var users []*primitives.User
@@ -221,22 +200,5 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 		}
 	}
 
-	var services []*primitives.Service
-	if len(serviceIDs) > 0 {
-		err = enforcer.Query(ctx, &services, database.NewFilter(database.Where{"id": serviceIDs}, nil, nil))
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	identities := make([]primitives.Identity, len(assignments))
-	for i, user := range users {
-		identities[i] = user
-	}
-
-	for i, service := range services {
-		identities[i+len(users)] = service
-	}
-
-	return identities, nil
+	return users, nil
 }

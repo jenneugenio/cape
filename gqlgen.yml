@@ -15,19 +15,8 @@ resolver:
   package: graph
 
 models:
-  Identity:
-    model: github.com/capeprivacy/cape/primitives.Identity
   User:
     model: github.com/capeprivacy/cape/primitives.User
-  Service:
-    model: github.com/capeprivacy/cape/primitives.Service
-  Source:
-    fields:
-      credentials:
-        resolver: true
-      schema:
-        resolver: true
-    model: github.com/capeprivacy/cape/primitives.Source
   Role:
     model: github.com/capeprivacy/cape/primitives.Role
   Session:
@@ -42,14 +31,8 @@ models:
     model: github.com/capeprivacy/cape/primitives.DBURL
   CredentialsAlgType:
     model: github.com/capeprivacy/cape/primitives.CredentialsAlgType
-  SourceType:
-    model: github.com/capeprivacy/cape/primitives.SourceType
-  ServiceType:
-    model: github.com/capeprivacy/cape/primitives.ServiceType
   AuthCredentials:
     model: github.com/capeprivacy/cape/primitives.AuthCredentials
-  IdentityImpl:
-    model: github.com/capeprivacy/cape/primitives.IdentityImpl
   Policy:
     model: github.com/capeprivacy/cape/primitives.Policy
   Label:
@@ -68,10 +51,6 @@ models:
     model: github.com/capeprivacy/cape/primitives.Token
   Password:
     model: github.com/capeprivacy/cape/primitives.Password
-  Schema:
-    model: github.com/capeprivacy/cape/primitives.Schema
-  SchemaBlob:
-    model: github.com/capeprivacy/cape/primitives.SchemaBlob
   Project:
     model: github.com/capeprivacy/cape/primitives.Project
   ProjectSpec:

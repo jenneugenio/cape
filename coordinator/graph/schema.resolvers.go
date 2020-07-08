@@ -138,52 +138,22 @@ func (r *queryResolver) Users(ctx context.Context) ([]*primitives.User, error) {
 	return users, nil
 }
 
-func (r *queryResolver) Me(ctx context.Context) (primitives.Identity, error) {
+func (r *queryResolver) Me(ctx context.Context) (*primitives.User, error) {
 	session := fw.Session(ctx)
-	return session.Identity, nil
+	return session.User, nil
 }
 
-func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Email) ([]primitives.Identity, error) {
+func (r *queryResolver) Identities(ctx context.Context, emails []*primitives.Email) ([]*primitives.User, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	serviceEmails := database.In{}
-	userEmails := database.In{}
-
-	for _, email := range emails {
-		if email.Type == primitives.ServiceEmail {
-			serviceEmails = append(serviceEmails, email.String())
-		} else {
-			userEmails = append(userEmails, email.String())
-		}
-	}
-
 	var users []*primitives.User
-	if len(userEmails) > 0 {
-		err := enforcer.Query(ctx, &users, database.NewFilter(database.Where{"email": userEmails}, nil, nil))
-		if err != nil {
-			return nil, err
-		}
+	err := enforcer.Query(ctx, &users, database.NewFilter(database.Where{"email": emails}, nil, nil))
+	if err != nil {
+		return nil, err
 	}
 
-	var services []*primitives.Service
-	if len(serviceEmails) > 0 {
-		err := enforcer.Query(ctx, &services, database.NewFilter(database.Where{"email": serviceEmails}, nil, nil))
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	identities := make([]primitives.Identity, len(users)+len(services))
-	for i, user := range users {
-		identities[i] = user
-	}
-
-	for i, service := range services {
-		identities[i+len(users)] = service
-	}
-
-	return identities, nil
+	return users, nil
 }
 
 func (r *userResolver) Roles(ctx context.Context, obj *primitives.User) ([]*primitives.Role, error) {

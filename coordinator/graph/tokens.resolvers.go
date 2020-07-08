@@ -19,27 +19,9 @@ func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTo
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	identity := currSession.Identity
+	user := currSession.User
 
-	hasAdminRole := hasRole(currSession.Roles, primitives.AdminRole)
-
-	if hasAdminRole {
-		// If the calling identity has the admin role they can only
-		// create tokens for services and themselves. This should be
-		// replaced by a policy DSL.
-
-		typ, err := input.IdentityID.Type()
-		if err != nil {
-			return nil, err
-		}
-
-		if typ != primitives.ServicePrimitiveType && identity.GetID() != input.IdentityID {
-			return nil, errs.New(auth.AuthorizationFailure,
-				"An admin can only create tokens for a service and themselves")
-		}
-	} else if identity.GetID() != input.IdentityID {
-		// If not an admin then the requesting identity must equal the requested identity
-
+	if user.GetID() != input.UserID {
 		return nil, errs.New(auth.AuthorizationFailure, "Can only create a token for yourself")
 	}
 
@@ -54,7 +36,7 @@ func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTo
 		return nil, err
 	}
 
-	token, err := primitives.NewToken(input.IdentityID, creds)
+	token, err := primitives.NewToken(input.UserID, creds)
 	if err != nil {
 		logger.Info().Err(err).Msg("Could not create token")
 		return nil, err
@@ -84,7 +66,7 @@ func (r *mutationResolver) RemoveToken(ctx context.Context, id database.ID) (dat
 		return database.EmptyID, err
 	}
 
-	if !hasAdminRole && currSession.Identity.GetID() != token.IdentityID {
+	if !hasAdminRole && currSession.User.GetID() != token.UserID {
 		return database.EmptyID, errs.New(auth.AuthorizationFailure, "Can only remove tokens you own")
 	}
 
@@ -92,18 +74,18 @@ func (r *mutationResolver) RemoveToken(ctx context.Context, id database.ID) (dat
 	return id, err
 }
 
-func (r *queryResolver) Tokens(ctx context.Context, identityID database.ID) ([]database.ID, error) {
+func (r *queryResolver) Tokens(ctx context.Context, userID database.ID) ([]database.ID, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
 	hasAdminRole := hasRole(currSession.Roles, primitives.AdminRole)
 
-	if !hasAdminRole && currSession.Identity.GetID() != identityID {
+	if !hasAdminRole && currSession.User.GetID() != userID {
 		return nil, errs.New(auth.AuthorizationFailure, "Can only list tokens you own")
 	}
 
 	var tokens []*primitives.Token
-	filter := database.Filter{Where: database.Where{"identity_id": identityID}}
+	filter := database.Filter{Where: database.Where{"user_id": userID}}
 
 	err := enforcer.Query(ctx, &tokens, filter)
 	if err != nil {

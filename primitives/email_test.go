@@ -17,24 +17,6 @@ func TestEmail(t *testing.T) {
 		gm.Expect(email.String()).To(gm.Equal("email@email.com"))
 	})
 
-	t.Run("create valid service email", func(t *testing.T) {
-		email, err := NewEmail("service:email@email.com")
-		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(email.String()).To(gm.Equal("service:email@email.com"))
-	})
-
-	t.Run("switch email type", func(t *testing.T) {
-		email, err := NewEmail("email@email.com")
-		gm.Expect(err).To(gm.BeNil())
-
-		email.SetType(ServiceEmail)
-		gm.Expect(email.String()).To(gm.Equal("service:email@email.com"))
-
-		// switch back
-		email.SetType(UserEmail)
-		gm.Expect(email.String()).To(gm.Equal("email@email.com"))
-	})
-
 	t.Run("Can gql unmarshal", func(t *testing.T) {
 		var email Email
 

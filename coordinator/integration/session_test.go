@@ -40,7 +40,7 @@ func TestSessions(t *testing.T) {
 		session, err := client.EmailLogin(ctx, m.Admin.User.Email, m.Admin.Password)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(session.IdentityID).To(gm.Equal(m.Admin.User.ID))
+		gm.Expect(session.UserID).To(gm.Equal(m.Admin.User.ID))
 		gm.Expect(session.Token).ToNot(gm.BeNil())
 	})
 
@@ -99,7 +99,7 @@ func TestSessions(t *testing.T) {
 		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Failed to authenticate"))
 	})
 
-	t.Run("login user can retrieve their identity", func(t *testing.T) {
+	t.Run("login user can retrieve their user", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
 		client, err := h.Client()
@@ -108,24 +108,20 @@ func TestSessions(t *testing.T) {
 		session, err := client.EmailLogin(ctx, m.Admin.User.Email, m.Admin.Password)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(session.IdentityID).To(gm.Equal(m.Admin.User.ID))
+		gm.Expect(session.UserID).To(gm.Equal(m.Admin.User.ID))
 		gm.Expect(session.Token).ToNot(gm.BeNil())
 
-		identity, err := client.Me(ctx)
+		user, err := client.Me(ctx)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(identity.GetID()).To(gm.Equal(session.IdentityID))
-		gm.Expect(identity.GetEmail()).To(gm.Equal(m.Admin.User.Email))
+		gm.Expect(user.GetID()).To(gm.Equal(session.UserID))
+		gm.Expect(user.GetEmail()).To(gm.Equal(m.Admin.User.Email))
 
-		// Credentials should never be leaked from the server
-		provider, ok := identity.(primitives.CredentialProvider)
-		gm.Expect(ok).To(gm.BeTrue())
-
-		creds, err := provider.GetCredentials()
+		creds, err := user.GetCredentials()
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(creds).To(gm.BeNil())
 	})
 
-	t.Run("non-auth'd user cannot retrieve their identity", func(t *testing.T) {
+	t.Run("non-auth'd user cannot retrieve their user", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
 		client, err := h.Client()

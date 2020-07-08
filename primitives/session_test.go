@@ -57,27 +57,27 @@ func TestSession(t *testing.T) {
 				cause: &InvalidSessionCause,
 			},
 			{
-				name: "invalid identity id",
+				name: "invalid user id",
 				fn: func() (*Session, error) {
 					session, err := NewSession(user)
 					if err != nil {
 						return nil, err
 					}
 
-					session.IdentityID = database.EmptyID
+					session.UserID = database.EmptyID
 					return session, nil
 				},
 				cause: &InvalidSessionCause,
 			},
 			{
-				name: "identity id is not a service or user",
+				name: "user id is not a user",
 				fn: func() (*Session, error) {
 					session, err := NewSession(user)
 					if err != nil {
 						return nil, err
 					}
 
-					session.IdentityID = session.ID
+					session.UserID = session.ID
 					return session, nil
 				},
 				cause: &InvalidSessionCause,
@@ -134,7 +134,7 @@ func TestSession(t *testing.T) {
 		gm.Expect(session.GetType()).To(gm.Equal(SessionType))
 		gm.Expect(session.ExpiresAt).To(gm.Equal(ti))
 		gm.Expect(session.Token).To(gm.Equal(sessionToken))
-		gm.Expect(session.IdentityID).To(gm.Equal(user.ID))
+		gm.Expect(session.UserID).To(gm.Equal(user.ID))
 		gm.Expect(session.OwnerID).To(gm.Equal(user.ID))
 	})
 
