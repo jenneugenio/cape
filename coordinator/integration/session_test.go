@@ -96,7 +96,7 @@ func TestSessions(t *testing.T) {
 		// Can't do authenticated command after deleting session
 		err = client.Logout(ctx, nil)
 		gm.Expect(err).ToNot(gm.BeNil())
-		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Failed to authenticate"))
+		gm.Expect(err.Error()).To(gm.Equal("authentication_failure: Failed to authenticate"))
 	})
 
 	t.Run("login user can retrieve their user", func(t *testing.T) {

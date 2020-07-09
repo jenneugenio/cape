@@ -61,11 +61,6 @@ input SessionRequest {
   secret: Password!
 }
 
-input DeleteSessionRequest {
-  token: Base64
-}
-
-
 # ------------------------------------------------------------------
 # END INPUTS
 # ------------------------------------------------------------------
@@ -81,7 +76,6 @@ type Query {
 type Mutation {
   createUser(input: CreateUserRequest!): CreateUserResponse!
 
-  deleteSession(input: DeleteSessionRequest!): String
 }
 
 # Scalar definitions

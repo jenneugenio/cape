@@ -68,14 +68,6 @@ func (c *HTTPTransport) Raw(ctx context.Context, query string, variables map[str
 		req.Var(key, val)
 	}
 
-	if c.authToken != nil {
-		cookie := &http.Cookie{
-			Name:  "token",
-			Value: c.authToken.String(),
-		}
-		c.httpClient.Jar.SetCookies(c.url.URL, []*http.Cookie{cookie})
-	}
-
 	err := c.client.Run(ctx, req, resp)
 	if err != nil {
 		if nerr, ok := err.(net.Error); ok {
@@ -115,6 +107,14 @@ func (c *HTTPTransport) Authenticated() bool {
 // SetToken enables a caller to set the auth token used by the transport
 func (c *HTTPTransport) SetToken(value *base64.Value) {
 	c.authToken = value
+
+	if c.authToken != nil {
+		cookie := &http.Cookie{
+			Name:  "token",
+			Value: c.authToken.String(),
+		}
+		c.httpClient.Jar.SetCookies(c.url.URL, []*http.Cookie{cookie})
+	}
 }
 
 // Token enables a caller to retrieve the current auth token used by the

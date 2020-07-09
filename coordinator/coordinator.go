@@ -179,6 +179,7 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 	root.Handle("/v1/version", framework.VersionHandler(cfg.InstanceID.String()))
 	root.Handle("/v1/login", framework.LoginHandler(backend, cp, tokenAuth))
 	root.Handle("/v1/setup", framework.SetupHandler(backend, cp, tokenAuth, rootKey))
+	root.Handle("/v1/logout", framework.AuthTokenMiddleware(authenticated(framework.LogoutHandler(backend, tokenAuth))))
 
 	health := healthz.NewHandler(root)
 	chain := alice.New(

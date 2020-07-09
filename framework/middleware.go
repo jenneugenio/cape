@@ -124,7 +124,7 @@ func AuthTokenMiddleware(next http.Handler) http.Handler {
 
 		token, err := base64.NewFromString(cookie.Value)
 		if err != nil {
-			respondWithGQLError(rw, err)
+			respondWithError(rw, req.URL.Path, err)
 			return
 		}
 
@@ -175,7 +175,7 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 
 				// The following is the error we want to propagate externally
 				err := errors.New(errors.UnknownCause, "Internal Server Error")
-				respondWithError(rw, err)
+				respondWithError(rw, req.URL.Path, err)
 			}
 		}()
 
@@ -186,7 +186,11 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 // respondWithError is a middleware helper for responding to an http request
 // with a specific error. The error is written out in JSON and must be a
 // partyerrors.Error.
-func respondWithError(rw http.ResponseWriter, err error) {
+func respondWithError(rw http.ResponseWriter, path string, err error) {
+	if path == "/v1/query" {
+		respondWithGQLError(rw, err)
+		return
+	}
 	e := errors.ToError(err)
 	respondWithJSON(rw, e.StatusCode(), e)
 }
@@ -221,9 +225,8 @@ func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAu
 			token := AuthToken(ctx)
 
 			if token == nil {
-				msg := "Could not authenticate. Token missing"
-				logger.Info().Msg(msg)
-				respondWithGQLError(rw, auth.ErrAuthentication)
+				logger.Info().Msg("Could not authenticate. Token missing")
+				respondWithError(rw, req.URL.Path, auth.ErrAuthentication)
 				return
 			}
 
@@ -231,7 +234,7 @@ func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAu
 			if err != nil {
 				msg := "Could not authenticate. Unable to verify auth token"
 				logger.Info().Err(err).Msg(msg)
-				respondWithGQLError(rw, auth.ErrAuthentication)
+				respondWithError(rw, req.URL.Path, auth.ErrAuthentication)
 				return
 			}
 
@@ -240,7 +243,7 @@ func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAu
 			if err != nil {
 				msg := "Could not authenticate. Unable to find session"
 				logger.Info().Err(err).Msg(msg)
-				respondWithGQLError(rw, auth.ErrAuthentication)
+				respondWithError(rw, req.URL.Path, auth.ErrAuthentication)
 				return
 			}
 
@@ -248,7 +251,7 @@ func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAu
 			if err != nil {
 				msg := "Could not authenticate. Unable get credentialProvider type"
 				logger.Info().Err(err).Msg(msg)
-				respondWithGQLError(rw, auth.ErrAuthentication)
+				respondWithError(rw, req.URL.Path, auth.ErrAuthentication)
 				return
 			}
 
@@ -258,7 +261,7 @@ func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAu
 			if err != nil {
 				msg := "Could not authenticate. Unable to find credentialProvider"
 				logger.Error().Err(err).Msg(msg)
-				respondWithGQLError(rw, auth.ErrAuthentication)
+				respondWithError(rw, req.URL.Path, auth.ErrAuthentication)
 				return
 			}
 
@@ -268,7 +271,7 @@ func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAu
 				if err != nil {
 					msg := "Could not authenticate. Unable to find credentialProvider"
 					logger.Error().Err(err).Msg(msg)
-					respondWithGQLError(rw, auth.ErrAuthentication)
+					respondWithError(rw, req.URL.Path, auth.ErrAuthentication)
 					return
 				}
 				credentialProvider = token
@@ -278,19 +281,19 @@ func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAu
 
 			policies, err := QueryUserPolicies(ctx, db, user.GetID())
 			if err != nil {
-				respondWithGQLError(rw, err)
+				respondWithError(rw, req.URL.Path, err)
 				return
 			}
 
 			roles, err := QueryRoles(ctx, db, user.GetID())
 			if err != nil {
-				respondWithGQLError(rw, err)
+				respondWithError(rw, req.URL.Path, err)
 				return
 			}
 
 			aSession, err := auth.NewSession(user, session, policies, roles, credentialProvider)
 			if err != nil {
-				respondWithGQLError(rw, err)
+				respondWithError(rw, req.URL.Path, err)
 				return
 			}
 

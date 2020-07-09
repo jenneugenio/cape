@@ -11,7 +11,6 @@ import (
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
-	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -73,43 +72,6 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 		Password: password,
 		User:     user,
 	}, nil
-}
-
-func (r *mutationResolver) DeleteSession(ctx context.Context, input model.DeleteSessionRequest) (*string, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	if input.Token == nil {
-		err := enforcer.Delete(ctx, primitives.SessionType, currSession.Session.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		return nil, nil
-	}
-
-	found := false
-	for _, role := range currSession.Roles {
-		if role.Label == primitives.AdminRole {
-			found = true
-		}
-	}
-
-	if !found {
-		return nil, errs.New(auth.AuthorizationFailure, "Unable to delete session")
-	}
-
-	id, err := r.TokenAuthority.Verify(input.Token)
-	if err != nil {
-		return nil, err
-	}
-
-	err = enforcer.Delete(ctx, primitives.SessionType, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, nil
 }
 
 func (r *queryResolver) User(ctx context.Context, id database.ID) (*primitives.User, error) {

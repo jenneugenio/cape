@@ -89,7 +89,6 @@ type ComplexityRoot struct {
 		CreateUser        func(childComplexity int, input model.CreateUserRequest) int
 		DeletePolicy      func(childComplexity int, input model.DeletePolicyRequest) int
 		DeleteRole        func(childComplexity int, input model.DeleteRoleRequest) int
-		DeleteSession     func(childComplexity int, input model.DeleteSessionRequest) int
 		DetachPolicy      func(childComplexity int, input model.DetachPolicyRequest) int
 		RemoveToken       func(childComplexity int, id database.ID) int
 		UnarchiveProject  func(childComplexity int, id *database.ID, label *primitives.Label) int
@@ -183,7 +182,6 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.CreateUserRequest) (*model.CreateUserResponse, error)
-	DeleteSession(ctx context.Context, input model.DeleteSessionRequest) (*string, error)
 	CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*primitives.Policy, error)
 	DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error)
 	AttachPolicy(ctx context.Context, input model.AttachPolicyRequest) (*model.Attachment, error)
@@ -488,18 +486,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteRole(childComplexity, args["input"].(model.DeleteRoleRequest)), true
-
-	case "Mutation.deleteSession":
-		if e.complexity.Mutation.DeleteSession == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteSession_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteSession(childComplexity, args["input"].(model.DeleteSessionRequest)), true
 
 	case "Mutation.detachPolicy":
 		if e.complexity.Mutation.DetachPolicy == nil {
@@ -1327,11 +1313,6 @@ input SessionRequest {
   secret: Password!
 }
 
-input DeleteSessionRequest {
-  token: Base64
-}
-
-
 # ------------------------------------------------------------------
 # END INPUTS
 # ------------------------------------------------------------------
@@ -1347,7 +1328,6 @@ type Query {
 type Mutation {
   createUser(input: CreateUserRequest!): CreateUserResponse!
 
-  deleteSession(input: DeleteSessionRequest!): String
 }
 
 # Scalar definitions
@@ -1562,20 +1542,6 @@ func (ec *executionContext) field_Mutation_deleteRole_args(ctx context.Context, 
 	var arg0 model.DeleteRoleRequest
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalNDeleteRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteRoleRequest(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteSession_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.DeleteSessionRequest
-	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNDeleteSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteSessionRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2471,44 +2437,6 @@ func (ec *executionContext) _Mutation_createUser(ctx context.Context, field grap
 	res := resTmp.(*model.CreateUserResponse)
 	fc.Result = res
 	return ec.marshalNCreateUserResponse2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateUserResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_deleteSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Mutation",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_deleteSession_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteSession(rctx, args["input"].(model.DeleteSessionRequest))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createPolicy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6512,24 +6440,6 @@ func (ec *executionContext) unmarshalInputDeleteRoleRequest(ctx context.Context,
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputDeleteSessionRequest(ctx context.Context, obj interface{}) (model.DeleteSessionRequest, error) {
-	var it model.DeleteSessionRequest
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "token":
-			var err error
-			it.Token, err = ec.unmarshalOBase642ᚖgithubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputDetachPolicyRequest(ctx context.Context, obj interface{}) (model.DetachPolicyRequest, error) {
 	var it model.DetachPolicyRequest
 	var asMap = obj.(map[string]interface{})
@@ -6860,8 +6770,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "deleteSession":
-			out.Values[i] = ec._Mutation_deleteSession(ctx, field)
 		case "createPolicy":
 			out.Values[i] = ec._Mutation_createPolicy(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -7968,10 +7876,6 @@ func (ec *executionContext) unmarshalNDeleteRoleRequest2githubᚗcomᚋcapepriva
 	return ec.unmarshalInputDeleteRoleRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNDeleteSessionRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteSessionRequest(ctx context.Context, v interface{}) (model.DeleteSessionRequest, error) {
-	return ec.unmarshalInputDeleteSessionRequest(ctx, v)
-}
-
 func (ec *executionContext) unmarshalNDescription2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐDescription(ctx context.Context, v interface{}) (primitives.Description, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return primitives.Description(tmp), err
@@ -8569,29 +8473,6 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalOBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx context.Context, v interface{}) (base64.Value, error) {
-	return primitives.UnmarshalBase64Value(v)
-}
-
-func (ec *executionContext) marshalOBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx context.Context, sel ast.SelectionSet, v base64.Value) graphql.Marshaler {
-	return primitives.MarshalBase64Value(v)
-}
-
-func (ec *executionContext) unmarshalOBase642ᚖgithubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx context.Context, v interface{}) (*base64.Value, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalOBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) marshalOBase642ᚖgithubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx context.Context, sel ast.SelectionSet, v *base64.Value) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec.marshalOBase642githubᚗcomᚋmanifoldcoᚋgoᚑbase64ᚐValue(ctx, sel, *v)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

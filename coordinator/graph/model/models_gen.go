@@ -7,7 +7,6 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
-	"github.com/manifoldco/go-base64"
 )
 
 type AssignRoleRequest struct {
@@ -91,10 +90,6 @@ type DeleteRecoveriesRequest struct {
 
 type DeleteRoleRequest struct {
 	ID database.ID `json:"id"`
-}
-
-type DeleteSessionRequest struct {
-	Token *base64.Value `json:"token"`
 }
 
 type DetachPolicyRequest struct {

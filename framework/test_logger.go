@@ -13,7 +13,7 @@ import (
 func TestLogger() *zerolog.Logger {
 	loggerType := os.Getenv("CAPE_LOGGING_TYPE")
 	if loggerType == "" {
-		loggerType = "discard"
+		loggerType = "json"
 	}
 
 	logLevel := os.Getenv("CAPE_LOGGING_LEVEL")

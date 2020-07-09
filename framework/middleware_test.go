@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/gofrs/uuid"
 	"github.com/justinas/alice"
 	"github.com/manifoldco/go-base64"
@@ -160,11 +159,9 @@ func TestAuthTokenMiddleware(t *testing.T) {
 		resp := w.Result()
 		body, _ := ioutil.ReadAll(resp.Body)
 
-		gResp := &graphql.Response{}
+		gResp := &errors.Error{}
 		err := json.Unmarshal(body, gResp)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(len(gResp.Errors)).To(gm.Equal(1))
-
-		gm.Expect(gResp.Errors[0].Message).To(gm.Equal("Encountered an unknown error"))
+		gm.Expect(errors.CausedBy(gResp, errors.UnsupportedErrorCause)).To(gm.BeTrue())
 	})
 }

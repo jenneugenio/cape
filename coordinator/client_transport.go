@@ -77,16 +77,18 @@ func logout(ctx context.Context, transport ClientTransport, authToken *base64.Va
 		token = authToken
 	}
 
-	variables := make(map[string]interface{})
-	variables["token"] = token
+	req := framework.LogoutRequest{
+		Token: token,
+	}
 
-	err := transport.Raw(ctx, `
-		mutation DeleteSession($token: Base64) {
-			deleteSession(input: { token: $token })
-		}
-	`, variables, nil)
+	_, err := transport.Post(transport.URL().String()+"/v1/logout", req)
+	if err != nil {
+		return err
+	}
+
 	if token == transport.Token() {
 		transport.SetToken(nil)
 	}
+
 	return err
 }
