@@ -44,7 +44,6 @@ require (
 	github.com/marianogappa/sqlparser v0.0.0-20190512194142-a82c3f44d2fc
 	github.com/markbates/pkger v0.15.1
 	github.com/matryer/is v1.3.0 // indirect
-	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mitchellh/mapstructure v1.2.2
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1
