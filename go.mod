@@ -24,9 +24,9 @@ require (
 	github.com/gosimple/slug v1.9.0
 	github.com/gostaticanalysis/analysisutil v0.0.3 // indirect
 	github.com/imdario/mergo v0.3.9 // indirect
-	github.com/jackc/pgconn v1.3.2
-	github.com/jackc/pgproto3/v2 v2.0.1
-	github.com/jackc/pgx/v4 v4.4.1
+	github.com/jackc/pgconn v1.6.1
+	github.com/jackc/pgproto3/v2 v2.0.2
+	github.com/jackc/pgx/v4 v4.7.1
 	github.com/jackc/tern v1.9.1
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
 	github.com/juju/ansiterm v0.0.0-20180109212912-720a0952cc2a
@@ -56,8 +56,8 @@ require (
 	github.com/urfave/cli/v2 v2.1.1
 	github.com/vektah/gqlparser/v2 v2.0.1
 	go.opencensus.io v0.22.2 // indirect
-	go.uber.org/multierr v1.1.0
-	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	go.uber.org/multierr v1.5.0
+	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	google.golang.org/grpc v1.28.1 // indirect

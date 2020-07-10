@@ -257,6 +257,9 @@ func mustPgxPool(url, name string) *pgxpool.Pool {
 		"application_name": name,
 	}
 
+	// Don't connect to the database until we start using the pool
+	cfg.LazyConnect = true
+
 	c, err := pgxpool.ConnectConfig(context.TODO(), cfg)
 	if err != nil {
 		log.Fatalf("error connecting to database: %s", err.Error())
