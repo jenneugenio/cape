@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	cloud.google.com/go v0.44.3 // indirect
-	github.com/99designs/gqlgen v0.11.2
+	github.com/99designs/gqlgen v0.11.3
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/Masterminds/semver v1.5.0
 	github.com/Masterminds/sprig v2.22.0+incompatible
@@ -36,23 +36,23 @@ require (
 	github.com/leekchan/gtf v0.0.0-20190214083521-5fba33c5b00b
 	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/machinebox/graphql v0.2.2
-	github.com/magefile/mage v1.9.0
+	github.com/magefile/mage v1.10.0
 	github.com/manifoldco/go-base32 v1.0.4
 	github.com/manifoldco/go-base64 v1.0.3
 	github.com/manifoldco/healthz v1.2.0
 	github.com/manifoldco/promptui v0.7.0
 	github.com/marianogappa/sqlparser v0.0.0-20190512194142-a82c3f44d2fc
-	github.com/markbates/pkger v0.15.1
+	github.com/markbates/pkger v0.17.0
 	github.com/matryer/is v1.3.0 // indirect
-	github.com/mitchellh/mapstructure v1.2.2
+	github.com/mitchellh/mapstructure v1.3.2
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1
 	github.com/onsi/gomega v1.9.0
 	github.com/rs/cors v1.7.0
-	github.com/rs/zerolog v1.18.0
+	github.com/rs/zerolog v1.19.0
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.6.2 // indirect
-	github.com/urfave/cli/v2 v2.1.1
+	github.com/urfave/cli/v2 v2.2.0
 	github.com/vektah/gqlparser/v2 v2.0.1
 	go.opencensus.io v0.22.2 // indirect
 	go.uber.org/multierr v1.5.0
@@ -61,7 +61,7 @@ require (
 	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
 	google.golang.org/grpc v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.55.0 // indirect
-	gopkg.in/square/go-jose.v2 v2.4.1
+	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v2 v2.2.8
 	helm.sh/helm/v3 v3.2.0
 	mvdan.cc/unparam v0.0.0-20200314162735-0ac8026f7d06 // indirect

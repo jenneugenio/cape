@@ -3,11 +3,12 @@ package mailer
 import (
 	"context"
 
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
 type TestMail struct {
-	To        primitives.Email
+	To        models.Email
 	Type      string
 	Arguments map[string]interface{}
 }
@@ -17,7 +18,7 @@ type TestMailer struct {
 }
 
 func (tm *TestMailer) SendAccountRecovery(
-	ctx context.Context, user *primitives.User, recovery *primitives.Recovery, secret primitives.Password) error {
+	ctx context.Context, user *models.User, recovery *primitives.Recovery, secret primitives.Password) error {
 	tm.Mails = append(tm.Mails, &TestMail{
 		To:   user.Email,
 		Type: "account_recovery",

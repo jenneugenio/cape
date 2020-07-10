@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"runtime/debug"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/db"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -130,6 +132,7 @@ func AuthTokenMiddleware(next http.Handler) http.Handler {
 
 		ctx = context.WithValue(ctx, AuthTokenContextKey, token)
 		req = req.WithContext(ctx)
+
 		next.ServeHTTP(rw, req)
 	})
 }
@@ -172,6 +175,8 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 					e = errors.New(errors.UnknownCause, "Encountered panic: %s", p)
 				}
 				logger.Err(e).Msg("Encountered a panic; responding with a 500 error")
+
+				logger.Trace().Msg(string(debug.Stack()))
 
 				// The following is the error we want to propagate externally
 				err := errors.New(errors.UnknownCause, "Internal Server Error")
@@ -216,7 +221,7 @@ func respondWithJSON(rw http.ResponseWriter, code int, out interface{}) {
 }
 
 // IsAuthenticatedMiddleware checks to make sure a query is authenticated
-func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAuthority) func(http.Handler) http.Handler {
+func IsAuthenticatedMiddleware(db database.Backend, capedb db.Interface, tokenAuthority *auth.TokenAuthority) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			ctx := req.Context()
@@ -247,7 +252,7 @@ func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAu
 				return
 			}
 
-			ownerType, err := session.OwnerID.Type()
+			cp, err := getCredentialsProvider(ctx, db, capedb, session.UserID)
 			if err != nil {
 				msg := "Could not authenticate. Unable get credentialProvider type"
 				logger.Info().Err(err).Msg(msg)
@@ -255,49 +260,31 @@ func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAu
 				return
 			}
 
-			var credentialProvider primitives.CredentialProvider
-			user := &primitives.User{}
-			err = db.Get(ctx, session.UserID, user)
-			if err != nil {
-				msg := "Could not authenticate. Unable to find credentialProvider"
-				logger.Error().Err(err).Msg(msg)
-				respondWithError(rw, req.URL.Path, auth.ErrAuthentication)
-				return
-			}
-
-			if ownerType == primitives.TokenPrimitiveType {
-				token := &primitives.Token{}
-				err = db.Get(ctx, session.OwnerID, token)
-				if err != nil {
-					msg := "Could not authenticate. Unable to find credentialProvider"
-					logger.Error().Err(err).Msg(msg)
-					respondWithError(rw, req.URL.Path, auth.ErrAuthentication)
-					return
-				}
-				credentialProvider = token
-			} else {
-				credentialProvider = user
-			}
-
-			policies, err := QueryUserPolicies(ctx, db, user.GetID())
+			user, err := capedb.Users().GetByID(ctx, cp.GetUserID())
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return
 			}
 
-			roles, err := QueryRoles(ctx, db, user.GetID())
+			policies, err := QueryUserPolicies(ctx, db, cp.GetUserID())
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return
 			}
 
-			aSession, err := auth.NewSession(user, session, policies, roles, credentialProvider)
+			roles, err := QueryRoles(ctx, db, cp.GetUserID())
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return
 			}
 
-			logger = logger.With().Str("user_id", aSession.GetID().String()).Logger()
+			aSession, err := auth.NewSession(user, session, policies, roles, cp)
+			if err != nil {
+				respondWithError(rw, req.URL.Path, err)
+				return
+			}
+
+			logger = logger.With().Str("user_id", aSession.GetID()).Logger()
 
 			ctx = context.WithValue(ctx, LoggerContextKey, logger)
 			ctx = context.WithValue(ctx, SessionContextKey, aSession)
@@ -307,4 +294,21 @@ func IsAuthenticatedMiddleware(db database.Backend, tokenAuthority *auth.TokenAu
 			next.ServeHTTP(rw, req)
 		})
 	}
+}
+
+func getCredentialsProvider(ctx context.Context, db database.Backend, capedb db.Interface, id string) (primitives.CredentialProvider, error) {
+	dID, err := database.DecodeFromString(id)
+	if err != nil {
+		user, err := capedb.Users().GetByID(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+
+		return user, nil
+	}
+
+	token := &primitives.Token{}
+	err = db.Get(ctx, dID, token)
+
+	return token, err
 }

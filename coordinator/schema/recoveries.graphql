@@ -5,7 +5,7 @@ type Recovery {
 }
 
 input CreateRecoveryRequest {
-  email: Email!
+  email: ModelEmail!
 }
 
 input AttemptRecoveryRequest {

@@ -9,6 +9,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/harness"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -32,11 +33,8 @@ func TestUsers(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("create user", func(t *testing.T) {
-		email, err := primitives.NewEmail("jerry@jerry.berry")
-		gm.Expect(err).To(gm.BeNil())
-
-		name, err := primitives.NewName("Jerry Berry")
-		gm.Expect(err).To(gm.BeNil())
+		email := models.Email("jerry@jerry.berry")
+		name := models.Name("Jerry Berry")
 
 		result, _, err := client.CreateUser(ctx, name, email)
 		gm.Expect(err).To(gm.BeNil())
@@ -52,18 +50,14 @@ func TestUsers(t *testing.T) {
 	})
 
 	t.Run("cannot create multiple users with same email", func(t *testing.T) {
-		n, err := primitives.NewName("Lenny Bonedog")
-		gm.Expect(err).To(gm.BeNil())
-
-		e, err := primitives.NewEmail("bones@tails.com")
-		gm.Expect(err).To(gm.BeNil())
+		n := models.Name("Lenny Bonedog")
+		e := models.Email("lenny@bonedog.com")
 
 		user, _, err := client.CreateUser(ctx, n, e)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(user).ToNot(gm.BeNil())
 
-		nTwo, err := primitives.NewName("Julio Tails")
-		gm.Expect(err).To(gm.BeNil())
+		nTwo := models.Name("Julio Tails")
 
 		secondUser, _, err := client.CreateUser(ctx, nTwo, e)
 		gm.Expect(err).ToNot(gm.BeNil())
@@ -74,7 +68,7 @@ func TestUsers(t *testing.T) {
 		me, err := client.Me(ctx)
 		gm.Expect(err).To(gm.BeNil())
 		name := me.Name
-		gm.Expect(name).To(gm.Equal(primitives.Name("admin")))
+		gm.Expect(name).To(gm.Equal(models.Name("admin")))
 	})
 }
 
@@ -97,21 +91,15 @@ func TestListUsers(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	n, err := primitives.NewName("Lenny Bonedog")
-	gm.Expect(err).To(gm.BeNil())
-
-	e, err := primitives.NewEmail("bones@tails.com")
-	gm.Expect(err).To(gm.BeNil())
+	n := models.Name("Lenny Bonedog")
+	e := models.Email("lenny@bonedog.com")
 
 	user, _, err := client.CreateUser(ctx, n, e)
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(user).ToNot(gm.BeNil())
 
-	nTwo, err := primitives.NewName("Julio Tails")
-	gm.Expect(err).To(gm.BeNil())
-
-	e2, err := primitives.NewEmail("bones2@tails.com")
-	gm.Expect(err).To(gm.BeNil())
+	nTwo := models.Name("Julio Tails")
+	e2 := models.Email("bone2@bonedog.com")
 
 	_, _, err = client.CreateUser(ctx, nTwo, e2)
 	gm.Expect(err).To(gm.BeNil())

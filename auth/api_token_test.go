@@ -5,7 +5,7 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -13,16 +13,14 @@ func TestSecret(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	t.Run("can create secret from password", func(t *testing.T) {
-		password, err := primitives.GeneratePassword()
-		gm.Expect(err).To(gm.BeNil())
+		password := primitives.GeneratePassword()
 
-		_, err = FromPassword(password)
+		_, err := FromPassword(password)
 		gm.Expect(err).To(gm.BeNil())
 	})
 
 	t.Run("can turn secret into password", func(t *testing.T) {
-		password, err := primitives.GeneratePassword()
-		gm.Expect(err).To(gm.BeNil())
+		password := primitives.GeneratePassword()
 
 		secret, err := FromPassword(password)
 		gm.Expect(err).To(gm.BeNil())
@@ -34,11 +32,9 @@ func TestSecret(t *testing.T) {
 func TestAPIToken(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	userID, err := database.GenerateID(primitives.UserType)
-	gm.Expect(err).To(gm.BeNil())
+	userID := models.NewID()
 
-	password, err := primitives.GeneratePassword()
-	gm.Expect(err).To(gm.BeNil())
+	password := primitives.GeneratePassword()
 
 	secret, err := FromPassword(password)
 	gm.Expect(err).To(gm.BeNil())
@@ -46,7 +42,11 @@ func TestAPIToken(t *testing.T) {
 	creds, err := DefaultSHA256Producer.Generate(password)
 	gm.Expect(err).To(gm.BeNil())
 
-	tc, err := primitives.NewToken(userID, creds)
+	tc, err := primitives.NewToken(userID, &primitives.Credentials{
+		Secret: creds.Secret,
+		Salt:   creds.Salt,
+		Alg:    primitives.CredentialsAlgType(creds.Alg),
+	})
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("new api token", func(t *testing.T) {

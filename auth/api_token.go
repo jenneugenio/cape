@@ -136,10 +136,7 @@ func ParseAPIToken(in string) (*APIToken, error) {
 // exists to simplify the creation of tests for things that take an APIToken as
 // an input.
 func GenerateToken() (*APIToken, error) {
-	password, err := primitives.GeneratePassword()
-	if err != nil {
-		return nil, err
-	}
+	password := primitives.GeneratePassword()
 
 	secret, err := FromPassword(password)
 	if err != nil {

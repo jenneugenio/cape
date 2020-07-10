@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/capeprivacy/cape/models"
 	"github.com/urfave/cli/v2"
 )
 
@@ -46,7 +47,7 @@ func loginCmd(c *cli.Context) error {
 		return err
 	}
 
-	session, err := client.EmailLogin(c.Context, email, password)
+	session, err := client.EmailLogin(c.Context, models.Email(email.Email), password)
 	if err != nil {
 		return err
 	}

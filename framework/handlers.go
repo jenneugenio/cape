@@ -7,6 +7,8 @@ import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
+	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/capeprivacy/cape/version"
@@ -33,12 +35,12 @@ func VersionHandler(instanceID string) http.HandlerFunc {
 }
 
 type LoginRequest struct {
-	Email   *primitives.Email   `json:"email"`
+	Email   *models.Email       `json:"email"`
 	TokenID *database.ID        `json:"token_id"`
 	Secret  primitives.Password `json:"secret"`
 }
 
-func LoginHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.TokenAuthority) http.HandlerFunc {
+func LoginHandler(db database.Backend, capedb db.Interface, cp auth.CredentialProducer, ta *auth.TokenAuthority) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var input LoginRequest
 
@@ -49,13 +51,6 @@ func LoginHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.Toke
 		}
 
 		logger := Logger(r.Context())
-
-		if input.Email != nil {
-			if err := input.Email.Validate(); err != nil {
-				respondWithError(w, r.URL.Path, err)
-				return
-			}
-		}
 
 		if input.TokenID != nil {
 			if err := input.TokenID.Validate(); err != nil {
@@ -73,7 +68,7 @@ func LoginHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.Toke
 			return
 		}
 
-		provider, err := getCredentialProvider(r.Context(), db, input)
+		provider, err := getCredentialProvider(r.Context(), db, capedb, input)
 		if err != nil {
 			logger.Info().Err(err).Msgf("Could not retrieve user for create session request, email: %s token_id: %s", input.Email, input.TokenID)
 			respondWithError(w, r.URL.Path, auth.ErrAuthentication)
@@ -87,7 +82,11 @@ func LoginHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.Toke
 			return
 		}
 
-		err = cp.Compare(input.Secret, creds)
+		err = cp.Compare(input.Secret, &models.Credentials{
+			Secret: creds.Secret,
+			Salt:   creds.Salt,
+			Alg:    models.CredentialsAlgType(creds.Alg),
+		})
 		if err != nil {
 			logger.Info().Err(err).Msgf("Invalid credentials provided")
 			respondWithError(w, r.URL.Path, auth.ErrAuthentication)
@@ -129,12 +128,12 @@ func LoginHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.Toke
 }
 
 type SetupRequest struct {
-	Name     primitives.Name     `json:"name"`
-	Email    primitives.Email    `json:"email"`
+	Name     models.Name         `json:"name"`
+	Email    models.Email        `json:"email"`
 	Password primitives.Password `json:"password"`
 }
 
-func SetupHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.TokenAuthority, rootKey [32]byte) http.HandlerFunc {
+func SetupHandler(db database.Backend, capedb db.Interface, cp auth.CredentialProducer, ta *auth.TokenAuthority, rootKey [32]byte) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		logger := Logger(ctx)
@@ -154,7 +153,7 @@ func SetupHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.Toke
 			return err
 		}
 
-		doWork := func() (*primitives.User, error) {
+		doWork := func() (*models.User, error) {
 			// We must create the config and load up the state before we can make
 			// requests against the backend that requires the encryptionKey.
 			config, encryptionKey, kp, err := createConfig(rootKey)
@@ -177,6 +176,19 @@ func SetupHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.Toke
 			db.SetEncryptionCodec(crypto.NewSecretBoxCodec(kms))
 			ta.SetKeyPair(kp)
 
+			creds, err := cp.Generate(input.Password)
+			if err != nil {
+				logger.Info().Err(err).Msg("Could not generate credentials")
+				return nil, err
+			}
+
+			user := models.NewUser(input.Name, input.Email, creds)
+
+			err = capedb.Users().Create(ctx, user)
+			if err != nil {
+				return nil, err
+			}
+
 			tx, err := db.Transaction(ctx)
 			if err != nil {
 				logger.Error().Err(err).Msg("Could not create transaction")
@@ -187,24 +199,6 @@ func SetupHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.Toke
 			err = tx.Create(ctx, config)
 			if err != nil {
 				logger.Error().Err(err).Msg("Could not create config in database")
-				return nil, err
-			}
-
-			creds, err := cp.Generate(input.Password)
-			if err != nil {
-				logger.Info().Err(err).Msg("Could not generate credentials")
-				return nil, err
-			}
-
-			user, err := primitives.NewUser(input.Name, input.Email, creds)
-			if err != nil {
-				logger.Info().Err(err).Msg("Could not create user")
-				return nil, err
-			}
-
-			err = tx.Create(ctx, user)
-			if err != nil {
-				logger.Error().Err(err).Msg("Could not insert user into database")
 				return nil, err
 			}
 
@@ -229,7 +223,7 @@ func SetupHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.Toke
 				return nil, err
 			}
 
-			err = CreateAssignments(ctx, tx, user, roles)
+			err = CreateAssignments(ctx, tx, user.ID, roles)
 			if err != nil {
 				logger.Error().Err(err).Msg("Could not create assignments in database")
 				return nil, err
@@ -241,7 +235,7 @@ func SetupHandler(db database.Backend, cp auth.CredentialProducer, ta *auth.Toke
 				return nil, err
 			}
 
-			return user, nil
+			return &user, nil
 		}
 
 		user, err := doWork()

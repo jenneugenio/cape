@@ -48,7 +48,7 @@ extend type Query {
 
   policies: [Policy!]
   rolePolicies(role_id: ID!): [Policy!]
-  userPolicies(user_id: ID!): [Policy!]
+  userPolicies(user_id: String!): [Policy!]
 
   attachment(role_id: ID!, policy_id: ID!): Attachment!
 }

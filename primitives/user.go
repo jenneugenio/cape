@@ -69,8 +69,8 @@ func NewUser(name Name, email Email, creds *Credentials) (*User, error) {
 	return user, user.Validate()
 }
 
-func (u *User) GetUserID() database.ID {
-	return u.ID
+func (u *User) GetUserID() string {
+	return u.ID.String()
 }
 
 // GetCredentials returns the credentials
@@ -129,14 +129,15 @@ func (u *User) GetEncryptable() bool {
 	return true
 }
 
+func (u *User) GetStringID() string {
+	return u.ID.String()
+}
+
 // GenerateUser returns an instantiated user for use in unit testing
 //
 // This function _should only ever_ be used inside of a test.
 func GenerateUser(name, email string) (Password, *User, error) {
-	password, err := GeneratePassword()
-	if err != nil {
-		return EmptyPassword, nil, err
-	}
+	password := GeneratePassword()
 
 	n, err := NewName(name)
 	if err != nil {
@@ -148,10 +149,7 @@ func GenerateUser(name, email string) (Password, *User, error) {
 		return EmptyPassword, nil, err
 	}
 
-	c, err := GenerateCredentials()
-	if err != nil {
-		return EmptyPassword, nil, err
-	}
+	c := GenerateCredentials()
 
 	user, err := NewUser(n, e, c)
 	return password, user, err

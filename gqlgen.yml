@@ -16,7 +16,7 @@ resolver:
 
 models:
   User:
-    model: github.com/capeprivacy/cape/primitives.User
+    model: github.com/capeprivacy/cape/models.User
   Role:
     model: github.com/capeprivacy/cape/primitives.Role
   Session:
@@ -43,6 +43,10 @@ models:
     model: github.com/capeprivacy/cape/primitives.Name
   Email:
     model: github.com/capeprivacy/cape/primitives.Email
+  ModelName:
+    model: github.com/capeprivacy/cape/models.Name
+  ModelEmail:
+    model: github.com/capeprivacy/cape/models.Email
   EmailType:
     model: github.com/capeprivacy/cape/primitives.EmailType
   PolicySpec:

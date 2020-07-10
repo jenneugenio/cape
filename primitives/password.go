@@ -58,12 +58,12 @@ func NewPassword(input string) (Password, error) {
 
 // GeneratePassword returns a new password using random data sourced from a
 // cryptographically strong pseudorandom source.
-func GeneratePassword() (Password, error) {
+func GeneratePassword() Password {
 	bytes := make([]byte, PasswordByteLength)
 	_, err := rand.Read(bytes)
 	if err != nil {
-		return EmptyPassword, err
+		panic("Unable to read form rand")
 	}
 
-	return Password(base64.New(bytes).String()), nil
+	return Password(base64.New(bytes).String())
 }

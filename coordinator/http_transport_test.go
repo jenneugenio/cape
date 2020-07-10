@@ -159,7 +159,7 @@ func TestHTTPTransportEmailLogin(t *testing.T) {
 	defer ts.Close()
 
 	ct := createHTTPTransport(ts, clientURL, nil)
-	gotSess, err := ct.EmailLogin(context.TODO(), primitives.Email{}, primitives.EmptyPassword)
+	gotSess, err := ct.EmailLogin(context.TODO(), "", primitives.EmptyPassword)
 	if err != nil {
 		t.Errorf("email login returned unexpected error: %v", err)
 	}

@@ -5,7 +5,6 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -132,9 +131,9 @@ func rolesCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	userIDs := make([]database.ID, len(users))
+	userIDs := make([]string, len(users))
 	for i, user := range users {
-		userIDs[i] = user.GetID()
+		userIDs[i] = user.ID
 	}
 
 	_, err = client.CreateRole(c.Context, label, userIDs)
@@ -230,7 +229,7 @@ func rolesMembersCmd(c *cli.Context) error {
 	header := []string{"Email"}
 	body := make([][]string, len(users))
 	for i, user := range users {
-		body[i] = []string{user.GetEmail().String()}
+		body[i] = []string{user.Email.String()}
 	}
 
 	return u.Table(header, body)

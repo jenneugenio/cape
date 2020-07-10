@@ -6,9 +6,17 @@ type Role {
   updated_at: Time!
 }
 
+type Assignment {
+  id: ID!
+  role: Role!
+  user: User!
+  created_at: Time!
+  updated_at: Time!
+}
+
 input CreateRoleRequest {
   label: Label!
-  user_ids: [ID!]
+  user_ids: [String!]
 }
 
 input DeleteRoleRequest {
@@ -17,14 +25,14 @@ input DeleteRoleRequest {
 
 input AssignRoleRequest {
   role_id: ID!
-  user_id: ID!
+  user_id: String!
 }
 
 extend type Query {
   role(id: ID!): Role!
   roleByLabel(label: Label!): Role!
   roles: [Role!]
-  roleMembers(role_id: ID!): [User!]
+  roleMembers(role_id: ID!): [User]
 }
 
 extend type Mutation {

@@ -9,6 +9,7 @@ import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
@@ -147,7 +148,7 @@ func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([
 	return retVal, nil
 }
 
-func (r *queryResolver) UserPolicies(ctx context.Context, userID database.ID) ([]*models.Policy, error) {
+func (r *queryResolver) UserPolicies(ctx context.Context, userID string) ([]*models.Policy, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -178,3 +179,8 @@ func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, poli
 
 	return buildAttachment(ctx, enforcer, attachment)
 }
+
+// Mutation returns generated.MutationResolver implementation.
+func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
+
+type mutationResolver struct{ *Resolver }

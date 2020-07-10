@@ -118,3 +118,19 @@ func ArgsFromPrimitive(prim primitives.Args) models.Args {
 func ConditionFromPrimitive(prim primitives.Condition) models.Condition {
 	return models.Condition(prim)
 }
+
+func CredentialsFromModels(model *models.Credentials) *primitives.Credentials {
+	return &primitives.Credentials{
+		Secret: model.Secret,
+		Salt:   model.Salt,
+		Alg:    primitives.CredentialsAlgType(model.Alg),
+	}
+}
+
+func CredentialsFromPrimitives(prim *primitives.Credentials) *models.Credentials {
+	return &models.Credentials{
+		Secret: prim.Secret,
+		Salt:   prim.Salt,
+		Alg:    models.CredentialsAlgType(prim.Alg),
+	}
+}

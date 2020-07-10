@@ -9,6 +9,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/harness"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -31,14 +32,10 @@ func TestRecoveries(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	unknownEmail, err := primitives.NewEmail("unknwon@email.us")
-	gm.Expect(err).To(gm.BeNil())
+	unknownEmail := models.Email("unknwon@email.us")
 
-	email, err := primitives.NewEmail("jerry@jerry.berry")
-	gm.Expect(err).To(gm.BeNil())
-
-	name, err := primitives.NewName("Jerry Berry")
-	gm.Expect(err).To(gm.BeNil())
+	email := models.Email("jerry@jerry.berry")
+	name := models.Name("Jerry Berry")
 
 	password, err := primitives.NewPassword("hellotestingthisout")
 	gm.Expect(err).To(gm.BeNil())
@@ -56,7 +53,7 @@ func TestRecoveries(t *testing.T) {
 		recovery := mail[0].Arguments["recovery"].(*primitives.Recovery)
 		secret := mail[0].Arguments["secret"].(primitives.Password)
 
-		err = client.AttemptRecovery(ctx, recovery.ID, secret, password)
+		err = client.AttemptRecovery(ctx, recovery.ID.String(), secret, password)
 		gm.Expect(err).To(gm.BeNil())
 
 		userClient, err := h.Client()
@@ -72,14 +69,6 @@ func TestRecoveries(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(len(h.Mails())).To(gm.Equal(1))
-	})
-
-	t.Run("can't supply invalid email", func(t *testing.T) {
-		err := client.CreateRecovery(ctx, primitives.Email{
-			Email: "sdfsdf",
-			Type:  primitives.UserEmail,
-		})
-		gm.Expect(err).ToNot(gm.BeNil())
 	})
 
 	t.Run("can't recover with wrong id", func(t *testing.T) {
@@ -104,7 +93,7 @@ func TestRecoveries(t *testing.T) {
 
 		recovery := mail[2].Arguments["recovery"].(*primitives.Recovery)
 
-		err = client.AttemptRecovery(ctx, recovery.ID, password, password)
+		err = client.AttemptRecovery(ctx, recovery.ID.String(), password, password)
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 }

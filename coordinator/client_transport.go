@@ -8,6 +8,7 @@ import (
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/framework"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -23,7 +24,7 @@ type ClientTransport interface {
 	SetToken(*base64.Value)
 	Token() *base64.Value
 
-	EmailLogin(ctx context.Context, email primitives.Email, password primitives.Password) (*primitives.Session, error)
+	EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*primitives.Session, error)
 	TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*primitives.Session, error)
 
 	Logout(ctx context.Context, authToken *base64.Value) error
@@ -50,7 +51,7 @@ func tokenLogin(ctx context.Context, transport ClientTransport, apiToken *auth.A
 	return session, nil
 }
 
-func emailLogin(ctx context.Context, transport ClientTransport, email primitives.Email, password primitives.Password) (*primitives.Session, error) {
+func emailLogin(ctx context.Context, transport ClientTransport, email models.Email, password primitives.Password) (*primitives.Session, error) {
 	req := framework.LoginRequest{
 		Email:  &email,
 		Secret: password,

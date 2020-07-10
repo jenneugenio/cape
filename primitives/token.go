@@ -14,7 +14,7 @@ import (
 
 type Token struct {
 	*database.Primitive
-	UserID database.ID `json:"user_id"`
+	UserID string `json:"user_id"`
 
 	// We never want to send Credentials over the wire!
 	Credentials *Credentials `json:"-" gqlgen:"-"`
@@ -38,23 +38,14 @@ func (tc *Token) Validate() error {
 		return errors.New(InvalidTokenCause, "Credentials must be non-nil")
 	}
 
-	if err := tc.UserID.Validate(); err != nil {
-		return err
-	}
-
-	t, err := tc.UserID.Type()
-	if err != nil {
-		return err
-	}
-
-	if t != UserType {
-		return errors.New(InvalidTokenCause, "UserID must be a user")
+	if tc.UserID == "" {
+		return errors.New(InvalidTokenCause, "Must supply user id")
 	}
 
 	return tc.Credentials.Validate()
 }
 
-func (tc *Token) GetUserID() database.ID {
+func (tc *Token) GetUserID() string {
 	return tc.UserID
 }
 
@@ -62,7 +53,7 @@ func (tc *Token) GetCredentials() (*Credentials, error) {
 	return tc.Credentials, nil
 }
 
-func NewToken(userID database.ID, creds *Credentials) (*Token, error) {
+func NewToken(userID string, creds *Credentials) (*Token, error) {
 	p, err := database.NewPrimitive(TokenPrimitiveType)
 	if err != nil {
 		return nil, err
@@ -129,20 +120,17 @@ func (tc *Token) GetEncryptable() bool {
 	return true
 }
 
+func (tc *Token) GetStringID() string {
+	return tc.ID.String()
+}
+
 // GenerateToken returns an instantiated token for use in unit testing.
 //
 // This function _should only ever_ be used inside of a test.
 func GenerateToken(user *User) (Password, *Token, error) {
-	password, err := GeneratePassword()
-	if err != nil {
-		return EmptyPassword, nil, err
-	}
+	password := GeneratePassword()
+	c := GenerateCredentials()
 
-	c, err := GenerateCredentials()
-	if err != nil {
-		return EmptyPassword, nil, err
-	}
-
-	token, err := NewToken(user.GetID(), c)
+	token, err := NewToken(user.GetID().String(), c)
 	return password, token, err
 }

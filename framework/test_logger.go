@@ -18,7 +18,7 @@ func TestLogger() *zerolog.Logger {
 
 	logLevel := os.Getenv("CAPE_LOGGING_LEVEL")
 	if logLevel == "" {
-		logLevel = "info"
+		logLevel = "trace"
 	}
 
 	logger, err := logging.Logger(loggerType, logLevel, "test")

@@ -64,7 +64,7 @@ func TestSession(t *testing.T) {
 						return nil, err
 					}
 
-					session.UserID = database.EmptyID
+					session.UserID = ""
 					return session, nil
 				},
 				cause: &InvalidSessionCause,
@@ -77,7 +77,7 @@ func TestSession(t *testing.T) {
 						return nil, err
 					}
 
-					session.UserID = session.ID
+					session.UserID = ""
 					return session, nil
 				},
 				cause: &InvalidSessionCause,
@@ -90,7 +90,7 @@ func TestSession(t *testing.T) {
 						return nil, err
 					}
 
-					session.OwnerID = database.EmptyID
+					session.OwnerID = ""
 					return session, nil
 				},
 				cause: &InvalidSessionCause,
@@ -103,7 +103,7 @@ func TestSession(t *testing.T) {
 						return nil, err
 					}
 
-					session.OwnerID = session.ID
+					session.OwnerID = ""
 					return session, nil
 				},
 				cause: &InvalidSessionCause,
@@ -134,8 +134,8 @@ func TestSession(t *testing.T) {
 		gm.Expect(session.GetType()).To(gm.Equal(SessionType))
 		gm.Expect(session.ExpiresAt).To(gm.Equal(ti))
 		gm.Expect(session.Token).To(gm.Equal(sessionToken))
-		gm.Expect(session.UserID).To(gm.Equal(user.ID))
-		gm.Expect(session.OwnerID).To(gm.Equal(user.ID))
+		gm.Expect(session.UserID).To(gm.Equal(user.ID.String()))
+		gm.Expect(session.OwnerID).To(gm.Equal(user.ID.String()))
 	})
 
 	t.Run("test encrypt decrytp", func(t *testing.T) {

@@ -6,6 +6,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/cmd/ui"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -59,7 +60,7 @@ func usersCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	_, password, err := client.CreateUser(c.Context, name, email)
+	_, password, err := client.CreateUser(c.Context, name, models.Email(email.Email))
 	if err != nil {
 		return err
 	}

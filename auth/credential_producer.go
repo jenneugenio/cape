@@ -8,6 +8,7 @@ import (
 	"github.com/manifoldco/go-base64"
 	"golang.org/x/crypto/argon2"
 
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -25,9 +26,9 @@ var (
 // CredentialProducer represents an interface for generating credentials and
 // comparing credentials based on a pre-shared key.
 type CredentialProducer interface {
-	Generate(primitives.Password) (*primitives.Credentials, error)
-	Compare(primitives.Password, *primitives.Credentials) error
-	Alg() primitives.CredentialsAlgType
+	Generate(primitives.Password) (*models.Credentials, error)
+	Compare(primitives.Password, *models.Credentials) error
+	Alg() models.CredentialsAlgType
 }
 
 // Argon2IDProducer implements the CredentialProducer interface.
@@ -42,7 +43,7 @@ type Argon2IDProducer struct {
 	KeyLength uint32
 }
 
-func (a *Argon2IDProducer) Generate(secret primitives.Password) (*primitives.Credentials, error) {
+func (a *Argon2IDProducer) Generate(secret primitives.Password) (*models.Credentials, error) {
 	if err := secret.Validate(); err != nil {
 		return nil, err
 	}
@@ -54,21 +55,17 @@ func (a *Argon2IDProducer) Generate(secret primitives.Password) (*primitives.Cre
 	}
 
 	value := argon2.IDKey([]byte(secret), salt, a.Time, a.Memory, a.Threads, a.KeyLength)
-	creds := &primitives.Credentials{
+	creds := &models.Credentials{
 		Alg:    a.Alg(),
 		Secret: base64.New(value),
 		Salt:   base64.New(salt),
 	}
 
-	return creds, creds.Validate()
+	return creds, nil
 }
 
-func (a *Argon2IDProducer) Compare(secret primitives.Password, creds *primitives.Credentials) error {
+func (a *Argon2IDProducer) Compare(secret primitives.Password, creds *models.Credentials) error {
 	if err := secret.Validate(); err != nil {
-		return err
-	}
-
-	if err := creds.Validate(); err != nil {
 		return err
 	}
 
@@ -84,8 +81,8 @@ func (a *Argon2IDProducer) Compare(secret primitives.Password, creds *primitives
 	return nil
 }
 
-func (a *Argon2IDProducer) Alg() primitives.CredentialsAlgType {
-	return primitives.Argon2ID
+func (a *Argon2IDProducer) Alg() models.CredentialsAlgType {
+	return models.Argon2ID
 }
 
 // SHA256Producer implements the CredentialProducer interface. The
@@ -93,7 +90,7 @@ func (a *Argon2IDProducer) Alg() primitives.CredentialsAlgType {
 // only ever be used in development situations
 type SHA256Producer struct{}
 
-func (s *SHA256Producer) Generate(secret primitives.Password) (*primitives.Credentials, error) {
+func (s *SHA256Producer) Generate(secret primitives.Password) (*models.Credentials, error) {
 	if err := secret.Validate(); err != nil {
 		return nil, err
 	}
@@ -105,21 +102,17 @@ func (s *SHA256Producer) Generate(secret primitives.Password) (*primitives.Crede
 	}
 
 	value := sha256.Sum256(append([]byte(secret), salt...))
-	creds := &primitives.Credentials{
+	creds := &models.Credentials{
 		Alg:    s.Alg(),
 		Secret: base64.New(value[:]),
 		Salt:   base64.New(salt),
 	}
 
-	return creds, creds.Validate()
+	return creds, nil
 }
 
-func (s *SHA256Producer) Compare(secret primitives.Password, creds *primitives.Credentials) error {
+func (s *SHA256Producer) Compare(secret primitives.Password, creds *models.Credentials) error {
 	if err := secret.Validate(); err != nil {
-		return err
-	}
-
-	if err := creds.Validate(); err != nil {
 		return err
 	}
 
@@ -135,8 +128,8 @@ func (s *SHA256Producer) Compare(secret primitives.Password, creds *primitives.C
 	return nil
 }
 
-func (s *SHA256Producer) Alg() primitives.CredentialsAlgType {
-	return primitives.SHA256
+func (s *SHA256Producer) Alg() models.CredentialsAlgType {
+	return models.SHA256
 }
 
 var randRead = rand.Read

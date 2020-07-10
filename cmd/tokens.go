@@ -8,6 +8,7 @@ import (
 	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -81,8 +82,8 @@ func init() {
 	commands = append(commands, tokensCmd.Package())
 }
 
-func getUser(ctx context.Context, client *coordinator.Client) (*primitives.User, error) {
-	var user *primitives.User
+func getUser(ctx context.Context, client *coordinator.Client) (*models.User, error) {
+	var user *models.User
 	identifier, ok := Arguments(ctx, TokenUserArg).(primitives.Email)
 	if ok {
 		users, err := client.GetUsers(ctx, []primitives.Email{identifier})
@@ -125,7 +126,7 @@ func createTokenCmd(c *cli.Context) error {
 	}
 
 	u := provider.UI(c.Context)
-	err = u.Template("A token for {{ . | bold }} has been created!\n\n", user.GetEmail().String())
+	err = u.Template("A token for {{ . | bold }} has been created!\n\n", user.Email.String())
 	if err != nil {
 		return err
 	}

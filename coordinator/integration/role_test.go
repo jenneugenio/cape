@@ -8,8 +8,8 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/harness"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -68,7 +68,7 @@ func TestRoles(t *testing.T) {
 
 		label, err := primitives.NewLabel("cto-person")
 		gm.Expect(err).To(gm.BeNil())
-		role, err := client.CreateRole(ctx, label, []database.ID{m.Admin.User.ID})
+		role, err := client.CreateRole(ctx, label, []string{m.Admin.User.ID})
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(role).ToNot(gm.BeNil())
 
@@ -76,7 +76,7 @@ func TestRoles(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(len(users)).To(gm.Equal(1))
 
-		gm.Expect(users[0].GetID()).To(gm.Equal(m.Admin.User.ID))
+		gm.Expect(users[0].ID).To(gm.Equal(m.Admin.User.ID))
 	})
 
 	t.Run("create role with multiple members", func(t *testing.T) {
@@ -85,16 +85,13 @@ func TestRoles(t *testing.T) {
 		label, err := primitives.NewLabel("ceoooo")
 		gm.Expect(err).To(gm.BeNil())
 
-		email, err := primitives.NewEmail("jye@jdfjkf.com")
-		gm.Expect(err).To(gm.BeNil())
-
-		name, err := primitives.NewName("Jye Jdfjkf")
-		gm.Expect(err).To(gm.BeNil())
+		email := models.Email("jye@jdfjkf.com")
+		name := models.Name("My Name")
 
 		user, _, err := client.CreateUser(ctx, name, email)
 		gm.Expect(err).To(gm.BeNil())
 
-		role, err := client.CreateRole(ctx, label, []database.ID{m.Admin.User.ID, user.ID})
+		role, err := client.CreateRole(ctx, label, []string{m.Admin.User.ID, user.ID})
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(role).ToNot(gm.BeNil())
 
@@ -102,15 +99,15 @@ func TestRoles(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(len(users)).To(gm.Equal(2))
 
-		gm.Expect(users[0].GetID()).To(gm.Equal(m.Admin.User.ID))
-		gm.Expect(users[1].GetID()).To(gm.Equal(user.ID))
+		gm.Expect(users[0].ID).To(gm.Equal(m.Admin.User.ID))
+		gm.Expect(users[1].ID).To(gm.Equal(user.ID))
 	})
 
 	t.Run("Roles will not default to system roles", func(t *testing.T) {
 		l, err := primitives.NewLabel("coolguy")
 		gm.Expect(err).To(gm.BeNil())
 
-		role, err := client.CreateRole(ctx, l, []database.ID{m.Admin.User.ID})
+		role, err := client.CreateRole(ctx, l, []string{m.Admin.User.ID})
 
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(role.System).To(gm.BeFalse())
@@ -120,7 +117,7 @@ func TestRoles(t *testing.T) {
 		l, err := primitives.NewLabel("coolguy-five")
 		gm.Expect(err).To(gm.BeNil())
 
-		role, err := client.CreateRole(ctx, l, []database.ID{m.Admin.User.ID})
+		role, err := client.CreateRole(ctx, l, []string{m.Admin.User.ID})
 		gm.Expect(err).To(gm.BeNil())
 
 		otherRole, err := client.GetRoleByLabel(ctx, role.Label)
@@ -204,7 +201,7 @@ func TestAssignments(t *testing.T) {
 		assignment, err := client.AssignRole(ctx, m.Admin.User.ID, role.ID)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(assignment).NotTo(gm.BeNil())
-		gm.Expect(assignment.User.GetID()).To(gm.Equal(m.Admin.User.ID))
+		gm.Expect(assignment.User.ID).To(gm.Equal(m.Admin.User.ID))
 		gm.Expect(assignment.Role.Label).To(gm.Equal(label))
 
 		users, err := client.GetMembersRole(ctx, role.ID)
@@ -212,7 +209,7 @@ func TestAssignments(t *testing.T) {
 
 		gm.Expect(len(users)).To(gm.Equal(1))
 
-		gm.Expect(users[0].GetID()).To(gm.Equal(m.Admin.User.ID))
+		gm.Expect(users[0].ID).To(gm.Equal(m.Admin.User.ID))
 	})
 
 	t.Run("unassign role", func(t *testing.T) {

@@ -84,7 +84,7 @@ func (p *pgPolicy) Get(ctx context.Context, l models.Label) (*models.Policy, err
 	var policy models.Policy
 	err = row.Scan(&policy)
 	if err != nil {
-		return nil, fmt.Errorf("error decoding to string: %w", err)
+		return nil, fmt.Errorf("error getting policy: %w", err)
 	}
 
 	return &policy, nil

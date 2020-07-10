@@ -17,9 +17,6 @@ func TestToken(t *testing.T) {
 	_, user, err := GenerateUser("hello", "bob@hello.com")
 	gm.Expect(err).To(gm.BeNil())
 
-	roleID, err := database.GenerateID(RoleType)
-	gm.Expect(err).To(gm.BeNil())
-
 	t.Run("create token", func(t *testing.T) {
 		tests := []struct {
 			name   string
@@ -33,35 +30,23 @@ func TestToken(t *testing.T) {
 				creds:  user.Credentials,
 			},
 			{
-				name:   "invalid user id",
-				userID: database.EmptyID,
-				creds:  user.Credentials,
-				cause:  &database.InvalidIDCause,
-			},
-			{
 				name:   "missing credentials",
 				userID: user.ID,
 				creds:  nil,
-				cause:  &InvalidTokenCause,
-			},
-			{
-				name:   "wrong id type",
-				userID: roleID,
-				creds:  user.Credentials,
 				cause:  &InvalidTokenCause,
 			},
 		}
 
 		for _, tc := range tests {
 			t.Run(tc.name, func(t *testing.T) {
-				token, err := NewToken(tc.userID, tc.creds)
+				token, err := NewToken(tc.userID.String(), tc.creds)
 				if tc.cause != nil {
 					gm.Expect(err).ToNot(gm.BeNil())
 					gm.Expect(errors.FromCause(err, *tc.cause)).To(gm.BeTrue())
 					return
 				}
 
-				gm.Expect(token.UserID).To(gm.Equal(tc.userID))
+				gm.Expect(token.UserID).To(gm.Equal(tc.userID.String()))
 				gm.Expect(token.Credentials.Alg).To(gm.Equal(tc.creds.Alg))
 				gm.Expect(token.Credentials.Salt).To(gm.Equal(tc.creds.Salt))
 				gm.Expect(token.Credentials.Secret).To(gm.Equal(tc.creds.Secret))

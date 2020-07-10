@@ -63,8 +63,7 @@ func TestProject(t *testing.T) {
 		email, err := NewEmail("hacker@cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		creds, err := GenerateCredentials()
-		gm.Expect(err).To(gm.BeNil())
+		creds := GenerateCredentials()
 
 		user, err := NewUser("Science McGee", email, creds)
 		gm.Expect(err).To(gm.BeNil())

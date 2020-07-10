@@ -19,7 +19,7 @@ var RecoveryExpiration time.Duration = 30 * time.Minute
 
 type Recovery struct {
 	*database.Primitive
-	UserID      database.ID  `json:"user_id"`
+	UserID      string       `json:"user_id"`
 	Credentials *Credentials `json:"-" gqlgen:"-"`
 	ExpiresAt   time.Time    `json:"expires_at"`
 }
@@ -34,12 +34,8 @@ func (r *Recovery) Validate() error {
 		return errors.Wrap(InvalidRecoveryCause, err)
 	}
 
-	if err := r.UserID.Validate(); err != nil {
-		return errors.Wrap(InvalidRecoveryCause, err)
-	}
-
-	if !r.UserID.IsType(UserType) {
-		return errors.New(InvalidRecoveryCause, "User ID is not an ID of a user")
+	if r.UserID == "" {
+		return errors.New(InvalidRecoveryCause, "UserID must not be empty")
 	}
 
 	if r.Credentials == nil {
@@ -112,7 +108,7 @@ func (r *Recovery) Decrypt(ctx context.Context, codec crypto.EncryptionCodec, da
 	return nil
 }
 
-func NewRecovery(userID database.ID, creds *Credentials) (*Recovery, error) {
+func NewRecovery(userID string, creds *Credentials) (*Recovery, error) {
 	p, err := database.NewPrimitive(RecoveryType)
 	if err != nil {
 		return nil, err
@@ -135,15 +131,7 @@ func NewRecovery(userID database.ID, creds *Credentials) (*Recovery, error) {
 }
 
 func GenerateRecovery() (*Recovery, error) {
-	userID, err := database.GenerateID(UserType)
-	if err != nil {
-		return nil, err
-	}
+	userID := "thisisanid"
 
-	creds, err := GenerateCredentials()
-	if err != nil {
-		return nil, err
-	}
-
-	return NewRecovery(userID, creds)
+	return NewRecovery(userID, GenerateCredentials())
 }

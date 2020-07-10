@@ -9,6 +9,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/database/types"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -18,8 +19,8 @@ func TestDefaultAdminPolicy(t *testing.T) {
 	policy, err := loadPolicyFile(primitives.DefaultAdminPolicy.String() + ".yaml")
 	gm.Expect(err).To(gm.BeNil())
 
-	user := &primitives.User{}
-	session, err := NewSession(&primitives.User{}, &primitives.Session{}, []*primitives.Policy{policy},
+	user := &models.User{}
+	session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{policy},
 		[]*primitives.Role{}, user)
 
 	gm.Expect(err).To(gm.BeNil())
@@ -52,8 +53,8 @@ func TestDefaultGlobalPolicy(t *testing.T) {
 	policy, err := loadPolicyFile(primitives.DefaultGlobalPolicy.String() + ".yaml")
 	gm.Expect(err).To(gm.BeNil())
 
-	user := &primitives.User{}
-	session, err := NewSession(&primitives.User{}, &primitives.Session{}, []*primitives.Policy{policy},
+	user := &models.User{}
+	session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{policy},
 		[]*primitives.Role{}, user)
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(session).ToNot(gm.BeNil())

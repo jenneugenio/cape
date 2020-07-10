@@ -12,13 +12,13 @@ import (
 
 type AssignRoleRequest struct {
 	RoleID database.ID `json:"role_id"`
-	UserID database.ID `json:"user_id"`
+	UserID string      `json:"user_id"`
 }
 
 type Assignment struct {
 	ID        database.ID      `json:"id"`
 	Role      *primitives.Role `json:"role"`
-	User      *primitives.User `json:"user"`
+	User      *models.User     `json:"user"`
 	CreatedAt time.Time        `json:"created_at"`
 	UpdatedAt time.Time        `json:"updated_at"`
 }
@@ -54,16 +54,16 @@ type CreateProjectRequest struct {
 }
 
 type CreateRecoveryRequest struct {
-	Email primitives.Email `json:"email"`
+	Email models.Email `json:"email"`
 }
 
 type CreateRoleRequest struct {
 	Label   primitives.Label `json:"label"`
-	UserIds []database.ID    `json:"user_ids"`
+	UserIds []string         `json:"user_ids"`
 }
 
 type CreateTokenRequest struct {
-	UserID database.ID `json:"user_id"`
+	UserID string `json:"user_id"`
 }
 
 type CreateTokenResponse struct {
@@ -72,13 +72,13 @@ type CreateTokenResponse struct {
 }
 
 type CreateUserRequest struct {
-	Name  primitives.Name  `json:"name"`
-	Email primitives.Email `json:"email"`
+	Name  models.Name  `json:"name"`
+	Email models.Email `json:"email"`
 }
 
 type CreateUserResponse struct {
 	Password primitives.Password `json:"password"`
-	User     *primitives.User    `json:"user"`
+	User     *models.User        `json:"user"`
 }
 
 type DeletePolicyRequest struct {
@@ -100,18 +100,6 @@ type DetachPolicyRequest struct {
 
 type PolicyInput struct {
 	Label primitives.Label `json:"label"`
-}
-
-type SessionRequest struct {
-	Email   *primitives.Email   `json:"email"`
-	TokenID *database.ID        `json:"token_id"`
-	Secret  primitives.Password `json:"secret"`
-}
-
-type SetupRequest struct {
-	Name     primitives.Name     `json:"name"`
-	Email    primitives.Email    `json:"email"`
-	Password primitives.Password `json:"password"`
 }
 
 type UpdateProjectRequest struct {

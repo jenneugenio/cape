@@ -18,11 +18,7 @@ func TestRecovery(t *testing.T) {
 	_, user, err := GenerateUser("hi", "hi@hi.hi")
 	gm.Expect(err).To(gm.BeNil())
 
-	_, token, err := GenerateToken(user)
-	gm.Expect(err).To(gm.BeNil())
-
-	creds, err := GenerateCredentials()
-	gm.Expect(err).To(gm.BeNil())
+	creds := GenerateCredentials()
 
 	t.Run("Validate", func(t *testing.T) {
 		tests := []struct {
@@ -33,13 +29,13 @@ func TestRecovery(t *testing.T) {
 			{
 				name: "valid recovery",
 				fn: func() (*Recovery, error) {
-					return NewRecovery(user.ID, creds)
+					return NewRecovery(user.ID.String(), creds)
 				},
 			},
 			{
 				name: "invalid id",
 				fn: func() (*Recovery, error) {
-					r, err := NewRecovery(user.ID, creds)
+					r, err := NewRecovery(user.ID.String(), creds)
 					if err != nil {
 						return nil, err
 					}
@@ -52,25 +48,12 @@ func TestRecovery(t *testing.T) {
 			{
 				name: "invalid user id",
 				fn: func() (*Recovery, error) {
-					r, err := NewRecovery(user.ID, creds)
+					r, err := NewRecovery(user.ID.String(), creds)
 					if err != nil {
 						return nil, err
 					}
 
-					r.UserID = database.EmptyID
-					return r, nil
-				},
-				cause: &InvalidRecoveryCause,
-			},
-			{
-				name: "wrong type for user id",
-				fn: func() (*Recovery, error) {
-					r, err := NewRecovery(user.ID, creds)
-					if err != nil {
-						return nil, err
-					}
-
-					r.UserID = token.ID
+					r.UserID = ""
 					return r, nil
 				},
 				cause: &InvalidRecoveryCause,
@@ -78,7 +61,7 @@ func TestRecovery(t *testing.T) {
 			{
 				name: "missing credentials",
 				fn: func() (*Recovery, error) {
-					r, err := NewRecovery(user.ID, creds)
+					r, err := NewRecovery(user.ID.String(), creds)
 					if err != nil {
 						return nil, err
 					}
@@ -91,10 +74,10 @@ func TestRecovery(t *testing.T) {
 			{
 				name: "bad credentials",
 				fn: func() (*Recovery, error) {
-					badcreds, err := GenerateCredentials()
+					badcreds := GenerateCredentials()
 					gm.Expect(err).To(gm.BeNil())
 
-					r, err := NewRecovery(user.ID, badcreds)
+					r, err := NewRecovery(user.ID.String(), badcreds)
 					if err != nil {
 						return nil, err
 					}
@@ -107,7 +90,7 @@ func TestRecovery(t *testing.T) {
 			{
 				name: "expires at is zero value",
 				fn: func() (*Recovery, error) {
-					r, err := NewRecovery(user.ID, creds)
+					r, err := NewRecovery(user.ID.String(), creds)
 					if err != nil {
 						return nil, err
 					}
@@ -150,10 +133,9 @@ func TestRecovery(t *testing.T) {
 	})
 
 	t.Run("encrypt & decrypt", func(t *testing.T) {
-		creds, err := GenerateCredentials()
-		gm.Expect(err).To(gm.BeNil())
+		creds := GenerateCredentials()
 
-		r, err := NewRecovery(user.ID, creds)
+		r, err := NewRecovery(user.ID.String(), creds)
 		gm.Expect(err).To(gm.BeNil())
 
 		key, err := crypto.NewBase64KeyURL(nil)

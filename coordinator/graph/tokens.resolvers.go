@@ -21,22 +21,22 @@ func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTo
 
 	user := currSession.User
 
-	if user.GetID() != input.UserID {
+	if user.ID != input.UserID {
 		return nil, errs.New(auth.AuthorizationFailure, "Can only create a token for yourself")
 	}
 
-	password, err := primitives.GeneratePassword()
-	if err != nil {
-		return nil, err
-	}
-
+	password := primitives.GeneratePassword()
 	creds, err := r.CredentialProducer.Generate(password)
 	if err != nil {
 		logger.Info().Err(err).Msg("Could not generate credentials")
 		return nil, err
 	}
 
-	token, err := primitives.NewToken(input.UserID, creds)
+	token, err := primitives.NewToken(input.UserID, &primitives.Credentials{
+		Secret: creds.Secret,
+		Salt:   creds.Salt,
+		Alg:    primitives.CredentialsAlgType(creds.Alg),
+	})
 	if err != nil {
 		logger.Info().Err(err).Msg("Could not create token")
 		return nil, err
@@ -66,7 +66,7 @@ func (r *mutationResolver) RemoveToken(ctx context.Context, id database.ID) (dat
 		return database.EmptyID, err
 	}
 
-	if !hasAdminRole && currSession.User.GetID() != token.UserID {
+	if !hasAdminRole && currSession.User.ID != token.UserID {
 		return database.EmptyID, errs.New(auth.AuthorizationFailure, "Can only remove tokens you own")
 	}
 
@@ -74,13 +74,13 @@ func (r *mutationResolver) RemoveToken(ctx context.Context, id database.ID) (dat
 	return id, err
 }
 
-func (r *queryResolver) Tokens(ctx context.Context, userID database.ID) ([]database.ID, error) {
+func (r *queryResolver) Tokens(ctx context.Context, userID string) ([]database.ID, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
 	hasAdminRole := hasRole(currSession.Roles, primitives.AdminRole)
 
-	if !hasAdminRole && currSession.User.GetID() != userID {
+	if !hasAdminRole && currSession.User.ID != userID {
 		return nil, errs.New(auth.AuthorizationFailure, "Can only list tokens you own")
 	}
 

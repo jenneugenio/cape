@@ -17,8 +17,8 @@ import (
 // calls with the server
 type Session struct {
 	*database.Primitive
-	UserID    database.ID   `json:"user_id"`
-	OwnerID   database.ID   `json:"owner_id"`
+	UserID    string        `json:"user_id"`
+	OwnerID   string        `json:"owner_id"`
 	ExpiresAt time.Time     `json:"expires_at"`
 	Token     *base64.Value `json:"token"`
 }
@@ -33,23 +33,12 @@ func (s *Session) Validate() error {
 		return errors.Wrap(InvalidSessionCause, err)
 	}
 
-	if err := s.UserID.Validate(); err != nil {
-		return errors.Wrap(InvalidSessionCause, err)
+	if s.UserID == "" {
+		return errors.New(InvalidSessionCause, "IdentityID is empty")
 	}
 
-	userTypes := []types.Type{
-		UserType,
-	}
-	if !s.UserID.OneOf(userTypes) {
-		return errors.New(InvalidSessionCause, "User ID is not a user")
-	}
-
-	if err := s.OwnerID.Validate(); err != nil {
-		return errors.Wrap(InvalidSessionCause, err)
-	}
-
-	if !s.OwnerID.OneOf([]types.Type{UserType, TokenPrimitiveType}) {
-		return errors.New(InvalidSessionCause, "Owner ID is not a user or token")
+	if s.OwnerID == "" {
+		return errors.New(InvalidSessionCause, "OwnerID is empty")
 	}
 
 	return nil
@@ -70,7 +59,7 @@ func NewSession(cp CredentialProvider) (*Session, error) {
 	session := &Session{
 		Primitive: p,
 		UserID:    cp.GetUserID(),
-		OwnerID:   cp.GetID(),
+		OwnerID:   cp.GetStringID(),
 	}
 
 	id, err := database.DeriveID(session)

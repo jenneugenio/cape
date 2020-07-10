@@ -57,23 +57,23 @@ func NewCredentials(secret, salt *base64.Value, alg CredentialsAlgType) (*Creden
 // GenerateCredentials returns an instantiated Credentials for use in unit testing.
 //
 // This function _should only ever_ be used inside of a test.
-func GenerateCredentials() (*Credentials, error) {
+func GenerateCredentials() *Credentials {
 	secret := make([]byte, SecretLength)
 	salt := make([]byte, SaltLength)
 
 	_, err := rand.Read(secret)
 	if err != nil {
-		return nil, err
+		panic("Unable to read from rand")
 	}
 
 	_, err = rand.Read(salt)
 	if err != nil {
-		return nil, err
+		panic("Unable to read from rand")
 	}
 
 	return &Credentials{
 		Secret: base64.New(secret),
 		Salt:   base64.New(salt),
 		Alg:    SHA256,
-	}, nil
+	}
 }

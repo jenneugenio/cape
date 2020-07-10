@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -88,7 +89,7 @@ func (m *MockClientTransport) TokenLogin(ctx context.Context, apiToken *auth.API
 	return tokenLogin(ctx, m, apiToken)
 }
 
-func (m *MockClientTransport) EmailLogin(ctx context.Context, email primitives.Email, password primitives.Password) (*primitives.Session, error) {
+func (m *MockClientTransport) EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*primitives.Session, error) {
 	return emailLogin(ctx, m, email, password)
 }
 

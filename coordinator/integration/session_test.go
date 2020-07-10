@@ -9,6 +9,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/harness"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -50,8 +51,7 @@ func TestSessions(t *testing.T) {
 		client, err := h.Client()
 		gm.Expect(err).To(gm.BeNil())
 
-		email, err := primitives.NewEmail("fake@fake.com")
-		gm.Expect(err).To(gm.BeNil())
+		email := models.Email("fake@fake.com")
 
 		password, err := primitives.NewPassword("newpasswordwhodis")
 		gm.Expect(err).To(gm.BeNil())
@@ -113,8 +113,8 @@ func TestSessions(t *testing.T) {
 
 		user, err := client.Me(ctx)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(user.GetID()).To(gm.Equal(session.UserID))
-		gm.Expect(user.GetEmail()).To(gm.Equal(m.Admin.User.Email))
+		gm.Expect(user.ID).To(gm.Equal(session.UserID))
+		gm.Expect(user.Email).To(gm.Equal(m.Admin.User.Email))
 
 		creds, err := user.GetCredentials()
 		gm.Expect(err).To(gm.BeNil())

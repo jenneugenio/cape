@@ -1,9 +1,7 @@
 package primitives
 
-import "github.com/capeprivacy/cape/coordinator/database"
-
 type CredentialProvider interface {
-	database.Entity
+	GetStringID() string
 	GetCredentials() (*Credentials, error)
-	GetUserID() database.ID
+	GetUserID() string
 }

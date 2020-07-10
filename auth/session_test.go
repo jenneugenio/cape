@@ -5,6 +5,7 @@ import (
 
 	gm "github.com/onsi/gomega"
 
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -12,30 +13,26 @@ import (
 func TestCan(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	email, err := primitives.NewEmail("jerry@jerry.berry")
-	gm.Expect(err).To(gm.BeNil())
+	email := models.Email("jerry@jerry.berry")
 
-	password, err := primitives.GeneratePassword()
-	gm.Expect(err).To(gm.BeNil())
+	password := primitives.GeneratePassword()
 
 	creds, err := DefaultSHA256Producer.Generate(password)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("GetID returns the user id", func(t *testing.T) {
-		_, user, err := primitives.GenerateUser("hiho", "jerry@berry.jerry")
-		gm.Expect(err).To(gm.BeNil())
+		_, user := models.GenerateUser("hiho", "jerry@berry.jerry")
 
-		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{}, []*primitives.Role{}, user)
+		session, err := NewSession(&user, &primitives.Session{}, []*primitives.Policy{}, []*primitives.Role{}, &user)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(session.GetID()).To(gm.Equal(user.ID))
 	})
 
 	t.Run("denied no rules", func(t *testing.T) {
-		user, err := primitives.NewUser("Jerry Berry", email, creds)
-		gm.Expect(err).To(gm.BeNil())
+		user := models.NewUser("Jerry Berry", email, creds)
 
-		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{}, []*primitives.Role{}, user)
+		session, err := NewSession(&user, &primitives.Session{}, []*primitives.Policy{}, []*primitives.Role{}, &user)
 		gm.Expect(err).To(gm.BeNil())
 
 		err = session.Can(primitives.Create, primitives.UserType)
@@ -44,8 +41,7 @@ func TestCan(t *testing.T) {
 	})
 
 	t.Run("denied deny rule exists", func(t *testing.T) {
-		user, err := primitives.NewUser("Jerry Berry", email, creds)
-		gm.Expect(err).To(gm.BeNil())
+		user := models.NewUser("Jerry Berry", email, creds)
 
 		spec := &primitives.PolicySpec{
 			Version: 1,
@@ -62,7 +58,7 @@ func TestCan(t *testing.T) {
 		p, err := primitives.NewPolicy("my-policy", spec)
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{p}, []*primitives.Role{}, user)
+		session, err := NewSession(&user, &primitives.Session{}, []*primitives.Policy{p}, []*primitives.Role{}, &user)
 		gm.Expect(err).To(gm.BeNil())
 
 		err = session.Can(primitives.Create, primitives.UserType)
@@ -71,7 +67,7 @@ func TestCan(t *testing.T) {
 	})
 
 	t.Run("allowed rules", func(t *testing.T) {
-		user, err := primitives.NewUser("Jerry Berry", email, creds)
+		user := models.NewUser("Jerry Berry", email, creds)
 		gm.Expect(err).To(gm.BeNil())
 
 		spec := &primitives.PolicySpec{
@@ -89,7 +85,7 @@ func TestCan(t *testing.T) {
 		p, err := primitives.NewPolicy("my-policy", spec)
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{p}, []*primitives.Role{}, user)
+		session, err := NewSession(&user, &primitives.Session{}, []*primitives.Policy{p}, []*primitives.Role{}, &user)
 		gm.Expect(err).To(gm.BeNil())
 
 		err = session.Can(primitives.Create, primitives.UserType)

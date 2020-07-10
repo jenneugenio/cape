@@ -14,6 +14,7 @@ import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
+	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/go-openapi/runtime/middleware/header"
 	"github.com/manifoldco/go-base64"
@@ -24,9 +25,9 @@ import (
 
 // QueryUserPolicies is a helper function to query all roles assigned to an user and then
 // all policies attached to those roles.
-func QueryUserPolicies(ctx context.Context, db database.Querier, userID database.ID) ([]*primitives.Policy, error) {
+func QueryUserPolicies(ctx context.Context, db database.Querier, userID string) ([]*primitives.Policy, error) {
 	var assignments []*primitives.Assignment
-	assignmentFilter := database.NewFilter(database.Where{"user_id": userID.String()}, nil, nil)
+	assignmentFilter := database.NewFilter(database.Where{"user_id": userID}, nil, nil)
 	err := db.Query(ctx, &assignments, assignmentFilter)
 	if err != nil {
 		return nil, err
@@ -64,7 +65,7 @@ func QueryUserPolicies(ctx context.Context, db database.Querier, userID database
 	return policies, nil
 }
 
-func QueryRoles(ctx context.Context, db database.Querier, userID database.ID) ([]*primitives.Role, error) {
+func QueryRoles(ctx context.Context, db database.Querier, userID string) ([]*primitives.Role, error) {
 	var assignments []*primitives.Assignment
 	filter := database.NewFilter(database.Where{
 		"user_id": userID,
@@ -157,12 +158,9 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) err
 	return nil
 }
 
-func getCredentialProvider(ctx context.Context, q database.Querier, input LoginRequest) (primitives.CredentialProvider, error) {
+func getCredentialProvider(ctx context.Context, q database.Querier, capedb db.Interface, input LoginRequest) (primitives.CredentialProvider, error) {
 	if input.Email != nil {
-		filter := database.NewFilter(database.Where{"email": input.Email.String()}, nil, nil)
-		user := &primitives.User{}
-		err := q.QueryOne(ctx, user, filter)
-		return user, err
+		return capedb.Users().Get(ctx, *input.Email)
 	}
 
 	token := &primitives.Token{}
@@ -314,10 +312,10 @@ func GetRolesByLabel(ctx context.Context, db database.Querier, labels []primitiv
 // CreateAssignments is a helper function that makes it easy to assign roles to
 // a given user.
 func CreateAssignments(ctx context.Context, db database.Querier,
-	user *primitives.User, roles []*primitives.Role) error {
+	userID string, roles []*primitives.Role) error {
 	assignments := make([]database.Entity, len(roles))
 	for i, role := range roles {
-		assignment, err := primitives.NewAssignment(user.GetID(), role.ID)
+		assignment, err := primitives.NewAssignment(userID, role.ID)
 		if err != nil {
 			return err
 		}

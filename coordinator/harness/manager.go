@@ -11,14 +11,14 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
-const AdminEmail = "admin@cape.com"
-const AdminName = "admin"
+const AdminEmail = models.Email("admin@cape.com")
+const AdminName = models.Name("admin")
 const AdminPassword = "iamtheadmin"
 
 // User represents a user in the cape coordinator
 type User struct {
 	Client   *coordinator.Client
-	User     *primitives.User
+	User     *models.User
 	Password primitives.Password
 	Token    *base64.Value
 }
@@ -47,17 +47,7 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 		return nil, err
 	}
 
-	email, err := primitives.NewEmail(AdminEmail)
-	if err != nil {
-		return nil, err
-	}
-
-	name, err := primitives.NewName(AdminName)
-	if err != nil {
-		return nil, err
-	}
-
-	u, err := client.Setup(ctx, name, email, password)
+	u, err := client.Setup(ctx, AdminName, AdminEmail, password)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +58,7 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 		Password: password,
 	}
 
-	session, err := client.EmailLogin(ctx, email, password)
+	session, err := client.EmailLogin(ctx, AdminEmail, password)
 	if err != nil {
 		return nil, err
 	}

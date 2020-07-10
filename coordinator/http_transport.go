@@ -18,6 +18,7 @@ import (
 	"github.com/manifoldco/go-base64"
 
 	"github.com/capeprivacy/cape/auth"
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -92,7 +93,7 @@ func (c *HTTPTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToken)
 }
 
 // EmailLogin starts step 1 of the login flow using an email & password
-func (c *HTTPTransport) EmailLogin(ctx context.Context, email primitives.Email, password primitives.Password) (*primitives.Session, error) {
+func (c *HTTPTransport) EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*primitives.Session, error) {
 	return emailLogin(ctx, c, email, password)
 }
 

@@ -13,6 +13,7 @@ import (
 
 	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/capeprivacy/cape/framework"
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -86,18 +87,14 @@ func formatInstanceID(serviceType, instanceID string) (primitives.Label, error) 
 	return primitives.NewLabel(fmt.Sprintf("cape-%s-%s", serviceType, instanceID))
 }
 
-func getName(c *cli.Context, question string) (primitives.Name, error) {
+func getName(c *cli.Context, question string) (models.Name, error) {
 	nameStr := c.String("name")
 	if nameStr != "" {
-		return primitives.NewName(nameStr)
+		return models.Name(nameStr), nil
 	}
 
 	validateName := func(input string) error {
-		_, err := primitives.NewName(input)
-		if err != nil {
-			return err
-		}
-
+		// TODO validate??
 		return nil
 	}
 
@@ -114,7 +111,7 @@ func getName(c *cli.Context, question string) (primitives.Name, error) {
 		return "", err
 	}
 
-	return primitives.NewName(nameStr)
+	return models.Name(nameStr), nil
 }
 
 func getEmail(c *cli.Context, in string) (primitives.Email, error) {

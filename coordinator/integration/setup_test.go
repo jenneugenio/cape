@@ -10,6 +10,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/harness"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -31,11 +32,8 @@ func TestSetup(t *testing.T) {
 	password, err := primitives.NewPassword("jerryberrybuddyboy")
 	gm.Expect(err).To(gm.BeNil())
 
-	name, err := primitives.NewName("ben")
-	gm.Expect(err).To(gm.BeNil())
-
-	email, err := primitives.NewEmail("ben@capeprivacy.com")
-	gm.Expect(err).To(gm.BeNil())
+	name := models.Name("ben")
+	email := models.Email("ben@capeprivacy.com")
 
 	t.Run("cannot login prior to setup", func(t *testing.T) {
 		gm.RegisterTestingT(t)
@@ -76,7 +74,7 @@ func TestSetup(t *testing.T) {
 				members, err := client.GetMembersRole(ctx, role.ID)
 				gm.Expect(err).To(gm.BeNil())
 
-				gm.Expect(members[0].GetEmail()).To(gm.Equal(admin.Email))
+				gm.Expect(members[0].Email).To(gm.Equal(admin.Email))
 			}
 		}
 
@@ -102,11 +100,8 @@ func TestSetup(t *testing.T) {
 		password, err := primitives.NewPassword("jerryberrybuddythey")
 		gm.Expect(err).To(gm.BeNil())
 
-		name, err := primitives.NewName("justin")
-		gm.Expect(err).To(gm.BeNil())
-
-		email, err := primitives.NewEmail("justin@capeprivacy.com")
-		gm.Expect(err).To(gm.BeNil())
+		name := models.Name("justin")
+		email := models.Email("justin@capeprivacy.com")
 
 		_, err = client.Setup(ctx, name, email, password)
 		gm.Expect(err).ToNot(gm.BeNil())

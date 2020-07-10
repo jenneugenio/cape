@@ -7,6 +7,7 @@ import (
 	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -17,7 +18,7 @@ func TestCredentialProducer(t *testing.T) {
 	t.Run("can generate credentials", func(t *testing.T) {
 		tests := []struct {
 			name     string
-			alg      primitives.CredentialsAlgType
+			alg      models.CredentialsAlgType
 			producer CredentialProducer
 			secret   primitives.Password
 			randRead func([]byte) (int, error)
@@ -25,33 +26,33 @@ func TestCredentialProducer(t *testing.T) {
 		}{
 			{
 				name:     "can create with valid password - sha256",
-				alg:      primitives.SHA256,
+				alg:      models.SHA256,
 				producer: DefaultSHA256Producer,
 				secret:   primitives.Password("helloabcdefgh"),
 			},
 			{
 				name:     "can create with valid password - argon2id",
 				producer: DefaultArgon2IDProducer,
-				alg:      primitives.Argon2ID,
+				alg:      models.Argon2ID,
 				secret:   primitives.Password("helloabcdefgh"),
 			},
 			{
 				name:     "error for invalid password - sha256",
-				alg:      primitives.SHA256,
+				alg:      models.SHA256,
 				producer: DefaultSHA256Producer,
 				secret:   primitives.Password("sdf"),
 				cause:    &primitives.InvalidPasswordCause,
 			},
 			{
 				name:     "error for invalid password - argon2id",
-				alg:      primitives.Argon2ID,
+				alg:      models.Argon2ID,
 				producer: DefaultArgon2IDProducer,
 				secret:   primitives.Password("sdf"),
 				cause:    &primitives.InvalidPasswordCause,
 			},
 			{
 				name:     "errors on rand.Read error - sha256",
-				alg:      primitives.SHA256,
+				alg:      models.SHA256,
 				producer: DefaultSHA256Producer,
 				secret:   primitives.Password("helloabcdefgh"),
 				randRead: errRand,
@@ -76,19 +77,17 @@ func TestCredentialProducer(t *testing.T) {
 				}
 
 				gm.Expect(creds.Alg).To(gm.Equal(tc.alg))
-				gm.Expect(creds.Validate()).To(gm.BeNil())
 			})
 		}
 	})
 
 	t.Run("can compare credentials", func(t *testing.T) {
-		matching, err := primitives.GeneratePassword()
-		gm.Expect(err).To(gm.BeNil())
+		matching := primitives.GeneratePassword()
 
 		tests := []struct {
 			name       string
 			producer   CredentialProducer
-			alg        primitives.CredentialsAlgType
+			alg        models.CredentialsAlgType
 			initial    primitives.Password
 			comparison primitives.Password
 			cause      *errors.Cause
@@ -99,14 +98,14 @@ func TestCredentialProducer(t *testing.T) {
 			{
 				name:       "matches properly - sha256",
 				producer:   DefaultSHA256Producer,
-				alg:        primitives.SHA256,
+				alg:        models.SHA256,
 				initial:    primitives.Password("abcdefghijk"),
 				comparison: primitives.Password("abcdefghijk"),
 			},
 			{
 				name:       "errors if incorrect - sha256",
 				producer:   DefaultSHA256Producer,
-				alg:        primitives.SHA256,
+				alg:        models.SHA256,
 				initial:    primitives.Password("sfsdfsfsfsdf"),
 				comparison: primitives.Password("sdfsfsfsf231"),
 				cause:      &MismatchingCredentials,
@@ -114,7 +113,7 @@ func TestCredentialProducer(t *testing.T) {
 			{
 				name:       "errors if wrong alg - sha256",
 				producer:   DefaultSHA256Producer,
-				alg:        primitives.Argon2ID,
+				alg:        models.Argon2ID,
 				initial:    matching,
 				comparison: matching,
 				cause:      &UnsupportedAlgorithm,
@@ -122,7 +121,7 @@ func TestCredentialProducer(t *testing.T) {
 			{
 				name:       "errors if wrong alg - argon2id",
 				producer:   DefaultArgon2IDProducer,
-				alg:        primitives.SHA256,
+				alg:        models.SHA256,
 				initial:    matching,
 				comparison: matching,
 				cause:      &UnsupportedAlgorithm,
@@ -130,39 +129,21 @@ func TestCredentialProducer(t *testing.T) {
 			{
 				name:       "matches properly - Argon2ID",
 				producer:   DefaultArgon2IDProducer,
-				alg:        primitives.Argon2ID,
+				alg:        models.Argon2ID,
 				initial:    primitives.Password("abcdefghijk"),
 				comparison: primitives.Password("abcdefghijk"),
 			},
 			{
 				name:       "errors if incorrect - Argon2ID",
 				producer:   DefaultArgon2IDProducer,
-				alg:        primitives.Argon2ID,
+				alg:        models.Argon2ID,
 				initial:    primitives.Password("sfsdfsfsfsdf"),
 				comparison: primitives.Password("sdfsfsfsf231"),
 				cause:      &MismatchingCredentials,
 			},
 			{
-				name:       "cannot compare malignant creds - sha256",
-				producer:   DefaultSHA256Producer,
-				alg:        primitives.SHA256,
-				secret:     base64.New([]byte("hi")),
-				initial:    matching,
-				comparison: matching,
-				cause:      &primitives.InvalidCredentialsCause,
-			},
-			{
-				name:       "cannot compare malignant creds - argon2id",
-				producer:   DefaultArgon2IDProducer,
-				alg:        primitives.Argon2ID,
-				secret:     base64.New([]byte("hi")),
-				initial:    matching,
-				comparison: matching,
-				cause:      &primitives.InvalidCredentialsCause,
-			},
-			{
 				name:       "error for invalid password - sha256",
-				alg:        primitives.SHA256,
+				alg:        models.SHA256,
 				producer:   DefaultSHA256Producer,
 				initial:    primitives.Password("sdf"),
 				comparison: matching,
@@ -170,7 +151,7 @@ func TestCredentialProducer(t *testing.T) {
 			},
 			{
 				name:       "error for invalid password - argon2id",
-				alg:        primitives.Argon2ID,
+				alg:        models.Argon2ID,
 				producer:   DefaultArgon2IDProducer,
 				initial:    primitives.Password("sdf"),
 				comparison: matching,
@@ -179,7 +160,7 @@ func TestCredentialProducer(t *testing.T) {
 			{
 				name:       "matches properly - sha256",
 				producer:   DefaultSHA256Producer,
-				alg:        primitives.SHA256,
+				alg:        models.SHA256,
 				initial:    primitives.Password("abcdefghijk"),
 				comparison: primitives.Password("abcdefghijk"),
 			},

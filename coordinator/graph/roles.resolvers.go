@@ -8,8 +8,10 @@ import (
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
+	"github.com/capeprivacy/cape/models"
 	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -99,8 +101,7 @@ func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRol
 		return nil, err
 	}
 
-	user := &primitives.User{}
-	err = enforcer.Get(ctx, input.UserID, user)
+	user, err := r.Database.Users().GetByID(ctx, input.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +123,7 @@ func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignR
 
 	filter := database.NewFilter(database.Where{
 		"role_id": input.RoleID.String(),
-		"user_id": input.UserID.String(),
+		"user_id": input.UserID,
 	}, nil, nil)
 
 	err := enforcer.QueryOne(ctx, assignment, filter)
@@ -177,7 +178,7 @@ func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
 	return roles, nil
 }
 
-func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]*primitives.User, error) {
+func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]*models.User, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -187,18 +188,26 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 		return nil, err
 	}
 
-	userIDs := database.In{}
+	var userIDs []string
 	for _, assignment := range assignments {
 		userIDs = append(userIDs, assignment.UserID)
 	}
 
-	var users []*primitives.User
+	var users []models.User
 	if len(userIDs) > 0 {
-		err = enforcer.Query(ctx, &users, database.NewFilter(database.Where{"id": userIDs}, nil, nil))
+		opts := &db.ListUserOptions{Options: nil, FilterIDs: userIDs}
+		u, err := r.Database.Users().List(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+		users = u
 	}
 
-	return users, nil
+	userPtrs := make([]*models.User, len(users))
+	for i, user := range users {
+		u := user
+		userPtrs[i] = &u
+	}
+
+	return userPtrs, nil
 }

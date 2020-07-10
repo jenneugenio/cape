@@ -9,7 +9,7 @@ import (
 // Assignment represents a policy being applied/attached to a role
 type Assignment struct {
 	*database.Primitive
-	UserID database.ID `json:"user_id"`
+	UserID string      `json:"user_id"`
 	RoleID database.ID `json:"role_id"`
 }
 
@@ -18,24 +18,15 @@ func (a *Assignment) Validate() error {
 		return errors.Wrap(InvalidAssignmentCause, err)
 	}
 
-	if err := a.UserID.Validate(); err != nil {
-		return errors.New(InvalidAssignmentCause, "Assignment user id must be valid")
-	}
-
-	typ, err := a.UserID.Type()
-	if err != nil {
-		return errors.New(InvalidAssignmentCause, "Invalid User ID provided")
-	}
-
-	if typ != UserType {
-		return errors.New(InvalidAssignmentCause, "Invalid User ID provided")
+	if a.UserID == "" {
+		return errors.New(InvalidAssignmentCause, "Invalid Identity ID provided")
 	}
 
 	if err := a.RoleID.Validate(); err != nil {
 		return errors.New(InvalidAssignmentCause, "Assignment role id must be valid")
 	}
 
-	typ, err = a.RoleID.Type()
+	typ, err := a.RoleID.Type()
 	if err != nil {
 		return errors.New(InvalidAssignmentCause, "Invalid Role ID provider")
 	}
@@ -53,7 +44,7 @@ func (a *Assignment) GetType() types.Type {
 }
 
 // NewAssignment returns a new Assignment
-func NewAssignment(userID, roleID database.ID) (*Assignment, error) {
+func NewAssignment(userID string, roleID database.ID) (*Assignment, error) {
 	p, err := database.NewPrimitive(AssignmentType)
 	if err != nil {
 		return nil, err

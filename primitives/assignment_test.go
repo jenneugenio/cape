@@ -19,25 +19,25 @@ func TestAssignment(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("valid assignment", func(t *testing.T) {
-		assignment, err := NewAssignment(user.ID, role.ID)
+		assignment, err := NewAssignment(user.ID.String(), role.ID)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(assignment.UserID).To(gm.Equal(user.ID))
+		gm.Expect(assignment.UserID).To(gm.Equal(user.ID.String()))
 		gm.Expect(assignment.RoleID).To(gm.Equal(role.ID))
 	})
 
 	tests := []struct {
 		name   string
-		userID database.ID
+		userID string
 		roleID database.ID
 	}{
 		{
 			"invalid user id",
-			database.EmptyID,
+			"",
 			role.ID,
 		},
 		{
 			"invalid role id",
-			user.ID,
+			user.ID.String(),
 			database.EmptyID,
 		},
 	}

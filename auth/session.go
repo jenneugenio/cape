@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/types"
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -10,7 +10,7 @@ import (
 // Session holds information related to authenticating and
 // authorizing the contained user
 type Session struct {
-	User               *primitives.User
+	User               *models.User
 	Session            *primitives.Session
 	Policies           []*primitives.Policy
 	Roles              []*primitives.Role
@@ -19,7 +19,7 @@ type Session struct {
 
 // NewSession returns a new auth Session
 func NewSession(
-	user *primitives.User,
+	user *models.User,
 	session *primitives.Session,
 	policies []*primitives.Policy,
 	roles []*primitives.Role,
@@ -56,8 +56,8 @@ func (s *Session) Validate() error {
 	return nil
 }
 
-func (s *Session) GetID() database.ID {
-	return s.User.GetID()
+func (s *Session) GetID() string {
+	return s.User.ID
 }
 
 // Can checks to see if the given user can do an action on the given primitive type. This

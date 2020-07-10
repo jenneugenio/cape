@@ -6,25 +6,22 @@ package graph
 import (
 	"context"
 
-	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
-	errs "github.com/capeprivacy/cape/partyerrors"
+	modelmigrations "github.com/capeprivacy/cape/models/migration"
 	"github.com/capeprivacy/cape/primitives"
 )
 
 func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.CreateRecoveryRequest) (*string, error) {
 	logger := fw.Logger(ctx)
 
-	user := &primitives.User{}
-	err := r.Backend.QueryOne(ctx, user, database.NewFilter(database.Where{
-		"email": input.Email,
-	}, nil, nil))
+	user, err := r.Database.Users().Get(ctx, input.Email)
 	if err != nil {
 		// If the error is not found, we don't propagate it up, we pretend
 		// everything is groovy so an attacker can't enumerate email addresses
 		// through our recovery API
-		if errs.FromCause(err, database.NotFoundCause) {
+		if err == db.ErrNoRows {
 			logger.Info().Err(err).Msg("Could not find account to recover")
 			return nil, nil
 		}
@@ -33,13 +30,9 @@ func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.Creat
 		return nil, err
 	}
 
-	logger = logger.With().Str("user_id", user.ID.String()).Logger()
+	logger = logger.With().Str("user_id", user.ID).Logger()
 
-	password, err := primitives.GeneratePassword()
-	if err != nil {
-		logger.Error().Err(err).Msg("Could not generate password")
-		return nil, err
-	}
+	password := primitives.GeneratePassword()
 
 	creds, err := r.CredentialProducer.Generate(password)
 	if err != nil {
@@ -47,7 +40,11 @@ func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.Creat
 		return nil, err
 	}
 
-	recovery, err := primitives.NewRecovery(user.ID, creds)
+	recovery, err := primitives.NewRecovery(user.ID, &primitives.Credentials{
+		Secret: creds.Secret,
+		Salt:   creds.Salt,
+		Alg:    primitives.CredentialsAlgType(creds.Alg),
+	})
 	if err != nil {
 		logger.Info().Err(err).Msg("Could not instantiate recovery")
 		return nil, err
@@ -88,23 +85,22 @@ func (r *mutationResolver) AttemptRecovery(ctx context.Context, input model.Atte
 		return nil, ErrRecoveryFailed
 	}
 
-	logger = logger.With().Str("user_id", recovery.UserID.String()).Logger()
+	logger = logger.With().Str("user_id", recovery.UserID).Logger()
 
 	if recovery.Expired() {
 		logger.Info().Msg("Recovery has expired")
 		return nil, ErrRecoveryFailed
 	}
 
-	err = r.CredentialProducer.Compare(input.Secret, recovery.Credentials)
+	err = r.CredentialProducer.Compare(input.Secret, modelmigrations.CredentialsFromPrimitives(recovery.Credentials))
 	if err != nil {
 		logger.Info().Err(err).Msg("Invalid credentials provided")
 		return nil, ErrRecoveryFailed
 	}
 
-	user := &primitives.User{}
-	err = tx.Get(ctx, recovery.UserID, user)
+	user, err := r.Database.Users().GetByID(ctx, recovery.UserID)
 	if err != nil {
-		logger.Error().Err(err).Msg("Could not retrieve user for recovery")
+		logger.Error().Err(err).Msgf("Could not get user %s", recovery.UserID)
 		return nil, ErrRecoveryFailed
 	}
 
@@ -115,7 +111,7 @@ func (r *mutationResolver) AttemptRecovery(ctx context.Context, input model.Atte
 	}
 
 	user.Credentials = creds
-	err = tx.Update(ctx, user)
+	err = r.Database.Users().Update(ctx, user.ID, *user)
 	if err != nil {
 		logger.Error().Err(err).Msg("Could not update user with new password")
 		return nil, ErrRecoveryFailed

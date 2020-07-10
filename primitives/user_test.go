@@ -16,8 +16,7 @@ func TestUser(t *testing.T) {
 	name, err := NewName("my-name")
 	gm.Expect(err).To(gm.BeNil())
 
-	creds, err := GenerateCredentials()
-	gm.Expect(err).To(gm.BeNil())
+	creds := GenerateCredentials()
 
 	email, err := NewEmail("email@email.com")
 	gm.Expect(err).To(gm.BeNil())

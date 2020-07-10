@@ -172,9 +172,11 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 
 	pgxPool := mustPgxPool(cfg.DB.Addr.ToURL().String(), cfg.InstanceID.String())
 
+	capedb := capepg.New(pgxPool)
+
 	config := &generated.Config{
 		Resolvers: &graph.Resolver{
-			Database:           capepg.New(pgxPool),
+			Database:           capedb,
 			Backend:            backend,
 			TokenAuthority:     tokenAuth,
 			RootKey:            rootKey,
@@ -185,14 +187,14 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(*config))
 	gqlHandler.SetErrorPresenter(errorPresenter)
 
-	authenticated := framework.IsAuthenticatedMiddleware(backend, tokenAuth)
+	authenticated := framework.IsAuthenticatedMiddleware(backend, capedb, tokenAuth)
 
 	root := http.NewServeMux()
 	root.Handle("/v1", playground.Handler("GraphQL playground", "/query"))
 	root.Handle("/v1/query", framework.AuthTokenMiddleware(authenticated(gqlHandler)))
 	root.Handle("/v1/version", framework.VersionHandler(cfg.InstanceID.String()))
-	root.Handle("/v1/login", framework.LoginHandler(backend, cp, tokenAuth))
-	root.Handle("/v1/setup", framework.SetupHandler(backend, cp, tokenAuth, rootKey))
+	root.Handle("/v1/login", framework.LoginHandler(backend, capedb, cp, tokenAuth))
+	root.Handle("/v1/setup", framework.SetupHandler(backend, capedb, cp, tokenAuth, rootKey))
 	root.Handle("/v1/logout", framework.AuthTokenMiddleware(authenticated(framework.LogoutHandler(backend, tokenAuth))))
 
 	health := healthz.NewHandler(root)

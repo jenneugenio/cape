@@ -9,7 +9,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/harness"
-	"github.com/capeprivacy/cape/primitives"
+	"github.com/capeprivacy/cape/models"
 )
 
 func TestTokens(t *testing.T) {
@@ -31,11 +31,9 @@ func TestTokens(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	email, err := primitives.NewEmail("newuser@email.com")
-	gm.Expect(err).To(gm.BeNil())
+	email := models.Email("newuser@email.com")
 
-	name, err := primitives.NewName("hello")
-	gm.Expect(err).To(gm.BeNil())
+	name := models.Name("HEY")
 
 	user, password, err := client.CreateUser(ctx, name, email)
 	gm.Expect(err).To(gm.BeNil())

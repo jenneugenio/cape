@@ -1,0 +1,31 @@
+scalar ModelName
+scalar ModelEmail
+
+type User {
+  id: String!
+  name: ModelName!
+  email: ModelEmail!
+  created_at: Time!
+  updated_at: Time!
+  roles: [Role!]
+}
+
+
+input CreateUserRequest {
+  name: ModelName!
+  email: ModelEmail!
+}
+
+type CreateUserResponse {
+  password: Password!
+  user: User!
+}
+
+extend type Query {
+  user(id: String!): User!
+  users: [User!]
+}
+
+extend type Mutation {
+  createUser(input: CreateUserRequest!): CreateUserResponse!
+}

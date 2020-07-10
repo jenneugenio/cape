@@ -8,22 +8,19 @@ import (
 	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestCreateToken(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	password, user, err := primitives.GenerateUser("bob", "bob@bob.bob")
-	gm.Expect(err).To(gm.BeNil())
+	password, user := models.GenerateUser("bob", "bob@bob.bob")
 
-	creds, err := primitives.GenerateCredentials()
-	gm.Expect(err).To(gm.BeNil())
+	creds := primitives.GenerateCredentials()
 
-	me := coordinator.MeResponse{User: &primitives.User{
-		Primitive: &database.Primitive{
-			ID: user.ID,
-		},
+	me := coordinator.MeResponse{User: &models.User{
+		ID:    user.ID,
 		Email: user.Email,
 	}}
 
@@ -90,7 +87,7 @@ func TestCreateToken(t *testing.T) {
 				Value: resp,
 			},
 		})
-		err = app.Run([]string{"cape", "tokens", "list"})
+		err := app.Run([]string{"cape", "tokens", "list"})
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(len(u.Calls)).To(gm.Equal(2))
@@ -107,7 +104,7 @@ func TestCreateToken(t *testing.T) {
 	t.Run("Can remove a token", func(t *testing.T) {
 		app, u := NewHarness([]*coordinator.MockResponse{})
 		ID := "2018d9x3ntbca95dda3bu9wnrr"
-		err = app.Run([]string{"cape", "tokens", "remove", ID})
+		err := app.Run([]string{"cape", "tokens", "remove", ID})
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(len(u.Calls)).To(gm.Equal(1))
@@ -120,7 +117,7 @@ func TestCreateToken(t *testing.T) {
 		gm.RegisterTestingT(t)
 
 		app, _ := NewHarness([]*coordinator.MockResponse{})
-		err = app.Run([]string{"cape", "tokens", "remove"})
+		err := app.Run([]string{"cape", "tokens", "remove"})
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 }

@@ -34,11 +34,11 @@ func NewClient(transport ClientTransport) *Client {
 }
 
 type MeResponse struct {
-	User *primitives.User `json:"me"`
+	User *models.User `json:"me"`
 }
 
 // Me returns the user of the current authenticated session
-func (c *Client) Me(ctx context.Context) (*primitives.User, error) {
+func (c *Client) Me(ctx context.Context) (*models.User, error) {
 	var resp MeResponse
 
 	err := c.transport.Raw(ctx, `
@@ -60,21 +60,21 @@ func (c *Client) Me(ctx context.Context) (*primitives.User, error) {
 // UserResponse is a primitive User with an extra Roles field that maps to the
 // GraphQL type.
 type UserResponse struct {
-	*primitives.User
+	*models.User
 	Roles []*primitives.Role `json:"roles"`
 }
 
 // GetUser returns a user and it's roles!
-func (c *Client) GetUser(ctx context.Context, id database.ID) (*UserResponse, error) {
+func (c *Client) GetUser(ctx context.Context, id string) (*UserResponse, error) {
 	var resp struct {
 		User UserResponse `json:"user"`
 	}
 
 	variables := make(map[string]interface{})
-	variables["id"] = id.String()
+	variables["id"] = id
 
 	err := c.transport.Raw(ctx, `
-		query User($id: ID!) {
+		query User($id: String!) {
 			user(id: $id) {
 				id
 				name
@@ -94,11 +94,11 @@ func (c *Client) GetUser(ctx context.Context, id database.ID) (*UserResponse, er
 }
 
 // CreateUser creates a user and returns it
-func (c *Client) CreateUser(ctx context.Context, name primitives.Name, email primitives.Email) (*primitives.User, primitives.Password, error) {
+func (c *Client) CreateUser(ctx context.Context, name models.Name, email models.Email) (*models.User, primitives.Password, error) {
 	var resp struct {
 		Response struct {
 			Password primitives.Password `json:"password"`
-			User     *primitives.User    `json:"user"`
+			User     *models.User        `json:"user"`
 		} `json:"createUser"`
 	}
 
@@ -107,7 +107,7 @@ func (c *Client) CreateUser(ctx context.Context, name primitives.Name, email pri
 	variables["email"] = email
 
 	err := c.transport.Raw(ctx, `
-		mutation CreateUser ($name: Name!, $email: Email!) {
+		mutation CreateUser ($name: ModelName!, $email: ModelEmail!) {
 			createUser(input: { name: $name, email: $email }) {
 				password
 				user {
@@ -127,9 +127,9 @@ func (c *Client) CreateUser(ctx context.Context, name primitives.Name, email pri
 }
 
 // ListUsers returns all of the users in the database
-func (c *Client) ListUsers(ctx context.Context) ([]*primitives.User, error) {
+func (c *Client) ListUsers(ctx context.Context) ([]*models.User, error) {
 	var resp struct {
-		Users []*primitives.User `json:"users"`
+		Users []*models.User `json:"users"`
 	}
 
 	err := c.transport.Raw(ctx, `
@@ -158,7 +158,7 @@ func (c *Client) Authenticated() bool {
 }
 
 // EmailLogin calls the CreateLoginSession and CreateAuthSession mutations
-func (c *Client) EmailLogin(ctx context.Context, email primitives.Email, password primitives.Password) (*primitives.Session, error) {
+func (c *Client) EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*primitives.Session, error) {
 	return c.transport.EmailLogin(ctx, email, password)
 }
 
@@ -179,7 +179,7 @@ func (c *Client) SessionToken() *base64.Value {
 // Role Routes
 
 // CreateRole creates a new role with a label
-func (c *Client) CreateRole(ctx context.Context, label primitives.Label, userIDs []database.ID) (*primitives.Role, error) {
+func (c *Client) CreateRole(ctx context.Context, label primitives.Label, userIDs []string) (*primitives.Role, error) {
 	var resp struct {
 		Role primitives.Role `json:"createRole"`
 	}
@@ -189,7 +189,7 @@ func (c *Client) CreateRole(ctx context.Context, label primitives.Label, userIDs
 	variables["label"] = label
 
 	err := c.transport.Raw(ctx, `
-		mutation CreateRole($label: Label!, $ids: [ID!]) {
+		mutation CreateRole($label: Label!, $ids: [String!]) {
 			createRole(input: { label: $label, user_ids: $ids }) {
 				id
 				label
@@ -265,9 +265,9 @@ func (c *Client) GetRoleByLabel(ctx context.Context, label primitives.Label) (*p
 }
 
 // GetMembersRole returns the members of a role
-func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]*primitives.User, error) {
+func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]*models.User, error) {
 	var resp struct {
-		Users []*primitives.User `json:"roleMembers"`
+		Users []*models.User `json:"roleMembers"`
 	}
 
 	variables := make(map[string]interface{})
@@ -289,7 +289,7 @@ func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]*pri
 }
 
 // AssignRole assigns a role to an user
-func (c *Client) AssignRole(ctx context.Context, userID database.ID,
+func (c *Client) AssignRole(ctx context.Context, userID string,
 	roleID database.ID) (*model.Assignment, error) {
 	var resp struct {
 		Assignment model.Assignment `json:"assignRole"`
@@ -300,7 +300,7 @@ func (c *Client) AssignRole(ctx context.Context, userID database.ID,
 	variables["user_id"] = userID
 
 	err := c.transport.Raw(ctx, `
-		mutation AssignRole($role_id: ID!, $user_id: ID!) {
+		mutation AssignRole($role_id: ID!, $user_id: String!) {
 			assignRole(input: { role_id: $role_id, user_id: $user_id }) {
 				role {
 					id
@@ -320,14 +320,14 @@ func (c *Client) AssignRole(ctx context.Context, userID database.ID,
 	return &resp.Assignment, nil
 }
 
-// UnassignRole unassigns a role from an user
-func (c *Client) UnassignRole(ctx context.Context, userID database.ID, roleID database.ID) error {
+// UnassignRole unassigns a role from an identity
+func (c *Client) UnassignRole(ctx context.Context, userID string, roleID database.ID) error {
 	variables := make(map[string]interface{})
 	variables["role_id"] = roleID
 	variables["user_id"] = userID
 
 	return c.transport.Raw(ctx, `
-		mutation UnassignRole($role_id: ID!, $user_id: ID!) {
+		mutation UnassignRole($role_id: ID!, $user_id: String!) {
 			unassignRole(input: { role_id: $role_id, user_id: $user_id })
 		}
 	`, variables, nil)
@@ -357,7 +357,7 @@ func (c *Client) ListRoles(ctx context.Context) ([]*primitives.Role, error) {
 }
 
 // Setup calls the setup command to bootstrap cape
-func (c *Client) Setup(ctx context.Context, name primitives.Name, email primitives.Email, password primitives.Password) (*primitives.User, error) {
+func (c *Client) Setup(ctx context.Context, name models.Name, email models.Email, password primitives.Password) (*models.User, error) {
 	req := framework.SetupRequest{
 		Name:     name,
 		Email:    email,
@@ -369,7 +369,7 @@ func (c *Client) Setup(ctx context.Context, name primitives.Name, email primitiv
 		return nil, err
 	}
 
-	user := &primitives.User{}
+	user := &models.User{}
 	err = json.Unmarshal(body, user)
 	if err != nil {
 		return nil, err
@@ -607,9 +607,9 @@ func (c *Client) GetUserPolicies(ctx context.Context, userID database.ID) ([]*pr
 }
 
 // GetUsers returns all users for the given emails
-func (c *Client) GetUsers(ctx context.Context, emails []primitives.Email) ([]*primitives.User, error) {
+func (c *Client) GetUsers(ctx context.Context, emails []primitives.Email) ([]*models.User, error) {
 	var resp struct {
-		Users []*primitives.User `json:"identities"`
+		Users []*models.User `json:"identities"`
 	}
 
 	variables := make(map[string]interface{})
@@ -640,7 +640,7 @@ type CreateTokenResponse struct {
 }
 
 // CreateToken creates a new API token for the provided user. You can pass nil and it will return a token for you
-func (c *Client) CreateToken(ctx context.Context, user *primitives.User) (*auth.APIToken, *primitives.Token, error) {
+func (c *Client) CreateToken(ctx context.Context, user *models.User) (*auth.APIToken, *primitives.Token, error) {
 	// If the user provides no user, we will make a token for the current session user
 	if user == nil {
 		i, err := c.Me(ctx)
@@ -652,11 +652,11 @@ func (c *Client) CreateToken(ctx context.Context, user *primitives.User) (*auth.
 	}
 
 	variables := make(map[string]interface{})
-	variables["user_id"] = user.GetID().String()
+	variables["user_id"] = user.ID
 
 	resp := &CreateTokenResponse{}
 	err := c.transport.Raw(ctx, `
-		mutation CreateToken($user_id: ID!) {
+		mutation CreateToken($user_id: String!) {
 			createToken(input: { user_id: $user_id }) {
 				secret
 				token {
@@ -683,7 +683,7 @@ type ListTokensResponse struct {
 }
 
 // ListTokens lists all of the auth tokens for the provided user
-func (c *Client) ListTokens(ctx context.Context, user *primitives.User) ([]database.ID, error) {
+func (c *Client) ListTokens(ctx context.Context, user *models.User) ([]database.ID, error) {
 	// If the user provides no user, we will make a token for the current session user
 	if user == nil {
 		i, err := c.Me(ctx)
@@ -697,10 +697,10 @@ func (c *Client) ListTokens(ctx context.Context, user *primitives.User) ([]datab
 	var resp ListTokensResponse
 
 	variables := make(map[string]interface{})
-	variables["user_id"] = user.GetID()
+	variables["user_id"] = user.ID
 
 	err := c.transport.Raw(ctx, `
-		query Tokens($user_id: ID!) {
+		query Tokens($user_id: String!) {
 			tokens(user_id: $user_id)
 		}
     `, variables, &resp)
@@ -907,23 +907,23 @@ func (c *Client) UpdateProject(
 	return resp.Project, nil
 }
 
-func (c *Client) CreateRecovery(ctx context.Context, email primitives.Email) error {
+func (c *Client) CreateRecovery(ctx context.Context, email models.Email) error {
 	variables := map[string]interface{}{
 		"email": email,
 	}
 
-	query := `mutation createRecovery($email: Email!) {
+	query := `mutation createRecovery($email: ModelEmail!) {
 		createRecovery(input: { email: $email })
 	}`
 
 	return c.transport.Raw(ctx, query, variables, nil)
 }
 
-func (c *Client) AttemptRecovery(ctx context.Context, ID database.ID, secret primitives.Password, newPassword primitives.Password) error {
+func (c *Client) AttemptRecovery(ctx context.Context, ID string, secret primitives.Password, newPassword primitives.Password) error {
 	variables := map[string]interface{}{
 		"new_password": newPassword.String(),
 		"secret":       secret.String(),
-		"id":           ID.String(),
+		"id":           ID,
 	}
 
 	query := `mutation attemptRecovery($new_password: Password!, $secret: Password!, $id: ID!) {

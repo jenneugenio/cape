@@ -12,8 +12,7 @@ import (
 func TestCredentials(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	creds, err := GenerateCredentials()
-	gm.Expect(err).To(gm.BeNil())
+	creds := GenerateCredentials()
 
 	tests := []struct {
 		name   string

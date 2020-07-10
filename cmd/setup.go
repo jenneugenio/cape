@@ -7,6 +7,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/cmd/config"
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -78,13 +79,13 @@ func setupCoordinatorCmd(c *cli.Context) error {
 		return err
 	}
 
-	_, err = client.Setup(c.Context, name, email, password)
+	_, err = client.Setup(c.Context, name, models.Email(email.Email), password)
 	if err != nil {
 		return err
 	}
 
 	// Now, log in our admin!
-	session, err := client.EmailLogin(c.Context, email, password)
+	session, err := client.EmailLogin(c.Context, models.Email(email.Email), password)
 	if err != nil {
 		return err
 	}

@@ -2,7 +2,7 @@ package db
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/capeprivacy/cape/models"
 )
@@ -10,6 +10,7 @@ import (
 type Interface interface {
 	Policies() PolicyDB
 	Roles() RoleDB
+	Users() UserDB
 }
 
 type PolicyDB interface {
@@ -17,6 +18,15 @@ type PolicyDB interface {
 	Delete(context.Context, models.Label) error
 	Get(context.Context, models.Label) (*models.Policy, error)
 	List(ctx context.Context, opts *ListPolicyOptions) ([]models.Policy, error)
+}
+
+type UserDB interface {
+	Create(context.Context, models.User) error
+	Update(context.Context, string, models.User) error
+	Delete(context.Context, models.Email) error
+	Get(context.Context, models.Email) (*models.User, error)
+	GetByID(context.Context, string) (*models.User, error)
+	List(context.Context, *ListUserOptions) ([]models.User, error)
 }
 
 type RoleDB interface {
@@ -39,4 +49,14 @@ type ListRoleOptions struct {
 	Limit  uint64
 }
 
-var ErrDuplicateKey = fmt.Errorf("duplicate key")
+type ListUserOptions struct {
+	Options *struct {
+		Offset uint64
+		Limit  uint64
+	}
+
+	FilterIDs []string
+}
+
+var ErrDuplicateKey = errors.New("duplicate key")
+var ErrNoRows = errors.New("no rows")
