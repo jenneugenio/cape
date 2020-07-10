@@ -64,7 +64,7 @@ func (c *Coordinator) Setup(ctx context.Context) (http.Handler, error) {
 		return nil, err
 	}
 
-	_, err = c.pool.Exec(context.TODO(), "SELECT 1;")
+	_, err = c.pool.Exec(ctx, "SELECT 1;")
 	if err != nil {
 		return nil, err
 	}
