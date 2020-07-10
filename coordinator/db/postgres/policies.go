@@ -124,5 +124,5 @@ func (p *pgPolicy) List(ctx context.Context, opts *db.ListPolicyOptions) ([]mode
 		policies = append(policies, policy)
 	}
 
-	return policies, nil
+	return policies, rows.Err()
 }
