@@ -46,12 +46,15 @@ func NewHTTPTransport(coordinatorURL *primitives.URL, authToken *base64.Value, c
 	}
 
 	client := graphql.NewClient(coordinatorURL.String()+"/v1/query", graphql.WithHTTPClient(httpClient))
-	return &HTTPTransport{
+	transport := &HTTPTransport{
 		client:     client,
 		httpClient: httpClient,
-		authToken:  authToken,
 		url:        coordinatorURL,
 	}
+
+	transport.SetToken(authToken)
+
+	return transport
 }
 
 // URL returns the underlying URL used by this Transport

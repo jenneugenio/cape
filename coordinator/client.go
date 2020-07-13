@@ -712,7 +712,7 @@ func (c *Client) ListTokens(ctx context.Context, user *primitives.User) ([]datab
 	return resp.IDs, nil
 }
 
-// RemoveTokens removes the provided token from the database
+// RemoveToken removes the provided token from the database
 func (c *Client) RemoveToken(ctx context.Context, tokenID database.ID) error {
 	variables := make(map[string]interface{})
 	variables["id"] = tokenID
