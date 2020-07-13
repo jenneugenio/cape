@@ -13,16 +13,14 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
-func TestDefaultAdminPolicy(t *testing.T) {
+func TestDefaultAdminRBAC(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	policy, err := loadPolicyFile(string(models.DefaultAdminPolicy) + ".yaml")
+	policy, err := loadRBACFile(string(models.DefaultAdminRBAC) + ".yaml")
 	gm.Expect(err).To(gm.BeNil())
 
-	fmt.Println(policy)
-
 	user := &models.User{}
-	session, err := NewSession(user, &primitives.Session{}, []*models.Policy{policy},
+	session, err := NewSession(user, &primitives.Session{}, []*models.RBAC{policy},
 		[]*primitives.Role{}, user)
 
 	gm.Expect(err).To(gm.BeNil())
@@ -49,21 +47,21 @@ func TestDefaultAdminPolicy(t *testing.T) {
 	}
 }
 
-func TestDefaultGlobalPolicy(t *testing.T) {
+func TestDefaultGlobalRBAC(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	policy, err := loadPolicyFile(string(models.DefaultGlobalPolicy) + ".yaml")
+	policy, err := loadRBACFile(string(models.DefaultGlobalRBAC) + ".yaml")
 	gm.Expect(err).To(gm.BeNil())
 
 	user := &models.User{}
-	session, err := NewSession(user, &primitives.Session{}, []*models.Policy{policy},
+	session, err := NewSession(user, &primitives.Session{}, []*models.RBAC{policy},
 		[]*primitives.Role{}, user)
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(session).ToNot(gm.BeNil())
 
 	type TestCase struct {
 		Primitive string
-		Action    models.Action
+		Action    models.RBACAction
 	}
 
 	allowedTestCases := []TestCase{
@@ -108,7 +106,7 @@ func TestDefaultGlobalPolicy(t *testing.T) {
 	}
 }
 
-func loadPolicyFile(file string) (*models.Policy, error) {
+func loadRBACFile(file string) (*models.RBAC, error) {
 	dir := pkger.Dir("/primitives/policies/default")
 	f, err := dir.Open(file)
 	if err != nil {
@@ -120,5 +118,5 @@ func loadPolicyFile(file string) (*models.Policy, error) {
 		return nil, err
 	}
 
-	return models.ParsePolicy(b)
+	return models.ParseRBAC(b)
 }

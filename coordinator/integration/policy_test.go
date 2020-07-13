@@ -11,17 +11,16 @@ import (
 
 	gm "github.com/onsi/gomega"
 
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/harness"
 )
 
-func mockSpec() (*models.PolicySpec, error) {
-	mockSpec, err := ioutil.ReadFile("./testdata/policy.yaml")
+func mockPolicy() (*models.Policy, error) {
+	mockPolicy, err := ioutil.ReadFile("./testdata/policy.yaml")
 	if err != nil {
 		return nil, err
 	}
 
-	return models.ParsePolicySpec(mockSpec)
+	return models.ParsePolicy(mockPolicy)
 }
 
 func TestPolicies(t *testing.T) {
@@ -43,14 +42,14 @@ func TestPolicies(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	spec, err := mockSpec()
+	policy, err := mockPolicy()
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("create policy", func(t *testing.T) {
-		label := models.Label("admin-disallowed")
-		p := models.NewPolicy(label, spec)
+		label := models.Label("hehedata")
 
-		policy, err := client.CreatePolicy(ctx, &p)
+		policy.Label = label
+		policy, err := client.CreatePolicy(ctx, policy)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(policy.Label).To(gm.Equal(label))
 
@@ -62,18 +61,17 @@ func TestPolicies(t *testing.T) {
 	})
 
 	t.Run("delete policy", func(t *testing.T) {
-		l := "ds-dl-data"
-		label := models.Label(l)
+		label := models.Label("ds-dl-data")
 
-		p := models.NewPolicy(label, spec)
+		policy.Label = label
 
-		_, err := client.CreatePolicy(ctx, &p)
+		newPolicy, err := client.CreatePolicy(ctx, policy)
 		gm.Expect(err).To(gm.BeNil())
 
-		err = client.DeletePolicy(ctx, l)
+		err = client.DeletePolicy(ctx, string(label))
 		gm.Expect(err).To(gm.BeNil())
 
-		otherPolicy, err := client.GetPolicy(ctx, l)
+		otherPolicy, err := client.GetPolicy(ctx, newPolicy.ID)
 		gm.Expect(err).NotTo(gm.BeNil())
 		gm.Expect(otherPolicy).To(gm.BeNil())
 	})
@@ -82,9 +80,9 @@ func TestPolicies(t *testing.T) {
 		l := "wow-policy-is-cool"
 		label := models.Label(l)
 
-		p := models.NewPolicy(label, spec)
+		policy.Label = label
 
-		_, err = client.CreatePolicy(ctx, &p)
+		_, err = client.CreatePolicy(ctx, policy)
 		gm.Expect(err).To(gm.BeNil())
 
 		_, err = client.GetPolicyByLabel(ctx, l)
@@ -92,20 +90,20 @@ func TestPolicies(t *testing.T) {
 	})
 
 	t.Run("cannot create the same policy twice", func(t *testing.T) {
-		label := models.Label("make-me-twice")
+		// label := models.Label("make-me-twice")
 
-		p1 := models.NewPolicy(label, spec)
+		// p1 := models.NewPolicy(label, spec)
 
-		_, err = client.CreatePolicy(ctx, &p1)
-		gm.Expect(err).To(gm.BeNil())
+		// _, err = client.CreatePolicy(ctx, &p1)
+		// gm.Expect(err).To(gm.BeNil())
 
-		p2 := models.NewPolicy(label, spec)
+		// p2 := models.NewPolicy(label, spec)
 
-		_, err = client.CreatePolicy(ctx, &p2)
-		gm.Expect(err).ToNot(gm.BeNil())
-		// TODO(thor): This test was missing the .To(...) clause and seemed to be
-		// working but was a no-op. The returned error is losing the cause.
-		//gm.Expect(errors.CausedBy(err, database.DuplicateCause)).To(gm.BeTrue())
+		// _, err = client.CreatePolicy(ctx, &p2)
+		// gm.Expect(err).ToNot(gm.BeNil())
+		// // TODO(thor): This test was missing the .To(...) clause and seemed to be
+		// // working but was a no-op. The returned error is losing the cause.
+		// //gm.Expect(errors.CausedBy(err, database.DuplicateCause)).To(gm.BeTrue())
 	})
 }
 
@@ -124,7 +122,7 @@ func TestListPolicies(t *testing.T) {
 
 	defer h.Teardown(ctx) // nolint: errcheck
 
-	spec, err := mockSpec()
+	policy, err := mockPolicy()
 	gm.Expect(err).To(gm.BeNil())
 
 	m := h.Manager()
@@ -132,17 +130,13 @@ func TestListPolicies(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	labelStrs := []string{"cool-policy", "sad-policy", "wow-policy"}
-	labels := make([]models.Label, 0, len(labelStrs))
-
 	policies := make([]*models.Policy, 0, len(labelStrs))
 	for _, labelStr := range labelStrs {
 		label := models.Label(labelStr)
 
-		labels = append(labels, label)
+		policy.Label = label
 
-		p := models.NewPolicy(label, spec)
-
-		policy, err := client.CreatePolicy(ctx, &p)
+		policy, err := client.CreatePolicy(ctx, policy)
 		gm.Expect(err).To(gm.BeNil())
 
 		policies = append(policies, policy)
@@ -151,11 +145,5 @@ func TestListPolicies(t *testing.T) {
 	otherPolicies, err := client.ListPolicies(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	gm.Expect(otherPolicies).To(gm.ContainElements(policies))
-}
-
-func IDFromString(in string) database.ID {
-	id := database.ID{}
-	copy([]byte(in), id[:])
-	return id
+	gm.Expect(otherPolicies).To(gm.Equal(policies))
 }

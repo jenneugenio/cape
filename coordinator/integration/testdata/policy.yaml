@@ -1,8 +1,10 @@
-label: protect-ssn
-rules:
-- action: read
-  effect: deny
-  fields:
-  - card_number
-  target: records:creditcards.transactions
+label: masking_policy
 version: 1
+rules:
+  - match:
+      name: name
+    actions:
+      - transform:
+          type: "tokenizer"
+          max_token_len: 10
+          key: "my secret"

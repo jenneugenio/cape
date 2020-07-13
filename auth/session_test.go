@@ -23,7 +23,7 @@ func TestCan(t *testing.T) {
 	t.Run("GetID returns the user id", func(t *testing.T) {
 		_, user := models.GenerateUser("hiho", "jerry@berry.jerry")
 
-		session, err := NewSession(&user, &primitives.Session{}, []*models.Policy{}, []*primitives.Role{}, &user)
+		session, err := NewSession(&user, &primitives.Session{}, []*models.RBAC{}, []*primitives.Role{}, &user)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(session.GetID()).To(gm.Equal(user.ID))
@@ -32,7 +32,7 @@ func TestCan(t *testing.T) {
 	t.Run("denied no rules", func(t *testing.T) {
 		user := models.NewUser("Jerry Berry", email, creds)
 
-		session, err := NewSession(&user, &primitives.Session{}, []*models.Policy{}, []*primitives.Role{}, &user)
+		session, err := NewSession(&user, &primitives.Session{}, []*models.RBAC{}, []*primitives.Role{}, &user)
 		gm.Expect(err).To(gm.BeNil())
 
 		err = session.Can(models.Create, primitives.UserType)
@@ -43,10 +43,9 @@ func TestCan(t *testing.T) {
 	t.Run("denied deny rule exists", func(t *testing.T) {
 		user := models.NewUser("Jerry Berry", email, creds)
 
-		spec := &models.PolicySpec{
-			Version: 1,
-			Label:   "my-policy",
-			Rules: []*models.Rule{
+		spec := &models.RBACSpec{
+			Label: "my-policy",
+			Rules: []*models.RBACRule{
 				{
 					Target: "users:*",
 					Action: models.Create,
@@ -55,9 +54,9 @@ func TestCan(t *testing.T) {
 			},
 		}
 
-		p := models.NewPolicy("my-policy", spec)
+		p := models.NewRBAC("my-policy", spec)
 
-		session, err := NewSession(&user, &primitives.Session{}, []*models.Policy{&p}, []*primitives.Role{}, &user)
+		session, err := NewSession(&user, &primitives.Session{}, []*models.RBAC{&p}, []*primitives.Role{}, &user)
 		gm.Expect(err).To(gm.BeNil())
 
 		err = session.Can(models.Create, primitives.UserType)
@@ -69,10 +68,9 @@ func TestCan(t *testing.T) {
 		user := models.NewUser("Jerry Berry", email, creds)
 		gm.Expect(err).To(gm.BeNil())
 
-		spec := &models.PolicySpec{
-			Version: 1,
-			Label:   "my-policy",
-			Rules: []*models.Rule{
+		spec := &models.RBACSpec{
+			Label: "my-policy",
+			Rules: []*models.RBACRule{
 				{
 					Target: "users:*",
 					Action: models.Create,
@@ -81,9 +79,9 @@ func TestCan(t *testing.T) {
 			},
 		}
 
-		p := models.NewPolicy("my-policy", spec)
+		p := models.NewRBAC("my-policy", spec)
 
-		session, err := NewSession(&user, &primitives.Session{}, []*models.Policy{&p}, []*primitives.Role{}, &user)
+		session, err := NewSession(&user, &primitives.Session{}, []*models.RBAC{&p}, []*primitives.Role{}, &user)
 		gm.Expect(err).To(gm.BeNil())
 
 		err = session.Can(models.Create, primitives.UserType)

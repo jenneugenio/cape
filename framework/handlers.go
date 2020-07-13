@@ -208,7 +208,7 @@ func SetupHandler(db database.Backend, capedb db.Interface, cp auth.CredentialPr
 				return nil, err
 			}
 
-			err = attachDefaultPolicy(ctx, tx)
+			err = attachDefaultPolicy(ctx, tx, capedb)
 			if err != nil {
 				logger.Error().Err(err).Msg("Could not attach default policies inside database")
 				return nil, err

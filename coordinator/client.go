@@ -412,11 +412,11 @@ func (c *Client) CreatePolicy(ctx context.Context, policy *models.Policy) (*mode
 
 	variables := make(map[string]interface{})
 	variables["label"] = policy.Label
-	variables["spec"] = policy.Spec
+	variables["rules"] = policy.Rules
 
 	err := c.transport.Raw(ctx, `
-		mutation CreateDeprecatedPolicy($label: Label!, $spec: PolicySpec!) {
-			createPolicy(input: { label: $label, spec: $spec }) {
+		mutation CreatePolicy($label: Label!, $rules: [RuleInput!]) {
+			createPolicy(input: { label: $label, rules: $rules }) {
 				id
 				label
 			}
@@ -431,13 +431,13 @@ func (c *Client) CreatePolicy(ctx context.Context, policy *models.Policy) (*mode
 }
 
 // DeletePolicy deletes a policy on the coordinator
-func (c *Client) DeletePolicy(ctx context.Context, id string) error {
+func (c *Client) DeletePolicy(ctx context.Context, label string) error {
 	variables := make(map[string]interface{})
-	variables["id"] = id
+	variables["label"] = label
 
 	return c.transport.Raw(ctx, `
-		mutation DeletePolicy($id: String!) {
-			deletePolicy(input: { id: $id })
+		mutation DeletePolicy($label: String!) {
+			deletePolicy(input: { label: $label })
 		}
 	`, variables, nil)
 }

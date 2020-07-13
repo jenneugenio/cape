@@ -1,7 +1,9 @@
 package capepg
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -57,11 +59,15 @@ func (p *pgPolicy) Delete(ctx context.Context, l models.Label) error {
 		return err
 	}
 
-	_, err = p.pool.Exec(ctx, s, args...)
-
+	tag, err := p.pool.Exec(ctx, s, args...)
 	if err != nil {
 		return fmt.Errorf("error deleting policy: %w", err)
 	}
+
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("error deleting policy: policy with label %s does not exist", l)
+	}
+
 	return nil
 }
 
@@ -148,9 +154,18 @@ func (p *pgPolicy) List(ctx context.Context, opts *db.ListPolicyOptions) ([]mode
 
 	var policies []models.Policy
 	for rows.Next() {
+		var policyBytes []byte
+		if err := rows.Scan(&policyBytes); err != nil {
+			continue
+		}
+
+		dec := json.NewDecoder(bytes.NewBuffer(policyBytes))
+		dec.DisallowUnknownFields()
+
 		var policy models.Policy
-		if err := rows.Scan(&policy); err != nil {
-			return nil, fmt.Errorf("TODO: be more graceful when a policy errors like %w", err)
+		err := dec.Decode(&policy)
+		if err != nil {
+			continue
 		}
 		policies = append(policies, policy)
 	}

@@ -1,11 +1,11 @@
 package models
 
-// Action represents what kinds of actions this policy applies to
-type Action string
+// RBACAction represents what kinds of actions this policy applies to
+type RBACAction string
 
 const (
-	Create Action = "create"
-	Read   Action = "read"
-	Update Action = "update"
-	Delete Action = "delete"
+	Create RBACAction = "create"
+	Read   RBACAction = "read"
+	Update RBACAction = "update"
+	Delete RBACAction = "delete"
 )

@@ -1,6 +1,7 @@
 scalar ProjectStatus
 scalar DisplayName
 scalar Description
+scalar ProjectRule
 
 type Project {
     id: ID!
@@ -18,7 +19,7 @@ type ProjectSpec {
     id: ID!
     project: Project!
     parent: ProjectSpec
-    policy: [Rule!]!
+    policy: [ProjectRule!]!
 }
 
 input CreateProjectRequest {
@@ -33,7 +34,7 @@ input UpdateProjectRequest {
 }
 
 input ProjectSpecFile {
-    policy: [Rule!]!
+    policy: [ProjectRule!]!
 }
 
 extend type Query {

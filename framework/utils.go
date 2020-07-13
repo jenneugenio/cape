@@ -72,6 +72,54 @@ func QueryUserPolicies(ctx context.Context, querier database.Querier, capedb db.
 	return policyPtrs, nil
 }
 
+// QueryUserPolicies is a helper function to query all roles assigned to an user and then
+// all policies attached to those roles.
+func QueryUserRBAC(ctx context.Context, querier database.Querier, capedb db.Interface, userID string) ([]*models.RBAC, error) {
+	var assignments []*primitives.Assignment
+	assignmentFilter := database.NewFilter(database.Where{"user_id": userID}, nil, nil)
+	err := querier.Query(ctx, &assignments, assignmentFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	roleIDs := database.InFromEntities(assignments, func(e interface{}) interface{} {
+		return e.(*primitives.Assignment).RoleID
+	})
+
+	if len(roleIDs) == 0 {
+		return nil, nil
+	}
+
+	var attachments []*primitives.Attachment
+	attachmentFilter := database.NewFilter(database.Where{"role_id": roleIDs}, nil, nil)
+	err = querier.Query(ctx, &attachments, attachmentFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	var policyIDs []string
+	for _, a := range attachments {
+		policyIDs = append(policyIDs, a.PolicyID)
+	}
+
+	if len(policyIDs) == 0 {
+		return []*models.RBAC{}, nil
+	}
+
+	rbacs, err := capedb.RBAC().List(ctx, &db.ListRBACOptions{FilterIDs: policyIDs})
+	if err != nil {
+		return nil, err
+	}
+
+	rbacPtrs := make([]*models.RBAC, len(rbacs))
+	for i, policy := range rbacs {
+		p := policy
+		rbacPtrs[i] = &p
+	}
+
+	return rbacPtrs, nil
+}
+
 func QueryRoles(ctx context.Context, db database.Querier, userID string) ([]*primitives.Role, error) {
 	var assignments []*primitives.Assignment
 	filter := database.NewFilter(database.Where{
@@ -230,28 +278,33 @@ func createSystemRoles(ctx context.Context, db database.Querier) error {
 	return db.Create(ctx, entities...)
 }
 
-func attachDefaultPolicy(ctx context.Context, db database.Querier) error {
-	adminPolicy, err := loadPolicyFile(primitives.DefaultAdminPolicy.String() + ".yaml")
+func attachDefaultPolicy(ctx context.Context, db database.Querier, capedb db.Interface) error {
+	adminRBAC, err := loadRBACFile(primitives.DefaultAdminPolicy.String() + ".yaml")
 	if err != nil {
 		return err
 	}
 
-	globalPolicy, err := loadPolicyFile(primitives.DefaultGlobalPolicy.String() + ".yaml")
+	globalRBAC, err := loadRBACFile(primitives.DefaultGlobalPolicy.String() + ".yaml")
 	if err != nil {
 		return err
 	}
 
-	err = db.Create(ctx, adminPolicy, globalPolicy)
+	err = capedb.RBAC().Create(ctx, *adminRBAC)
 	if err != nil {
 		return err
 	}
 
-	adminAttachment, err := createAttachment(ctx, db, adminPolicy.ID.String(), primitives.AdminRole)
+	err = capedb.RBAC().Create(ctx, *globalRBAC)
 	if err != nil {
 		return err
 	}
 
-	globalAttachment, err := createAttachment(ctx, db, globalPolicy.ID.String(), primitives.GlobalRole)
+	adminAttachment, err := createAttachment(ctx, db, adminRBAC.ID, primitives.AdminRole)
+	if err != nil {
+		return err
+	}
+
+	globalAttachment, err := createAttachment(ctx, db, globalRBAC.ID, primitives.GlobalRole)
 	if err != nil {
 		return err
 	}
@@ -279,7 +332,7 @@ func createAttachment(ctx context.Context, db database.Querier, policyID string,
 	return attachment, nil
 }
 
-func loadPolicyFile(file string) (*primitives.Policy, error) {
+func loadRBACFile(file string) (*models.RBAC, error) {
 	f, err := pkger.Open("github.com/capeprivacy/cape:/primitives/policies/default/" + file)
 	if err != nil {
 		return nil, err
@@ -290,7 +343,7 @@ func loadPolicyFile(file string) (*primitives.Policy, error) {
 		return nil, err
 	}
 
-	return primitives.ParsePolicy(b)
+	return models.ParseRBAC(b)
 }
 
 // GetRolesByLabel is a helper to retrieve a specific role from the database. This is

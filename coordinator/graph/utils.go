@@ -6,6 +6,7 @@ import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -43,4 +44,18 @@ func hasRole(roles []*primitives.Role, label primitives.Label) bool {
 	}
 
 	return found
+}
+
+func ruleInputsToModelRules(inputs []*model.RuleInput) []models.Rule {
+	rules := make([]models.Rule, len(inputs))
+	for i, input := range inputs {
+		rules[i].Match.Name = input.Match.Name
+
+		rules[i].Actions = make([]models.Action, len(input.Actions))
+		for j, action := range input.Actions {
+			rules[i].Actions[j].Transform = action.Transform
+		}
+	}
+
+	return rules
 }

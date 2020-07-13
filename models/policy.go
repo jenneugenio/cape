@@ -1,74 +1,89 @@
 package models
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"strconv"
 	"time"
+
+	"github.com/mitchellh/mapstructure"
+	"sigs.k8s.io/yaml"
 )
 
-const (
-	DefaultAdminPolicy  = Label("default-admin")
-	DefaultGlobalPolicy = Label("default-global")
-)
-
-// Policy is a single defined policy
-type Policy struct {
-	ID        string      `json:"id"`
-	Version   uint8       `json:"version"`
-	Label     Label       `json:"label"`
-	Spec      *PolicySpec `json:"spec"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
-}
-
-// Validate that the policy is valid
-func (p Policy) Validate() error {
-	if p.Version < 1 {
-		return errors.New("Version must be greater than zero")
-	}
-
-	if p.CreatedAt.IsZero() {
-		return errors.New("CreatedAt cannot be a zero time")
-	}
-
-	if p.UpdatedAt.IsZero() {
-		return errors.New("UpdatedAt cannot be a zero time")
-	}
-
-	if p.UpdatedAt.Before(p.CreatedAt) {
-		return errors.New("UpdatedAt cannot be before CreatedAt")
-	}
-
-	err := p.Spec.Validate()
-	if err != nil {
-		return fmt.Errorf("policy has an invalid spec: %w", err)
-	}
-
-	return nil
-}
-
-// NewPolicy returns a mutable policy struct
-func NewPolicy(label Label, spec *PolicySpec) Policy {
+func NewPolicy(label Label, rules []Rule) Policy {
 	return Policy{
 		ID:        NewID(),
 		Version:   modelVersion,
 		Label:     label,
-		Spec:      spec,
+		Rules:     rules,
 		CreatedAt: now(),
 	}
 }
 
-// ParsePolicy can convert a yaml document into a Policy
+type Policy struct {
+	ID      string `json:"id"`
+	Version uint8  `json:"version"`
+	Label   Label  `json:"label"`
+
+	Rules []Rule `json:"rules"`
+
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 func ParsePolicy(data []byte) (*Policy, error) {
-	ps, err := ParsePolicySpec(data)
+	var p Policy
+
+	err := yaml.Unmarshal(data, &p, func(dec *json.Decoder) *json.Decoder {
+		dec.DisallowUnknownFields()
+		return dec
+	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	policy := &Policy{
-		Label: ps.Label,
-		Spec:  ps,
+	return &p, nil
+}
+
+type Rule struct {
+	Match   Match    `json:"match"`
+	Actions []Action `json:"actions"`
+}
+
+type Match struct {
+	Name string `json:"name"`
+}
+
+type Action struct {
+	Transform Transformation `json:"transform"`
+}
+
+type Transformation map[string]interface{}
+
+// UnmarshalGQL implements the graphql.Unmarshaler interface
+func (t *Transformation) UnmarshalGQL(v interface{}) error {
+	switch val := v.(type) {
+	case map[string]interface{}:
+		if err := mapstructure.Decode(val, t); err != nil {
+			return err
+		}
+
+		return nil
+	default:
+		return errors.New("unable to unmarshal gql policy spec")
+	}
+}
+
+// MarshalGQL implements the graphql.Marshaler interface
+func (t Transformation) MarshalGQL(w io.Writer) {
+	json, err := json.Marshal(t)
+	if err != nil {
+		fmt.Fprint(w, strconv.Quote(err.Error()))
+		return
 	}
 
-	return policy, nil
+	fmt.Fprint(w, string(json))
 }

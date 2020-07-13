@@ -12,6 +12,7 @@ import (
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
+	"github.com/capeprivacy/cape/models"
 	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/gosimple/slug"
@@ -194,3 +195,13 @@ func (r *Resolver) ProjectSpec() generated.ProjectSpecResolver { return &project
 
 type projectResolver struct{ *Resolver }
 type projectSpecResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *projectSpecResolver) Policy(ctx context.Context, obj *primitives.ProjectSpec) ([]*models.Rule, error) {
+	panic(fmt.Errorf("not implemented"))
+}

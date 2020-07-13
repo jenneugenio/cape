@@ -266,7 +266,7 @@ func IsAuthenticatedMiddleware(db database.Backend, capedb db.Interface, tokenAu
 				return
 			}
 
-			policies, err := QueryUserPolicies(ctx, db, capedb, cp.GetUserID())
+			rbacs, err := QueryUserRBAC(ctx, db, capedb, cp.GetUserID())
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return
@@ -278,7 +278,7 @@ func IsAuthenticatedMiddleware(db database.Backend, capedb db.Interface, tokenAu
 				return
 			}
 
-			aSession, err := auth.NewSession(user, session, policies, roles, cp)
+			aSession, err := auth.NewSession(user, session, rbacs, roles, cp)
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return

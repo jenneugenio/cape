@@ -8,6 +8,7 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/models"
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -79,28 +80,31 @@ func TestUsersUpdate(t *testing.T) {
 }
 
 func TestUsersDelete(t *testing.T) {
+	tagDeleted := pgconn.CommandTag("DELETE 1")
 	tests := []struct {
+		pool    *testPgPool
 		email   models.Email
 		wantErr error
-		err     error
 	}{
 		{
+			pool: &testPgPool{
+				ct: &tagDeleted,
+			},
 			email:   models.Email("foo"),
 			wantErr: nil,
-			err:     nil,
 		},
 		{
+			pool: &testPgPool{
+				ct:  &tagDeleted,
+				err: ErrGenericDBError,
+			},
 			email:   models.Email("foo"),
 			wantErr: fmt.Errorf("error deleting user: %w", ErrGenericDBError),
-			err:     ErrGenericDBError,
 		},
 	}
 
-	pool := &testPgPool{}
 	for i, test := range tests {
-		pool.err = test.err
-
-		userDB := pgUser{pool, 0}
+		userDB := pgUser{test.pool, 0}
 
 		gotErr := userDB.Delete(context.TODO(), test.email)
 		if (test.wantErr == nil && gotErr != nil) ||

@@ -10,6 +10,10 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
+type ActionInput struct {
+	Transform models.Transformation `json:"transform"`
+}
+
 type AssignRoleRequest struct {
 	RoleID database.ID `json:"role_id"`
 	UserID string      `json:"user_id"`
@@ -43,8 +47,8 @@ type AttemptRecoveryRequest struct {
 }
 
 type CreatePolicyRequest struct {
-	Label primitives.Label  `json:"label"`
-	Spec  models.PolicySpec `json:"spec"`
+	Label primitives.Label `json:"label"`
+	Rules []*RuleInput     `json:"rules"`
 }
 
 type CreateProjectRequest struct {
@@ -82,7 +86,7 @@ type CreateUserResponse struct {
 }
 
 type DeletePolicyRequest struct {
-	ID string `json:"id"`
+	Label string `json:"label"`
 }
 
 type DeleteRecoveriesRequest struct {
@@ -98,8 +102,13 @@ type DetachPolicyRequest struct {
 	RoleID   database.ID `json:"role_id"`
 }
 
-type PolicyInput struct {
-	Label primitives.Label `json:"label"`
+type MatchInput struct {
+	Name string `json:"name"`
+}
+
+type RuleInput struct {
+	Match   *MatchInput    `json:"match"`
+	Actions []*ActionInput `json:"actions"`
 }
 
 type UpdateProjectRequest struct {

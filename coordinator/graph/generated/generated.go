@@ -50,6 +50,10 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Action struct {
+		Transform func(childComplexity int) int
+	}
+
 	Assignment struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
@@ -74,6 +78,10 @@ type ComplexityRoot struct {
 	CreateUserResponse struct {
 		Password func(childComplexity int) int
 		User     func(childComplexity int) int
+	}
+
+	Match struct {
+		Name func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -101,7 +109,7 @@ type ComplexityRoot struct {
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
 		Label     func(childComplexity int) int
-		Spec      func(childComplexity int) int
+		Rules     func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
 	}
 
@@ -154,6 +162,11 @@ type ComplexityRoot struct {
 		Label     func(childComplexity int) int
 		System    func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
+	}
+
+	Rule struct {
+		Actions func(childComplexity int) int
+		Match   func(childComplexity int) int
 	}
 
 	Token struct {
@@ -234,6 +247,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Action.transform":
+		if e.complexity.Action.Transform == nil {
+			break
+		}
+
+		return e.complexity.Action.Transform(childComplexity), true
 
 	case "Assignment.created_at":
 		if e.complexity.Assignment.CreatedAt == nil {
@@ -332,6 +352,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CreateUserResponse.User(childComplexity), true
+
+	case "Match.name":
+		if e.complexity.Match.Name == nil {
+			break
+		}
+
+		return e.complexity.Match.Name(childComplexity), true
 
 	case "Mutation.archiveProject":
 		if e.complexity.Mutation.ArchiveProject == nil {
@@ -570,12 +597,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Policy.Label(childComplexity), true
 
-	case "Policy.spec":
-		if e.complexity.Policy.Spec == nil {
+	case "Policy.rules":
+		if e.complexity.Policy.Rules == nil {
 			break
 		}
 
-		return e.complexity.Policy.Spec(childComplexity), true
+		return e.complexity.Policy.Rules(childComplexity), true
 
 	case "Policy.updated_at":
 		if e.complexity.Policy.UpdatedAt == nil {
@@ -896,6 +923,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Role.UpdatedAt(childComplexity), true
 
+	case "Rule.actions":
+		if e.complexity.Rule.Actions == nil {
+			break
+		}
+
+		return e.complexity.Rule.Actions(childComplexity), true
+
+	case "Rule.match":
+		if e.complexity.Rule.Match == nil {
+			break
+		}
+
+		return e.complexity.Rule.Match(childComplexity), true
+
 	case "Token.id":
 		if e.complexity.Token.ID == nil {
 			break
@@ -1016,8 +1057,33 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	&ast.Source{Name: "coordinator/schema/policy.graphql", Input: `scalar PolicySpec
-scalar Rule
+	&ast.Source{Name: "coordinator/schema/policy.graphql", Input: `scalar Transformation
+
+type Rule {
+  match: Match!
+  actions: [Action!]
+}
+
+type Match {
+  name: String!
+}
+
+type Action {
+  transform: Transformation
+}
+
+input RuleInput {
+  match: MatchInput!
+  actions: [ActionInput!]
+}
+
+input MatchInput {
+  name: String!
+}
+
+input ActionInput {
+  transform: Transformation
+}
 
 type Policy {
   id: String!
@@ -1025,7 +1091,7 @@ type Policy {
   updated_at: Time!
 
   label: ModelLabel!
-  spec: PolicySpec!
+  rules: [Rule!]
 }
 
 type Attachment {
@@ -1039,15 +1105,11 @@ type Attachment {
 
 input CreatePolicyRequest {
   label: Label!
-  spec: PolicySpec!
+  rules: [RuleInput!]
 }
 
 input DeletePolicyRequest {
-  id: String!
-}
-
-input PolicyInput {
-  label: Label!
+  label: String!
 }
 
 input AttachPolicyRequest {
@@ -1082,6 +1144,7 @@ extend type Mutation {
 	&ast.Source{Name: "coordinator/schema/projects.graphql", Input: `scalar ProjectStatus
 scalar DisplayName
 scalar Description
+scalar ProjectRule
 
 type Project {
     id: ID!
@@ -1099,7 +1162,7 @@ type ProjectSpec {
     id: ID!
     project: Project!
     parent: ProjectSpec
-    policy: [Rule!]!
+    policy: [ProjectRule!]!
 }
 
 input CreateProjectRequest {
@@ -1114,7 +1177,7 @@ input UpdateProjectRequest {
 }
 
 input ProjectSpecFile {
-    policy: [Rule!]!
+    policy: [ProjectRule!]!
 }
 
 extend type Query {
@@ -1817,6 +1880,37 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _Action_transform(ctx context.Context, field graphql.CollectedField, obj *models.Action) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Action",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Transform, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(models.Transformation)
+	fc.Result = res
+	return ec.marshalOTransformation2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐTransformation(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Assignment_id(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2291,6 +2385,40 @@ func (ec *executionContext) _CreateUserResponse_user(ctx context.Context, field 
 	res := resTmp.(*models.User)
 	fc.Result = res
 	return ec.marshalNUser2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐUser(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Match_name(ctx context.Context, field graphql.CollectedField, obj *models.Match) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Match",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createPolicy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3149,7 +3277,7 @@ func (ec *executionContext) _Policy_label(ctx context.Context, field graphql.Col
 	return ec.marshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_spec(ctx context.Context, field graphql.CollectedField, obj *models.Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _Policy_rules(ctx context.Context, field graphql.CollectedField, obj *models.Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3166,21 +3294,18 @@ func (ec *executionContext) _Policy_spec(ctx context.Context, field graphql.Coll
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Spec, nil
+		return obj.Rules, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*models.PolicySpec)
+	res := resTmp.([]models.Rule)
 	fc.Result = res
-	return ec.marshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx, field.Selections, res)
+	return ec.marshalORule2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRuleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Project_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Project) (ret graphql.Marshaler) {
@@ -3582,7 +3707,7 @@ func (ec *executionContext) _ProjectSpec_policy(ctx context.Context, field graph
 	}
 	res := resTmp.([]*primitives.Rule)
 	fc.Result = res
-	return ec.marshalNRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRuleᚄ(ctx, field.Selections, res)
+	return ec.marshalNProjectRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRuleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4531,6 +4656,71 @@ func (ec *executionContext) _Role_updated_at(ctx context.Context, field graphql.
 	res := resTmp.(time.Time)
 	fc.Result = res
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Rule_match(ctx context.Context, field graphql.CollectedField, obj *models.Rule) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Rule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Match, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(models.Match)
+	fc.Result = res
+	return ec.marshalNMatch2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐMatch(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Rule_actions(ctx context.Context, field graphql.CollectedField, obj *models.Rule) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Rule",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Actions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]models.Action)
+	fc.Result = res
+	return ec.marshalOAction2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐActionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Token_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Token) (ret graphql.Marshaler) {
@@ -5857,6 +6047,24 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputActionInput(ctx context.Context, obj interface{}) (model.ActionInput, error) {
+	var it model.ActionInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "transform":
+			var err error
+			it.Transform, err = ec.unmarshalOTransformation2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐTransformation(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAssignRoleRequest(ctx context.Context, obj interface{}) (model.AssignRoleRequest, error) {
 	var it model.AssignRoleRequest
 	var asMap = obj.(map[string]interface{})
@@ -5947,9 +6155,9 @@ func (ec *executionContext) unmarshalInputCreatePolicyRequest(ctx context.Contex
 			if err != nil {
 				return it, err
 			}
-		case "spec":
+		case "rules":
 			var err error
-			it.Spec, err = ec.unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx, v)
+			it.Rules, err = ec.unmarshalORuleInput2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRuleInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6079,9 +6287,9 @@ func (ec *executionContext) unmarshalInputDeletePolicyRequest(ctx context.Contex
 
 	for k, v := range asMap {
 		switch k {
-		case "id":
+		case "label":
 			var err error
-			it.ID, err = ec.unmarshalNString2string(ctx, v)
+			it.Label, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6151,15 +6359,15 @@ func (ec *executionContext) unmarshalInputDetachPolicyRequest(ctx context.Contex
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputPolicyInput(ctx context.Context, obj interface{}) (model.PolicyInput, error) {
-	var it model.PolicyInput
+func (ec *executionContext) unmarshalInputMatchInput(ctx context.Context, obj interface{}) (model.MatchInput, error) {
+	var it model.MatchInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
 		switch k {
-		case "label":
+		case "name":
 			var err error
-			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6177,7 +6385,31 @@ func (ec *executionContext) unmarshalInputProjectSpecFile(ctx context.Context, o
 		switch k {
 		case "policy":
 			var err error
-			it.Policy, err = ec.unmarshalNRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRuleᚄ(ctx, v)
+			it.Policy, err = ec.unmarshalNProjectRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRuleᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputRuleInput(ctx context.Context, obj interface{}) (model.RuleInput, error) {
+	var it model.RuleInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "match":
+			var err error
+			it.Match, err = ec.unmarshalNMatchInput2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐMatchInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "actions":
+			var err error
+			it.Actions, err = ec.unmarshalOActionInput2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐActionInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6218,6 +6450,30 @@ func (ec *executionContext) unmarshalInputUpdateProjectRequest(ctx context.Conte
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var actionImplementors = []string{"Action"}
+
+func (ec *executionContext) _Action(ctx context.Context, sel ast.SelectionSet, obj *models.Action) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, actionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Action")
+		case "transform":
+			out.Values[i] = ec._Action_transform(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
 
 var assignmentImplementors = []string{"Assignment"}
 
@@ -6377,6 +6633,33 @@ func (ec *executionContext) _CreateUserResponse(ctx context.Context, sel ast.Sel
 	return out
 }
 
+var matchImplementors = []string{"Match"}
+
+func (ec *executionContext) _Match(ctx context.Context, sel ast.SelectionSet, obj *models.Match) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, matchImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Match")
+		case "name":
+			out.Values[i] = ec._Match_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -6506,11 +6789,8 @@ func (ec *executionContext) _Policy(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "spec":
-			out.Values[i] = ec._Policy_spec(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+		case "rules":
+			out.Values[i] = ec._Policy_rules(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6964,6 +7244,35 @@ func (ec *executionContext) _Role(ctx context.Context, sel ast.SelectionSet, obj
 	return out
 }
 
+var ruleImplementors = []string{"Rule"}
+
+func (ec *executionContext) _Rule(ctx context.Context, sel ast.SelectionSet, obj *models.Rule) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, ruleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Rule")
+		case "match":
+			out.Values[i] = ec._Rule_match(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "actions":
+			out.Values[i] = ec._Rule_actions(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var tokenImplementors = []string{"Token"}
 
 func (ec *executionContext) _Token(ctx context.Context, sel ast.SelectionSet, obj *primitives.Token) graphql.Marshaler {
@@ -7299,6 +7608,22 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNAction2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐAction(ctx context.Context, sel ast.SelectionSet, v models.Action) graphql.Marshaler {
+	return ec._Action(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNActionInput2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐActionInput(ctx context.Context, v interface{}) (model.ActionInput, error) {
+	return ec.unmarshalInputActionInput(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNActionInput2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐActionInput(ctx context.Context, v interface{}) (*model.ActionInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNActionInput2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐActionInput(ctx, v)
+	return &res, err
+}
+
 func (ec *executionContext) unmarshalNAssignRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐAssignRoleRequest(ctx context.Context, v interface{}) (model.AssignRoleRequest, error) {
 	return ec.unmarshalInputAssignRoleRequest(ctx, v)
 }
@@ -7494,6 +7819,22 @@ func (ec *executionContext) marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋpr
 	return v
 }
 
+func (ec *executionContext) marshalNMatch2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐMatch(ctx context.Context, sel ast.SelectionSet, v models.Match) graphql.Marshaler {
+	return ec._Match(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNMatchInput2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐMatchInput(ctx context.Context, v interface{}) (model.MatchInput, error) {
+	return ec.unmarshalInputMatchInput(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNMatchInput2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐMatchInput(ctx context.Context, v interface{}) (*model.MatchInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNMatchInput2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐMatchInput(ctx, v)
+	return &res, err
+}
+
 func (ec *executionContext) unmarshalNModelEmail2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐEmail(ctx context.Context, v interface{}) (models.Email, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return models.Email(tmp), err
@@ -7568,33 +7909,6 @@ func (ec *executionContext) marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcape�
 	return ec._Policy(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx context.Context, v interface{}) (models.PolicySpec, error) {
-	var res models.PolicySpec
-	return res, res.UnmarshalGQL(v)
-}
-
-func (ec *executionContext) marshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v models.PolicySpec) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) unmarshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx context.Context, v interface{}) (*models.PolicySpec, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalNPolicySpec2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) marshalNPolicySpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicySpec(ctx context.Context, sel ast.SelectionSet, v *models.PolicySpec) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return v
-}
-
 func (ec *executionContext) marshalNProject2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProject(ctx context.Context, sel ast.SelectionSet, v primitives.Project) graphql.Marshaler {
 	return ec._Project(ctx, sel, &v)
 }
@@ -7646,6 +7960,62 @@ func (ec *executionContext) marshalNProject2ᚖgithubᚗcomᚋcapeprivacyᚋcape
 	return ec._Project(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNProjectRule2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx context.Context, v interface{}) (primitives.Rule, error) {
+	var res primitives.Rule
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNProjectRule2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx context.Context, sel ast.SelectionSet, v primitives.Rule) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNProjectRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRuleᚄ(ctx context.Context, v interface{}) ([]*primitives.Rule, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*primitives.Rule, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNProjectRule2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNProjectRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRuleᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Rule) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNProjectRule2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalNProjectRule2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx context.Context, v interface{}) (*primitives.Rule, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNProjectRule2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalNProjectRule2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx context.Context, sel ast.SelectionSet, v *primitives.Rule) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) unmarshalNProjectSpecFile2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐProjectSpecFile(ctx context.Context, v interface{}) (primitives.ProjectSpecFile, error) {
 	return ec.unmarshalInputProjectSpecFile(ctx, v)
 }
@@ -7679,60 +8049,20 @@ func (ec *executionContext) marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋ
 	return ec._Role(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNRule2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx context.Context, v interface{}) (primitives.Rule, error) {
-	var res primitives.Rule
-	return res, res.UnmarshalGQL(v)
+func (ec *executionContext) marshalNRule2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRule(ctx context.Context, sel ast.SelectionSet, v models.Rule) graphql.Marshaler {
+	return ec._Rule(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRule2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx context.Context, sel ast.SelectionSet, v primitives.Rule) graphql.Marshaler {
-	return v
+func (ec *executionContext) unmarshalNRuleInput2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRuleInput(ctx context.Context, v interface{}) (model.RuleInput, error) {
+	return ec.unmarshalInputRuleInput(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRuleᚄ(ctx context.Context, v interface{}) ([]*primitives.Rule, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]*primitives.Rule, len(vSlice))
-	for i := range vSlice {
-		res[i], err = ec.unmarshalNRule2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRuleᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Rule) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNRule2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx, sel, v[i])
-	}
-
-	return ret
-}
-
-func (ec *executionContext) unmarshalNRule2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx context.Context, v interface{}) (*primitives.Rule, error) {
+func (ec *executionContext) unmarshalNRuleInput2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRuleInput(ctx context.Context, v interface{}) (*model.RuleInput, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalNRule2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx, v)
+	res, err := ec.unmarshalNRuleInput2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRuleInput(ctx, v)
 	return &res, err
-}
-
-func (ec *executionContext) marshalNRule2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRule(ctx context.Context, sel ast.SelectionSet, v *primitives.Rule) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
@@ -8021,6 +8351,66 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 	return res
 }
 
+func (ec *executionContext) marshalOAction2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐActionᚄ(ctx context.Context, sel ast.SelectionSet, v []models.Action) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAction2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐAction(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) unmarshalOActionInput2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐActionInputᚄ(ctx context.Context, v interface{}) ([]*model.ActionInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*model.ActionInput, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNActionInput2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐActionInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	return graphql.UnmarshalBoolean(v)
 }
@@ -8274,6 +8664,66 @@ func (ec *executionContext) marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcape
 	return ret
 }
 
+func (ec *executionContext) marshalORule2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRuleᚄ(ctx context.Context, sel ast.SelectionSet, v []models.Rule) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRule2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRule(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) unmarshalORuleInput2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRuleInputᚄ(ctx context.Context, v interface{}) ([]*model.RuleInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*model.RuleInput, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNRuleInput2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐRuleInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
 	return graphql.UnmarshalString(v)
 }
@@ -8327,6 +8777,21 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return ec.marshalOString2string(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalOTransformation2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐTransformation(ctx context.Context, v interface{}) (models.Transformation, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res models.Transformation
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalOTransformation2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐTransformation(ctx context.Context, sel ast.SelectionSet, v models.Transformation) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalOUser2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐUser(ctx context.Context, sel ast.SelectionSet, v models.User) graphql.Marshaler {

@@ -27,6 +27,7 @@ func New(pool Pool) *CapePg {
 func (c *CapePg) Policies() db.PolicyDB { return &pgPolicy{c.pool, c.timeout} }
 func (c *CapePg) Roles() db.RoleDB      { return &pgRole{c.pool, c.timeout} }
 func (c *CapePg) Users() db.UserDB      { return &pgUser{c.pool, c.timeout} }
+func (c *CapePg) RBAC() db.RBACDB       { return &pgRBAC{c.pool, c.timeout} }
 
 type Pool interface {
 	Exec(_ context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error)

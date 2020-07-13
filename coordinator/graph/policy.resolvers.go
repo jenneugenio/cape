@@ -20,7 +20,7 @@ import (
 func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*models.Policy, error) {
 	label := models.Label(input.Label.String())
 
-	policy := models.NewPolicy(label, &input.Spec)
+	policy := models.NewPolicy(label, ruleInputsToModelRules(input.Rules))
 	err := r.Database.Policies().Create(ctx, policy)
 	if err == db.ErrDuplicateKey {
 		return nil, ErrDuplicateKey
@@ -34,9 +34,9 @@ func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreateP
 }
 
 func (r *mutationResolver) DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error) {
-	id := models.Label(input.ID)
+	label := models.Label(input.Label)
 
-	err := r.Database.Policies().Delete(ctx, id)
+	err := r.Database.Policies().Delete(ctx, label)
 	if err != nil {
 		return nil, err
 	}

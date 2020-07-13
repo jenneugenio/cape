@@ -1,5 +1,30 @@
-scalar PolicySpec
-scalar Rule
+scalar Transformation
+
+type Rule {
+  match: Match!
+  actions: [Action!]
+}
+
+type Match {
+  name: String!
+}
+
+type Action {
+  transform: Transformation
+}
+
+input RuleInput {
+  match: MatchInput!
+  actions: [ActionInput!]
+}
+
+input MatchInput {
+  name: String!
+}
+
+input ActionInput {
+  transform: Transformation
+}
 
 type Policy {
   id: String!
@@ -7,7 +32,7 @@ type Policy {
   updated_at: Time!
 
   label: ModelLabel!
-  spec: PolicySpec!
+  rules: [Rule!]
 }
 
 type Attachment {
@@ -21,15 +46,11 @@ type Attachment {
 
 input CreatePolicyRequest {
   label: Label!
-  spec: PolicySpec!
+  rules: [RuleInput!]
 }
 
 input DeletePolicyRequest {
-  id: String!
-}
-
-input PolicyInput {
-  label: Label!
+  label: String!
 }
 
 input AttachPolicyRequest {

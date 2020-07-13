@@ -11,7 +11,7 @@ import (
 
 // A Canner verifies whether the owner of a c can perform a specific Action on a given Type
 type Canner interface {
-	Can(models.Action, types.Type) error
+	Can(models.RBACAction, types.Type) error
 }
 
 // Enforcer enforces authorization for accessing primitive types tables.

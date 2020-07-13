@@ -69,10 +69,14 @@ func (p *pgUser) Delete(ctx context.Context, e models.Email) error {
 		return fmt.Errorf("error building user update query: %w", err)
 	}
 
-	_, err = p.pool.Exec(ctx, s, args...)
+	tag, err := p.pool.Exec(ctx, s, args...)
 	if err != nil {
 		return fmt.Errorf("error deleting user: %w", err)
 	}
+	if tag.RowsAffected() == 0 {
+		return fmt.Errorf("error deleting user: user with email %s does not exist", e)
+	}
+
 	return nil
 }
 

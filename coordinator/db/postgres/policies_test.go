@@ -2,6 +2,7 @@ package capepg
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
@@ -50,28 +51,32 @@ func TestCreate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	tagDeleted := pgconn.CommandTag("DELETE 1")
+
 	tests := []struct {
+		pool    *testPgPool
 		label   models.Label
 		wantErr error
-		err     error
 	}{
 		{
+			pool: &testPgPool{
+				ct: &tagDeleted,
+			},
 			label:   models.Label("foo"),
 			wantErr: nil,
-			err:     nil,
 		},
 		{
+			pool: &testPgPool{
+				ct:  &tagDeleted,
+				err: ErrGenericDBError,
+			},
 			label:   models.Label("foo"),
 			wantErr: fmt.Errorf("error deleting policy: %w", ErrGenericDBError),
-			err:     ErrGenericDBError,
 		},
 	}
 
-	pool := &testPgPool{}
 	for i, test := range tests {
-		pool.err = test.err
-
-		policyDB := pgPolicy{pool, 0}
+		policyDB := pgPolicy{test.pool, 0}
 
 		gotErr := policyDB.Delete(context.TODO(), test.label)
 		if (test.wantErr == nil && gotErr != nil) ||
@@ -129,13 +134,15 @@ func TestGet(t *testing.T) {
 			t.Errorf("unexpected error on Create() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
 		}
 		got, want := *gotPol, *(test.wantPol)
-		if got != want {
+		if !reflect.DeepEqual(got, want) {
 			t.Errorf("incorrect policy returned on Get() test %d of %d: got %v want %v", i+1, len(tests), got, want)
 		}
 	}
 }
 
 func TestList(t *testing.T) {
+	by, _ := json.Marshal(models.Policy{})
+
 	tests := []struct {
 		opt      *db.ListPolicyOptions
 		wantPols []models.Policy
@@ -148,7 +155,7 @@ func TestList(t *testing.T) {
 			wantPols: []models.Policy{{}},
 			wantErr:  nil,
 			rows: &testRows{
-				obj: [][]interface{}{{models.Policy{}}},
+				obj: [][]interface{}{{by}},
 				err: nil,
 			},
 			err: nil,
@@ -166,7 +173,7 @@ func TestList(t *testing.T) {
 			wantPols: []models.Policy{{}},
 			wantErr:  nil,
 			rows: &testRows{
-				obj: [][]interface{}{{models.Policy{}}},
+				obj: [][]interface{}{{by}},
 				err: nil,
 			},
 			err: nil,

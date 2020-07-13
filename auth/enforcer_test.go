@@ -25,7 +25,7 @@ type TestCanner struct {
 	e error
 }
 
-func (tc TestCanner) Can(_ models.Action, _ types.Type) error { return tc.e }
+func (tc TestCanner) Can(_ models.RBACAction, _ types.Type) error { return tc.e }
 
 type TestQuerier struct {
 	err error

@@ -15,6 +15,14 @@ resolver:
   package: graph
 
 models:
+  Transformation:
+    model: github.com/capeprivacy/cape/models.Transformation
+  Action:
+    model: github.com/capeprivacy/cape/models.Action
+  Match:
+    model: github.com/capeprivacy/cape/models.Match
+  Rule:
+    model: github.com/capeprivacy/cape/models.Rule
   User:
     model: github.com/capeprivacy/cape/models.User
   Role:
@@ -49,10 +57,6 @@ models:
     model: github.com/capeprivacy/cape/models.Email
   EmailType:
     model: github.com/capeprivacy/cape/primitives.EmailType
-  PolicySpec:
-    model: github.com/capeprivacy/cape/models.PolicySpec
-  Rule:
-    model: github.com/capeprivacy/cape/primitives.Rule
   Token:
     model: github.com/capeprivacy/cape/primitives.Token
   Password:
@@ -71,3 +75,5 @@ models:
     model: github.com/capeprivacy/cape/primitives.DisplayName
   Recovery:
     model: github.com/capeprivacy/cape/primitives.Recovery
+  ProjectRule:
+    model: github.com/capeprivacy/cape/primitives.Rule
