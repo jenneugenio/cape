@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -62,11 +60,15 @@ func NewPolicy(label Label, spec *PolicySpec) Policy {
 
 // ParsePolicy can convert a yaml document into a Policy
 func ParsePolicy(data []byte) (*Policy, error) {
-	var p Policy
-	err := yaml.Unmarshal(data, &p)
+	ps, err := ParsePolicySpec(data)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse policy: %w", err)
+		return nil, err
 	}
 
-	return &p, nil
+	policy := &Policy{
+		Label: ps.Label,
+		Spec:  ps,
+	}
+
+	return policy, nil
 }

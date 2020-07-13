@@ -25,9 +25,9 @@ func TestAttachment(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("valid attachment", func(t *testing.T) {
-		attachment, err := NewAttachment(policy.ID, role.ID)
+		attachment, err := NewAttachment(policy.ID.String(), role.ID)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(attachment.PolicyID).To(gm.Equal(policy.ID))
+		gm.Expect(attachment.PolicyID).To(gm.Equal(policy.ID.String()))
 		gm.Expect(attachment.RoleID).To(gm.Equal(role.ID))
 	})
 
@@ -37,11 +37,6 @@ func TestAttachment(t *testing.T) {
 		roleID database.ID
 	}{
 		{
-			"invalid policy id",
-			database.EmptyID,
-			role.ID,
-		},
-		{
 			"invalid role id",
 			policy.ID,
 			database.EmptyID,
@@ -50,7 +45,7 @@ func TestAttachment(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := NewAttachment(tc.userID, tc.roleID)
+			_, err := NewAttachment(tc.userID.String(), tc.roleID)
 			gm.Expect(err).ToNot(gm.BeNil())
 			gm.Expect(errors.CausedBy(err, InvalidAttachmentCause)).To(gm.BeTrue())
 		})

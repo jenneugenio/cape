@@ -9,7 +9,7 @@ import (
 // Attachment represents a policy being applied/attached to a role
 type Attachment struct {
 	*database.Primitive
-	PolicyID database.ID `json:"policy_id"`
+	PolicyID string      `json:"policy_id"`
 	RoleID   database.ID `json:"role_id"`
 }
 
@@ -18,24 +18,11 @@ func (a *Attachment) Validate() error {
 		return errors.Wrap(InvalidAttachmentCause, err)
 	}
 
-	if err := a.PolicyID.Validate(); err != nil {
-		return errors.New(InvalidAttachmentCause, "Attachment policy id must be valid")
-	}
-
-	typ, err := a.PolicyID.Type()
-	if err != nil {
-		return errors.New(InvalidAttachmentCause, "Invalid Policy ID provider")
-	}
-
-	if typ != PolicyType {
-		return errors.New(InvalidAttachmentCause, "Invalid Policy ID provider")
-	}
-
 	if err := a.RoleID.Validate(); err != nil {
 		return errors.New(InvalidAttachmentCause, "Attachment role ID must be valid")
 	}
 
-	typ, err = a.RoleID.Type()
+	typ, err := a.RoleID.Type()
 	if err != nil {
 		return errors.New(InvalidAttachmentCause, "Invalid Role ID provided")
 	}
@@ -53,7 +40,7 @@ func (a *Attachment) GetType() types.Type {
 }
 
 // NewAttachment returns a new attachment
-func NewAttachment(policyID, roleID database.ID) (*Attachment, error) {
+func NewAttachment(policyID string, roleID database.ID) (*Attachment, error) {
 	p, err := database.NewPrimitive(AttachmentType)
 	if err != nil {
 		return nil, err

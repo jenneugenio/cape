@@ -5,13 +5,13 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/types"
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 // A Canner verifies whether the owner of a c can perform a specific Action on a given Type
 type Canner interface {
-	Can(primitives.Action, types.Type) error
+	Can(models.Action, types.Type) error
 }
 
 // Enforcer enforces authorization for accessing primitive types tables.
@@ -48,7 +48,7 @@ func (e *Enforcer) Create(ctx context.Context, entity ...database.Entity) error 
 		return errors.New(errors.InvalidArgumentCause, "cannot create 0 entities")
 	}
 
-	err := e.c.Can(primitives.Create, entity[0].GetType())
+	err := e.c.Can(models.Create, entity[0].GetType())
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (e *Enforcer) Get(ctx context.Context, id database.ID, entity database.Enti
 		return errors.New(errors.InvalidArgumentCause, "entity cannot be nil")
 	}
 
-	err := e.c.Can(primitives.Read, entity.GetType())
+	err := e.c.Can(models.Read, entity.GetType())
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (e *Enforcer) Get(ctx context.Context, id database.ID, entity database.Enti
 // Delete calls down to the underlying db function as long as the contained policies
 // can delete the given entity
 func (e *Enforcer) Delete(ctx context.Context, typ types.Type, ids ...database.ID) error {
-	err := e.c.Can(primitives.Delete, typ)
+	err := e.c.Can(models.Delete, typ)
 	if err != nil {
 		return err
 	}
@@ -104,12 +104,12 @@ func (e *Enforcer) Upsert(ctx context.Context, entity database.Entity) error {
 		return errors.New(errors.InvalidArgumentCause, "entity cannot be nil")
 	}
 
-	err := e.c.Can(primitives.Update, entity.GetType())
+	err := e.c.Can(models.Update, entity.GetType())
 	if err != nil {
 		return err
 	}
 
-	err = e.c.Can(primitives.Create, entity.GetType())
+	err = e.c.Can(models.Create, entity.GetType())
 	if err != nil {
 		return err
 	}
@@ -129,7 +129,7 @@ func (e *Enforcer) Update(ctx context.Context, entity database.Entity) error {
 		return errors.New(errors.InvalidArgumentCause, "entity cannot be nil")
 	}
 
-	err := e.c.Can(primitives.Update, entity.GetType())
+	err := e.c.Can(models.Update, entity.GetType())
 	if err != nil {
 		return err
 	}
@@ -149,7 +149,7 @@ func (e *Enforcer) QueryOne(ctx context.Context, entity database.Entity, filter 
 		return errors.New(errors.InvalidArgumentCause, "entity cannot be nil")
 	}
 
-	err := e.c.Can(primitives.Read, entity.GetType())
+	err := e.c.Can(models.Read, entity.GetType())
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func (e *Enforcer) QueryOne(ctx context.Context, entity database.Entity, filter 
 // can query the given entities
 func (e *Enforcer) Query(ctx context.Context, i interface{}, filter database.Filter) error {
 	typ := database.EntityTypeFromPtrSlice(i)
-	err := e.c.Can(primitives.Read, typ)
+	err := e.c.Can(models.Read, typ)
 	if err != nil {
 		return err
 	}

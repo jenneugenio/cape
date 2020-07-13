@@ -1,8 +1,0 @@
-version: 1
-label: protect-ssn
-rules:
-- target: records:db.transactions
-  action: read
-  effect: allow
-  fields:
-  -  card_number

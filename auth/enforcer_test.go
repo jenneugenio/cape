@@ -7,6 +7,7 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/types"
+	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -24,7 +25,7 @@ type TestCanner struct {
 	e error
 }
 
-func (tc TestCanner) Can(_ primitives.Action, _ types.Type) error { return tc.e }
+func (tc TestCanner) Can(_ models.Action, _ types.Type) error { return tc.e }
 
 type TestQuerier struct {
 	err error
@@ -407,7 +408,7 @@ func TestQuery(t *testing.T) {
 			canErr:   nil,
 			q:        TestQuerier{nil},
 			ctx:      context.TODO(),
-			i:        &([]*primitives.Policy{}),
+			i:        &([]*primitives.Role{}),
 			wantFunc: ErrNil,
 		},
 		{
@@ -415,7 +416,7 @@ func TestQuery(t *testing.T) {
 			canErr:   nil,
 			q:        TestQuerier{ErrGenericError},
 			ctx:      context.TODO(),
-			i:        &([]*primitives.Policy{{}}),
+			i:        &([]*primitives.Role{{}}),
 			wantFunc: ErrNotNil,
 		},
 		{
@@ -423,7 +424,7 @@ func TestQuery(t *testing.T) {
 			canErr:   ErrGenericError,
 			q:        TestQuerier{nil},
 			ctx:      context.TODO(),
-			i:        &([]*primitives.Policy{{}}),
+			i:        &([]*primitives.Role{{}}),
 			wantFunc: ErrNotNil,
 		},
 		{
@@ -431,7 +432,7 @@ func TestQuery(t *testing.T) {
 			canErr:   nil,
 			q:        TestQuerier{nil},
 			ctx:      context.TODO(),
-			i:        &([]*primitives.Policy{{}}),
+			i:        &([]*primitives.Role{{}}),
 			wantFunc: ErrNil,
 		},
 	}

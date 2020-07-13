@@ -124,7 +124,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Attachment    func(childComplexity int, roleID database.ID, policyID database.ID) int
+		Attachment    func(childComplexity int, roleID database.ID, policyID string) int
 		Me            func(childComplexity int) int
 		Policies      func(childComplexity int) int
 		Policy        func(childComplexity int, id string) int
@@ -205,7 +205,7 @@ type QueryResolver interface {
 	Policies(ctx context.Context) ([]*models.Policy, error)
 	RolePolicies(ctx context.Context, roleID database.ID) ([]*models.Policy, error)
 	UserPolicies(ctx context.Context, userID string) ([]*models.Policy, error)
-	Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error)
+	Attachment(ctx context.Context, roleID database.ID, policyID string) (*model.Attachment, error)
 	Projects(ctx context.Context, status []primitives.ProjectStatus) ([]*primitives.Project, error)
 	Project(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error)
 	Role(ctx context.Context, id database.ID) (*primitives.Role, error)
@@ -678,7 +678,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Attachment(childComplexity, args["role_id"].(database.ID), args["policy_id"].(database.ID)), true
+		return e.complexity.Query.Attachment(childComplexity, args["role_id"].(database.ID), args["policy_id"].(string)), true
 
 	case "Query.me":
 		if e.complexity.Query.Me == nil {
@@ -1051,12 +1051,12 @@ input PolicyInput {
 }
 
 input AttachPolicyRequest {
-  policy_id: ID!
+  policy_id: String!
   role_id: ID!
 }
 
 input DetachPolicyRequest {
-  policy_id: ID!
+  policy_id: String!
   role_id: ID!
 }
 
@@ -1068,7 +1068,7 @@ extend type Query {
   rolePolicies(role_id: ID!): [Policy!]
   userPolicies(user_id: String!): [Policy!]
 
-  attachment(role_id: ID!, policy_id: ID!): Attachment!
+  attachment(role_id: ID!, policy_id: String!): Attachment!
 }
 
 extend type Mutation {
@@ -1608,9 +1608,9 @@ func (ec *executionContext) field_Query_attachment_args(ctx context.Context, raw
 		}
 	}
 	args["role_id"] = arg0
-	var arg1 database.ID
+	var arg1 string
 	if tmp, ok := rawArgs["policy_id"]; ok {
-		arg1, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3832,7 +3832,7 @@ func (ec *executionContext) _Query_attachment(ctx context.Context, field graphql
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Attachment(rctx, args["role_id"].(database.ID), args["policy_id"].(database.ID))
+		return ec.resolvers.Query().Attachment(rctx, args["role_id"].(database.ID), args["policy_id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5889,7 +5889,7 @@ func (ec *executionContext) unmarshalInputAttachPolicyRequest(ctx context.Contex
 		switch k {
 		case "policy_id":
 			var err error
-			it.PolicyID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
+			it.PolicyID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6135,7 +6135,7 @@ func (ec *executionContext) unmarshalInputDetachPolicyRequest(ctx context.Contex
 		switch k {
 		case "policy_id":
 			var err error
-			it.PolicyID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
+			it.PolicyID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}

@@ -41,7 +41,6 @@ require (
 	github.com/manifoldco/go-base64 v1.0.3
 	github.com/manifoldco/healthz v1.2.0
 	github.com/manifoldco/promptui v0.7.0
-	github.com/marianogappa/sqlparser v0.0.0-20190512194142-a82c3f44d2fc
 	github.com/markbates/pkger v0.17.0
 	github.com/matryer/is v1.3.0 // indirect
 	github.com/mitchellh/mapstructure v1.3.2
@@ -62,7 +61,6 @@ require (
 	google.golang.org/grpc v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.55.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1
-	gopkg.in/yaml.v2 v2.2.8
 	helm.sh/helm/v3 v3.2.0
 	mvdan.cc/unparam v0.0.0-20200314162735-0ac8026f7d06 // indirect
 	rsc.io/letsencrypt v0.0.3 // indirect

@@ -33,12 +33,12 @@ input PolicyInput {
 }
 
 input AttachPolicyRequest {
-  policy_id: ID!
+  policy_id: String!
   role_id: ID!
 }
 
 input DetachPolicyRequest {
-  policy_id: ID!
+  policy_id: String!
   role_id: ID!
 }
 
@@ -50,7 +50,7 @@ extend type Query {
   rolePolicies(role_id: ID!): [Policy!]
   userPolicies(user_id: String!): [Policy!]
 
-  attachment(role_id: ID!, policy_id: ID!): Attachment!
+  attachment(role_id: ID!, policy_id: String!): Attachment!
 }
 
 extend type Mutation {

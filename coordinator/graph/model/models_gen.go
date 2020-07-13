@@ -24,7 +24,7 @@ type Assignment struct {
 }
 
 type AttachPolicyRequest struct {
-	PolicyID database.ID `json:"policy_id"`
+	PolicyID string      `json:"policy_id"`
 	RoleID   database.ID `json:"role_id"`
 }
 
@@ -94,7 +94,7 @@ type DeleteRoleRequest struct {
 }
 
 type DetachPolicyRequest struct {
-	PolicyID database.ID `json:"policy_id"`
+	PolicyID string      `json:"policy_id"`
 	RoleID   database.ID `json:"role_id"`
 }
 

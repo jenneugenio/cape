@@ -17,6 +17,7 @@ type PolicyDB interface {
 	Create(context.Context, models.Policy) error
 	Delete(context.Context, models.Label) error
 	Get(context.Context, models.Label) (*models.Policy, error)
+	GetByID(context.Context, string) (*models.Policy, error)
 	List(ctx context.Context, opts *ListPolicyOptions) ([]models.Policy, error)
 }
 
@@ -40,8 +41,12 @@ type RoleDB interface {
 }
 
 type ListPolicyOptions struct {
-	Offset uint64
-	Limit  uint64
+	Options *struct {
+		Offset uint64
+		Limit  uint64
+	}
+
+	FilterIDs []string
 }
 
 type ListRoleOptions struct {

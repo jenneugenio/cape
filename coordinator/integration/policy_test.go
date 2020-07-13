@@ -54,7 +54,7 @@ func TestPolicies(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(policy.Label).To(gm.Equal(label))
 
-		otherPolicy, err := client.GetPolicy(ctx, string(policy.Label))
+		otherPolicy, err := client.GetPolicyByLabel(ctx, string(policy.Label))
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(policy.Label).To(gm.Equal(otherPolicy.Label))

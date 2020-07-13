@@ -90,6 +90,31 @@ func (p *pgPolicy) Get(ctx context.Context, l models.Label) (*models.Policy, err
 	return &policy, nil
 }
 
+func (p *pgPolicy) GetByID(ctx context.Context, id string) (*models.Policy, error) {
+	ctx, cancel := context.WithTimeout(ctx, p.timeout)
+	defer cancel()
+
+	s, args, err := sq.Select("data").
+		PlaceholderFormat(sq.Dollar).
+		From("policies").
+		Where(sq.Eq{"id": id}).
+		ToSql()
+
+	if err != nil {
+		return nil, fmt.Errorf("error generating query: %w", err)
+	}
+
+	row := p.pool.QueryRow(ctx, s, args...)
+
+	var policy models.Policy
+	err = row.Scan(&policy)
+	if err != nil {
+		return nil, fmt.Errorf("error getting policy: %w", err)
+	}
+
+	return &policy, nil
+}
+
 func (p *pgPolicy) List(ctx context.Context, opts *db.ListPolicyOptions) ([]models.Policy, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
@@ -100,7 +125,13 @@ func (p *pgPolicy) List(ctx context.Context, opts *db.ListPolicyOptions) ([]mode
 		OrderBy("data->>'created_at'")
 
 	if opts != nil {
-		query = query.Limit(opts.Limit).Offset(opts.Offset)
+		if opts.Options != nil {
+			query = query.Limit(opts.Options.Limit).Offset(opts.Options.Offset)
+		}
+
+		if opts.FilterIDs != nil && len(opts.FilterIDs) > 0 {
+			query = query.Where(sq.Eq{"id": opts.FilterIDs})
+		}
 	}
 
 	s, args, err := query.ToSql()

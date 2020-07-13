@@ -12,7 +12,7 @@ import (
 type Session struct {
 	User               *models.User
 	Session            *primitives.Session
-	Policies           []*primitives.Policy
+	Policies           []*models.Policy
 	Roles              []*primitives.Role
 	CredentialProvider primitives.CredentialProvider
 }
@@ -21,7 +21,7 @@ type Session struct {
 func NewSession(
 	user *models.User,
 	session *primitives.Session,
-	policies []*primitives.Policy,
+	policies []*models.Policy,
 	roles []*primitives.Role,
 	cp primitives.CredentialProvider) (*Session, error) {
 	s := &Session{
@@ -62,13 +62,13 @@ func (s *Session) GetID() string {
 
 // Can checks to see if the given user can do an action on the given primitive type. This
 // is intended to work on internal authorization and policy decisions.
-func (s *Session) Can(action primitives.Action, typ types.Type) error {
-	var rules []*primitives.Rule
+func (s *Session) Can(action models.Action, typ types.Type) error {
+	var rules []*models.Rule
 
 	for _, p := range s.Policies {
 		for _, r := range p.Spec.Rules {
 			if r.Target.Type().String() == typ.String() && r.Action == action {
-				if r.Effect == primitives.Deny {
+				if r.Effect == models.Deny {
 					return errors.New(AuthorizationFailure, "A rule denies this action")
 				}
 				rules = append(rules, r)

@@ -13,7 +13,6 @@ import (
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
-	modelmigration "github.com/capeprivacy/cape/models/migration"
 	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -59,7 +58,7 @@ func (r *mutationResolver) AttachPolicy(ctx context.Context, input model.AttachP
 		return nil, err
 	}
 
-	return buildAttachment(ctx, enforcer, attachment)
+	return buildAttachment(ctx, enforcer, r.Database, attachment)
 }
 
 func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachPolicyRequest) (*string, error) {
@@ -70,7 +69,7 @@ func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachP
 
 	filter := database.NewFilter(database.Where{
 		"role_id":   input.RoleID.String(),
-		"policy_id": input.PolicyID.String(),
+		"policy_id": input.PolicyID,
 	}, nil, nil)
 
 	err := enforcer.QueryOne(ctx, attachment, filter)
@@ -87,7 +86,7 @@ func (r *mutationResolver) DetachPolicy(ctx context.Context, input model.DetachP
 }
 
 func (r *queryResolver) Policy(ctx context.Context, id string) (*models.Policy, error) {
-	policy, err := r.Database.Policies().Get(ctx, models.Label(id))
+	policy, err := r.Database.Policies().GetByID(ctx, id)
 	if err != nil {
 		// TODO(thor): Log internal error messages and swallow them before
 		// returning to the client.
@@ -131,37 +130,42 @@ func (r *queryResolver) RolePolicies(ctx context.Context, roleID database.ID) ([
 		return nil, err
 	}
 
-	var policies []*primitives.Policy
 	if len(attachments) == 0 {
-		return modelmigration.PoliciesFromPrimitive(policies), nil
+		return []*models.Policy{}, nil
 	}
 
-	policyIDs := database.InFromEntities(attachments, func(e interface{}) interface{} {
-		return e.(*primitives.Attachment).PolicyID
-	})
-	err = enforcer.Query(ctx, &policies, database.NewFilter(database.Where{"id": policyIDs}, nil, nil))
+	var policyIDs []string
+	for _, a := range attachments {
+		policyIDs = append(policyIDs, a.PolicyID)
+	}
+
+	policies, err := r.Database.Policies().List(ctx, &db.ListPolicyOptions{FilterIDs: policyIDs})
 	if err != nil {
 		return nil, err
 	}
 
-	retVal := modelmigration.PoliciesFromPrimitive(policies)
-	return retVal, nil
+	policyPtrs := make([]*models.Policy, len(policies))
+	for i, policy := range policies {
+		p := policy
+		policyPtrs[i] = &p
+	}
+
+	return policyPtrs, nil
 }
 
 func (r *queryResolver) UserPolicies(ctx context.Context, userID string) ([]*models.Policy, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	policies, err := fw.QueryUserPolicies(ctx, enforcer, userID)
+	policies, err := fw.QueryUserPolicies(ctx, enforcer, r.Database, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	retVal := modelmigration.PoliciesFromPrimitive(policies)
-	return retVal, nil
+	return policies, nil
 }
 
-func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, policyID database.ID) (*model.Attachment, error) {
+func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, policyID string) (*model.Attachment, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -177,7 +181,7 @@ func (r *queryResolver) Attachment(ctx context.Context, roleID database.ID, poli
 		return nil, err
 	}
 
-	return buildAttachment(ctx, enforcer, attachment)
+	return buildAttachment(ctx, enforcer, r.Database, attachment)
 }
 
 // Mutation returns generated.MutationResolver implementation.

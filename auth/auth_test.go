@@ -16,11 +16,13 @@ import (
 func TestDefaultAdminPolicy(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	policy, err := loadPolicyFile(primitives.DefaultAdminPolicy.String() + ".yaml")
+	policy, err := loadPolicyFile(string(models.DefaultAdminPolicy) + ".yaml")
 	gm.Expect(err).To(gm.BeNil())
 
+	fmt.Println(policy)
+
 	user := &models.User{}
-	session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{policy},
+	session, err := NewSession(user, &primitives.Session{}, []*models.Policy{policy},
 		[]*primitives.Role{}, user)
 
 	gm.Expect(err).To(gm.BeNil())
@@ -33,7 +35,7 @@ func TestDefaultAdminPolicy(t *testing.T) {
 			typ, ok := types.Get(primitive)
 			gm.Expect(ok).To(gm.BeTrue())
 
-			err := session.Can(primitives.Create, typ)
+			err := session.Can(models.Create, typ)
 			gm.Expect(err).To(gm.BeNil())
 		})
 
@@ -41,7 +43,7 @@ func TestDefaultAdminPolicy(t *testing.T) {
 			typ, ok := types.Get(primitive)
 			gm.Expect(ok).To(gm.BeTrue())
 
-			err := session.Can(primitives.Delete, typ)
+			err := session.Can(models.Delete, typ)
 			gm.Expect(err).To(gm.BeNil())
 		})
 	}
@@ -50,29 +52,29 @@ func TestDefaultAdminPolicy(t *testing.T) {
 func TestDefaultGlobalPolicy(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	policy, err := loadPolicyFile(primitives.DefaultGlobalPolicy.String() + ".yaml")
+	policy, err := loadPolicyFile(string(models.DefaultGlobalPolicy) + ".yaml")
 	gm.Expect(err).To(gm.BeNil())
 
 	user := &models.User{}
-	session, err := NewSession(user, &primitives.Session{}, []*primitives.Policy{policy},
+	session, err := NewSession(user, &primitives.Session{}, []*models.Policy{policy},
 		[]*primitives.Role{}, user)
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(session).ToNot(gm.BeNil())
 
 	type TestCase struct {
 		Primitive string
-		Action    primitives.Action
+		Action    models.Action
 	}
 
 	allowedTestCases := []TestCase{
-		{"tokens", primitives.Create},
-		{"tokens", primitives.Delete},
-		{"sessions", primitives.Create},
-		{"sessions", primitives.Delete},
-		{"users", primitives.Read},
-		{"attachments", primitives.Read},
-		{"roles", primitives.Read},
-		{"policies", primitives.Read},
+		{"tokens", models.Create},
+		{"tokens", models.Delete},
+		{"sessions", models.Create},
+		{"sessions", models.Delete},
+		{"users", models.Read},
+		{"attachments", models.Read},
+		{"roles", models.Read},
+		{"policies", models.Read},
 	}
 
 	for _, tc := range allowedTestCases {
@@ -92,7 +94,7 @@ func TestDefaultGlobalPolicy(t *testing.T) {
 			typ, ok := types.Get(primitive)
 			gm.Expect(ok).To(gm.BeTrue())
 
-			err := session.Can(primitives.Create, typ)
+			err := session.Can(models.Create, typ)
 			gm.Expect(err).NotTo(gm.BeNil())
 		})
 
@@ -100,13 +102,13 @@ func TestDefaultGlobalPolicy(t *testing.T) {
 			typ, ok := types.Get(primitive)
 			gm.Expect(ok).To(gm.BeTrue())
 
-			err := session.Can(primitives.Delete, typ)
+			err := session.Can(models.Delete, typ)
 			gm.Expect(err).NotTo(gm.BeNil())
 		})
 	}
 }
 
-func loadPolicyFile(file string) (*primitives.Policy, error) {
+func loadPolicyFile(file string) (*models.Policy, error) {
 	dir := pkger.Dir("/primitives/policies/default")
 	f, err := dir.Open(file)
 	if err != nil {
@@ -118,5 +120,5 @@ func loadPolicyFile(file string) (*primitives.Policy, error) {
 		return nil, err
 	}
 
-	return primitives.ParsePolicy(b)
+	return models.ParsePolicy(b)
 }

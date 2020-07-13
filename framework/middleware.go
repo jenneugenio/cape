@@ -266,7 +266,7 @@ func IsAuthenticatedMiddleware(db database.Backend, capedb db.Interface, tokenAu
 				return
 			}
 
-			policies, err := QueryUserPolicies(ctx, db, cp.GetUserID())
+			policies, err := QueryUserPolicies(ctx, db, capedb, cp.GetUserID())
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return

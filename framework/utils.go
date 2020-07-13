@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 
 	"github.com/capeprivacy/cape/auth"
@@ -25,10 +26,10 @@ import (
 
 // QueryUserPolicies is a helper function to query all roles assigned to an user and then
 // all policies attached to those roles.
-func QueryUserPolicies(ctx context.Context, db database.Querier, userID string) ([]*primitives.Policy, error) {
+func QueryUserPolicies(ctx context.Context, querier database.Querier, capedb db.Interface, userID string) ([]*models.Policy, error) {
 	var assignments []*primitives.Assignment
 	assignmentFilter := database.NewFilter(database.Where{"user_id": userID}, nil, nil)
-	err := db.Query(ctx, &assignments, assignmentFilter)
+	err := querier.Query(ctx, &assignments, assignmentFilter)
 	if err != nil {
 		return nil, err
 	}
@@ -38,31 +39,37 @@ func QueryUserPolicies(ctx context.Context, db database.Querier, userID string) 
 	})
 
 	if len(roleIDs) == 0 {
-		return []*primitives.Policy{}, nil
+		return nil, nil
 	}
 
 	var attachments []*primitives.Attachment
 	attachmentFilter := database.NewFilter(database.Where{"role_id": roleIDs}, nil, nil)
-	err = db.Query(ctx, &attachments, attachmentFilter)
+	err = querier.Query(ctx, &attachments, attachmentFilter)
 	if err != nil {
 		return nil, err
 	}
 
-	policyIDs := database.InFromEntities(attachments, func(e interface{}) interface{} {
-		return e.(*primitives.Attachment).PolicyID
-	})
+	var policyIDs []string
+	for _, a := range attachments {
+		policyIDs = append(policyIDs, a.PolicyID)
+	}
 
 	if len(policyIDs) == 0 {
-		return []*primitives.Policy{}, nil
+		return []*models.Policy{}, nil
 	}
 
-	var policies []*primitives.Policy
-	err = db.Query(ctx, &policies, database.NewFilter(database.Where{"id": policyIDs}, nil, nil))
+	policies, err := capedb.Policies().List(ctx, &db.ListPolicyOptions{FilterIDs: policyIDs})
 	if err != nil {
 		return nil, err
 	}
 
-	return policies, nil
+	policyPtrs := make([]*models.Policy, len(policies))
+	for i, policy := range policies {
+		p := policy
+		policyPtrs[i] = &p
+	}
+
+	return policyPtrs, nil
 }
 
 func QueryRoles(ctx context.Context, db database.Querier, userID string) ([]*primitives.Role, error) {
@@ -239,12 +246,12 @@ func attachDefaultPolicy(ctx context.Context, db database.Querier) error {
 		return err
 	}
 
-	adminAttachment, err := createAttachment(ctx, db, adminPolicy.ID, primitives.AdminRole)
+	adminAttachment, err := createAttachment(ctx, db, adminPolicy.ID.String(), primitives.AdminRole)
 	if err != nil {
 		return err
 	}
 
-	globalAttachment, err := createAttachment(ctx, db, globalPolicy.ID, primitives.GlobalRole)
+	globalAttachment, err := createAttachment(ctx, db, globalPolicy.ID.String(), primitives.GlobalRole)
 	if err != nil {
 		return err
 	}
@@ -257,7 +264,7 @@ func attachDefaultPolicy(ctx context.Context, db database.Querier) error {
 	return nil
 }
 
-func createAttachment(ctx context.Context, db database.Querier, policyID database.ID,
+func createAttachment(ctx context.Context, db database.Querier, policyID string,
 	roleLabel primitives.Label) (*primitives.Attachment, error) {
 	roles, err := GetRolesByLabel(ctx, db, []primitives.Label{roleLabel})
 	if err != nil {

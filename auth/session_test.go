@@ -23,7 +23,7 @@ func TestCan(t *testing.T) {
 	t.Run("GetID returns the user id", func(t *testing.T) {
 		_, user := models.GenerateUser("hiho", "jerry@berry.jerry")
 
-		session, err := NewSession(&user, &primitives.Session{}, []*primitives.Policy{}, []*primitives.Role{}, &user)
+		session, err := NewSession(&user, &primitives.Session{}, []*models.Policy{}, []*primitives.Role{}, &user)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(session.GetID()).To(gm.Equal(user.ID))
@@ -32,10 +32,10 @@ func TestCan(t *testing.T) {
 	t.Run("denied no rules", func(t *testing.T) {
 		user := models.NewUser("Jerry Berry", email, creds)
 
-		session, err := NewSession(&user, &primitives.Session{}, []*primitives.Policy{}, []*primitives.Role{}, &user)
+		session, err := NewSession(&user, &primitives.Session{}, []*models.Policy{}, []*primitives.Role{}, &user)
 		gm.Expect(err).To(gm.BeNil())
 
-		err = session.Can(primitives.Create, primitives.UserType)
+		err = session.Can(models.Create, primitives.UserType)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(errors.CausedBy(err, AuthorizationFailure)).To(gm.BeTrue())
 	})
@@ -43,25 +43,24 @@ func TestCan(t *testing.T) {
 	t.Run("denied deny rule exists", func(t *testing.T) {
 		user := models.NewUser("Jerry Berry", email, creds)
 
-		spec := &primitives.PolicySpec{
+		spec := &models.PolicySpec{
 			Version: 1,
 			Label:   "my-policy",
-			Rules: []*primitives.Rule{
+			Rules: []*models.Rule{
 				{
 					Target: "users:*",
-					Action: primitives.Create,
-					Effect: primitives.Deny,
+					Action: models.Create,
+					Effect: models.Deny,
 				},
 			},
 		}
 
-		p, err := primitives.NewPolicy("my-policy", spec)
+		p := models.NewPolicy("my-policy", spec)
+
+		session, err := NewSession(&user, &primitives.Session{}, []*models.Policy{&p}, []*primitives.Role{}, &user)
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := NewSession(&user, &primitives.Session{}, []*primitives.Policy{p}, []*primitives.Role{}, &user)
-		gm.Expect(err).To(gm.BeNil())
-
-		err = session.Can(primitives.Create, primitives.UserType)
+		err = session.Can(models.Create, primitives.UserType)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(errors.CausedBy(err, AuthorizationFailure)).To(gm.BeTrue())
 	})
@@ -70,25 +69,24 @@ func TestCan(t *testing.T) {
 		user := models.NewUser("Jerry Berry", email, creds)
 		gm.Expect(err).To(gm.BeNil())
 
-		spec := &primitives.PolicySpec{
+		spec := &models.PolicySpec{
 			Version: 1,
 			Label:   "my-policy",
-			Rules: []*primitives.Rule{
+			Rules: []*models.Rule{
 				{
 					Target: "users:*",
-					Action: primitives.Create,
-					Effect: primitives.Allow,
+					Action: models.Create,
+					Effect: models.Allow,
 				},
 			},
 		}
 
-		p, err := primitives.NewPolicy("my-policy", spec)
+		p := models.NewPolicy("my-policy", spec)
+
+		session, err := NewSession(&user, &primitives.Session{}, []*models.Policy{&p}, []*primitives.Role{}, &user)
 		gm.Expect(err).To(gm.BeNil())
 
-		session, err := NewSession(&user, &primitives.Session{}, []*primitives.Policy{p}, []*primitives.Role{}, &user)
-		gm.Expect(err).To(gm.BeNil())
-
-		err = session.Can(primitives.Create, primitives.UserType)
+		err = session.Can(models.Create, primitives.UserType)
 		gm.Expect(err).To(gm.BeNil())
 	})
 }

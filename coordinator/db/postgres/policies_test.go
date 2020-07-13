@@ -155,8 +155,13 @@ func TestList(t *testing.T) {
 		},
 		{
 			opt: &db.ListPolicyOptions{
-				Offset: 0,
-				Limit:  1,
+				Options: &struct {
+					Offset uint64
+					Limit  uint64
+				}{
+					Offset: 0,
+					Limit:  1,
+				},
 			},
 			wantPols: []models.Policy{{}},
 			wantErr:  nil,
