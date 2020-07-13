@@ -351,7 +351,7 @@ func Parse() (*Config, error) {
 	}
 
 	if src.Mode().Perm() != requiredPermissions {
-		return nil, errors.New(InvalidPermissionsCause, "Invalid permissions for file %s, must be %d", filePath, requiredPermissions)
+		return nil, errors.New(InvalidPermissionsCause, "Invalid permissions for file %s, must be %o", filePath, requiredPermissions)
 	}
 
 	b, err := ioutil.ReadFile(filePath)
