@@ -378,32 +378,6 @@ func (c *Client) Setup(ctx context.Context, name models.Name, email models.Email
 	return user, nil
 }
 
-// CreateDeprecatedPolicy creates a policy on the coordinator
-func (c *Client) CreateDeprecatedPolicy(ctx context.Context, policy *primitives.Policy) (*primitives.Policy, error) {
-	var resp struct {
-		Policy primitives.Policy `json:"createPolicy"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["label"] = policy.Label
-	variables["spec"] = policy.Spec
-
-	err := c.transport.Raw(ctx, `
-		mutation CreateDeprecatedPolicy($label: Label!, $spec: PolicySpec!) {
-			createPolicy(input: { label: $label, spec: $spec }) {
-				id
-				label
-			}
-		}
-	`, variables, &resp)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Policy, nil
-}
-
 // CreatePolicy creates a policy on the coordinator
 func (c *Client) CreatePolicy(ctx context.Context, policy *models.Policy) (*models.Policy, error) {
 	var resp struct {
@@ -558,9 +532,9 @@ func (c *Client) DetachPolicy(ctx context.Context, policyID string, roleID datab
 }
 
 // GetRolePolicies returns all policies attached to a role
-func (c *Client) GetRolePolicies(ctx context.Context, roleID database.ID) ([]*primitives.Policy, error) {
+func (c *Client) GetRolePolicies(ctx context.Context, roleID database.ID) ([]*models.Policy, error) {
 	var resp struct {
-		Policies []*primitives.Policy `json:"rolePolicies"`
+		Policies []*models.Policy `json:"rolePolicies"`
 	}
 
 	variables := make(map[string]interface{})
@@ -582,9 +556,9 @@ func (c *Client) GetRolePolicies(ctx context.Context, roleID database.ID) ([]*pr
 }
 
 // GetUserPolicies returns all policies related to an user
-func (c *Client) GetUserPolicies(ctx context.Context, userID database.ID) ([]*primitives.Policy, error) {
+func (c *Client) GetUserPolicies(ctx context.Context, userID database.ID) ([]*models.Policy, error) {
 	var resp struct {
-		Policies []*primitives.Policy `json:"userPolicies"`
+		Policies []*models.Policy `json:"userPolicies"`
 	}
 
 	variables := make(map[string]interface{})
