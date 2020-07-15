@@ -204,8 +204,16 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		framework.RoundtripLoggerMiddleware,
 		framework.RecoveryMiddleware,
 		gziphandler.GzipHandler,
-		cors.New(cors.Options{
-			AllowedOrigins: []string{"*"},
+	)
+
+	if cfg.Cors.Enable {
+		logger.Info().Msg("enabling CORS")
+		allowOrigin := cfg.Cors.AllowOrigin
+		if allowOrigin == nil {
+			allowOrigin = []string{"*"}
+		}
+		cors := cors.New(cors.Options{
+			AllowedOrigins: allowOrigin,
 			AllowedHeaders: []string{
 				"Authorization",
 				"Content-Type",
@@ -215,12 +223,18 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 				"Referer",
 			},
 			AllowCredentials: true,
-		}).Handler,
-	).Then(health)
+		}).Handler
+
+		chain = chain.Extend(alice.New(cors))
+	} else {
+		logger.Info().Msg("not enabling CORS")
+	}
+
+	h := chain.Then(health)
 
 	return &Coordinator{
 		cfg:                cfg,
-		handler:            chain,
+		handler:            h,
 		backend:            backend,
 		logger:             logger,
 		tokenAuth:          tokenAuth,

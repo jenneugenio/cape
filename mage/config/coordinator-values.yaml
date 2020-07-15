@@ -19,6 +19,10 @@ config:
   port: 8080
   root_key: ul0b9qQONZDn4kLNgULl3WJOZEhBqDjT1YK-kgceFUU
   version: 1
+  cors:
+      enable: true
+      allow_origin:
+        - 'localhost:8080'
 
 service:
   type: "NodePort"

@@ -37,6 +37,15 @@ type Config struct {
 
 	// KeyFile contains a path to the coordinators TLS private key.
 	KeyFile string `json:"tls_key,omitempty" envconfig:"TLS_KEY"`
+
+	// Cors specifies the configuration for serving (or disabling)
+	// CORS headers
+	Cors *CorsConfig `json:"cors,omitempty"`
+}
+
+type CorsConfig struct {
+	Enable      bool     `json:"enable"`
+	AllowOrigin []string `json:"allow_origin"`
 }
 
 // DBConfig represent the database configuration
