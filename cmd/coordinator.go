@@ -33,12 +33,12 @@ func init() {
 	startCmd := &Command{
 		Usage: "Start an instance of the Cape coordinator",
 		Variables: []*EnvVar{
-			&EnvVar{
+			{
 				Name:        "CAPE_CORS_ENABLE",
 				Required:    false,
 				Description: "Serve CORS headers in HTTP responses",
 			},
-			&EnvVar{
+			{
 				Name:        "CAPE_CORS_ALLOW_ORIGIN",
 				Required:    false,
 				Description: "Specify the value of the CORS Allow Origin Header",
