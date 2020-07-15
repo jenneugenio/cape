@@ -40,12 +40,12 @@ type Config struct {
 
 	// Cors specifies the configuration for serving (or disabling)
 	// CORS headers
-	Cors *CorsConfig `json:"cors,omitempty"`
+	Cors CorsConfig `json:"cors"`
 }
 
 type CorsConfig struct {
 	Enable      bool     `json:"enable"`
-	AllowOrigin []string `json:"allow_origin"`
+	AllowOrigin []string `json:"allow_origin,omitempty"`
 }
 
 // DBConfig represent the database configuration
