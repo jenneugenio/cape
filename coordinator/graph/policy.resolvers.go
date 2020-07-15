@@ -36,12 +36,12 @@ func (r *mutationResolver) CreatePolicy(ctx context.Context, input model.CreateP
 func (r *mutationResolver) DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error) {
 	label := models.Label(input.Label)
 
-	err := r.Database.Policies().Delete(ctx, label)
+	status, err := r.Database.Policies().Delete(ctx, label)
 	if err != nil {
 		return nil, err
 	}
-
-	return nil, nil
+	str := string(status)
+	return &str, nil
 }
 
 func (r *mutationResolver) AttachPolicy(ctx context.Context, input model.AttachPolicyRequest) (*model.Attachment, error) {

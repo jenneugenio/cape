@@ -1,9 +1,7 @@
 package capepg
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -21,14 +19,14 @@ type pgRBAC struct {
 
 var _ db.RBACDB = &pgRBAC{}
 
-func (p *pgRBAC) Create(ctx context.Context, rbac models.RBAC) error {
+func (p *pgRBAC) Create(ctx context.Context, rbac models.RBACPolicy) error {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
 	s, args, err := sq.Insert("policies").
 		PlaceholderFormat(sq.Dollar).
-		Columns("data").
-		Values(rbac).
+		Columns("data", "type").
+		Values(rbac, PolicyTypeRBAC).
 		ToSql()
 
 	if err != nil {
@@ -46,18 +44,19 @@ func (p *pgRBAC) Create(ctx context.Context, rbac models.RBAC) error {
 	return nil
 }
 
-func (p *pgRBAC) List(ctx context.Context, opts *db.ListRBACOptions) ([]models.RBAC, error) {
+func (p *pgRBAC) List(ctx context.Context, opts *db.ListRBACOptions) ([]models.RBACPolicy, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
 	query := sq.Select("data").
 		PlaceholderFormat(sq.Dollar).
 		From("policies").
-		OrderBy("data->>'created_at'")
+		OrderBy("data->>'created_at'").
+		Where(sq.Eq{"type": PolicyTypeRBAC})
 
 	if opts != nil {
-		if opts.FilterIDs != nil && len(opts.FilterIDs) > 0 {
-			query = query.Where(sq.Eq{"id": opts.FilterIDs})
+		if len(opts.FilterIDs) > 0 {
+			query = query.Where(sq.Eq{"id": opts.FilterIDs, "type": PolicyTypeRBAC})
 		}
 	}
 
@@ -73,20 +72,11 @@ func (p *pgRBAC) List(ctx context.Context, opts *db.ListRBACOptions) ([]models.R
 	}
 	defer rows.Close()
 
-	var rbacs []models.RBAC
+	var rbacs []models.RBACPolicy
 	for rows.Next() {
-		var rbacBytes []byte
-		if err := rows.Scan(&rbacBytes); err != nil {
-			continue
-		}
-
-		dec := json.NewDecoder(bytes.NewBuffer(rbacBytes))
-		dec.DisallowUnknownFields()
-
-		var rbac models.RBAC
-		err := dec.Decode(&rbac)
-		if err != nil {
-			continue
+		var rbac models.RBACPolicy
+		if err := rows.Scan(&rbac); err != nil {
+			return nil, fmt.Errorf("TODO: be more graceful when a rbac policy errors like %w", err)
 		}
 
 		rbacs = append(rbacs, rbac)

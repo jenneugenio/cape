@@ -11,8 +11,8 @@ const (
 	DefaultGlobalRBAC = Label("default-global")
 )
 
-// RBAC is a single defined policy
-type RBAC struct {
+// RBACPolicy represents a policy defining role based access control
+type RBACPolicy struct {
 	ID        string    `json:"id"`
 	Version   uint8     `json:"version"`
 	Label     Label     `json:"label"`
@@ -22,21 +22,21 @@ type RBAC struct {
 }
 
 // Validate that the policy is valid
-func (p RBAC) Validate() error {
+func (p RBACPolicy) Validate() error {
 	if p.Version < 1 {
-		return errors.New("Version must be greater than zero")
+		return errors.New("version must be greater than zero")
 	}
 
 	if p.CreatedAt.IsZero() {
-		return errors.New("CreatedAt cannot be a zero time")
+		return errors.New("createdAt cannot be a zero time")
 	}
 
 	if p.UpdatedAt.IsZero() {
-		return errors.New("UpdatedAt cannot be a zero time")
+		return errors.New("updatedAt cannot be a zero time")
 	}
 
 	if p.UpdatedAt.Before(p.CreatedAt) {
-		return errors.New("UpdatedAt cannot be before CreatedAt")
+		return errors.New("updatedAt cannot be before CreatedAt")
 	}
 
 	err := p.Spec.Validate()
@@ -47,9 +47,9 @@ func (p RBAC) Validate() error {
 	return nil
 }
 
-// NewRBAC returns a mutable policy struct
-func NewRBAC(label Label, spec *RBACSpec) RBAC {
-	return RBAC{
+// NewRBACPolicy returns new RBACPolicy
+func NewRBACPolicy(label Label, spec *RBACSpec) RBACPolicy {
+	return RBACPolicy{
 		ID:        NewID(),
 		Version:   modelVersion,
 		Label:     label,
@@ -58,14 +58,14 @@ func NewRBAC(label Label, spec *RBACSpec) RBAC {
 	}
 }
 
-// ParseRBAC can convert a yaml document into a Policy
-func ParseRBAC(data []byte) (*RBAC, error) {
+// ParseRBACPolicy can convert a yaml document into a Policy
+func ParseRBACPolicy(data []byte) (*RBACPolicy, error) {
 	spec, err := ParseRBACSpec(data)
 	if err != nil {
 		return nil, err
 	}
 
-	rbac := NewRBAC(spec.Label, spec)
+	rbac := NewRBACPolicy(spec.Label, spec)
 
 	return &rbac, nil
 }

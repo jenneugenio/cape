@@ -20,8 +20,8 @@ func (r *pgRole) Create(context.Context, *models.Role) error {
 	return errors.New("not implemented")
 }
 
-func (r *pgRole) Delete(context.Context, models.Label) error {
-	return errors.New("not implemented")
+func (r *pgRole) Delete(context.Context, models.Label) (db.DeleteStatus, error) {
+	return db.DeleteStatusError, errors.New("not implemented")
 }
 
 func (r *pgRole) Get(context.Context, models.Label) (*models.Role, error) {

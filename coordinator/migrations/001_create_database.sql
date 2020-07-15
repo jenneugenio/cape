@@ -50,6 +50,7 @@ CREATE TRIGGER roles_hoist_tgr
 
 CREATE TABLE policies (
   id char(29) primary key not null,
+  type text,
   data jsonb not null,
   CONSTRAINT policies_id_check CHECK (data::jsonb#>>'{id}' = id)
 );

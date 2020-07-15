@@ -20,7 +20,7 @@ func TestDefaultAdminRBAC(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	user := &models.User{}
-	session, err := NewSession(user, &primitives.Session{}, []*models.RBAC{policy},
+	session, err := NewSession(user, &primitives.Session{}, []*models.RBACPolicy{policy},
 		[]*primitives.Role{}, user)
 
 	gm.Expect(err).To(gm.BeNil())
@@ -54,7 +54,7 @@ func TestDefaultGlobalRBAC(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	user := &models.User{}
-	session, err := NewSession(user, &primitives.Session{}, []*models.RBAC{policy},
+	session, err := NewSession(user, &primitives.Session{}, []*models.RBACPolicy{policy},
 		[]*primitives.Role{}, user)
 	gm.Expect(err).To(gm.BeNil())
 	gm.Expect(session).ToNot(gm.BeNil())
@@ -106,7 +106,7 @@ func TestDefaultGlobalRBAC(t *testing.T) {
 	}
 }
 
-func loadRBACFile(file string) (*models.RBAC, error) {
+func loadRBACFile(file string) (*models.RBACPolicy, error) {
 	dir := pkger.Dir("/primitives/policies/default")
 	f, err := dir.Open(file)
 	if err != nil {
@@ -118,5 +118,5 @@ func loadRBACFile(file string) (*models.RBAC, error) {
 		return nil, err
 	}
 
-	return models.ParseRBAC(b)
+	return models.ParseRBACPolicy(b)
 }

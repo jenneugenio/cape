@@ -12,6 +12,7 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/coordinator/harness"
+	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 func mockPolicy() (*models.Policy, error) {
@@ -90,20 +91,17 @@ func TestPolicies(t *testing.T) {
 	})
 
 	t.Run("cannot create the same policy twice", func(t *testing.T) {
-		// label := models.Label("make-me-twice")
+		label := models.Label("make-me-twice")
 
-		// p1 := models.NewPolicy(label, spec)
+		policy.Label = label
 
-		// _, err = client.CreatePolicy(ctx, &p1)
-		// gm.Expect(err).To(gm.BeNil())
+		_, err = client.CreatePolicy(ctx, policy)
+		gm.Expect(err).To(gm.BeNil())
 
-		// p2 := models.NewPolicy(label, spec)
-
-		// _, err = client.CreatePolicy(ctx, &p2)
-		// gm.Expect(err).ToNot(gm.BeNil())
-		// // TODO(thor): This test was missing the .To(...) clause and seemed to be
-		// // working but was a no-op. The returned error is losing the cause.
-		// //gm.Expect(errors.CausedBy(err, database.DuplicateCause)).To(gm.BeTrue())
+		_, err = client.CreatePolicy(ctx, policy)
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(errors.CausedBy(err, errors.UnknownCause)).To(gm.BeTrue())
+		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: duplicate_key"))
 	})
 }
 

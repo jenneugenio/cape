@@ -2,7 +2,6 @@ package capepg
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
@@ -14,17 +13,17 @@ import (
 
 func TestCreateRBAC(t *testing.T) {
 	tests := []struct {
-		r       models.RBAC
+		r       models.RBACPolicy
 		wantErr error
 		err     error
 	}{
 		{
-			r:       models.RBAC{},
+			r:       models.RBACPolicy{},
 			wantErr: nil,
 			err:     nil,
 		},
 		{
-			r:       models.RBAC{},
+			r:       models.RBACPolicy{},
 			wantErr: fmt.Errorf("error creating rbac: %w", ErrGenericDBError),
 			err:     ErrGenericDBError,
 		},
@@ -44,28 +43,28 @@ func TestCreateRBAC(t *testing.T) {
 	}
 }
 
-var EmptyRBAC = models.RBAC{
+var EmptyRBAC = models.RBACPolicy{
 	ID:      "foo",
 	Version: 1,
 	Label:   models.Label("foo"),
 }
 
 func TestListRBAC(t *testing.T) {
-	by, _ := json.Marshal(models.RBAC{ID: "idididid"})
-
 	tests := []struct {
 		opt     *db.ListRBACOptions
-		wantRs  []models.RBAC
+		wantRs  []models.RBACPolicy
 		wantErr error
 		rows    pgx.Rows
 		err     error
 	}{
 		{
 			opt:     nil,
-			wantRs:  []models.RBAC{{ID: "idididid"}},
+			wantRs:  []models.RBACPolicy{{ID: "idididid"}},
 			wantErr: nil,
 			rows: &testRows{
-				obj: [][]interface{}{{by}},
+				obj: [][]interface{}{{models.RBACPolicy{
+					ID: "idididid",
+				}}},
 				err: nil,
 			},
 			err: nil,
@@ -74,10 +73,12 @@ func TestListRBAC(t *testing.T) {
 			opt: &db.ListRBACOptions{
 				FilterIDs: []string{"idididid"},
 			},
-			wantRs:  []models.RBAC{{ID: "idididid"}},
+			wantRs:  []models.RBACPolicy{{ID: "idididid"}},
 			wantErr: nil,
 			rows: &testRows{
-				obj: [][]interface{}{{by}},
+				obj: [][]interface{}{{models.RBACPolicy{
+					ID: "idididid",
+				}}},
 				err: nil,
 			},
 			err: nil,

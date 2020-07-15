@@ -2,7 +2,6 @@ package capepg
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"testing"
@@ -52,35 +51,47 @@ func TestCreate(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	tagDeleted := pgconn.CommandTag("DELETE 1")
+	tagNotDeleted := pgconn.CommandTag("DELETE 0")
 
 	tests := []struct {
-		pool    *testPgPool
-		label   models.Label
-		wantErr error
+		pool       *testPgPool
+		label      models.Label
+		wantErr    error
+		wantStatus db.DeleteStatus
 	}{
 		{
 			pool: &testPgPool{
 				ct: &tagDeleted,
 			},
-			label:   models.Label("foo"),
-			wantErr: nil,
+			label:      models.Label("foo"),
+			wantErr:    nil,
+			wantStatus: db.DeleteStatusDeleted,
 		},
 		{
 			pool: &testPgPool{
 				ct:  &tagDeleted,
 				err: ErrGenericDBError,
 			},
-			label:   models.Label("foo"),
-			wantErr: fmt.Errorf("error deleting policy: %w", ErrGenericDBError),
+			label:      models.Label("foo"),
+			wantErr:    fmt.Errorf("error deleting policy: %w", ErrGenericDBError),
+			wantStatus: db.DeleteStatusError,
+		},
+		{
+			pool: &testPgPool{
+				ct: &tagNotDeleted,
+			},
+			label:      models.Label("foo"),
+			wantErr:    nil,
+			wantStatus: db.DeleteStatusDeleted,
 		},
 	}
 
 	for i, test := range tests {
 		policyDB := pgPolicy{test.pool, 0}
 
-		gotErr := policyDB.Delete(context.TODO(), test.label)
-		if (test.wantErr == nil && gotErr != nil) ||
-			(test.wantErr != nil && gotErr.Error() != test.wantErr.Error()) {
+		gotStatus, gotErr := policyDB.Delete(context.TODO(), test.label)
+		if ((test.wantErr == nil && gotErr != nil) ||
+			(test.wantErr != nil && gotErr.Error() != test.wantErr.Error())) && gotStatus != test.wantStatus {
 			t.Errorf("unexpected error on Create() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
 		}
 	}
@@ -141,8 +152,6 @@ func TestGet(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	by, _ := json.Marshal(models.Policy{})
-
 	tests := []struct {
 		opt      *db.ListPolicyOptions
 		wantPols []models.Policy
@@ -155,7 +164,7 @@ func TestList(t *testing.T) {
 			wantPols: []models.Policy{{}},
 			wantErr:  nil,
 			rows: &testRows{
-				obj: [][]interface{}{{by}},
+				obj: [][]interface{}{{models.Policy{}}},
 				err: nil,
 			},
 			err: nil,
@@ -173,7 +182,7 @@ func TestList(t *testing.T) {
 			wantPols: []models.Policy{{}},
 			wantErr:  nil,
 			rows: &testRows{
-				obj: [][]interface{}{{by}},
+				obj: [][]interface{}{{models.Policy{}}},
 				err: nil,
 			},
 			err: nil,

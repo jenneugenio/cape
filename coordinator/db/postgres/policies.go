@@ -1,9 +1,7 @@
 package capepg
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -12,6 +10,13 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/models"
+)
+
+type PolicyType string
+
+const (
+	PolicyTypeData PolicyType = "data_policy"
+	PolicyTypeRBAC PolicyType = "rbac_policy"
 )
 
 type pgPolicy struct {
@@ -27,8 +32,8 @@ func (p *pgPolicy) Create(ctx context.Context, policy models.Policy) error {
 
 	s, args, err := sq.Insert("policies").
 		PlaceholderFormat(sq.Dollar).
-		Columns("data").
-		Values(policy).
+		Columns("data", "type").
+		Values(policy, PolicyTypeData).
 		ToSql()
 
 	if err != nil {
@@ -46,7 +51,7 @@ func (p *pgPolicy) Create(ctx context.Context, policy models.Policy) error {
 	return nil
 }
 
-func (p *pgPolicy) Delete(ctx context.Context, l models.Label) error {
+func (p *pgPolicy) Delete(ctx context.Context, l models.Label) (db.DeleteStatus, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
@@ -56,19 +61,19 @@ func (p *pgPolicy) Delete(ctx context.Context, l models.Label) error {
 		ToSql()
 
 	if err != nil {
-		return err
+		return db.DeleteStatusError, err
 	}
 
 	tag, err := p.pool.Exec(ctx, s, args...)
 	if err != nil {
-		return fmt.Errorf("error deleting policy: %w", err)
+		return db.DeleteStatusError, fmt.Errorf("error deleting policy: %w", err)
 	}
 
 	if tag.RowsAffected() == 0 {
-		return fmt.Errorf("error deleting policy: policy with label %s does not exist", l)
+		return db.DeleteStatusDoesNotExist, nil
 	}
 
-	return nil
+	return db.DeleteStatusDeleted, nil
 }
 
 func (p *pgPolicy) Get(ctx context.Context, l models.Label) (*models.Policy, error) {
@@ -128,20 +133,20 @@ func (p *pgPolicy) List(ctx context.Context, opts *db.ListPolicyOptions) ([]mode
 	query := sq.Select("data").
 		PlaceholderFormat(sq.Dollar).
 		From("policies").
-		OrderBy("data->>'created_at'")
+		OrderBy("data->>'created_at'").
+		Where(sq.Eq{"type": PolicyTypeData})
 
 	if opts != nil {
 		if opts.Options != nil {
 			query = query.Limit(opts.Options.Limit).Offset(opts.Options.Offset)
 		}
 
-		if opts.FilterIDs != nil && len(opts.FilterIDs) > 0 {
+		if len(opts.FilterIDs) > 0 {
 			query = query.Where(sq.Eq{"id": opts.FilterIDs})
 		}
 	}
 
 	s, args, err := query.ToSql()
-
 	if err != nil {
 		return nil, err
 	}
@@ -154,19 +159,11 @@ func (p *pgPolicy) List(ctx context.Context, opts *db.ListPolicyOptions) ([]mode
 
 	var policies []models.Policy
 	for rows.Next() {
-		var policyBytes []byte
-		if err := rows.Scan(&policyBytes); err != nil {
-			continue
-		}
-
-		dec := json.NewDecoder(bytes.NewBuffer(policyBytes))
-		dec.DisallowUnknownFields()
-
 		var policy models.Policy
-		err := dec.Decode(&policy)
-		if err != nil {
-			continue
+		if err := rows.Scan(&policy); err != nil {
+			return nil, fmt.Errorf("TODO: be more graceful when a policy errors like %w", err)
 		}
+
 		policies = append(policies, policy)
 	}
 

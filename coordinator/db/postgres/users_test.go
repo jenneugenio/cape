@@ -81,34 +81,47 @@ func TestUsersUpdate(t *testing.T) {
 
 func TestUsersDelete(t *testing.T) {
 	tagDeleted := pgconn.CommandTag("DELETE 1")
+	tagNotDeleted := pgconn.CommandTag("DELETE 0")
+
 	tests := []struct {
-		pool    *testPgPool
-		email   models.Email
-		wantErr error
+		pool       *testPgPool
+		email      models.Email
+		wantErr    error
+		wantStatus db.DeleteStatus
 	}{
 		{
 			pool: &testPgPool{
 				ct: &tagDeleted,
 			},
-			email:   models.Email("foo"),
-			wantErr: nil,
+			email:      models.Email("foo"),
+			wantErr:    nil,
+			wantStatus: db.DeleteStatusDeleted,
+		},
+		{
+			pool: &testPgPool{
+				ct: &tagNotDeleted,
+			},
+			email:      models.Email("foo"),
+			wantErr:    nil,
+			wantStatus: db.DeleteStatusDoesNotExist,
 		},
 		{
 			pool: &testPgPool{
 				ct:  &tagDeleted,
 				err: ErrGenericDBError,
 			},
-			email:   models.Email("foo"),
-			wantErr: fmt.Errorf("error deleting user: %w", ErrGenericDBError),
+			email:      models.Email("foo"),
+			wantErr:    fmt.Errorf("error deleting user: %w", ErrGenericDBError),
+			wantStatus: db.DeleteStatusError,
 		},
 	}
 
 	for i, test := range tests {
 		userDB := pgUser{test.pool, 0}
 
-		gotErr := userDB.Delete(context.TODO(), test.email)
-		if (test.wantErr == nil && gotErr != nil) ||
-			(test.wantErr != nil && gotErr.Error() != test.wantErr.Error()) {
+		gotStatus, gotErr := userDB.Delete(context.TODO(), test.email)
+		if ((test.wantErr == nil && gotErr != nil) ||
+			(test.wantErr != nil && gotErr.Error() != test.wantErr.Error())) && gotStatus != test.wantStatus {
 			t.Errorf("unexpected error on Create() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
 		}
 	}

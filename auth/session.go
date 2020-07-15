@@ -12,7 +12,7 @@ import (
 type Session struct {
 	User               *models.User
 	Session            *primitives.Session
-	Policies           []*models.RBAC
+	Policies           []*models.RBACPolicy
 	Roles              []*primitives.Role
 	CredentialProvider primitives.CredentialProvider
 }
@@ -21,7 +21,7 @@ type Session struct {
 func NewSession(
 	user *models.User,
 	session *primitives.Session,
-	policies []*models.RBAC,
+	policies []*models.RBACPolicy,
 	roles []*primitives.Role,
 	cp primitives.CredentialProvider) (*Session, error) {
 	s := &Session{

@@ -74,7 +74,7 @@ func QueryUserPolicies(ctx context.Context, querier database.Querier, capedb db.
 
 // QueryUserPolicies is a helper function to query all roles assigned to an user and then
 // all policies attached to those roles.
-func QueryUserRBAC(ctx context.Context, querier database.Querier, capedb db.Interface, userID string) ([]*models.RBAC, error) {
+func QueryUserRBAC(ctx context.Context, querier database.Querier, capedb db.Interface, userID string) ([]*models.RBACPolicy, error) {
 	var assignments []*primitives.Assignment
 	assignmentFilter := database.NewFilter(database.Where{"user_id": userID}, nil, nil)
 	err := querier.Query(ctx, &assignments, assignmentFilter)
@@ -103,7 +103,7 @@ func QueryUserRBAC(ctx context.Context, querier database.Querier, capedb db.Inte
 	}
 
 	if len(policyIDs) == 0 {
-		return []*models.RBAC{}, nil
+		return []*models.RBACPolicy{}, nil
 	}
 
 	rbacs, err := capedb.RBAC().List(ctx, &db.ListRBACOptions{FilterIDs: policyIDs})
@@ -111,7 +111,7 @@ func QueryUserRBAC(ctx context.Context, querier database.Querier, capedb db.Inte
 		return nil, err
 	}
 
-	rbacPtrs := make([]*models.RBAC, len(rbacs))
+	rbacPtrs := make([]*models.RBACPolicy, len(rbacs))
 	for i, policy := range rbacs {
 		p := policy
 		rbacPtrs[i] = &p
@@ -332,7 +332,7 @@ func createAttachment(ctx context.Context, db database.Querier, policyID string,
 	return attachment, nil
 }
 
-func loadRBACFile(file string) (*models.RBAC, error) {
+func loadRBACFile(file string) (*models.RBACPolicy, error) {
 	f, err := pkger.Open("github.com/capeprivacy/cape:/primitives/policies/default/" + file)
 	if err != nil {
 		return nil, err
@@ -343,7 +343,7 @@ func loadRBACFile(file string) (*models.RBAC, error) {
 		return nil, err
 	}
 
-	return models.ParseRBAC(b)
+	return models.ParseRBACPolicy(b)
 }
 
 // GetRolesByLabel is a helper to retrieve a specific role from the database. This is

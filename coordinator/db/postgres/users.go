@@ -57,7 +57,7 @@ func (p *pgUser) Update(ctx context.Context, id string, user models.User) error 
 	return nil
 }
 
-func (p *pgUser) Delete(ctx context.Context, e models.Email) error {
+func (p *pgUser) Delete(ctx context.Context, e models.Email) (db.DeleteStatus, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
@@ -66,18 +66,18 @@ func (p *pgUser) Delete(ctx context.Context, e models.Email) error {
 		Where(sq.Eq{"data->>'email'": e}).
 		ToSql()
 	if err != nil {
-		return fmt.Errorf("error building user update query: %w", err)
+		return db.DeleteStatusError, fmt.Errorf("error building user update query: %w", err)
 	}
 
 	tag, err := p.pool.Exec(ctx, s, args...)
 	if err != nil {
-		return fmt.Errorf("error deleting user: %w", err)
+		return db.DeleteStatusError, fmt.Errorf("error deleting user: %w", err)
 	}
 	if tag.RowsAffected() == 0 {
-		return fmt.Errorf("error deleting user: user with email %s does not exist", e)
+		return db.DeleteStatusDoesNotExist, nil
 	}
 
-	return nil
+	return db.DeleteStatusDeleted, nil
 }
 
 func (p *pgUser) Get(ctx context.Context, e models.Email) (*models.User, error) {
