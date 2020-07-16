@@ -19,6 +19,8 @@ import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
+	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/coordinator/db/encrypt"
 	capepg "github.com/capeprivacy/cape/coordinator/db/postgres"
 	"github.com/capeprivacy/cape/coordinator/graph"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
@@ -37,6 +39,7 @@ type Coordinator struct {
 	logger  *zerolog.Logger
 	mailer  mailer.Mailer
 	pool    *pgxpool.Pool
+	db      db.Interface
 
 	tokenAuth          *auth.TokenAuthority
 	credentialProducer auth.CredentialProducer
@@ -108,6 +111,11 @@ func (c *Coordinator) setBackendCodec(cfg *primitives.Config) error {
 
 	c.backend.SetEncryptionCodec(codec)
 
+	enc, ok := c.db.(*encrypt.CapeDBEncrypt)
+	if ok {
+		enc.SetEncryptionCodec(codec)
+	}
+
 	return nil
 }
 
@@ -172,7 +180,7 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 
 	pgxPool := mustPgxPool(cfg.DB.Addr.ToURL().String(), cfg.InstanceID.String())
 
-	capedb := capepg.New(pgxPool)
+	capedb := encrypt.New(capepg.New(pgxPool))
 
 	config := &generated.Config{
 		Resolvers: &graph.Resolver{

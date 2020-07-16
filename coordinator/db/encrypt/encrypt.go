@@ -1,0 +1,29 @@
+package encrypt
+
+import (
+	"github.com/capeprivacy/cape/coordinator/database/crypto"
+	"github.com/capeprivacy/cape/coordinator/db"
+)
+
+// CapeDBEncrypt is a postgresql implementation of the cape database interface
+type CapeDBEncrypt struct {
+	db    db.Interface
+	codec crypto.EncryptionCodec
+}
+
+var _ db.Interface = &CapeDBEncrypt{}
+
+func New(db db.Interface) *CapeDBEncrypt {
+	return &CapeDBEncrypt{
+		db: db,
+	}
+}
+
+func (c *CapeDBEncrypt) Policies() db.PolicyDB { return c.db.Policies() }
+func (c *CapeDBEncrypt) Roles() db.RoleDB      { return c.db.Roles() }
+func (c *CapeDBEncrypt) Users() db.UserDB      { return &encryptUser{db: c.db.Users(), codec: c.codec} }
+func (c *CapeDBEncrypt) RBAC() db.RBACDB       { return c.db.RBAC() }
+
+func (c *CapeDBEncrypt) SetEncryptionCodec(codec crypto.EncryptionCodec) {
+	c.codec = codec
+}

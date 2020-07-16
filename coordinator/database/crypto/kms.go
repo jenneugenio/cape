@@ -45,7 +45,7 @@ type LocalKMS struct {
 	key [KeyLength]byte
 }
 
-// Encrypts the data encryption key (dek) returning the encrypted bytes. The
+// Encrypt encrypts the data encryption key (dek) returning the encrypted bytes. The
 // result is appended to the nonce.
 func (l *LocalKMS) Encrypt(ctx context.Context, dek []byte) ([]byte, error) {
 	return Encrypt(l.key, dek)

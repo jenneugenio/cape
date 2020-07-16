@@ -8,6 +8,7 @@ import (
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/coordinator/db/encrypt"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -173,8 +174,14 @@ func SetupHandler(db database.Backend, capedb db.Interface, cp auth.CredentialPr
 			// not_ work. This is a big bug that we _must_ fix prior to launch.
 			//
 			// See: https://github.com/capeprivacy/planning/issues/1176
-			db.SetEncryptionCodec(crypto.NewSecretBoxCodec(kms))
+			codec := crypto.NewSecretBoxCodec(kms)
+			db.SetEncryptionCodec(codec)
 			ta.SetKeyPair(kp)
+
+			enc, ok := capedb.(*encrypt.CapeDBEncrypt)
+			if ok {
+				enc.SetEncryptionCodec(codec)
+			}
 
 			creds, err := cp.Generate(input.Password)
 			if err != nil {
