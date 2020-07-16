@@ -34,7 +34,7 @@ func init() {
 		Usage: "Start an instance of the Cape coordinator",
 		Variables: []*EnvVar{
 			{
-				Name:        "CAPE_CORS_ENABLE",
+				Name:        "CAPE_CORS_ENABLED",
 				Required:    false,
 				Description: "Serve CORS headers in HTTP responses",
 			},
