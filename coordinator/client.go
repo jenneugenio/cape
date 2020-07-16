@@ -2,12 +2,10 @@ package coordinator
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/capeprivacy/cape/models"
 	"github.com/manifoldco/go-base64"
 
-	"github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
 
 	"github.com/capeprivacy/cape/auth"
@@ -354,28 +352,6 @@ func (c *Client) ListRoles(ctx context.Context) ([]*primitives.Role, error) {
 	}
 
 	return resp.Roles, nil
-}
-
-// Setup calls the setup command to bootstrap cape
-func (c *Client) Setup(ctx context.Context, name models.Name, email models.Email, password primitives.Password) (*models.User, error) {
-	req := framework.SetupRequest{
-		Name:     name,
-		Email:    email,
-		Password: password,
-	}
-
-	body, err := c.transport.Post(c.transport.URL().String()+"/v1/setup", req)
-	if err != nil {
-		return nil, err
-	}
-
-	user := &models.User{}
-	err = json.Unmarshal(body, user)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
 }
 
 // CreatePolicy creates a policy on the coordinator

@@ -1,4 +1,4 @@
-package framework
+package coordinator
 
 import (
 	"encoding/json"
@@ -13,13 +13,14 @@ import (
 	gm "github.com/onsi/gomega"
 	"github.com/rs/zerolog"
 
+	fw "github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 var logger *zerolog.Logger
 
 func init() {
-	logger = TestLogger()
+	logger = fw.TestLogger()
 }
 
 func runMiddleware(mw http.Handler, header *http.Header) {
@@ -39,7 +40,7 @@ func TestRequestIDMiddleware(t *testing.T) {
 		wasCalled := false
 		next := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			wasCalled = true
-			v := r.Context().Value(RequestIDContextKey)
+			v := r.Context().Value(fw.RequestIDContextKey)
 
 			gm.Expect(v).ToNot(gm.BeNil())
 			gm.Expect(rw.Header().Get("X-Request-Id")).To(gm.Equal(v.(uuid.UUID).String()))
@@ -92,7 +93,7 @@ func TestLoggingMiddleware(t *testing.T) {
 		next := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			wasCalled = true
 			gm.Expect(func() {
-				_ = Logger(r.Context())
+				_ = fw.Logger(r.Context())
 			}).ToNot(gm.Panic())
 		})
 
@@ -122,7 +123,7 @@ func TestAuthTokenMiddleware(t *testing.T) {
 		wasCalled := false
 		next := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			wasCalled = true
-			id := r.Context().Value(AuthTokenContextKey)
+			id := r.Context().Value(fw.AuthTokenContextKey)
 			gm.Expect(id).To(gm.Equal(expID))
 		})
 

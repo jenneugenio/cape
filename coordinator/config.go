@@ -7,6 +7,7 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -41,6 +42,15 @@ type Config struct {
 	// Cors specifies the configuration for serving (or disabling)
 	// CORS headers
 	Cors CorsConfig `json:"cors"`
+
+	// Required if no admin user has been c
+	User *UserConfig `json:"user"`
+}
+
+type UserConfig struct {
+	Name     models.Name  `json:"name"`
+	Email    models.Email `json:"email"`
+	Password string       `json:"password"`
 }
 
 type CorsConfig struct {

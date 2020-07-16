@@ -14,6 +14,7 @@ type Interface interface {
 	Projects() ProjectsDB
 	Contributors() ContributorDB
 	RBAC() RBACDB
+	Config() ConfigDB
 }
 
 // Interfaces
@@ -51,6 +52,11 @@ type RoleDB interface {
 	DetachPolicy(context.Context, models.Label) error
 }
 
+type ConfigDB interface {
+	Create(context.Context, models.Config) error
+	Get(context.Context) (*models.Config, error)
+}
+
 type ContributorDB interface {
 	Add(context.Context, models.Label, models.Email, models.Label) (*models.Contributor, error)
 	Get(context.Context, models.Label, models.Email) (*models.Contributor, error)
@@ -72,6 +78,7 @@ type ProjectsDB interface {
 }
 
 // Options
+
 type ListPolicyOptions struct {
 	Options *struct {
 		Offset uint64

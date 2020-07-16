@@ -7,7 +7,6 @@ import (
 	"github.com/manifoldco/go-base64"
 
 	"github.com/capeprivacy/cape/auth"
-	"github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -31,7 +30,7 @@ type ClientTransport interface {
 }
 
 func tokenLogin(ctx context.Context, transport ClientTransport, apiToken *auth.APIToken) (*primitives.Session, error) {
-	req := framework.LoginRequest{
+	req := LoginRequest{
 		TokenID: &apiToken.TokenID,
 		Secret:  apiToken.Secret.Password(),
 	}
@@ -52,7 +51,7 @@ func tokenLogin(ctx context.Context, transport ClientTransport, apiToken *auth.A
 }
 
 func emailLogin(ctx context.Context, transport ClientTransport, email models.Email, password primitives.Password) (*primitives.Session, error) {
-	req := framework.LoginRequest{
+	req := LoginRequest{
 		Email:  &email,
 		Secret: password,
 	}
@@ -78,7 +77,7 @@ func logout(ctx context.Context, transport ClientTransport, authToken *base64.Va
 		token = authToken
 	}
 
-	req := framework.LogoutRequest{
+	req := LogoutRequest{
 		Token: token,
 	}
 

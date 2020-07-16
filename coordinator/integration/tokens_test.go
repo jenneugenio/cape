@@ -48,7 +48,7 @@ func TestTokens(t *testing.T) {
 		t.Run("Create a token", func(t *testing.T) {
 			gm.RegisterTestingT(t)
 
-			apiToken, token, err := client.CreateToken(ctx, m.Admin.User)
+			apiToken, token, err := client.CreateToken(ctx, &m.Admin.User)
 			gm.Expect(err).To(gm.BeNil())
 			gm.Expect(token).ToNot(gm.BeNil())
 			gm.Expect(apiToken).ToNot(gm.BeNil())
@@ -63,7 +63,7 @@ func TestTokens(t *testing.T) {
 		t.Run("Can login with a token", func(t *testing.T) {
 			gm.RegisterTestingT(t)
 
-			apiToken, _, err := client.CreateToken(ctx, m.Admin.User)
+			apiToken, _, err := client.CreateToken(ctx, &m.Admin.User)
 			gm.Expect(err).To(gm.BeNil())
 
 			err = client.Logout(ctx, m.Admin.Token)
@@ -76,7 +76,7 @@ func TestTokens(t *testing.T) {
 		t.Run("Can remove a token", func(t *testing.T) {
 			gm.RegisterTestingT(t)
 
-			apiToken, _, err := client.CreateToken(ctx, m.Admin.User)
+			apiToken, _, err := client.CreateToken(ctx, &m.Admin.User)
 			gm.Expect(err).To(gm.BeNil())
 
 			err = client.RemoveToken(ctx, apiToken.TokenID)
@@ -87,7 +87,7 @@ func TestTokens(t *testing.T) {
 			gm.RegisterTestingT(t)
 
 			for i := 0; i < 10; i++ {
-				_, _, err := client.CreateToken(ctx, m.Admin.User)
+				_, _, err := client.CreateToken(ctx, &m.Admin.User)
 				gm.Expect(err).To(gm.BeNil())
 			}
 
@@ -104,12 +104,12 @@ func TestTokens(t *testing.T) {
 
 	t.Run("tokens for another user", func(t *testing.T) {
 		t.Run("can't list tokens you don't own", func(t *testing.T) {
-			_, err = userClient.ListTokens(ctx, m.Admin.User)
+			_, err = userClient.ListTokens(ctx, &m.Admin.User)
 			gm.Expect(err).NotTo(gm.BeNil())
 		})
 
 		t.Run("can't remove token you don't own", func(t *testing.T) {
-			apiToken, _, err := client.CreateToken(ctx, m.Admin.User)
+			apiToken, _, err := client.CreateToken(ctx, &m.Admin.User)
 			gm.Expect(err).To(gm.BeNil())
 
 			err = userClient.RemoveToken(ctx, apiToken.TokenID)
@@ -135,7 +135,7 @@ func TestTokens(t *testing.T) {
 		})
 
 		t.Run("user can't create token for admin", func(t *testing.T) {
-			_, _, err := userClient.CreateToken(ctx, m.Admin.User)
+			_, _, err := userClient.CreateToken(ctx, &m.Admin.User)
 			gm.Expect(err).NotTo(gm.BeNil())
 			gm.Expect(err.Error()).To(gm.Equal("unknown_cause: Can only create a token for yourself"))
 		})

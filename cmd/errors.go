@@ -9,12 +9,6 @@ var (
 	// MissingEnvVarCause is when a user has not supplied a required environment variable
 	MissingEnvVarCause = errors.NewCause(errors.BadRequestCategory, "missing_environment_variable")
 
-	// PasswordNoMatch happens when you confirm you password and it doesn't match your initial input
-	PasswordNoMatch = errors.NewCause(errors.BadRequestCategory, "passwords_dont_match")
-
-	// ClusterExistsCause happens when you try to create a new cluster that already exists
-	ClusterExistsCause = errors.NewCause(errors.BadRequestCategory, "cluster_already_exists")
-
 	// NoUserCause happens when you try to do something on an user that you do not have access to
 	// or does not exist
 	NoUserCause = errors.NewCause(errors.BadRequestCategory, "user_not_found")

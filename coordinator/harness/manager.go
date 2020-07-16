@@ -18,7 +18,7 @@ const AdminPassword = "iamtheadmin"
 // User represents a user in the cape coordinator
 type User struct {
 	Client   *coordinator.Client
-	User     *models.User
+	User     models.User
 	Password primitives.Password
 	Token    *base64.Value
 }
@@ -47,10 +47,7 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 		return nil, err
 	}
 
-	u, err := client.Setup(ctx, AdminName, AdminEmail, password)
-	if err != nil {
-		return nil, err
-	}
+	u := models.NewUser(AdminName, AdminEmail, nil)
 
 	user := &User{
 		Client:   client,
@@ -63,6 +60,7 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 		return nil, err
 	}
 
+	user.User.ID = session.UserID
 	user.Token = session.Token
 	m.Admin = user
 

@@ -17,22 +17,21 @@ type Backend interface {
 	Close() error
 	Transaction(context.Context) (Transaction, error)
 	URL() *url.URL
-	SetEncryptionCodec(crypto.EncryptionCodec)
 }
 
 // NewBackendFunc represents a constructor of a Backend implementation
-type NewBackendFunc func(*url.URL, string) (Backend, error)
+type NewBackendFunc func(*url.URL, string, crypto.EncryptionCodec) (Backend, error)
 
 var validDBs = map[string]NewBackendFunc{
 	"postgres": NewPostgresBackend,
 }
 
 // New returns a new backend for the given application name
-func New(dbURL *url.URL, appName string) (Backend, error) {
+func New(dbURL *url.URL, appName string, codec crypto.EncryptionCodec) (Backend, error) {
 	ctor, ok := validDBs[dbURL.Scheme]
 	if !ok {
 		return nil, errors.New(errors.NotImplementedCause, "database not supported")
 	}
 
-	return ctor(dbURL, appName)
+	return ctor(dbURL, appName, codec)
 }

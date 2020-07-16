@@ -12,13 +12,10 @@ import (
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
-	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/go-openapi/runtime/middleware/header"
-	"github.com/manifoldco/go-base64"
 	"github.com/markbates/pkger"
 
 	pkgerrors "errors"
@@ -72,7 +69,7 @@ func QueryUserPolicies(ctx context.Context, querier database.Querier, capedb db.
 	return policyPtrs, nil
 }
 
-// QueryUserPolicies is a helper function to query all roles assigned to an user and then
+// QueryUserRBAC is a helper function to query all roles assigned to an user and then
 // all policies attached to those roles.
 func QueryUserRBAC(ctx context.Context, querier database.Querier, capedb db.Interface, userID string) ([]*models.RBACPolicy, error) {
 	var assignments []*primitives.Assignment
@@ -154,7 +151,7 @@ func (mr *malformedRequest) Error() string {
 	return mr.msg
 }
 
-func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) error {
+func DecodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) error {
 	if r.Header.Get("Content-Type") != "" {
 		value, _ := header.ParseValueAndParams(r.Header, "Content-Type")
 		if value != "application/json" {
@@ -213,58 +210,10 @@ func decodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) err
 	return nil
 }
 
-func getCredentialProvider(ctx context.Context, q database.Querier, capedb db.Interface, input LoginRequest) (primitives.CredentialProvider, error) {
-	if input.Email != nil {
-		return capedb.Users().Get(ctx, *input.Email)
-	}
-
-	token := &primitives.Token{}
-	err := q.Get(ctx, *input.TokenID, token)
-	if err != nil {
-		return nil, err
-	}
-
-	return token, nil
-}
-
-func createConfig(rootKey [32]byte) (*primitives.Config, *crypto.KeyURL, *auth.Keypair, error) {
-	encryptionKey, err := crypto.NewBase64KeyURL(nil)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	encryptedKey, err := crypto.Encrypt(rootKey, []byte(encryptionKey.String()))
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	keypair, err := auth.NewKeypair()
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	by, err := json.Marshal(keypair.Package())
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	encryptedAuth, err := crypto.Encrypt(rootKey, by)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	config, err := primitives.NewConfig(base64.New(encryptedKey), base64.New(encryptedAuth))
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	return config, encryptionKey, keypair, nil
-}
-
-// createSystemRoles is a helper intended to be used by the Setup graphql route.
+// CreateSystemRoles is a helper intended to be used by the Setup graphql route.
 // It creates all the roles given by the list of role labels and makes sure
 // they are system roles
-func createSystemRoles(ctx context.Context, db database.Querier) error {
+func CreateSystemRoles(ctx context.Context, db database.Querier) error {
 	entities := make([]database.Entity, len(primitives.SystemRoles))
 	for i, roleLabel := range primitives.SystemRoles {
 		role, err := primitives.NewRole(roleLabel, true)
@@ -278,7 +227,7 @@ func createSystemRoles(ctx context.Context, db database.Querier) error {
 	return db.Create(ctx, entities...)
 }
 
-func attachDefaultPolicy(ctx context.Context, db database.Querier, capedb db.Interface) error {
+func AttachDefaultPolicy(ctx context.Context, db database.Querier, capedb db.Interface) error {
 	adminRBAC, err := loadRBACFile(primitives.DefaultAdminPolicy.String() + ".yaml")
 	if err != nil {
 		return err

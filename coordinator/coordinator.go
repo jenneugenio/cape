@@ -3,6 +3,7 @@ package coordinator
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -25,7 +26,8 @@ import (
 	"github.com/capeprivacy/cape/coordinator/graph"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/mailer"
-	"github.com/capeprivacy/cape/framework"
+	fw "github.com/capeprivacy/cape/framework"
+	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -52,27 +54,6 @@ func (c *Coordinator) Setup(ctx context.Context) (http.Handler, error) {
 		return nil, err
 	}
 
-	cfg, err := getDatabaseConfig(ctx, c.backend)
-	if err != nil {
-		// if setup hasn't been run yet
-		if errors.CausedBy(err, database.NotFoundCause) {
-			return c.handler, nil
-		}
-
-		return nil, err
-	}
-
-	err = c.setBackendCodec(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = c.pool.Exec(ctx, "SELECT 1;")
-	if err != nil {
-		return nil, err
-	}
-
-	err = c.setTokenAuthKeyPair(cfg, c.cfg.RootKey)
 	return c.handler, err
 }
 
@@ -90,57 +71,6 @@ func (c *Coordinator) CertFiles() (certFile string, keyFile string) {
 	return
 }
 
-func (c *Coordinator) setBackendCodec(cfg *primitives.Config) error {
-	// if setup has been run we create and add the codec here
-	encryptionKey, err := decryptBase64s(c.cfg.RootKey, cfg.EncryptionKey)
-	if err != nil {
-		return err
-	}
-
-	keyURL, err := crypto.NewKeyURL(string(encryptionKey))
-	if err != nil {
-		return err
-	}
-
-	kms, err := crypto.LoadKMS(keyURL)
-	if err != nil {
-		return err
-	}
-
-	codec := crypto.NewSecretBoxCodec(kms)
-
-	c.backend.SetEncryptionCodec(codec)
-
-	enc, ok := c.db.(*encrypt.CapeDBEncrypt)
-	if ok {
-		enc.SetEncryptionCodec(codec)
-	}
-
-	return nil
-}
-
-func (c *Coordinator) setTokenAuthKeyPair(cfg *primitives.Config, rootKey *base64.Value) error {
-	unencrypted, err := decryptBase64s(rootKey, cfg.AuthKeypair)
-	if err != nil {
-		return err
-	}
-
-	pkg := &auth.KeypairPackage{}
-	err = json.Unmarshal(unencrypted, pkg)
-	if err != nil {
-		return err
-	}
-
-	kp, err := pkg.Unpackage()
-	if err != nil {
-		return err
-	}
-
-	c.tokenAuth.SetKeyPair(kp)
-
-	return nil
-}
-
 // New validates the input and returns a constructed Coordinator.
 //
 // If the mode is set to Testing then the Coordinator will use the SHA256
@@ -155,19 +85,6 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		return nil, err
 	}
 
-	backend, err := database.New(cfg.DB.Addr.ToURL(), cfg.InstanceID.String())
-	if err != nil {
-		return nil, err
-	}
-
-	var rootKey [32]byte
-	copy(rootKey[:], *cfg.RootKey)
-
-	tokenAuth, err := auth.NewTokenAuthority(nil, cfg.InstanceID.String())
-	if err != nil {
-		return nil, err
-	}
-
 	var cp auth.CredentialProducer
 	switch cfg.CredentialProducerAlg {
 	case primitives.SHA256:
@@ -178,38 +95,51 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		return nil, errors.New(InvalidConfigCause, "Unknown credential producer algorithm supplied")
 	}
 
-	pgxPool := mustPgxPool(cfg.DB.Addr.ToURL().String(), cfg.InstanceID.String())
+	var rootKey [32]byte
+	copy(rootKey[:], *cfg.RootKey)
 
-	capedb := encrypt.New(capepg.New(pgxPool))
-	config := &generated.Config{
+	pgxPool := mustPgxPool(cfg.DB.Addr.ToURL().String(), cfg.InstanceID.String())
+	capedb := capepg.New(pgxPool)
+
+	coor := &Coordinator{
+		cfg:                cfg,
+		logger:             logger,
+		mailer:             mailer,
+		pool:               pgxPool,
+		credentialProducer: cp,
+	}
+
+	err := coor.doSetup(context.TODO(), capedb, rootKey)
+	if err != nil {
+		return nil, err
+	}
+
+	config := generated.Config{
 		Resolvers: &graph.Resolver{
-			Database:           capedb,
-			Backend:            backend,
-			TokenAuthority:     tokenAuth,
-			RootKey:            rootKey,
+			Database:           coor.db,
+			Backend:            coor.backend,
 			CredentialProducer: cp,
 			Mailer:             mailer,
 		}}
 
-	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(*config))
+	gqlHandler := handler.NewDefaultServer(generated.NewExecutableSchema(config))
 	gqlHandler.SetErrorPresenter(errorPresenter)
 
-	authenticated := framework.IsAuthenticatedMiddleware(backend, capedb, tokenAuth)
+	authenticated := IsAuthenticatedMiddleware(coor)
 
 	root := http.NewServeMux()
 	root.Handle("/v1", playground.Handler("GraphQL playground", "/query"))
-	root.Handle("/v1/query", framework.AuthTokenMiddleware(authenticated(gqlHandler)))
-	root.Handle("/v1/version", framework.VersionHandler(cfg.InstanceID.String()))
-	root.Handle("/v1/login", framework.LoginHandler(backend, capedb, cp, tokenAuth))
-	root.Handle("/v1/setup", framework.SetupHandler(backend, capedb, cp, tokenAuth, rootKey))
-	root.Handle("/v1/logout", framework.AuthTokenMiddleware(authenticated(framework.LogoutHandler(backend, tokenAuth))))
+	root.Handle("/v1/query", AuthTokenMiddleware(authenticated(gqlHandler)))
+	root.Handle("/v1/version", VersionHandler(cfg.InstanceID.String()))
+	root.Handle("/v1/login", LoginHandler(coor))
+	root.Handle("/v1/logout", AuthTokenMiddleware(authenticated(LogoutHandler(coor))))
 
 	health := healthz.NewHandler(root)
 	chain := alice.New(
-		framework.RequestIDMiddleware,
-		framework.LogMiddleware(logger),
-		framework.RoundtripLoggerMiddleware,
-		framework.RecoveryMiddleware,
+		RequestIDMiddleware,
+		LogMiddleware(logger),
+		RoundtripLoggerMiddleware,
+		RecoveryMiddleware,
 		gziphandler.GzipHandler,
 	)
 
@@ -237,19 +167,140 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		logger.Info().Msg("not enabling CORS")
 	}
 
-	h := chain.Then(health)
+	coor.handler = chain.Then(health)
 
-	return &Coordinator{
-		cfg:                cfg,
-		handler:            h,
-		backend:            backend,
-		logger:             logger,
-		tokenAuth:          tokenAuth,
-		mailer:             mailer,
-		pool:               pgxPool,
-		db:                 capedb,
-		credentialProducer: cp,
-	}, nil
+	return coor, nil
+}
+
+func (c *Coordinator) doSetup(ctx context.Context, capedb db.Interface, rootKey [32]byte) error {
+	_, codec, kp, err := getDatabaseConfig(ctx, capedb, c.cfg.RootKey)
+	if err == nil {
+		backend, err := database.New(c.cfg.DB.Addr.ToURL(), c.cfg.InstanceID.String(), codec)
+		if err != nil {
+			return err
+		}
+		c.backend = backend
+
+		ta, err := auth.NewTokenAuthority(kp, c.cfg.InstanceID.String())
+		if err != nil {
+			return err
+		}
+		c.tokenAuth = ta
+
+		capedb := encrypt.New(capedb, codec)
+		c.db = capedb
+
+		return nil
+	}
+
+	if err.Error() != db.ErrNoRows.Error() {
+		return err
+	}
+
+	if c.cfg.User == nil {
+		return fmt.Errorf("user must be specified when starting coordinator for first time")
+	}
+
+	// We must create the config and load up the state before we can make
+	// requests against the backend that requires the encryptionKey.
+	config, encryptionKey, kp, err := createDatabaseConfig(rootKey)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Could not generate config")
+		return err
+	}
+
+	// if setup has been run we create and add the codec here
+	kms, err := crypto.LoadKMS(encryptionKey)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Could not load KMS w/ Encryption Key")
+		return err
+	}
+
+	codec = crypto.NewSecretBoxCodec(kms)
+	backend, err := database.New(c.cfg.DB.Addr.ToURL(), c.cfg.InstanceID.String(), codec)
+	if err != nil {
+		return err
+	}
+	c.backend = backend
+
+	ta, err := auth.NewTokenAuthority(kp, c.cfg.InstanceID.String())
+	if err != nil {
+		return err
+	}
+	c.tokenAuth = ta
+
+	enc := encrypt.New(capedb, codec)
+	c.db = enc
+
+	creds, err := c.credentialProducer.Generate(primitives.Password(c.cfg.User.Password))
+	if err != nil {
+		c.logger.Info().Err(err).Msg("Could not generate credentials")
+		return err
+	}
+
+	user := models.NewUser(c.cfg.User.Name, c.cfg.User.Email, creds)
+	err = enc.Users().Create(ctx, user)
+	if err != nil {
+		return err
+	}
+
+	err = enc.Config().Create(ctx, *config)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Could not create config in database")
+		return err
+	}
+
+	err = c.backend.Open(ctx)
+	if err != nil {
+		return err
+	}
+
+	tx, err := c.backend.Transaction(ctx)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Could not create transaction")
+		return err
+	}
+	defer tx.Rollback(ctx) // nolint: errcheck
+
+	err = fw.CreateSystemRoles(ctx, tx)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Could not insert roles into database")
+		return err
+	}
+
+	err = fw.AttachDefaultPolicy(ctx, tx, enc)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Could not attach default policies inside database")
+		return err
+	}
+
+	roles, err := fw.GetRolesByLabel(ctx, tx, []primitives.Label{
+		primitives.GlobalRole,
+		primitives.AdminRole,
+	})
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Could not retrieve roles")
+		return err
+	}
+
+	err = fw.CreateAssignments(ctx, tx, user.ID, roles)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Could not create assignments in database")
+		return err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		c.logger.Error().Err(err).Msg("Could not commit transaction")
+		return err
+	}
+
+	err = backend.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func decryptBase64s(rootKey *base64.Value, data *base64.Value) ([]byte, error) {
@@ -265,13 +316,81 @@ func decryptBase64s(rootKey *base64.Value, data *base64.Value) ([]byte, error) {
 	return decrypted, nil
 }
 
-func getDatabaseConfig(ctx context.Context, db database.Backend) (*primitives.Config, error) {
-	cfg := &primitives.Config{}
+func getDatabaseConfig(ctx context.Context, db db.Interface, rootKey *base64.Value) (*models.Config, crypto.EncryptionCodec, *auth.Keypair, error) {
+	cfg, err := db.Config().Get(ctx)
+	if err != nil {
+		return nil, nil, nil, err
+	}
 
-	// Querying for true is weird but no easy way to query the config right now, also
-	// it gets the job done.
-	err := db.QueryOne(ctx, cfg, database.NewFilter(database.Where{"setup": "true"}, nil, nil))
-	return cfg, err
+	unencrypted, err := decryptBase64s(rootKey, cfg.AuthKeypair)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	pkg := &auth.KeypairPackage{}
+	err = json.Unmarshal(unencrypted, pkg)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	kp, err := pkg.Unpackage()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	// if setup has been run we create and add the codec here
+	encryptionKey, err := decryptBase64s(rootKey, cfg.EncryptionKey)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	keyURL, err := crypto.NewKeyURL(string(encryptionKey))
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	kms, err := crypto.LoadKMS(keyURL)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	codec := crypto.NewSecretBoxCodec(kms)
+
+	return cfg, codec, kp, err
+}
+
+func createDatabaseConfig(rootKey [32]byte) (*models.Config, *crypto.KeyURL, *auth.Keypair, error) {
+	encryptionKey, err := crypto.NewBase64KeyURL(nil)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	encryptedKey, err := crypto.Encrypt(rootKey, []byte(encryptionKey.String()))
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	keypair, err := auth.NewKeypair()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	by, err := json.Marshal(keypair.Package())
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	encryptedAuth, err := crypto.Encrypt(rootKey, by)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	config, err := models.NewConfig(base64.New(encryptedKey), base64.New(encryptedAuth))
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return config, encryptionKey, keypair, nil
 }
 
 func mustPgxPool(url, name string) *pgxpool.Pool {

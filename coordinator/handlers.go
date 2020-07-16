@@ -1,4 +1,4 @@
-package framework
+package coordinator
 
 import (
 	"context"
@@ -6,9 +6,8 @@ import (
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
-	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/db"
-	"github.com/capeprivacy/cape/coordinator/db/encrypt"
+	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -41,17 +40,22 @@ type LoginRequest struct {
 	Secret  primitives.Password `json:"secret"`
 }
 
-func LoginHandler(db database.Backend, capedb db.Interface, cp auth.CredentialProducer, ta *auth.TokenAuthority) http.HandlerFunc {
+func LoginHandler(coordinator *Coordinator) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var input LoginRequest
 
-		err := decodeJSONBody(w, r, &input)
+		db := coordinator.backend
+		capedb := coordinator.db
+		cp := coordinator.credentialProducer
+		ta := coordinator.tokenAuth
+
+		err := fw.DecodeJSONBody(w, r, &input)
 		if err != nil {
-			respondWithError(w, r.URL.Path, errors.Wrap(BadJSONCause, err))
+			respondWithError(w, r.URL.Path, errors.Wrap(fw.BadJSONCause, err))
 			return
 		}
 
-		logger := Logger(r.Context())
+		logger := fw.Logger(r.Context())
 
 		if input.TokenID != nil {
 			if err := input.TokenID.Validate(); err != nil {
@@ -61,11 +65,11 @@ func LoginHandler(db database.Backend, capedb db.Interface, cp auth.CredentialPr
 		}
 
 		if input.Email == nil && input.TokenID == nil {
-			respondWithError(w, r.URL.Path, errors.New(InvalidParametersCause, "An email or token_id must be provided"))
+			respondWithError(w, r.URL.Path, errors.New(fw.InvalidParametersCause, "An email or token_id must be provided"))
 			return
 		}
 		if input.Email != nil && input.TokenID != nil {
-			respondWithError(w, r.URL.Path, errors.New(InvalidParametersCause, "You can only provide an email or a token_id."))
+			respondWithError(w, r.URL.Path, errors.New(fw.InvalidParametersCause, "You can only provide an email or a token_id."))
 			return
 		}
 
@@ -134,139 +138,21 @@ type SetupRequest struct {
 	Password primitives.Password `json:"password"`
 }
 
-func SetupHandler(db database.Backend, capedb db.Interface, cp auth.CredentialProducer, ta *auth.TokenAuthority, rootKey [32]byte) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		logger := Logger(ctx)
-
-		var input SetupRequest
-		err := decodeJSONBody(w, r, &input)
-		if err != nil {
-			respondWithError(w, r.URL.Path, errors.Wrap(BadJSONCause, err))
-			return
-		}
-
-		// Since we set some key state as a part of this flow, we need to roll it back in
-		// the event of an error.
-		cleanup := func(err error) error {
-			db.SetEncryptionCodec(nil)
-			ta.SetKeyPair(nil)
-			return err
-		}
-
-		doWork := func() (*models.User, error) {
-			// We must create the config and load up the state before we can make
-			// requests against the backend that requires the encryptionKey.
-			config, encryptionKey, kp, err := createConfig(rootKey)
-			if err != nil {
-				logger.Error().Err(err).Msg("Could not generate config")
-				return nil, err
-			}
-
-			// if setup has been run we create and add the codec here
-			kms, err := crypto.LoadKMS(encryptionKey)
-			if err != nil {
-				logger.Error().Err(err).Msg("Could not load KMS w/ Encryption Key")
-				return nil, err
-			}
-
-			// XXX: Note - if you are running more than one coordinator this _will
-			// not_ work. This is a big bug that we _must_ fix prior to launch.
-			//
-			// See: https://github.com/capeprivacy/planning/issues/1176
-			codec := crypto.NewSecretBoxCodec(kms)
-			db.SetEncryptionCodec(codec)
-			ta.SetKeyPair(kp)
-
-			enc, ok := capedb.(*encrypt.CapeDBEncrypt)
-			if ok {
-				enc.SetEncryptionCodec(codec)
-			}
-
-			creds, err := cp.Generate(input.Password)
-			if err != nil {
-				logger.Info().Err(err).Msg("Could not generate credentials")
-				return nil, err
-			}
-
-			user := models.NewUser(input.Name, input.Email, creds)
-
-			err = capedb.Users().Create(ctx, user)
-			if err != nil {
-				return nil, err
-			}
-
-			tx, err := db.Transaction(ctx)
-			if err != nil {
-				logger.Error().Err(err).Msg("Could not create transaction")
-				return nil, err
-			}
-			defer tx.Rollback(ctx) // nolint: errcheck
-
-			err = tx.Create(ctx, config)
-			if err != nil {
-				logger.Error().Err(err).Msg("Could not create config in database")
-				return nil, err
-			}
-
-			err = createSystemRoles(ctx, tx)
-			if err != nil {
-				logger.Error().Err(err).Msg("Could not insert roles into database")
-				return nil, err
-			}
-
-			err = attachDefaultPolicy(ctx, tx, capedb)
-			if err != nil {
-				logger.Error().Err(err).Msg("Could not attach default policies inside database")
-				return nil, err
-			}
-
-			roles, err := GetRolesByLabel(ctx, tx, []primitives.Label{
-				primitives.GlobalRole,
-				primitives.AdminRole,
-			})
-			if err != nil {
-				logger.Error().Err(err).Msg("Could not retrieve roles")
-				return nil, err
-			}
-
-			err = CreateAssignments(ctx, tx, user.ID, roles)
-			if err != nil {
-				logger.Error().Err(err).Msg("Could not create assignments in database")
-				return nil, err
-			}
-
-			err = tx.Commit(ctx)
-			if err != nil {
-				logger.Error().Err(err).Msg("Could not commit transaction")
-				return nil, err
-			}
-
-			return &user, nil
-		}
-
-		user, err := doWork()
-		if err != nil {
-			respondWithError(w, r.URL.Path, cleanup(err))
-			return
-		}
-
-		respondWithJSON(w, http.StatusOK, user)
-	})
-}
-
 type LogoutRequest struct {
 	Token *base64.Value `json:"token"`
 }
 
-func LogoutHandler(backend database.Backend, ta *auth.TokenAuthority) http.HandlerFunc {
+func LogoutHandler(coordinator *Coordinator) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
+		backend := coordinator.backend
+		ta := coordinator.tokenAuth
+
 		var input LogoutRequest
-		err := decodeJSONBody(w, r, &input)
+		err := fw.DecodeJSONBody(w, r, &input)
 		if err != nil {
-			respondWithError(w, r.URL.Path, errors.Wrap(BadJSONCause, err))
+			respondWithError(w, r.URL.Path, errors.Wrap(fw.BadJSONCause, err))
 			return
 		}
 
@@ -279,7 +165,7 @@ func LogoutHandler(backend database.Backend, ta *auth.TokenAuthority) http.Handl
 }
 
 func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAuthority, input LogoutRequest) error {
-	currSession := Session(ctx)
+	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, backend)
 	if input.Token == nil {
 		err := enforcer.Delete(ctx, primitives.SessionType, currSession.Session.ID)
@@ -312,4 +198,18 @@ func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAutho
 	}
 
 	return nil
+}
+
+func getCredentialProvider(ctx context.Context, q database.Querier, capedb db.Interface, input LoginRequest) (primitives.CredentialProvider, error) {
+	if input.Email != nil {
+		return capedb.Users().Get(ctx, *input.Email)
+	}
+
+	token := &primitives.Token{}
+	err := q.Get(ctx, *input.TokenID, token)
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
 }

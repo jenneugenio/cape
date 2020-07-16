@@ -1,4 +1,4 @@
-package framework
+package coordinator
 
 import (
 	"context"
@@ -17,68 +17,10 @@ import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/db"
+	fw "github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
-
-// ContextKey is a type alias used for storing data in a context
-type ContextKey string
-
-const (
-	// RequestIDContextKey is the name of the key stored on the contet
-	RequestIDContextKey ContextKey = "request-id"
-
-	// LoggerContextKey is the name of the logger key stored on the context
-	LoggerContextKey ContextKey = "logger"
-
-	// AuthTokenContextKey is the name of the auth token stored on the context
-	AuthTokenContextKey ContextKey = "auth-token"
-
-	// SessionContextKey is the name of the session key stored on the context
-	SessionContextKey ContextKey = "session"
-)
-
-// RequestID returns the request id stored on a given context
-func RequestID(ctx context.Context) uuid.UUID {
-	id := ctx.Value(RequestIDContextKey)
-	if id == nil {
-		panic("request id not available on context")
-	}
-
-	return id.(uuid.UUID)
-}
-
-// Logger returns the logger stored on a given context
-func Logger(ctx context.Context) zerolog.Logger {
-	logger := ctx.Value(LoggerContextKey)
-	if logger == nil {
-		panic("logger not available on context")
-	}
-
-	return logger.(zerolog.Logger)
-}
-
-// AuthToken returns the auth token stored on the given context.
-//
-// Returns nil if the token is not available on the context.
-func AuthToken(ctx context.Context) *base64.Value {
-	token := ctx.Value(AuthTokenContextKey)
-	if token == nil {
-		return nil
-	}
-
-	return token.(*base64.Value)
-}
-
-// Session returns the session stored on the given context
-func Session(ctx context.Context) *auth.Session {
-	session := ctx.Value(SessionContextKey)
-	if session == nil {
-		panic("session not available on context")
-	}
-
-	return session.(*auth.Session)
-}
 
 // RequestIDMiddleware sets a UUID on the response header and request context
 // for use in tracing and
@@ -89,7 +31,7 @@ func RequestIDMiddleware(next http.Handler) http.Handler {
 			panic(fmt.Sprintf("Could not generate a v4 uuid: %s", err))
 		}
 
-		ctx := context.WithValue(req.Context(), RequestIDContextKey, id)
+		ctx := context.WithValue(req.Context(), fw.RequestIDContextKey, id)
 		req = req.WithContext(ctx)
 		rw.Header().Set("X-Request-ID", id.String())
 		next.ServeHTTP(rw, req)
@@ -102,10 +44,10 @@ func LogMiddleware(log *zerolog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			ctx := req.Context()
-			requestID := RequestID(ctx)
+			requestID := fw.RequestID(ctx)
 			logger := log.With().Str("request_id", requestID.String()).Logger()
 
-			ctx = context.WithValue(ctx, LoggerContextKey, logger)
+			ctx = context.WithValue(ctx, fw.LoggerContextKey, logger)
 			req = req.WithContext(ctx)
 			next.ServeHTTP(rw, req)
 		})
@@ -130,7 +72,7 @@ func AuthTokenMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx = context.WithValue(ctx, AuthTokenContextKey, token)
+		ctx = context.WithValue(ctx, fw.AuthTokenContextKey, token)
 		req = req.WithContext(ctx)
 
 		next.ServeHTTP(rw, req)
@@ -142,7 +84,7 @@ func AuthTokenMiddleware(next http.Handler) http.Handler {
 func RoundtripLoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		metrics := httpsnoop.CaptureMetrics(next, rw, req)
-		logger := Logger(req.Context())
+		logger := fw.Logger(req.Context())
 
 		logger.Info().
 			Int("status", metrics.Code).
@@ -161,7 +103,7 @@ func RoundtripLoggerMiddleware(next http.Handler) http.Handler {
 // log is produced, and an internal server error is returned to the caller.
 func RecoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		logger := Logger(req.Context())
+		logger := fw.Logger(req.Context())
 		defer func() {
 			if p := recover(); p != nil {
 				// If the panic contains an error then we want to log that
@@ -221,13 +163,17 @@ func respondWithJSON(rw http.ResponseWriter, code int, out interface{}) {
 }
 
 // IsAuthenticatedMiddleware checks to make sure a query is authenticated
-func IsAuthenticatedMiddleware(db database.Backend, capedb db.Interface, tokenAuthority *auth.TokenAuthority) func(http.Handler) http.Handler {
+func IsAuthenticatedMiddleware(coordinator *Coordinator) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			ctx := req.Context()
 
-			logger := Logger(ctx)
-			token := AuthToken(ctx)
+			ta := coordinator.tokenAuth
+			db := coordinator.backend
+			capedb := coordinator.db
+
+			logger := fw.Logger(ctx)
+			token := fw.AuthToken(ctx)
 
 			if token == nil {
 				logger.Info().Msg("Could not authenticate. Token missing")
@@ -235,7 +181,7 @@ func IsAuthenticatedMiddleware(db database.Backend, capedb db.Interface, tokenAu
 				return
 			}
 
-			id, err := tokenAuthority.Verify(token)
+			id, err := ta.Verify(token)
 			if err != nil {
 				msg := "Could not authenticate. Unable to verify auth token"
 				logger.Info().Err(err).Msg(msg)
@@ -266,13 +212,13 @@ func IsAuthenticatedMiddleware(db database.Backend, capedb db.Interface, tokenAu
 				return
 			}
 
-			rbacs, err := QueryUserRBAC(ctx, db, capedb, cp.GetUserID())
+			rbacs, err := fw.QueryUserRBAC(ctx, db, capedb, cp.GetUserID())
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return
 			}
 
-			roles, err := QueryRoles(ctx, db, cp.GetUserID())
+			roles, err := fw.QueryRoles(ctx, db, cp.GetUserID())
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return
@@ -286,8 +232,8 @@ func IsAuthenticatedMiddleware(db database.Backend, capedb db.Interface, tokenAu
 
 			logger = logger.With().Str("user_id", aSession.GetID()).Logger()
 
-			ctx = context.WithValue(ctx, LoggerContextKey, logger)
-			ctx = context.WithValue(ctx, SessionContextKey, aSession)
+			ctx = context.WithValue(ctx, fw.LoggerContextKey, logger)
+			ctx = context.WithValue(ctx, fw.SessionContextKey, aSession)
 
 			req = req.WithContext(ctx)
 
