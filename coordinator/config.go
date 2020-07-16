@@ -19,7 +19,7 @@ type Config struct {
 	InstanceID primitives.Label `json:"instance_id,omitempty"`
 	Port       int              `json:"port"`
 
-	// RootKey is used to encrypted EncryptionKey and should
+	// RootKey is used to encrypt/decrypt EncryptionKey and should
 	// be stored in a separate config file in a secret or
 	// other secure location.
 	RootKey *base64.Value `json:"root_key"`
