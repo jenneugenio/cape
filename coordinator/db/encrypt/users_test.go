@@ -14,10 +14,12 @@ import (
 
 var ErrGenericDBError = errors.New("generic db error")
 
+var Secret = base64.New([]byte("HEYEYEYEYYE"))
+
 var SecretUser = models.User{
 	Email: models.Email("hey@email.com"),
 	Credentials: &models.Credentials{
-		Secret: base64.New([]byte("HEYEYEYEYYE")),
+		Secret: Secret,
 	},
 }
 
@@ -45,7 +47,7 @@ func TestUsersCreate(t *testing.T) {
 
 	pgUser := &testPgUser{}
 	for i, test := range tests {
-		userDB := encryptUser{
+		userDB := userEncrypt{
 			db:    pgUser,
 			codec: codec,
 		}
@@ -56,6 +58,10 @@ func TestUsersCreate(t *testing.T) {
 		if (test.wantErr == nil && gotErr != nil) ||
 			(test.wantErr != nil && gotErr.Error() != test.wantErr.Error()) {
 			t.Errorf("unexpected error on Create() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
+		}
+
+		if !reflect.DeepEqual(SecretUser, pgUser.receivedUser) {
+			t.Errorf("user not encrypted: got %v", pgUser.receivedUser)
 		}
 	}
 }
@@ -87,7 +93,7 @@ func TestUsersUpdate(t *testing.T) {
 
 	pgUser := &testPgUser{}
 	for i, test := range tests {
-		userDB := encryptUser{
+		userDB := userEncrypt{
 			db:    pgUser,
 			codec: codec,
 		}
@@ -98,6 +104,10 @@ func TestUsersUpdate(t *testing.T) {
 		if (test.wantErr == nil && gotErr != nil) ||
 			(test.wantErr != nil && gotErr.Error() != test.wantErr.Error()) {
 			t.Errorf("unexpected error on Update() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
+		}
+
+		if !reflect.DeepEqual(SecretUser, pgUser.receivedUser) {
+			t.Errorf("user not encrypted: got %v", pgUser.receivedUser)
 		}
 	}
 }
@@ -125,7 +135,7 @@ func TestUsersDelete(t *testing.T) {
 
 	pgUser := &testPgUser{}
 	for i, test := range tests {
-		userDB := encryptUser{
+		userDB := userEncrypt{
 			db:    pgUser,
 			codec: codec,
 		}
@@ -144,7 +154,7 @@ func TestUserGet(t *testing.T) {
 	kms, _ := crypto.NewLocalKMS(key)
 	codec := crypto.NewSecretBoxCodec(kms)
 
-	encryptedSecret, _ := codec.Encrypt(context.TODO(), base64.New([]byte("HEYEYEYEYYE")))
+	encryptedSecret, _ := codec.Encrypt(context.TODO(), Secret)
 	encryptedUser := models.User{
 		Credentials: &models.Credentials{
 			Secret: encryptedSecret,
@@ -155,7 +165,7 @@ func TestUserGet(t *testing.T) {
 	secretUser := models.User{
 		Email: models.Email("hey@email.com"),
 		Credentials: &models.Credentials{
-			Secret: base64.New([]byte("HEYEYEYEYYE")),
+			Secret: Secret,
 		},
 	}
 
@@ -185,12 +195,12 @@ func TestUserGet(t *testing.T) {
 
 	pgUser := &testPgUser{}
 	for i, test := range tests {
-		userDB := encryptUser{
+		userDB := userEncrypt{
 			db:    pgUser,
 			codec: codec,
 		}
 
-		pgUser.user = test.user
+		pgUser.returnUser = test.user
 		pgUser.err = test.err
 
 		gotUser, gotErr := userDB.Get(context.TODO(), test.user.Email)
@@ -252,12 +262,12 @@ func TestUserGetByID(t *testing.T) {
 
 	pgUser := &testPgUser{}
 	for i, test := range tests {
-		userDB := encryptUser{
+		userDB := userEncrypt{
 			db:    pgUser,
 			codec: codec,
 		}
 
-		pgUser.user = test.user
+		pgUser.returnUser = test.user
 		pgUser.err = test.err
 
 		gotUser, gotErr := userDB.GetByID(context.TODO(), test.user.ID)
@@ -276,7 +286,7 @@ func TestUserstList(t *testing.T) {
 	kms, _ := crypto.NewLocalKMS(key)
 	codec := crypto.NewSecretBoxCodec(kms)
 
-	encryptedSecret, _ := codec.Encrypt(context.TODO(), base64.New([]byte("HEYEYEYEYYE")))
+	encryptedSecret, _ := codec.Encrypt(context.TODO(), Secret)
 	encryptedUser := models.User{
 		ID: "idididid",
 		Credentials: &models.Credentials{
@@ -289,7 +299,7 @@ func TestUserstList(t *testing.T) {
 		ID:    "idididid",
 		Email: models.Email("hey@email.com"),
 		Credentials: &models.Credentials{
-			Secret: base64.New([]byte("HEYEYEYEYYE")),
+			Secret: Secret,
 		},
 	}
 
@@ -312,13 +322,13 @@ func TestUserstList(t *testing.T) {
 
 	pgUser := &testPgUser{}
 	for i, test := range tests {
-		userDB := encryptUser{
+		userDB := userEncrypt{
 			db:    pgUser,
 			codec: codec,
 		}
 
 		pgUser.err = test.err
-		pgUser.user = test.user
+		pgUser.returnUser = test.user
 		gotUsers, gotErr := userDB.List(context.TODO(), test.opt)
 		if (test.wantErr == nil && gotErr != nil) ||
 			(test.wantErr != nil && gotErr != nil && gotErr.Error() != test.wantErr.Error()) {
@@ -331,24 +341,19 @@ func TestUserstList(t *testing.T) {
 }
 
 type testPgUser struct {
-	user models.User
-	err  error
+	returnUser   models.User
+	receivedUser models.User
+	err          error
 }
 
-func (t *testPgUser) Create(_ context.Context, _ models.User) error {
-	if t.err != nil {
-		return t.err
-	}
-
-	return nil
+func (t *testPgUser) Create(_ context.Context, user models.User) error {
+	t.receivedUser = user
+	return t.err
 }
 
-func (t *testPgUser) Update(_ context.Context, _ string, _ models.User) error {
-	if t.err != nil {
-		return t.err
-	}
-
-	return nil
+func (t *testPgUser) Update(_ context.Context, _ string, user models.User) error {
+	t.receivedUser = user
+	return t.err
 }
 
 func (t *testPgUser) Delete(_ context.Context, _ models.Email) (db.DeleteStatus, error) {
@@ -364,7 +369,7 @@ func (t *testPgUser) Get(_ context.Context, _ models.Email) (*models.User, error
 		return nil, t.err
 	}
 
-	return &t.user, nil
+	return &t.returnUser, nil
 }
 
 func (t *testPgUser) GetByID(_ context.Context, _ string) (*models.User, error) {
@@ -372,7 +377,7 @@ func (t *testPgUser) GetByID(_ context.Context, _ string) (*models.User, error) 
 		return nil, t.err
 	}
 
-	return &t.user, nil
+	return &t.returnUser, nil
 }
 
 func (t *testPgUser) List(_ context.Context, _ *db.ListUserOptions) ([]models.User, error) {
@@ -380,5 +385,5 @@ func (t *testPgUser) List(_ context.Context, _ *db.ListUserOptions) ([]models.Us
 		return nil, t.err
 	}
 
-	return []models.User{t.user}, nil
+	return []models.User{t.returnUser}, nil
 }
