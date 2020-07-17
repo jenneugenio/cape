@@ -122,11 +122,11 @@ func TestGet(t *testing.T) {
 		},
 		{
 			label:   models.Label("foo"),
-			wantPol: &EmptyPolicy,
+			wantPol: nil,
 			wantErr: fmt.Errorf("error retrieving policy: %w", ErrGenericDBError),
 			row: testRow{
 				obj: []interface{}{EmptyPolicy},
-				err: nil,
+				err: ErrGenericDBError,
 			},
 			err: ErrGenericDBError,
 		},
@@ -144,9 +144,8 @@ func TestGet(t *testing.T) {
 			(test.wantErr != nil && gotErr != nil && gotErr.Error() != test.wantErr.Error()) {
 			t.Errorf("unexpected error on Create() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
 		}
-		got, want := *gotPol, *(test.wantPol)
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("incorrect policy returned on Get() test %d of %d: got %v want %v", i+1, len(tests), got, want)
+		if !reflect.DeepEqual(gotPol, test.wantPol) {
+			t.Errorf("incorrect policy returned on Get() test %d of %d: got %v want %v", i+1, len(tests), gotPol, test.wantPol)
 		}
 	}
 }

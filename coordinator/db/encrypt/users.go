@@ -2,6 +2,7 @@ package encrypt
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/db"
@@ -18,10 +19,15 @@ type encryptUser struct {
 func (e *encryptUser) Create(ctx context.Context, user models.User) error {
 	u, err := userEncrypt(ctx, e.codec, user)
 	if err != nil {
+		return fmt.Errorf("error encrypting user for creation: %w", err)
+	}
+
+	err = e.db.Create(ctx, *u)
+	if err != nil {
 		return err
 	}
 
-	return e.db.Create(ctx, *u)
+	return nil
 }
 
 func (e *encryptUser) Update(ctx context.Context, id string, user models.User) error {
@@ -30,11 +36,21 @@ func (e *encryptUser) Update(ctx context.Context, id string, user models.User) e
 		return err
 	}
 
-	return e.db.Update(ctx, id, *u)
+	err = e.db.Update(ctx, id, *u)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (e *encryptUser) Delete(ctx context.Context, email models.Email) (db.DeleteStatus, error) {
-	return e.db.Delete(ctx, email)
+	status, err := e.db.Delete(ctx, email)
+	if err != nil {
+		return status, err
+	}
+
+	return status, nil
 }
 
 func (e *encryptUser) Get(ctx context.Context, email models.Email) (*models.User, error) {
@@ -49,6 +65,7 @@ func (e *encryptUser) Get(ctx context.Context, email models.Email) (*models.User
 
 func (e *encryptUser) GetByID(ctx context.Context, id string) (*models.User, error) {
 	user, err := e.db.GetByID(ctx, id)
+
 	if err != nil {
 		return nil, err
 	}
