@@ -21,7 +21,7 @@ func New(db db.Interface) *CapeDBEncrypt {
 
 func (c *CapeDBEncrypt) Policies() db.PolicyDB { return c.db.Policies() }
 func (c *CapeDBEncrypt) Roles() db.RoleDB      { return c.db.Roles() }
-func (c *CapeDBEncrypt) Users() db.UserDB      { return &encryptUser{db: c.db.Users(), codec: c.codec} }
+func (c *CapeDBEncrypt) Users() db.UserDB      { return &userEncrypt{db: c.db.Users(), codec: c.codec} }
 func (c *CapeDBEncrypt) RBAC() db.RBACDB       { return c.db.RBAC() }
 
 func (c *CapeDBEncrypt) SetEncryptionCodec(codec crypto.EncryptionCodec) {

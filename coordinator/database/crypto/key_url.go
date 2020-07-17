@@ -102,7 +102,8 @@ func (d *KeyURL) Type() KeyURLType {
 	return KeyURLType(d.Scheme)
 }
 
-// NewBase64KeyURL
+// NewBase64KeyURL generates a KeyURL for you if key is nil. Otherwise
+// key must be KeyLength long.
 func NewBase64KeyURL(key []byte) (*KeyURL, error) {
 	if key == nil {
 		key = make([]byte, KeyLength)

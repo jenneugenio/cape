@@ -74,7 +74,7 @@ func TestUsersUpdate(t *testing.T) {
 		gotErr := userDB.Update(context.TODO(), test.id, test.user)
 		if (test.wantErr == nil && gotErr != nil) ||
 			(test.wantErr != nil && gotErr.Error() != test.wantErr.Error()) {
-			t.Errorf("unexpected error on Create() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
+			t.Errorf("unexpected error on Update() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
 		}
 	}
 }
@@ -122,7 +122,7 @@ func TestUsersDelete(t *testing.T) {
 		gotStatus, gotErr := userDB.Delete(context.TODO(), test.email)
 		if ((test.wantErr == nil && gotErr != nil) ||
 			(test.wantErr != nil && gotErr.Error() != test.wantErr.Error())) && gotStatus != test.wantStatus {
-			t.Errorf("unexpected error on Create() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
+			t.Errorf("unexpected error on Delete() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
 		}
 	}
 }
@@ -152,21 +152,21 @@ func TestUserGet(t *testing.T) {
 		},
 		{
 			email:    models.Email("foo"),
-			wantUser: &EmptyUser,
+			wantUser: nil,
 			wantErr:  fmt.Errorf("error retrieving user: %w", ErrGenericDBError),
 			row: testRow{
 				obj: []interface{}{EmptyUser},
-				err: nil,
+				err: ErrGenericDBError,
 			},
 			err: ErrGenericDBError,
 		},
 		{
 			email:    models.Email("foo"),
-			wantUser: &EmptyUser,
+			wantUser: nil,
 			wantErr:  db.ErrNoRows,
 			row: testRow{
 				obj: []interface{}{EmptyUser},
-				err: nil,
+				err: pgx.ErrNoRows,
 			},
 			err: pgx.ErrNoRows,
 		},
@@ -179,14 +179,13 @@ func TestUserGet(t *testing.T) {
 
 		userDB := pgUser{pool, 0}
 
-		gotPol, gotErr := userDB.Get(context.TODO(), test.email)
+		gotUser, gotErr := userDB.Get(context.TODO(), test.email)
 		if (test.wantErr == nil && gotErr != nil) ||
 			(test.wantErr != nil && gotErr != nil && gotErr.Error() != test.wantErr.Error()) {
-			t.Errorf("unexpected error on Create() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
+			t.Errorf("unexpected error on Get() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
 		}
-		got, want := *gotPol, *(test.wantUser)
-		if got != want {
-			t.Errorf("incorrect user returned on Get() test %d of %d: got %v want %v", i+1, len(tests), got, want)
+		if !reflect.DeepEqual(gotUser, test.wantUser) {
+			t.Errorf("incorrect user returned on Get() test %d of %d: got %v want %v", i+1, len(tests), gotUser, test.wantUser)
 		}
 	}
 }
@@ -210,21 +209,21 @@ func TestUserGetByID(t *testing.T) {
 		},
 		{
 			id:       "idididid",
-			wantUser: &EmptyUser,
+			wantUser: nil,
 			wantErr:  fmt.Errorf("error retrieving user: %w", ErrGenericDBError),
 			row: testRow{
 				obj: []interface{}{EmptyUser},
-				err: nil,
+				err: ErrGenericDBError,
 			},
 			err: ErrGenericDBError,
 		},
 		{
 			id:       "idididid",
-			wantUser: &EmptyUser,
+			wantUser: nil,
 			wantErr:  db.ErrNoRows,
 			row: testRow{
 				obj: []interface{}{EmptyUser},
-				err: nil,
+				err: pgx.ErrNoRows,
 			},
 			err: pgx.ErrNoRows,
 		},
@@ -242,9 +241,9 @@ func TestUserGetByID(t *testing.T) {
 			(test.wantErr != nil && gotErr != nil && gotErr.Error() != test.wantErr.Error()) {
 			t.Errorf("unexpected error on Create() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
 		}
-		got, want := *gotUser, *(test.wantUser)
-		if got != want {
-			t.Errorf("incorrect user returned on Get() test %d of %d: got %v want %v", i+1, len(tests), got, want)
+
+		if !reflect.DeepEqual(gotUser, test.wantUser) {
+			t.Errorf("incorrect user returned on Get() test %d of %d: got %v want %v", i+1, len(tests), gotUser, test.wantUser)
 		}
 	}
 }
