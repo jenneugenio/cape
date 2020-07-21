@@ -3,7 +3,6 @@ package coordinator
 import (
 	"context"
 	"encoding/json"
-
 	"github.com/capeprivacy/cape/models"
 	"github.com/manifoldco/go-base64"
 
@@ -765,10 +764,15 @@ func (c *Client) ListProjects(ctx context.Context, status []primitives.ProjectSt
 }
 
 type GetProjectResponse struct {
-	Project *primitives.Project `json:"project"`
+	*primitives.Project
+	Contributors []GQLContributor `json:"contributors"`
 }
 
-func (c *Client) GetProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error) {
+func (c *Client) GetProject(ctx context.Context, id *database.ID, label *primitives.Label) (*GetProjectResponse, error) {
+	var resp struct {
+		Project GetProjectResponse `json:"project"`
+	}
+
 	variables := make(map[string]interface{})
 	if id != nil {
 		variables["id"] = id
@@ -778,7 +782,6 @@ func (c *Client) GetProject(ctx context.Context, id *database.ID, label *primiti
 		variables["label"] = label
 	}
 
-	var resp GetProjectResponse
 	err := c.transport.Raw(ctx, `
 		query GetProjects($id: ID, $label: Label) {
 			project(id: $id, label: $label) {
@@ -788,7 +791,18 @@ func (c *Client) GetProject(ctx context.Context, id *database.ID, label *primiti
 				description,
 				status,
 				created_at,
-				updated_at
+				updated_at,
+				
+				contributors {
+					id
+					user {
+						id
+					}
+					role {
+						id
+						label
+					}
+				}
 			}
 		}
 	`, variables, &resp)
@@ -796,7 +810,7 @@ func (c *Client) GetProject(ctx context.Context, id *database.ID, label *primiti
 		return nil, err
 	}
 
-	return resp.Project, nil
+	return &resp.Project, nil
 }
 
 type UpdateProjectSpecResponseBody struct {
@@ -879,6 +893,114 @@ func (c *Client) UpdateProject(
 	}
 
 	return resp.Project, nil
+}
+
+type UpdateContributorResponse struct {
+	*models.Contributor `json:"updateContributor"`
+	User                *models.User `json:"user"`
+}
+
+func (c *Client) AddContributor(ctx context.Context, project models.Project, user models.User, role models.Label) (*models.Contributor, error) {
+	variables := map[string]interface{}{
+		"project_label": project.Label,
+		"email":         user.Email,
+		"role":          role,
+	}
+
+	var resp UpdateContributorResponse
+
+	query := `mutation updateContributor($project_label: ModelLabel!, $email: ModelEmail!, $role: ModelLabel!) {
+		updateContributor(project_label: $project_label, user_email: $email, role_label: $role) {
+			id
+			user {
+			  id
+			}
+			project {
+              id
+            }
+		}
+	}`
+
+	err := c.transport.Raw(ctx, query, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Contributor, nil
+}
+
+type RemoveContributorResponse struct {
+	Contributor models.Contributor `json:"removeContributor"`
+}
+
+func (c *Client) RemoveContributor(ctx context.Context, user models.User, project models.Project) (*models.Contributor, error) {
+	variables := map[string]interface{}{
+		"project_label": project.Label,
+		"email":         user.Email,
+	}
+
+	var resp RemoveContributorResponse
+
+	query := `mutation removeContributor($project_label: ModelLabel!, $email: ModelEmail!) {
+		removeContributor(project_label: $project_label, user_email: $email) {
+			id
+		}
+	}`
+
+	err := c.transport.Raw(ctx, query, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Contributor, nil
+}
+
+type GQLContributor struct {
+	*models.Contributor
+	User    models.User    `json:"user"`
+	Project models.Project `json:"project"`
+	Role    models.Role    `json:"role"`
+}
+
+type ListContributorsResponse struct {
+	Contributors []GQLContributor `json:"listContributors"`
+}
+
+func (c *Client) ListContributors(ctx context.Context, project models.Project) ([]GQLContributor, error) {
+	variables := map[string]interface{}{
+		"project_label": project.Label,
+	}
+
+	var resp ListContributorsResponse
+	query := `query listContributors($project_label: ModelLabel!) {
+		listContributors(project_label: $project_label) {
+			id,
+			created_at,
+			updated_at
+
+			user {
+				id
+			}
+
+			project {
+				id
+				label
+			}
+
+			role {
+				id
+				label
+				system
+			}
+		}
+	}`
+
+	err := c.transport.Raw(ctx, query, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Contributors, nil
 }
 
 func (c *Client) CreateRecovery(ctx context.Context, email models.Email) error {

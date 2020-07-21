@@ -24,5 +24,6 @@ var (
 	ErrRecoveryFailed   = errors.New(RecoveryFailedCause, "recovery_failed")
 
 	DuplicateKeyCause = errors.NewCause(errors.BadRequestCategory, "duplicate_key")
-	ErrDuplicateKey   = errors.New(DuplicateKeyCause, "duplicate_key")
+
+	ErrDuplicateKey = errors.New(DuplicateKeyCause, "duplicate_key")
 )

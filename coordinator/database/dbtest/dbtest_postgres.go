@@ -32,7 +32,7 @@ func NewTestPostgres(rootURL string) (TestDatabase, error) {
 		return nil, err
 	}
 
-	dbName, err := generateName()
+	dbName, err := GenerateName()
 	if err != nil {
 		return nil, err
 	}

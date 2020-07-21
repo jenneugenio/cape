@@ -277,6 +277,10 @@ type testRow struct {
 }
 
 func (t testRow) Scan(dest ...interface{}) error {
+	if len(t.obj) == 0 {
+		return pgx.ErrNoRows
+	}
+
 	if len(dest) != len(t.obj) {
 		panic("unable to scan into dest")
 	}
@@ -286,5 +290,6 @@ func (t testRow) Scan(dest ...interface{}) error {
 		replacement := t.obj[i]
 		reflect.Indirect(orig).Set(reflect.ValueOf(replacement))
 	}
+
 	return t.err
 }

@@ -8,7 +8,7 @@ import (
 
 var dbNameByteLength = 4
 
-func generateName() (string, error) {
+func GenerateName() (string, error) {
 	value := make([]byte, dbNameByteLength)
 	_, err := rand.Read(value)
 	if err != nil {

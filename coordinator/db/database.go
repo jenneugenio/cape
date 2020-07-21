@@ -11,6 +11,8 @@ type Interface interface {
 	Policies() PolicyDB
 	Roles() RoleDB
 	Users() UserDB
+	Projects() ProjectsDB
+	Contributors() ContributorDB
 	RBAC() RBACDB
 }
 
@@ -42,14 +44,26 @@ type RoleDB interface {
 	Create(context.Context, *models.Role) error
 	Delete(context.Context, models.Label) (DeleteStatus, error)
 	Get(context.Context, models.Label) (*models.Role, error)
+	GetByID(context.Context, string) (*models.Role, error)
 	List(context.Context, *ListRoleOptions) ([]*models.Role, error)
 
 	AttachPolicy(context.Context, models.Label) error
 	DetachPolicy(context.Context, models.Label) error
 }
 
-// Options
+type ContributorDB interface {
+	Add(context.Context, models.Label, models.Email, models.Label) (*models.Contributor, error)
+	Get(context.Context, models.Label, models.Email) (*models.Contributor, error)
+	List(context.Context, models.Label) ([]models.Contributor, error)
+	Delete(context.Context, models.Label, models.Email) (*models.Contributor, error)
+}
 
+type ProjectsDB interface {
+	Get(context.Context, models.Label) (*models.Project, error)
+	GetByID(context.Context, string) (*models.Project, error)
+}
+
+// Options
 type ListPolicyOptions struct {
 	Options *struct {
 		Offset uint64

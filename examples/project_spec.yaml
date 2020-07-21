@@ -1,9 +1,10 @@
 version: 1
 policy:
-    - target: "records:creditcards.transactions"
-      action: read
-      effect: allow
-      fields:
-          - vendor
-          - value
-          - timestamp
+    rules:
+        - target: "records:creditcards.transactions"
+          action: read
+          effect: allow
+          fields:
+              - vendor
+              - value
+              - timestamp

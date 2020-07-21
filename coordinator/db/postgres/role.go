@@ -3,6 +3,8 @@ package capepg
 import (
 	"context"
 	"errors"
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v4"
 	"time"
 
 	"github.com/capeprivacy/cape/coordinator/db"
@@ -24,8 +26,58 @@ func (r *pgRole) Delete(context.Context, models.Label) (db.DeleteStatus, error) 
 	return db.DeleteStatusError, errors.New("not implemented")
 }
 
-func (r *pgRole) Get(context.Context, models.Label) (*models.Role, error) {
-	return &models.Role{}, errors.New("not implemented")
+func (r *pgRole) Get(ctx context.Context, label models.Label) (*models.Role, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	s, args, err := sq.Select("data").
+		PlaceholderFormat(sq.Dollar).
+		From("roles").
+		Where(sq.Eq{"data->>'label'": label}).
+		ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
+	row := r.pool.QueryRow(ctx, s, args...)
+	role := &models.Role{}
+	err = row.Scan(role)
+	if err != nil {
+		if err.Error() == pgx.ErrNoRows.Error() {
+			return nil, db.ErrNoRows
+		}
+		return nil, err
+	}
+
+	return role, nil
+}
+
+func (r *pgRole) GetByID(ctx context.Context, ID string) (*models.Role, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	s, args, err := sq.Select("data").
+		PlaceholderFormat(sq.Dollar).
+		From("roles").
+		Where(sq.Eq{"id": ID}).
+		ToSql()
+
+	if err != nil {
+		return nil, err
+	}
+
+	row := r.pool.QueryRow(ctx, s, args...)
+	role := &models.Role{}
+	err = row.Scan(role)
+	if err != nil {
+		if err.Error() == pgx.ErrNoRows.Error() {
+			return nil, db.ErrNoRows
+		}
+		return nil, err
+	}
+
+	return role, nil
 }
 
 func (r *pgRole) List(context.Context, *db.ListRoleOptions) ([]*models.Role, error) {

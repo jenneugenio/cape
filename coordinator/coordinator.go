@@ -181,7 +181,6 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 	pgxPool := mustPgxPool(cfg.DB.Addr.ToURL().String(), cfg.InstanceID.String())
 
 	capedb := encrypt.New(capepg.New(pgxPool))
-
 	config := &generated.Config{
 		Resolvers: &graph.Resolver{
 			Database:           capedb,
@@ -288,7 +287,6 @@ func mustPgxPool(url, name string) *pgxpool.Pool {
 
 	// Don't connect to the database until we start using the pool
 	cfg.LazyConnect = true
-
 	c, err := pgxpool.ConnectConfig(context.TODO(), cfg)
 	if err != nil {
 		log.Fatalf("error connecting to database: %s", err.Error())

@@ -10,6 +10,7 @@ type Project {
     description: Description!
     status: ProjectStatus!
     current_spec: ProjectSpec
+    contributors: [Contributor!]!
 
     created_at: Time!
     updated_at: Time!
@@ -20,6 +21,19 @@ type ProjectSpec {
     project: Project!
     parent: ProjectSpec
     policy: [ProjectRule!]!
+
+    created_at: Time!
+    updated_at: Time!
+}
+
+type Contributor {
+    id: String!
+    user: User!
+    project: Project!
+    role: Role!
+
+    created_at: Time!
+    updated_at: Time!
 }
 
 input CreateProjectRequest {
@@ -40,6 +54,8 @@ input ProjectSpecFile {
 extend type Query {
     projects(status: [ProjectStatus!]): [Project!]!
     project(id: ID, label: Label): Project
+
+    listContributors(project_label: ModelLabel!): [Contributor!]!
 }
 
 extend type Mutation {
@@ -49,4 +65,7 @@ extend type Mutation {
 
     archiveProject(id: ID, label: Label): Project!
     unarchiveProject(id: ID, label: Label): Project!
+
+    updateContributor(project_label: ModelLabel!, user_email: ModelEmail!, role_label: ModelLabel!): Contributor!
+    removeContributor(project_label: ModelLabel!, user_email: ModelEmail!): Contributor!
 }
