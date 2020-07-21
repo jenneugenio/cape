@@ -3,6 +3,7 @@ package coordinator
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/capeprivacy/cape/models"
 	"github.com/manifoldco/go-base64"
 
@@ -792,7 +793,7 @@ func (c *Client) GetProject(ctx context.Context, id string, label *models.Label)
 				status,
 				created_at,
 				updated_at,
-				
+
 				contributors {
 					id
 					user {

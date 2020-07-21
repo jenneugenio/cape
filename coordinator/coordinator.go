@@ -247,6 +247,7 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		tokenAuth:          tokenAuth,
 		mailer:             mailer,
 		pool:               pgxPool,
+		db:                 capedb,
 		credentialProducer: cp,
 	}, nil
 }

@@ -117,9 +117,9 @@ func LoginHandler(db database.Backend, capedb db.Interface, cp auth.CredentialPr
 		}
 
 		cookie := &http.Cookie{
-			Name:     "token",
-			Value:    token.String(),
-			Secure:   true,
+			Name:  "token",
+			Value: token.String(),
+			//Secure:   true,
 			HttpOnly: true,
 		}
 		http.SetCookie(w, cookie)
