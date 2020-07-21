@@ -1,9 +1,5 @@
 scalar Transformation
-
-type Rule {
-  match: Match!
-  actions: [Action!]
-}
+scalar Rule
 
 type Match {
   name: String!

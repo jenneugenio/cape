@@ -53,6 +53,30 @@ type Rule struct {
 	Actions []Action `json:"actions"`
 }
 
+// UnmarshalGQL implements the graphql.Unmarshaler interface
+func (r *Rule) UnmarshalGQL(v interface{}) error {
+	switch t := v.(type) {
+	case map[string]interface{}:
+		if err := mapstructure.Decode(t, r); err != nil {
+			return err
+		}
+		return nil
+	default:
+		return fmt.Errorf("unable to unmarshal rule")
+	}
+}
+
+// MarshalGQL implements the graphql.Marshaler interface
+func (r Rule) MarshalGQL(w io.Writer) {
+	json, err := json.Marshal(r)
+	if err != nil {
+		fmt.Fprint(w, strconv.Quote(err.Error()))
+		return
+	}
+
+	fmt.Fprint(w, string(json))
+}
+
 type Match struct {
 	Name string `json:"name"`
 }

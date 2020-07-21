@@ -5,16 +5,22 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
+
+func (r *modelRoleResolver) ID(ctx context.Context, obj *models.Role) (database.ID, error) {
+	panic(fmt.Errorf("not implemented"))
+}
 
 func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error) {
 	role, err := primitives.NewRole(input.Label, false)
@@ -211,3 +217,8 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 
 	return userPtrs, nil
 }
+
+// ModelRole returns generated.ModelRoleResolver implementation.
+func (r *Resolver) ModelRole() generated.ModelRoleResolver { return &modelRoleResolver{r} }
+
+type modelRoleResolver struct{ *Resolver }

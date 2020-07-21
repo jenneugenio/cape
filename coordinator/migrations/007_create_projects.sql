@@ -10,6 +10,10 @@ CREATE TRIGGER projects_hoist_tgr
   BEFORE INSERT ON projects
   FOR EACH ROW EXECUTE PROCEDURE hoist_values('id', 'current_spec');
 
+CREATE TRIGGER projects_hoist_tgr
+    BEFORE UPDATE ON projects
+    FOR EACH ROW EXECUTE PROCEDURE hoist_values('id', 'current_spec');
+
 CREATE TABLE project_specs (
   id char(29) primary key not null,
   project_id char(29) references projects(id),

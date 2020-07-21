@@ -61,6 +61,11 @@ type ContributorDB interface {
 type ProjectsDB interface {
 	Get(context.Context, models.Label) (*models.Project, error)
 	GetByID(context.Context, string) (*models.Project, error)
+	Create(context.Context, models.Project) error
+	Update(context.Context, models.Project) error
+
+	CreateProjectSpec(context.Context, models.ProjectSpec) error
+	GetProjectSpec(context.Context, string) (*models.ProjectSpec, error)
 }
 
 // Options

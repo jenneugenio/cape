@@ -6,14 +6,13 @@ package graph
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
-	modelmigration "github.com/capeprivacy/cape/models/migration"
 	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/gosimple/slug"
@@ -23,78 +22,52 @@ func (r *contributorResolver) User(ctx context.Context, obj *models.Contributor)
 	return r.Database.Users().GetByID(ctx, obj.UserID)
 }
 
-func (r *contributorResolver) Project(ctx context.Context, obj *models.Contributor) (*primitives.Project, error) {
-	p, err := r.Database.Projects().GetByID(ctx, obj.ProjectID)
-	if err != nil {
-		return nil, err
-	}
-
-	return modelmigration.PrimitiveFromProject(*p)
+func (r *contributorResolver) Project(ctx context.Context, obj *models.Contributor) (*models.Project, error) {
+	return r.Database.Projects().GetByID(ctx, obj.ProjectID)
 }
 
-func (r *contributorResolver) Role(ctx context.Context, obj *models.Contributor) (*primitives.Role, error) {
-	role, err := r.Database.Roles().GetByID(ctx, obj.RoleID)
-	if err != nil {
-		return nil, err
-	}
-
-	return modelmigration.PrimitiveFromRole(*role)
+func (r *contributorResolver) Role(ctx context.Context, obj *models.Contributor) (*models.Role, error) {
+	return r.Database.Roles().GetByID(ctx, obj.RoleID)
 }
 
-func (r *mutationResolver) CreateProject(ctx context.Context, project model.CreateProjectRequest) (*primitives.Project, error) {
+func (r *mutationResolver) CreateProject(ctx context.Context, project model.CreateProjectRequest) (*models.Project, error) {
 	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	var label primitives.Label
+	var label models.Label
 	if project.Label != nil {
 		label = *project.Label
 	} else {
 		labelStr := slug.Make(project.Name.String())
-		l, err := primitives.NewLabel(labelStr)
-		if err != nil {
-			return nil, err
-		}
-
-		label = l
+		label = models.Label(labelStr)
 	}
 
-	p, err := primitives.NewProject(project.Name, label, project.Description)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := enforcer.Create(ctx, p); err != nil {
+	p := models.NewProject(project.Name, label, project.Description)
+	if err := r.Database.Projects().Create(ctx, p); err != nil {
 		return nil, err
 	}
 
 	// Now make the creator the project owner
 	// TODO -- this should happen in a transaction
-	l := modelmigration.LabelFromPrimitive(label)
-	_, err = r.Database.Contributors().Add(ctx, l, currSession.User.Email, models.ProjectOwnerRole)
+	_, err := r.Database.Contributors().Add(ctx, label, currSession.User.Email, models.ProjectOwnerRole)
 	if err != nil {
 		return nil, err
 	}
 
-	return p, nil
+	return &p, nil
 }
 
-func (r *mutationResolver) UpdateProject(ctx context.Context, id *database.ID, label *primitives.Label, update model.UpdateProjectRequest) (*primitives.Project, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	project := &primitives.Project{}
+func (r *mutationResolver) UpdateProject(ctx context.Context, id *database.ID, label *models.Label, update model.UpdateProjectRequest) (*models.Project, error) {
+	var project *models.Project
+	var err error
 	if id != nil {
-		err := enforcer.Get(ctx, *id, project)
-		if err != nil {
-			return nil, err
-		}
+		project, err = r.Database.Projects().GetByID(ctx, id.String())
 	} else if label != nil {
-		err := enforcer.QueryOne(ctx, project, database.NewFilter(database.Where{"label": label}, nil, nil))
-		if err != nil {
-			return nil, err
-		}
+		project, err = r.Database.Projects().Get(ctx, *label)
 	} else {
-		return nil, errs.New(fw.InvalidParametersCause, "Either id or label must be supplied to updateProject")
+		return nil, errs.New(fw.InvalidParametersCause, "either id or label must be supplied to updateProject")
+	}
+
+	if err != nil {
+		return nil, errs.New(fw.InvalidParametersCause, "could not find the requested project")
 	}
 
 	if update.Name != nil {
@@ -105,64 +78,46 @@ func (r *mutationResolver) UpdateProject(ctx context.Context, id *database.ID, l
 		project.Description = *update.Description
 	}
 
-	err := enforcer.Update(ctx, project)
-	if err != nil {
-		return nil, err
-	}
-
-	return project, nil
+	err = r.Database.Projects().Update(ctx, *project)
+	return project, err
 }
 
-func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, projectLabel *primitives.Label, projectID *database.ID, request primitives.ProjectSpecFile) (*primitives.Project, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	var project primitives.Project
-	err := enforcer.QueryOne(ctx, &project, database.NewFilter(database.Where{"label": projectLabel.String()}, nil, nil))
-	if err != nil {
-		return nil, err
+func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *database.ID, label *models.Label, request models.ProjectSpecFile) (*models.Project, error) {
+	var project *models.Project
+	var err error
+	if id != nil {
+		project, err = r.Database.Projects().GetByID(ctx, id.String())
+	} else if label != nil {
+		project, err = r.Database.Projects().Get(ctx, *label)
+	} else {
+		return nil, errs.New(fw.InvalidParametersCause, "either id or label must be supplied to updateProject")
 	}
+
+	if err != nil {
+		return nil, errs.New(fw.InvalidParametersCause, "could not find the requested project")
+	}
+
 	// Insert the spec
 	// TODO -- How do you specify the parent? This concept doesn't make sense until we have proposals & diffing
-	spec, err := primitives.NewProjectSpec(project.ID, nil, request.Policy)
-	if err != nil {
-		return nil, err
-	}
-
-	tx, err := r.Backend.Transaction(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback(ctx) // nolint: errcheck
-
-	enforcer = auth.NewEnforcer(currSession, tx)
-	err = enforcer.Create(ctx, spec)
+	spec := models.NewProjectSpec(project.ID, nil, request.Policy)
+	err = r.Database.Projects().CreateProjectSpec(ctx, spec)
 	if err != nil {
 		return nil, err
 	}
 
 	// Make this spec active on the project
-	project.CurrentSpecID = &spec.ID
+	project.CurrentSpecID = spec.ID
 	// A spec makes the project active!
-	project.Status = primitives.ProjectActive
-	err = enforcer.Update(ctx, &project)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return &project, nil
+	project.Status = models.ProjectActive
+	err = r.Database.Projects().Update(ctx, *project)
+	return project, err
 }
 
-func (r *mutationResolver) ArchiveProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error) {
+func (r *mutationResolver) ArchiveProject(ctx context.Context, id *database.ID, label *models.Label) (*models.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) UnarchiveProject(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error) {
+func (r *mutationResolver) UnarchiveProject(ctx context.Context, id *database.ID, label *models.Label) (*models.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
@@ -174,22 +129,21 @@ func (r *mutationResolver) RemoveContributor(ctx context.Context, projectLabel m
 	return r.Database.Contributors().Delete(ctx, projectLabel, userEmail)
 }
 
-func (r *projectResolver) CurrentSpec(ctx context.Context, obj *primitives.Project) (*primitives.ProjectSpec, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
+func (r *projectResolver) ID(ctx context.Context, obj *models.Project) (database.ID, error) {
+	panic(fmt.Errorf("not implemented"))
+}
 
-	if obj.CurrentSpecID == nil {
+func (r *projectResolver) CurrentSpec(ctx context.Context, obj *models.Project) (*models.ProjectSpec, error) {
+	if obj.CurrentSpecID == "" {
 		return nil, errs.New(NoActiveSpecCause, "Project %s has no active project spec", obj.Name)
 	}
 
-	var projectSpec primitives.ProjectSpec
-	err := enforcer.Get(ctx, *obj.CurrentSpecID, &projectSpec)
-	return &projectSpec, err
+	return r.Database.Projects().GetProjectSpec(ctx, obj.CurrentSpecID)
 }
 
-func (r *projectResolver) Contributors(ctx context.Context, obj *primitives.Project) ([]*models.Contributor, error) {
+func (r *projectResolver) Contributors(ctx context.Context, obj *models.Project) ([]*models.Contributor, error) {
 	// TODO -- can this not be a copy of listContributors?
-	contribs, err := r.Database.Contributors().List(ctx, modelmigration.LabelFromPrimitive(obj.Label))
+	contribs, err := r.Database.Contributors().List(ctx, obj.Label)
 	if err != nil {
 		return nil, err
 	}
@@ -203,44 +157,49 @@ func (r *projectResolver) Contributors(ctx context.Context, obj *primitives.Proj
 	return contributors, nil
 }
 
-func (r *projectSpecResolver) Project(ctx context.Context, obj *primitives.ProjectSpec) (*primitives.Project, error) {
+func (r *projectResolver) CreatedAt(ctx context.Context, obj *models.Project) (*time.Time, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *projectSpecResolver) Parent(ctx context.Context, obj *primitives.ProjectSpec) (*primitives.ProjectSpec, error) {
+func (r *projectResolver) UpdatedAt(ctx context.Context, obj *models.Project) (*time.Time, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) Projects(ctx context.Context, status []primitives.ProjectStatus) ([]*primitives.Project, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	var projects []*primitives.Project
-	err := enforcer.Query(ctx, &projects, database.NewEmptyFilter())
-	if err != nil {
-		return nil, err
-	}
-
-	return projects, nil
+func (r *projectSpecResolver) ID(ctx context.Context, obj *models.ProjectSpec) (database.ID, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) Project(ctx context.Context, id *database.ID, label *primitives.Label) (*primitives.Project, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
+func (r *projectSpecResolver) Project(ctx context.Context, obj *models.ProjectSpec) (*models.Project, error) {
+	panic(fmt.Errorf("not implemented"))
+}
 
+func (r *projectSpecResolver) Parent(ctx context.Context, obj *models.ProjectSpec) (*models.ProjectSpec, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *projectSpecResolver) CreatedAt(ctx context.Context, obj *models.ProjectSpec) (*time.Time, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *projectSpecResolver) UpdatedAt(ctx context.Context, obj *models.ProjectSpec) (*time.Time, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) Projects(ctx context.Context, status []models.ProjectStatus) ([]*models.Project, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) Project(ctx context.Context, id *database.ID, label *models.Label) (*models.Project, error) {
 	if id == nil && label == nil {
 		return nil, errs.New(fw.InvalidParametersCause, "Must provide an id or label")
 	}
 
-	var project primitives.Project
 	if id != nil {
-		err := enforcer.Get(ctx, *id, &project)
-		return &project, err
+		return r.Database.Projects().GetByID(ctx, id.String())
 	}
 
 	// otherwise, get by label
-	err := enforcer.QueryOne(ctx, &project, database.NewFilter(database.Where{"label": label}, nil, nil))
-	return &project, err
+	return r.Database.Projects().Get(ctx, *label)
 }
 
 func (r *queryResolver) ListContributors(ctx context.Context, projectLabel models.Label) ([]*models.Contributor, error) {
@@ -270,3 +229,13 @@ func (r *Resolver) ProjectSpec() generated.ProjectSpecResolver { return &project
 type contributorResolver struct{ *Resolver }
 type projectResolver struct{ *Resolver }
 type projectSpecResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *projectSpecResolver) Policy(ctx context.Context, obj *models.ProjectSpec) ([]*primitives.Rule, error) {
+	panic(fmt.Errorf("not implemented"))
+}

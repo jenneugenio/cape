@@ -40,26 +40,6 @@ func CredentialsFromPrimitives(prim *primitives.Credentials) *models.Credentials
 	}
 }
 
-func ProjectFromPrimitive(prim *primitives.Project) models.Project {
-	return models.Project{
-		ID:    prim.ID.String(),
-		Label: models.Label(prim.Label.String()),
-	}
-}
-
-func PrimitiveFromProject(p models.Project) (*primitives.Project, error) {
-	id, err := database.DecodeFromString(p.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &primitives.Project{
-		Primitive: &database.Primitive{ID: id},
-		Name:      "TODO",
-		Label:     primitives.Label(p.Label),
-	}, nil
-}
-
 func PrimitiveFromRole(r models.Role) (*primitives.Role, error) {
 	id, err := database.DecodeFromString(r.ID)
 	if err != nil {
