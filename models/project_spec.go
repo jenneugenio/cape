@@ -1,6 +1,9 @@
 package models
 
-import "sigs.k8s.io/yaml"
+import (
+	"sigs.k8s.io/yaml"
+	"time"
+)
 
 type ProjectSpecFile struct {
 	Policy []*Rule `json:"policy"`
@@ -19,7 +22,9 @@ type ProjectSpec struct {
 	ID        string `json:"id"`
 	ProjectID string
 	ParentID  *string
-	Policy    []*Rule `json:"policy"`
+	Policy    []*Rule   `json:"policy"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (p *ProjectSpec) Validate() error {

@@ -6,8 +6,6 @@ package graph
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
@@ -156,14 +154,6 @@ func (r *projectSpecResolver) Project(ctx context.Context, obj *models.ProjectSp
 }
 
 func (r *projectSpecResolver) Parent(ctx context.Context, obj *models.ProjectSpec) (*models.ProjectSpec, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *projectSpecResolver) CreatedAt(ctx context.Context, obj *models.ProjectSpec) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *projectSpecResolver) UpdatedAt(ctx context.Context, obj *models.ProjectSpec) (*time.Time, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
