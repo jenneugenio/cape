@@ -27,6 +27,8 @@ models:
     model: github.com/capeprivacy/cape/models.User
   Role:
     model: github.com/capeprivacy/cape/primitives.Role
+  ModelRole:
+    model: github.com/capeprivacy/cape/models.Role
   Session:
     model: github.com/capeprivacy/cape/primitives.Session
   ID:
@@ -62,20 +64,18 @@ models:
   Password:
     model: github.com/capeprivacy/cape/primitives.Password
   Project:
-    model: github.com/capeprivacy/cape/primitives.Project
+    model: github.com/capeprivacy/cape/models.Project
   ProjectSpec:
-    model: github.com/capeprivacy/cape/primitives.ProjectSpec
+    model: github.com/capeprivacy/cape/models.ProjectSpec
   ProjectSpecFile:
-    model: github.com/capeprivacy/cape/primitives.ProjectSpecFile
-  Description:
-    model: github.com/capeprivacy/cape/primitives.Description
+    model: github.com/capeprivacy/cape/models.ProjectSpecFile
+  ProjectDescription:
+    model: github.com/capeprivacy/cape/models.ProjectDescription
   ProjectStatus:
-    model: github.com/capeprivacy/cape/primitives.ProjectStatus
-  DisplayName:
-    model: github.com/capeprivacy/cape/primitives.DisplayName
+    model: github.com/capeprivacy/cape/models.ProjectStatus
+  ProjectDisplayName:
+    model: github.com/capeprivacy/cape/models.ProjectDisplayName
   Recovery:
     model: github.com/capeprivacy/cape/primitives.Recovery
   Contributor:
     model: github.com/capeprivacy/cape/models.Contributor
-  ProjectRule:
-    model: github.com/capeprivacy/cape/primitives.Rule

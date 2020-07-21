@@ -1,3 +1,11 @@
+type ModelRole {
+  id: ID!
+  label: ModelLabel!
+  system: Boolean!
+  created_at: Time!
+  updated_at: Time!
+}
+
 type Role {
   id: ID!
   label: Label!

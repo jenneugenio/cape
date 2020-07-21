@@ -1,13 +1,12 @@
 scalar ProjectStatus
-scalar DisplayName
-scalar Description
-scalar ProjectRule
+scalar ProjectDisplayName
+scalar ProjectDescription
 
 type Project {
     id: ID!
-    name: DisplayName!
-    label: Label!
-    description: Description!
+    name: ProjectDisplayName!
+    label: ModelLabel!
+    description: ProjectDescription!
     status: ProjectStatus!
     current_spec: ProjectSpec
     contributors: [Contributor!]!
@@ -20,7 +19,7 @@ type ProjectSpec {
     id: ID!
     project: Project!
     parent: ProjectSpec
-    policy: [ProjectRule!]!
+    policy: [Rule!]!
 
     created_at: Time!
     updated_at: Time!
@@ -30,41 +29,41 @@ type Contributor {
     id: String!
     user: User!
     project: Project!
-    role: Role!
+    role: ModelRole!
 
     created_at: Time!
     updated_at: Time!
 }
 
 input CreateProjectRequest {
-    name: DisplayName!
-    label: Label
-    Description: Description!
+    name: ProjectDisplayName!
+    label: ModelLabel
+    Description: ProjectDescription!
 }
 
 input UpdateProjectRequest {
-    name: DisplayName
-    description: Description
+    name: ProjectDisplayName
+    description: ProjectDescription
 }
 
 input ProjectSpecFile {
-    policy: [ProjectRule!]!
+    policy: [Rule!]!
 }
 
 extend type Query {
     projects(status: [ProjectStatus!]): [Project!]!
-    project(id: ID, label: Label): Project
+    project(id: ID, label: ModelLabel): Project
 
     listContributors(project_label: ModelLabel!): [Contributor!]!
 }
 
 extend type Mutation {
     createProject(project: CreateProjectRequest!): Project!
-    updateProject(id: ID, label: Label, update: UpdateProjectRequest!): Project!
-    updateProjectSpec(project_label: Label, project_id: ID, request: ProjectSpecFile!): Project!
+    updateProject(id: ID, label: ModelLabel, update: UpdateProjectRequest!): Project!
+    updateProjectSpec(id: ID, label: ModelLabel, request: ProjectSpecFile!): Project!
 
-    archiveProject(id: ID, label: Label): Project!
-    unarchiveProject(id: ID, label: Label): Project!
+    archiveProject(id: ID, label: ModelLabel): Project!
+    unarchiveProject(id: ID, label: ModelLabel): Project!
 
     updateContributor(project_label: ModelLabel!, user_email: ModelEmail!, role_label: ModelLabel!): Contributor!
     removeContributor(project_label: ModelLabel!, user_email: ModelEmail!): Contributor!

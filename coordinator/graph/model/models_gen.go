@@ -52,9 +52,9 @@ type CreatePolicyRequest struct {
 }
 
 type CreateProjectRequest struct {
-	Name        primitives.DisplayName `json:"name"`
-	Label       *primitives.Label      `json:"label"`
-	Description primitives.Description `json:"Description"`
+	Name        models.ProjectDisplayName `json:"name"`
+	Label       *models.Label             `json:"label"`
+	Description models.ProjectDescription `json:"Description"`
 }
 
 type CreateRecoveryRequest struct {
@@ -112,6 +112,6 @@ type RuleInput struct {
 }
 
 type UpdateProjectRequest struct {
-	Name        *primitives.DisplayName `json:"name"`
-	Description *primitives.Description `json:"description"`
+	Name        *models.ProjectDisplayName `json:"name"`
+	Description *models.ProjectDescription `json:"description"`
 }
