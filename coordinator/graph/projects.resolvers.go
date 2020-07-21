@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
@@ -233,22 +232,3 @@ func (r *Resolver) ProjectSpec() generated.ProjectSpecResolver { return &project
 type contributorResolver struct{ *Resolver }
 type projectResolver struct{ *Resolver }
 type projectSpecResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *projectResolver) ID(ctx context.Context, obj *models.Project) (database.ID, error) {
-	return database.DecodeFromString(obj.ID)
-}
-func (r *projectResolver) CreatedAt(ctx context.Context, obj *models.Project) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-func (r *projectResolver) UpdatedAt(ctx context.Context, obj *models.Project) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-func (r *projectSpecResolver) ID(ctx context.Context, obj *models.ProjectSpec) (database.ID, error) {
-	panic(fmt.Errorf("not implemented"))
-}
