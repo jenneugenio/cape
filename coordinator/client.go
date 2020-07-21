@@ -698,14 +698,14 @@ func (c *Client) RemoveToken(ctx context.Context, tokenID database.ID) error {
 }
 
 type CreateProjectResponse struct {
-	Project *primitives.Project `json:"createProject"`
+	Project *models.Project `json:"createProject"`
 }
 
 func (c *Client) CreateProject(
 	ctx context.Context,
-	name primitives.DisplayName,
-	label *primitives.Label,
-	desc primitives.Description) (*primitives.Project, error) {
+	name models.ProjectDisplayName,
+	label *models.Label,
+	desc models.ProjectDescription) (*models.Project, error) {
 	createReq := &model.CreateProjectRequest{
 		Name:        name,
 		Label:       label,
@@ -737,10 +737,10 @@ func (c *Client) CreateProject(
 }
 
 type ListProjectsResponse struct {
-	Projects []*primitives.Project `json:"projects"`
+	Projects []*models.Project `json:"projects"`
 }
 
-func (c *Client) ListProjects(ctx context.Context, status []primitives.ProjectStatus) ([]*primitives.Project, error) {
+func (c *Client) ListProjects(ctx context.Context, status []models.ProjectStatus) ([]*models.Project, error) {
 	variables := make(map[string]interface{})
 	variables["status"] = status
 
@@ -764,17 +764,17 @@ func (c *Client) ListProjects(ctx context.Context, status []primitives.ProjectSt
 }
 
 type GetProjectResponse struct {
-	*primitives.Project
+	*models.Project
 	Contributors []GQLContributor `json:"contributors"`
 }
 
-func (c *Client) GetProject(ctx context.Context, id *database.ID, label *primitives.Label) (*GetProjectResponse, error) {
+func (c *Client) GetProject(ctx context.Context, id string, label *models.Label) (*GetProjectResponse, error) {
 	var resp struct {
 		Project GetProjectResponse `json:"project"`
 	}
 
 	variables := make(map[string]interface{})
-	if id != nil {
+	if id != "" {
 		variables["id"] = id
 	}
 
@@ -814,15 +814,15 @@ func (c *Client) GetProject(ctx context.Context, id *database.ID, label *primiti
 }
 
 type UpdateProjectSpecResponseBody struct {
-	*primitives.Project
-	ProjectSpec *primitives.ProjectSpec `json:"current_spec"`
+	*models.Project
+	ProjectSpec *models.ProjectSpec `json:"current_spec"`
 }
 
 type UpdateProjectSpecResponse struct {
 	UpdateProjectSpecResponseBody `json:"updateProjectSpec"`
 }
 
-func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel primitives.Label, spec *primitives.ProjectSpecFile) (*primitives.Project, *primitives.ProjectSpec, error) {
+func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel models.Label, spec *models.ProjectSpecFile) (*models.Project, *models.ProjectSpec, error) {
 	variables := make(map[string]interface{})
 	variables["project"] = &projectLabel
 	variables["projectSpecFile"] = spec
@@ -849,20 +849,20 @@ func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel primitives.
 	p := resp.UpdateProjectSpecResponseBody.Project
 	s := resp.UpdateProjectSpecResponseBody.ProjectSpec
 
-	p.CurrentSpecID = &s.ID
+	p.CurrentSpecID = s.ID
 	return p, s, nil
 }
 
 type UpdateProjectResponse struct {
-	Project *primitives.Project `json:"updateProject"`
+	Project *models.Project `json:"updateProject"`
 }
 
 func (c *Client) UpdateProject(
 	ctx context.Context,
 	id *database.ID,
-	label *primitives.Label,
-	name *primitives.DisplayName,
-	desc *primitives.Description) (*primitives.Project, error) {
+	label *models.Label,
+	name *models.ProjectDisplayName,
+	desc *models.ProjectDescription) (*models.Project, error) {
 	updateReq := &model.UpdateProjectRequest{
 		Name:        name,
 		Description: desc,

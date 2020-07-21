@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/models"
-	modelmigration "github.com/capeprivacy/cape/models/migration"
 	gm "github.com/onsi/gomega"
 	"testing"
 )
@@ -28,16 +27,15 @@ func TestContributors(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	primProject, err := client.CreateProject(ctx, "My Project", nil, "This project does great things")
+	project, err := client.CreateProject(ctx, "My Project", nil, "This project does great things")
 	gm.Expect(err).To(gm.BeNil())
-	project := modelmigration.ProjectFromPrimitive(primProject)
 
 	t.Run("Add a contributor", func(t *testing.T) {
 		// Our admin is already the project owner, so we make a new user to test adding contributors
 		user, _, err := client.CreateUser(ctx, "Noname Mcgee", "dont@me.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		contributor, err := client.AddContributor(ctx, project, *user, models.ProjectContributorRole)
+		contributor, err := client.AddContributor(ctx, *project, *user, models.ProjectContributorRole)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(contributor).ToNot(gm.BeNil())
 	})
@@ -46,16 +44,16 @@ func TestContributors(t *testing.T) {
 		user, _, err := client.CreateUser(ctx, "Double Derry", "dd@cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.AddContributor(ctx, project, *user, models.ProjectContributorRole)
+		_, err = client.AddContributor(ctx, *project, *user, models.ProjectContributorRole)
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.AddContributor(ctx, project, *user, models.ProjectContributorRole)
+		_, err = client.AddContributor(ctx, *project, *user, models.ProjectContributorRole)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: duplicate key"))
 	})
 
 	t.Run("Can list contributors", func(t *testing.T) {
-		contributors, err := client.ListContributors(ctx, project)
+		contributors, err := client.ListContributors(ctx, *project)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(contributors).ToNot(gm.BeNil())
 	})
@@ -64,7 +62,7 @@ func TestContributors(t *testing.T) {
 		project, err := client.CreateProject(ctx, "New Project", nil, "This project does good things")
 		gm.Expect(err).To(gm.BeNil())
 
-		p, err := client.GetProject(ctx, &project.ID, nil)
+		p, err := client.GetProject(ctx, project.ID, nil)
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(p.Contributors).ToNot(gm.BeNil())
@@ -72,26 +70,25 @@ func TestContributors(t *testing.T) {
 	})
 
 	t.Run("Can remove a contributor", func(t *testing.T) {
-		primProject, err := client.CreateProject(ctx, "Unique Project", nil, "This project does great things")
+		project, err := client.CreateProject(ctx, "Unique Project", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
-		project = modelmigration.ProjectFromPrimitive(primProject)
 
 		user, _, err := client.CreateUser(ctx, "Remove McMee", "rm@cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.AddContributor(ctx, project, *user, models.ProjectContributorRole)
+		_, err = client.AddContributor(ctx, *project, *user, models.ProjectContributorRole)
 		gm.Expect(err).To(gm.BeNil())
 
-		contributors, err := client.ListContributors(ctx, project)
+		contributors, err := client.ListContributors(ctx, *project)
 		gm.Expect(err).To(gm.BeNil())
 
 		// Admin and Remove McMee are the contributors
 		gm.Expect(len(contributors)).To(gm.Equal(2))
 
-		_, err = client.RemoveContributor(ctx, *user, project)
+		_, err = client.RemoveContributor(ctx, *user, *project)
 		gm.Expect(err).To(gm.BeNil())
 
-		contributors, err = client.ListContributors(ctx, project)
+		contributors, err = client.ListContributors(ctx, *project)
 		gm.Expect(err).To(gm.BeNil())
 
 		// Admin and Remove McMee are the contributors

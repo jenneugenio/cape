@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/capeprivacy/cape/models"
 
 	"github.com/capeprivacy/cape/cmd/ui"
-	"github.com/capeprivacy/cape/primitives"
 	"github.com/urfave/cli/v2"
 	"io/ioutil"
 )
@@ -93,8 +93,8 @@ func projectsCreate(c *cli.Context) error {
 		return err
 	}
 
-	name := Arguments(c.Context, ProjectNameArg).(primitives.DisplayName)
-	desc, _ := Arguments(c.Context, ProjectDescriptionArg).(primitives.Description)
+	name := Arguments(c.Context, ProjectNameArg).(models.ProjectDisplayName)
+	desc, _ := Arguments(c.Context, ProjectDescriptionArg).(models.ProjectDescription)
 
 	project, err := client.CreateProject(c.Context, name, nil, desc)
 	if err != nil {
@@ -155,14 +155,14 @@ func projectsList(c *cli.Context) error {
 }
 
 func updateProjectSpec(c *cli.Context, specFile string) error {
-	projectLabel := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
+	projectLabel := Arguments(c.Context, ProjectLabelArg).(models.Label)
 
 	bytes, err := ioutil.ReadFile(specFile)
 	if err != nil {
 		return err
 	}
 
-	spec, err := primitives.ParseProjectSpecFile(bytes)
+	spec, err := models.ParseProjectSpecFile(bytes)
 	if err != nil {
 		return err
 	}
@@ -202,22 +202,16 @@ func projectsUpdate(c *cli.Context) error {
 		return err
 	}
 
-	label := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
+	label := Arguments(c.Context, ProjectLabelArg).(models.Label)
 
-	var name *primitives.DisplayName
-	var desc *primitives.Description
+	var name *models.ProjectDisplayName
+	var desc *models.ProjectDescription
 
-	nameFlag, err := primitives.NewDisplayName(c.String("name"))
-	if err != nil {
-		return err
-	}
+	nameFlag := models.ProjectDisplayName(c.String("name"))
 	if nameFlag != "" {
 		name = &nameFlag
 	}
-	descFlag, err := primitives.NewDescription(c.String("description"))
-	if err != nil {
-		return err
-	}
+	descFlag := models.ProjectDescription(c.String("description"))
 	if descFlag != "" {
 		desc = &descFlag
 	}

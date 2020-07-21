@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/capeprivacy/cape/models"
 
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
@@ -56,7 +57,7 @@ var (
 		Description: "The name of your project",
 		Required:    true,
 		Processor: func(in string) (interface{}, error) {
-			return primitives.NewDisplayName(in)
+			return models.ProjectDisplayName(in), nil
 		},
 	}
 
@@ -65,7 +66,7 @@ var (
 		Description: "Describe what your project is for",
 		Required:    false,
 		Processor: func(in string) (interface{}, error) {
-			return primitives.NewDescription(in)
+			return models.ProjectDescription(in), nil
 		},
 	}
 )
