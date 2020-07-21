@@ -52,7 +52,7 @@ type Project struct {
 
 func NewProject(name ProjectDisplayName, label Label, description ProjectDescription) Project {
 	return Project{
-		ID: NewID(),
+		ID:          NewID(),
 		Name:        name,
 		Label:       label,
 		Description: description,

@@ -16,7 +16,6 @@ type pgProject struct {
 
 var _ db.ProjectsDB = &pgProject{}
 
-
 func (p *pgProject) GetByID(ctx context.Context, ID string) (*models.Project, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
@@ -109,4 +108,3 @@ func (p *pgProject) GetProjectSpec(ctx context.Context, id string) (*models.Proj
 
 	return &spec, err
 }
-

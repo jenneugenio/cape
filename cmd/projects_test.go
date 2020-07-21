@@ -1,23 +1,21 @@
 package main
 
 import (
-	"github.com/capeprivacy/cape/coordinator/database"
+	"github.com/capeprivacy/cape/models"
 	"testing"
 
 	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/capeprivacy/cape/coordinator"
-	"github.com/capeprivacy/cape/primitives"
 	gm "github.com/onsi/gomega"
 )
 
 func TestProjectsCreate(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	p, err := primitives.NewProject("My Project", "my-project", "What is this project even about")
-	gm.Expect(err).To(gm.BeNil())
+	p := models.NewProject("My Project", "my-project", "What is this project even about")
 
 	resp := coordinator.CreateProjectResponse{
-		Project: p,
+		Project: &p,
 	}
 
 	t.Run("Can create a project", func(t *testing.T) {
@@ -26,7 +24,7 @@ func TestProjectsCreate(t *testing.T) {
 				Value: resp,
 			},
 		})
-		err = app.Run([]string{"cape", "projects", "create", p.Name.String(), p.Description.String()})
+		err := app.Run([]string{"cape", "projects", "create", p.Name.String(), p.Description.String()})
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(len(u.Calls)).To(gm.Equal(2))
@@ -40,7 +38,7 @@ func TestProjectsCreate(t *testing.T) {
 				Value: resp,
 			},
 		})
-		err = app.Run([]string{"cape", "projects", "create", p.Name.String()})
+		err := app.Run([]string{"cape", "projects", "create", p.Name.String()})
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(len(u.Calls)).To(gm.Equal(2))
@@ -54,17 +52,15 @@ func TestProjectsCreate(t *testing.T) {
 				Value: resp,
 			},
 		})
-		err = app.Run([]string{"cape", "projects", "create"})
+		err := app.Run([]string{"cape", "projects", "create"})
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(err.Error()).To(gm.Equal("missing_argument: The argument name is required, but was not provided"))
 	})
 
 	t.Run("Can update a project", func(t *testing.T) {
-		updatedP, err := primitives.NewProject("Updated Project", "my-project", "Update ME")
-		gm.Expect(err).To(gm.BeNil())
-
+		updatedP := models.NewProject("Updated Project", "my-project", "Update ME")
 		updateResp := coordinator.UpdateProjectResponse{
-			Project: updatedP,
+			Project: &updatedP,
 		}
 
 		app, u := NewHarness([]*coordinator.MockResponse{
@@ -72,7 +68,7 @@ func TestProjectsCreate(t *testing.T) {
 				Value: updateResp,
 			},
 		})
-		err = app.Run([]string{
+		err := app.Run([]string{
 			"cape", "projects", "update",
 			"--name", updatedP.Name.String(), "--description", updatedP.Description.String(),
 			p.Label.String(),
@@ -86,11 +82,9 @@ func TestProjectsCreate(t *testing.T) {
 	})
 
 	t.Run("Can update a project without a description", func(t *testing.T) {
-		updatedP, err := primitives.NewProject("Updated Project", "my-project", "What is this project even about")
-		gm.Expect(err).To(gm.BeNil())
-
+		updatedP := models.NewProject("Updated Project", "my-project", "What is this project even about")
 		updateResp := coordinator.UpdateProjectResponse{
-			Project: updatedP,
+			Project: &updatedP,
 		}
 
 		app, u := NewHarness([]*coordinator.MockResponse{
@@ -98,7 +92,7 @@ func TestProjectsCreate(t *testing.T) {
 				Value: updateResp,
 			},
 		})
-		err = app.Run([]string{
+		err := app.Run([]string{
 			"cape", "projects", "update",
 			"--name", updatedP.Name.String(),
 			p.Label.String(),
@@ -112,20 +106,12 @@ func TestProjectsCreate(t *testing.T) {
 	})
 
 	t.Run("Can update a project spec", func(t *testing.T) {
-		project, err := primitives.NewProject("Project", "my-project", "What is this project even about")
-		gm.Expect(err).To(gm.BeNil())
-
-		prim, err := database.NewPrimitive(primitives.ProjectSpecType)
-		gm.Expect(err).To(gm.BeNil())
-		spec := &primitives.ProjectSpec{
-			Primitive: prim,
-		}
-		id, err := database.GenerateID(primitives.ProjectSpecType)
-		gm.Expect(err).To(gm.BeNil())
-		spec.ID = id
+		project := models.NewProject("Project", "my-project", "What is this project even about")
+		spec := &models.ProjectSpec{}
+		spec.ID = "my-spec"
 
 		respBody := coordinator.UpdateProjectSpecResponseBody{
-			Project:     project,
+			Project:     &project,
 			ProjectSpec: spec,
 		}
 
@@ -136,7 +122,7 @@ func TestProjectsCreate(t *testing.T) {
 				Value: resp,
 			},
 		})
-		err = app.Run([]string{
+		err := app.Run([]string{
 			"cape", "projects", "update",
 			"--from-spec", "./testdata/project_spec.yaml",
 			p.Label.String(),
@@ -152,14 +138,11 @@ func TestProjectsList(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	t.Run("Can list some projects", func(t *testing.T) {
-		p1, err := primitives.NewProject("My Project One", "my-project-one", "What is this project even about")
-		gm.Expect(err).To(gm.BeNil())
-
-		p2, err := primitives.NewProject("My Project Two", "my-project-two", "What is this project even about")
-		gm.Expect(err).To(gm.BeNil())
+		p1 := models.NewProject("My Project One", "my-project-one", "What is this project even about")
+		p2 := models.NewProject("My Project Two", "my-project-two", "What is this project even about")
 
 		resp := coordinator.ListProjectsResponse{
-			Projects: []*primitives.Project{p1, p2},
+			Projects: []*models.Project{&p1, &p2},
 		}
 
 		app, u := NewHarness([]*coordinator.MockResponse{
@@ -167,7 +150,7 @@ func TestProjectsList(t *testing.T) {
 				Value: resp,
 			},
 		})
-		err = app.Run([]string{"cape", "projects", "list"})
+		err := app.Run([]string{"cape", "projects", "list"})
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(len(u.Calls)).To(gm.Equal(2))
 		gm.Expect(u.Calls[0].Name).To(gm.Equal("table"))
@@ -176,7 +159,7 @@ func TestProjectsList(t *testing.T) {
 
 	t.Run("Works when there are no projects", func(t *testing.T) {
 		resp := coordinator.ListProjectsResponse{
-			Projects: []*primitives.Project{},
+			Projects: []*models.Project{},
 		}
 
 		app, u := NewHarness([]*coordinator.MockResponse{

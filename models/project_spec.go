@@ -32,7 +32,7 @@ func NewProjectSpec(
 	policy []*Rule,
 ) ProjectSpec {
 	return ProjectSpec{
-		ID: NewID(),
+		ID:        NewID(),
 		ProjectID: projectID,
 		ParentID:  parent,
 		Policy:    policy,
