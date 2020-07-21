@@ -3,7 +3,7 @@ scalar ProjectDisplayName
 scalar ProjectDescription
 
 type Project {
-    id: ID!
+    id: String!
     name: ProjectDisplayName!
     label: ModelLabel!
     description: ProjectDescription!
@@ -16,7 +16,7 @@ type Project {
 }
 
 type ProjectSpec {
-    id: ID!
+    id: String!
     project: Project!
     parent: ProjectSpec
     policy: [Rule!]!
@@ -51,19 +51,19 @@ input ProjectSpecFile {
 }
 
 extend type Query {
-    projects(status: [ProjectStatus!]): [Project!]!
-    project(id: ID, label: ModelLabel): Project
+    projects(status: ProjectStatus!): [Project!]!
+    project(id: String, label: ModelLabel): Project
 
     listContributors(project_label: ModelLabel!): [Contributor!]!
 }
 
 extend type Mutation {
     createProject(project: CreateProjectRequest!): Project!
-    updateProject(id: ID, label: ModelLabel, update: UpdateProjectRequest!): Project!
-    updateProjectSpec(id: ID, label: ModelLabel, request: ProjectSpecFile!): Project!
+    updateProject(id: String, label: ModelLabel, update: UpdateProjectRequest!): Project!
+    updateProjectSpec(id: String label: ModelLabel, request: ProjectSpecFile!): Project!
 
-    archiveProject(id: ID, label: ModelLabel): Project!
-    unarchiveProject(id: ID, label: ModelLabel): Project!
+    archiveProject(id: String, label: ModelLabel): Project!
+    unarchiveProject(id: String, label: ModelLabel): Project!
 
     updateContributor(project_label: ModelLabel!, user_email: ModelEmail!, role_label: ModelLabel!): Contributor!
     removeContributor(project_label: ModelLabel!, user_email: ModelEmail!): Contributor!

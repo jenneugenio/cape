@@ -104,7 +104,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		ArchiveProject    func(childComplexity int, id *database.ID, label *models.Label) int
+		ArchiveProject    func(childComplexity int, id *string, label *models.Label) int
 		AssignRole        func(childComplexity int, input model.AssignRoleRequest) int
 		AttachPolicy      func(childComplexity int, input model.AttachPolicyRequest) int
 		AttemptRecovery   func(childComplexity int, input model.AttemptRecoveryRequest) int
@@ -119,11 +119,11 @@ type ComplexityRoot struct {
 		DetachPolicy      func(childComplexity int, input model.DetachPolicyRequest) int
 		RemoveContributor func(childComplexity int, projectLabel models.Label, userEmail models.Email) int
 		RemoveToken       func(childComplexity int, id database.ID) int
-		UnarchiveProject  func(childComplexity int, id *database.ID, label *models.Label) int
+		UnarchiveProject  func(childComplexity int, id *string, label *models.Label) int
 		UnassignRole      func(childComplexity int, input model.AssignRoleRequest) int
 		UpdateContributor func(childComplexity int, projectLabel models.Label, userEmail models.Email, roleLabel models.Label) int
-		UpdateProject     func(childComplexity int, id *database.ID, label *models.Label, update model.UpdateProjectRequest) int
-		UpdateProjectSpec func(childComplexity int, id *database.ID, label *models.Label, request models.ProjectSpecFile) int
+		UpdateProject     func(childComplexity int, id *string, label *models.Label, update model.UpdateProjectRequest) int
+		UpdateProjectSpec func(childComplexity int, id *string, label *models.Label, request models.ProjectSpecFile) int
 	}
 
 	Policy struct {
@@ -162,8 +162,8 @@ type ComplexityRoot struct {
 		Policies         func(childComplexity int) int
 		Policy           func(childComplexity int, id string) int
 		PolicyByLabel    func(childComplexity int, label string) int
-		Project          func(childComplexity int, id *database.ID, label *models.Label) int
-		Projects         func(childComplexity int, status []models.ProjectStatus) int
+		Project          func(childComplexity int, id *string, label *models.Label) int
+		Projects         func(childComplexity int, status models.ProjectStatus) int
 		Role             func(childComplexity int, id database.ID) int
 		RoleByLabel      func(childComplexity int, label primitives.Label) int
 		RoleMembers      func(childComplexity int, roleID database.ID) int
@@ -218,10 +218,10 @@ type MutationResolver interface {
 	AttachPolicy(ctx context.Context, input model.AttachPolicyRequest) (*model.Attachment, error)
 	DetachPolicy(ctx context.Context, input model.DetachPolicyRequest) (*string, error)
 	CreateProject(ctx context.Context, project model.CreateProjectRequest) (*models.Project, error)
-	UpdateProject(ctx context.Context, id *database.ID, label *models.Label, update model.UpdateProjectRequest) (*models.Project, error)
-	UpdateProjectSpec(ctx context.Context, id *database.ID, label *models.Label, request models.ProjectSpecFile) (*models.Project, error)
-	ArchiveProject(ctx context.Context, id *database.ID, label *models.Label) (*models.Project, error)
-	UnarchiveProject(ctx context.Context, id *database.ID, label *models.Label) (*models.Project, error)
+	UpdateProject(ctx context.Context, id *string, label *models.Label, update model.UpdateProjectRequest) (*models.Project, error)
+	UpdateProjectSpec(ctx context.Context, id *string, label *models.Label, request models.ProjectSpecFile) (*models.Project, error)
+	ArchiveProject(ctx context.Context, id *string, label *models.Label) (*models.Project, error)
+	UnarchiveProject(ctx context.Context, id *string, label *models.Label) (*models.Project, error)
 	UpdateContributor(ctx context.Context, projectLabel models.Label, userEmail models.Email, roleLabel models.Label) (*models.Contributor, error)
 	RemoveContributor(ctx context.Context, projectLabel models.Label, userEmail models.Email) (*models.Contributor, error)
 	CreateRecovery(ctx context.Context, input model.CreateRecoveryRequest) (*string, error)
@@ -235,15 +235,10 @@ type MutationResolver interface {
 	CreateUser(ctx context.Context, input model.CreateUserRequest) (*model.CreateUserResponse, error)
 }
 type ProjectResolver interface {
-	ID(ctx context.Context, obj *models.Project) (database.ID, error)
-
 	CurrentSpec(ctx context.Context, obj *models.Project) (*models.ProjectSpec, error)
 	Contributors(ctx context.Context, obj *models.Project) ([]*models.Contributor, error)
-	CreatedAt(ctx context.Context, obj *models.Project) (*time.Time, error)
-	UpdatedAt(ctx context.Context, obj *models.Project) (*time.Time, error)
 }
 type ProjectSpecResolver interface {
-	ID(ctx context.Context, obj *models.ProjectSpec) (database.ID, error)
 	Project(ctx context.Context, obj *models.ProjectSpec) (*models.Project, error)
 	Parent(ctx context.Context, obj *models.ProjectSpec) (*models.ProjectSpec, error)
 
@@ -258,8 +253,8 @@ type QueryResolver interface {
 	RolePolicies(ctx context.Context, roleID database.ID) ([]*models.Policy, error)
 	UserPolicies(ctx context.Context, userID string) ([]*models.Policy, error)
 	Attachment(ctx context.Context, roleID database.ID, policyID string) (*model.Attachment, error)
-	Projects(ctx context.Context, status []models.ProjectStatus) ([]*models.Project, error)
-	Project(ctx context.Context, id *database.ID, label *models.Label) (*models.Project, error)
+	Projects(ctx context.Context, status models.ProjectStatus) ([]*models.Project, error)
+	Project(ctx context.Context, id *string, label *models.Label) (*models.Project, error)
 	ListContributors(ctx context.Context, projectLabel models.Label) ([]*models.Contributor, error)
 	Role(ctx context.Context, id database.ID) (*primitives.Role, error)
 	RoleByLabel(ctx context.Context, label primitives.Label) (*primitives.Role, error)
@@ -487,7 +482,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ArchiveProject(childComplexity, args["id"].(*database.ID), args["label"].(*models.Label)), true
+		return e.complexity.Mutation.ArchiveProject(childComplexity, args["id"].(*string), args["label"].(*models.Label)), true
 
 	case "Mutation.assignRole":
 		if e.complexity.Mutation.AssignRole == nil {
@@ -667,7 +662,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UnarchiveProject(childComplexity, args["id"].(*database.ID), args["label"].(*models.Label)), true
+		return e.complexity.Mutation.UnarchiveProject(childComplexity, args["id"].(*string), args["label"].(*models.Label)), true
 
 	case "Mutation.unassignRole":
 		if e.complexity.Mutation.UnassignRole == nil {
@@ -703,7 +698,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateProject(childComplexity, args["id"].(*database.ID), args["label"].(*models.Label), args["update"].(model.UpdateProjectRequest)), true
+		return e.complexity.Mutation.UpdateProject(childComplexity, args["id"].(*string), args["label"].(*models.Label), args["update"].(model.UpdateProjectRequest)), true
 
 	case "Mutation.updateProjectSpec":
 		if e.complexity.Mutation.UpdateProjectSpec == nil {
@@ -715,7 +710,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateProjectSpec(childComplexity, args["id"].(*database.ID), args["label"].(*models.Label), args["request"].(models.ProjectSpecFile)), true
+		return e.complexity.Mutation.UpdateProjectSpec(childComplexity, args["id"].(*string), args["label"].(*models.Label), args["request"].(models.ProjectSpecFile)), true
 
 	case "Policy.created_at":
 		if e.complexity.Policy.CreatedAt == nil {
@@ -929,7 +924,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Project(childComplexity, args["id"].(*database.ID), args["label"].(*models.Label)), true
+		return e.complexity.Query.Project(childComplexity, args["id"].(*string), args["label"].(*models.Label)), true
 
 	case "Query.projects":
 		if e.complexity.Query.Projects == nil {
@@ -941,7 +936,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Projects(childComplexity, args["status"].([]models.ProjectStatus)), true
+		return e.complexity.Query.Projects(childComplexity, args["status"].(models.ProjectStatus)), true
 
 	case "Query.role":
 		if e.complexity.Query.Role == nil {
@@ -1302,7 +1297,7 @@ scalar ProjectDisplayName
 scalar ProjectDescription
 
 type Project {
-    id: ID!
+    id: String!
     name: ProjectDisplayName!
     label: ModelLabel!
     description: ProjectDescription!
@@ -1315,7 +1310,7 @@ type Project {
 }
 
 type ProjectSpec {
-    id: ID!
+    id: String!
     project: Project!
     parent: ProjectSpec
     policy: [Rule!]!
@@ -1350,19 +1345,19 @@ input ProjectSpecFile {
 }
 
 extend type Query {
-    projects(status: [ProjectStatus!]): [Project!]!
-    project(id: ID, label: ModelLabel): Project
+    projects(status: ProjectStatus!): [Project!]!
+    project(id: String, label: ModelLabel): Project
 
     listContributors(project_label: ModelLabel!): [Contributor!]!
 }
 
 extend type Mutation {
     createProject(project: CreateProjectRequest!): Project!
-    updateProject(id: ID, label: ModelLabel, update: UpdateProjectRequest!): Project!
-    updateProjectSpec(id: ID, label: ModelLabel, request: ProjectSpecFile!): Project!
+    updateProject(id: String, label: ModelLabel, update: UpdateProjectRequest!): Project!
+    updateProjectSpec(id: String label: ModelLabel, request: ProjectSpecFile!): Project!
 
-    archiveProject(id: ID, label: ModelLabel): Project!
-    unarchiveProject(id: ID, label: ModelLabel): Project!
+    archiveProject(id: String, label: ModelLabel): Project!
+    unarchiveProject(id: String, label: ModelLabel): Project!
 
     updateContributor(project_label: ModelLabel!, user_email: ModelEmail!, role_label: ModelLabel!): Contributor!
     removeContributor(project_label: ModelLabel!, user_email: ModelEmail!): Contributor!
@@ -1531,9 +1526,9 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_archiveProject_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *database.ID
+	var arg0 *string
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1757,9 +1752,9 @@ func (ec *executionContext) field_Mutation_removeToken_args(ctx context.Context,
 func (ec *executionContext) field_Mutation_unarchiveProject_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *database.ID
+	var arg0 *string
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1823,9 +1818,9 @@ func (ec *executionContext) field_Mutation_updateContributor_args(ctx context.Co
 func (ec *executionContext) field_Mutation_updateProjectSpec_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *database.ID
+	var arg0 *string
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1853,9 +1848,9 @@ func (ec *executionContext) field_Mutation_updateProjectSpec_args(ctx context.Co
 func (ec *executionContext) field_Mutation_updateProject_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *database.ID
+	var arg0 *string
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1961,9 +1956,9 @@ func (ec *executionContext) field_Query_policy_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_project_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *database.ID
+	var arg0 *string
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1983,9 +1978,9 @@ func (ec *executionContext) field_Query_project_args(ctx context.Context, rawArg
 func (ec *executionContext) field_Query_projects_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []models.ProjectStatus
+	var arg0 models.ProjectStatus
 	if tmp, ok := rawArgs["status"]; ok {
-		arg0, err = ec.unmarshalOProjectStatus2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐProjectStatusᚄ(ctx, tmp)
+		arg0, err = ec.unmarshalNProjectStatus2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐProjectStatus(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3266,7 +3261,7 @@ func (ec *executionContext) _Mutation_updateProject(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateProject(rctx, args["id"].(*database.ID), args["label"].(*models.Label), args["update"].(model.UpdateProjectRequest))
+		return ec.resolvers.Mutation().UpdateProject(rctx, args["id"].(*string), args["label"].(*models.Label), args["update"].(model.UpdateProjectRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3307,7 +3302,7 @@ func (ec *executionContext) _Mutation_updateProjectSpec(ctx context.Context, fie
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateProjectSpec(rctx, args["id"].(*database.ID), args["label"].(*models.Label), args["request"].(models.ProjectSpecFile))
+		return ec.resolvers.Mutation().UpdateProjectSpec(rctx, args["id"].(*string), args["label"].(*models.Label), args["request"].(models.ProjectSpecFile))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3348,7 +3343,7 @@ func (ec *executionContext) _Mutation_archiveProject(ctx context.Context, field 
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ArchiveProject(rctx, args["id"].(*database.ID), args["label"].(*models.Label))
+		return ec.resolvers.Mutation().ArchiveProject(rctx, args["id"].(*string), args["label"].(*models.Label))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3389,7 +3384,7 @@ func (ec *executionContext) _Mutation_unarchiveProject(ctx context.Context, fiel
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UnarchiveProject(rctx, args["id"].(*database.ID), args["label"].(*models.Label))
+		return ec.resolvers.Mutation().UnarchiveProject(rctx, args["id"].(*string), args["label"].(*models.Label))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4023,13 +4018,13 @@ func (ec *executionContext) _Project_id(ctx context.Context, field graphql.Colle
 		Object:   "Project",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Project().ID(rctx, obj)
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4041,9 +4036,9 @@ func (ec *executionContext) _Project_id(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(database.ID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Project_name(ctx context.Context, field graphql.CollectedField, obj *models.Project) (ret graphql.Marshaler) {
@@ -4258,13 +4253,13 @@ func (ec *executionContext) _Project_created_at(ctx context.Context, field graph
 		Object:   "Project",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Project().CreatedAt(rctx, obj)
+		return obj.CreatedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4276,9 +4271,9 @@ func (ec *executionContext) _Project_created_at(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*time.Time)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Project_updated_at(ctx context.Context, field graphql.CollectedField, obj *models.Project) (ret graphql.Marshaler) {
@@ -4292,13 +4287,13 @@ func (ec *executionContext) _Project_updated_at(ctx context.Context, field graph
 		Object:   "Project",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Project().UpdatedAt(rctx, obj)
+		return obj.UpdatedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4310,9 +4305,9 @@ func (ec *executionContext) _Project_updated_at(ctx context.Context, field graph
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*time.Time)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ProjectSpec_id(ctx context.Context, field graphql.CollectedField, obj *models.ProjectSpec) (ret graphql.Marshaler) {
@@ -4326,13 +4321,13 @@ func (ec *executionContext) _ProjectSpec_id(ctx context.Context, field graphql.C
 		Object:   "ProjectSpec",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ProjectSpec().ID(rctx, obj)
+		return obj.ID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4344,9 +4339,9 @@ func (ec *executionContext) _ProjectSpec_id(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(database.ID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ProjectSpec_project(ctx context.Context, field graphql.CollectedField, obj *models.ProjectSpec) (ret graphql.Marshaler) {
@@ -4804,7 +4799,7 @@ func (ec *executionContext) _Query_projects(ctx context.Context, field graphql.C
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Projects(rctx, args["status"].([]models.ProjectStatus))
+		return ec.resolvers.Query().Projects(rctx, args["status"].(models.ProjectStatus))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4845,7 +4840,7 @@ func (ec *executionContext) _Query_project(ctx context.Context, field graphql.Co
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Project(rctx, args["id"].(*database.ID), args["label"].(*models.Label))
+		return ec.resolvers.Query().Project(rctx, args["id"].(*string), args["label"].(*models.Label))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7741,19 +7736,10 @@ func (ec *executionContext) _Project(ctx context.Context, sel ast.SelectionSet, 
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Project")
 		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Project_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Project_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 			out.Values[i] = ec._Project_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7800,33 +7786,15 @@ func (ec *executionContext) _Project(ctx context.Context, sel ast.SelectionSet, 
 				return res
 			})
 		case "created_at":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Project_created_at(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Project_created_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "updated_at":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Project_updated_at(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._Project_updated_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7850,19 +7818,10 @@ func (ec *executionContext) _ProjectSpec(ctx context.Context, sel ast.SelectionS
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ProjectSpec")
 		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._ProjectSpec_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._ProjectSpec_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "project":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -9455,30 +9414,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
-func (ec *executionContext) unmarshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx context.Context, v interface{}) (database.ID, error) {
-	var res database.ID
-	return res, res.UnmarshalGQL(v)
-}
-
-func (ec *executionContext) marshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v database.ID) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) unmarshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx context.Context, v interface{}) (*database.ID, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalOID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) marshalOID2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx context.Context, sel ast.SelectionSet, v *database.ID) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
-}
-
 func (ec *executionContext) unmarshalOModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx context.Context, v interface{}) (models.Label, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return models.Label(tmp), err
@@ -9611,38 +9546,6 @@ func (ec *executionContext) marshalOProjectSpec2ᚖgithubᚗcomᚋcapeprivacyᚋ
 		return graphql.Null
 	}
 	return ec._ProjectSpec(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOProjectStatus2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐProjectStatusᚄ(ctx context.Context, v interface{}) ([]models.ProjectStatus, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]models.ProjectStatus, len(vSlice))
-	for i := range vSlice {
-		res[i], err = ec.unmarshalNProjectStatus2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐProjectStatus(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOProjectStatus2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐProjectStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []models.ProjectStatus) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNProjectStatus2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐProjectStatus(ctx, sel, v[i])
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Role) graphql.Marshaler {
