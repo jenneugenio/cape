@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"time"
 )
 
 type ProjectStatus string
@@ -10,6 +11,8 @@ const (
 	ProjectPending  ProjectStatus = "Pending"
 	ProjectActive   ProjectStatus = "Active"
 	ProjectArchived ProjectStatus = "Archived"
+
+	Any ProjectStatus = "any"
 )
 
 func (p ProjectStatus) String() string {
@@ -23,6 +26,8 @@ func (p ProjectStatus) Validate() error {
 	case ProjectActive:
 		return nil
 	case ProjectArchived:
+		return nil
+	case Any:
 		return nil
 	}
 
@@ -48,6 +53,8 @@ type Project struct {
 	Description   ProjectDescription `json:"description"`
 	Status        ProjectStatus      `json:"status"`
 	CurrentSpecID string
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 func NewProject(name ProjectDisplayName, label Label, description ProjectDescription) Project {
@@ -57,5 +64,7 @@ func NewProject(name ProjectDisplayName, label Label, description ProjectDescrip
 		Label:       label,
 		Description: description,
 		Status:      ProjectPending,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 }

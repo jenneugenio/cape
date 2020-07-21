@@ -4,12 +4,12 @@ package integration
 
 import (
 	"context"
+	"github.com/capeprivacy/cape/models"
 	"io/ioutil"
 	"testing"
 	"time"
 
 	"github.com/capeprivacy/cape/coordinator/harness"
-	"github.com/capeprivacy/cape/primitives"
 	gm "github.com/onsi/gomega"
 )
 
@@ -35,9 +35,9 @@ func TestProjects(t *testing.T) {
 	t.Run("Can create a project", func(t *testing.T) {
 		p, err := client.CreateProject(ctx, "My Project", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(p.Name).To(gm.Equal(primitives.DisplayName("My Project")))
-		gm.Expect(p.Label).To(gm.Equal(primitives.Label("my-project")))
-		gm.Expect(p.Description).To(gm.Equal(primitives.Description("This project does great things")))
+		gm.Expect(p.Name).To(gm.Equal(models.ProjectDisplayName("My Project")))
+		gm.Expect(p.Label).To(gm.Equal(models.Label("my-project")))
+		gm.Expect(p.Description).To(gm.Equal(models.ProjectDescription("This project does great things")))
 	})
 
 	t.Run("Can get a project by id", func(t *testing.T) {
@@ -47,7 +47,7 @@ func TestProjects(t *testing.T) {
 		p1, err := client.CreateProject(ctx, "Make Me", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
-		p2, err := client.GetProject(ctx, &p1.ID, nil)
+		p2, err := client.GetProject(ctx, p1.ID, nil)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(p2.Name).To(gm.Equal(p1.Name))
 		gm.Expect(p2.Description).To(gm.Equal(p1.Description))
@@ -62,7 +62,7 @@ func TestProjects(t *testing.T) {
 		p1, err := client.CreateProject(ctx, "Make Me Please", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
-		p2, err := client.GetProject(ctx, nil, &p1.Label)
+		p2, err := client.GetProject(ctx, "", &p1.Label)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(p2.Name).To(gm.Equal(p1.Name))
 		gm.Expect(p2.Description).To(gm.Equal(p1.Description))
@@ -83,10 +83,10 @@ func TestProjects(t *testing.T) {
 		p, err := client.CreateProject(ctx, "Updatable Project", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
-		name := primitives.DisplayName("New Name")
-		desc := primitives.Description("This project is now updated")
+		name := models.ProjectDisplayName("New Name")
+		desc := models.ProjectDescription("This project is now updated")
 
-		updatedP, err := client.UpdateProject(ctx, nil, &p.Label, &name, &desc)
+		updatedP, err := client.UpdateProject(ctx, "", &p.Label, &name, &desc)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(updatedP.Name).To(gm.Equal(name))
 		gm.Expect(updatedP.Label).To(gm.Equal(p.Label))
@@ -100,10 +100,10 @@ func TestProjects(t *testing.T) {
 		p, err := client.CreateProject(ctx, "Not Same Project", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
-		name := primitives.DisplayName("Same Project")
-		desc := primitives.Description("This project is now updated")
+		name := models.ProjectDisplayName("Same Project")
+		desc := models.ProjectDescription("This project is now updated")
 
-		_, err = client.UpdateProject(ctx, nil, &p.Label, &name, &desc)
+		_, err = client.UpdateProject(ctx, "", &p.Label, &name, &desc)
 		gm.Expect(err).NotTo(gm.BeNil())
 	})
 
@@ -111,10 +111,10 @@ func TestProjects(t *testing.T) {
 		p, err := client.CreateProject(ctx, "Another Updatable Project", nil, "This project does great things")
 		gm.Expect(err).To(gm.BeNil())
 
-		name := primitives.DisplayName("New New Name")
-		desc := primitives.Description("This project is now updated")
+		name := models.ProjectDisplayName("New New Name")
+		desc := models.ProjectDescription("This project is now updated")
 
-		updatedP, err := client.UpdateProject(ctx, &p.ID, nil, &name, &desc)
+		updatedP, err := client.UpdateProject(ctx, p.ID, nil, &name, &desc)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(updatedP.Name).To(gm.Equal(name))
 		gm.Expect(updatedP.Label).To(gm.Equal(p.Label))
@@ -142,7 +142,7 @@ func TestProjectsList(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	seedProjects := []struct {
-		Name primitives.DisplayName
+		Name models.ProjectDisplayName
 	}{
 		{Name: "Project One"},
 		{Name: "Project Two"},
@@ -157,7 +157,7 @@ func TestProjectsList(t *testing.T) {
 	}
 
 	t.Run("Can list projects", func(t *testing.T) {
-		projects, err := client.ListProjects(ctx, nil)
+		projects, err := client.ListProjects(ctx, models.Any)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(len(projects)).To(gm.Equal(len(seedProjects)))
 	})
@@ -188,20 +188,20 @@ func TestProjectSpecCreate(t *testing.T) {
 	f, err := ioutil.ReadFile("./testdata/project_spec.yaml")
 	gm.Expect(err).To(gm.BeNil())
 
-	spec, err := primitives.ParseProjectSpecFile(f)
+	spec, err := models.ParseProjectSpecFile(f)
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("Can create a spec", func(t *testing.T) {
-		gm.Expect(p.Status).To(gm.Equal(primitives.ProjectPending))
+		gm.Expect(p.Status).To(gm.Equal(models.ProjectPending))
 		p, _, err := client.UpdateProjectSpec(ctx, p.Label, spec)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(p.Status).To(gm.Equal(primitives.ProjectActive))
+		gm.Expect(p.Status).To(gm.Equal(models.ProjectActive))
 	})
 
 	t.Run("New specs become active", func(t *testing.T) {
 		p, s, err := client.UpdateProjectSpec(ctx, p.Label, spec)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(p.Status).To(gm.Equal(primitives.ProjectActive))
-		gm.Expect(p.CurrentSpecID).To(gm.Equal(&s.ID))
+		gm.Expect(p.Status).To(gm.Equal(models.ProjectActive))
+		gm.Expect(p.CurrentSpecID).To(gm.Equal(s.ID))
 	})
 }

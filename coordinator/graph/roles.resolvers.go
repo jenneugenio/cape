@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
@@ -19,7 +18,7 @@ import (
 )
 
 func (r *modelRoleResolver) ID(ctx context.Context, obj *models.Role) (database.ID, error) {
-	panic(fmt.Errorf("not implemented"))
+	return database.DecodeFromString(obj.ID)
 }
 
 func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error) {

@@ -740,13 +740,13 @@ type ListProjectsResponse struct {
 	Projects []*models.Project `json:"projects"`
 }
 
-func (c *Client) ListProjects(ctx context.Context, status []models.ProjectStatus) ([]*models.Project, error) {
+func (c *Client) ListProjects(ctx context.Context, status models.ProjectStatus) ([]*models.Project, error) {
 	variables := make(map[string]interface{})
 	variables["status"] = status
 
 	var resp ListProjectsResponse
 	err := c.transport.Raw(ctx, `
-		query ListProjects($status: [ProjectStatus!]) {
+		query ListProjects($status: ProjectStatus!) {
 			projects(status: $status) {
 				id,
 				name,
@@ -783,7 +783,7 @@ func (c *Client) GetProject(ctx context.Context, id string, label *models.Label)
 	}
 
 	err := c.transport.Raw(ctx, `
-		query GetProjects($id: ID, $label: Label) {
+		query GetProjects($id: String, $label: ModelLabel) {
 			project(id: $id, label: $label) {
 				id,
 				name,
@@ -829,8 +829,8 @@ func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel models.Labe
 
 	var resp UpdateProjectSpecResponse
 	err := c.transport.Raw(ctx, `
-		mutation UpdateProjectSpec($project: Label, $projectSpecFile: ProjectSpecFile!) {
-			updateProjectSpec(project_label: $project, request: $projectSpecFile) {
+		mutation UpdateProjectSpec($project: ModelLabel, $projectSpecFile: ProjectSpecFile!) {
+			updateProjectSpec(label: $project, request: $projectSpecFile) {
 				name,
 				label,
 				description,
@@ -859,7 +859,7 @@ type UpdateProjectResponse struct {
 
 func (c *Client) UpdateProject(
 	ctx context.Context,
-	id *database.ID,
+	id string,
 	label *models.Label,
 	name *models.ProjectDisplayName,
 	desc *models.ProjectDescription) (*models.Project, error) {
@@ -877,7 +877,7 @@ func (c *Client) UpdateProject(
 	var resp UpdateProjectResponse
 
 	err := c.transport.Raw(ctx, `
-		mutation UpdateProject($id: ID, $label: Label, $update_project: UpdateProjectRequest!) {
+		mutation UpdateProject($id: String, $label: ModelLabel, $update_project: UpdateProjectRequest!) {
 			updateProject(id: $id, label: $label, update: $update_project) {
 				id,
 				name,

@@ -14,7 +14,6 @@ import (
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 	errs "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 	"github.com/gosimple/slug"
 )
 
@@ -55,11 +54,11 @@ func (r *mutationResolver) CreateProject(ctx context.Context, project model.Crea
 	return &p, nil
 }
 
-func (r *mutationResolver) UpdateProject(ctx context.Context, id *database.ID, label *models.Label, update model.UpdateProjectRequest) (*models.Project, error) {
+func (r *mutationResolver) UpdateProject(ctx context.Context, id *string, label *models.Label, update model.UpdateProjectRequest) (*models.Project, error) {
 	var project *models.Project
 	var err error
-	if id != nil {
-		project, err = r.Database.Projects().GetByID(ctx, id.String())
+	if id != nil && *id != "" {
+		project, err = r.Database.Projects().GetByID(ctx, *id)
 	} else if label != nil {
 		project, err = r.Database.Projects().Get(ctx, *label)
 	} else {
@@ -82,11 +81,11 @@ func (r *mutationResolver) UpdateProject(ctx context.Context, id *database.ID, l
 	return project, err
 }
 
-func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *database.ID, label *models.Label, request models.ProjectSpecFile) (*models.Project, error) {
+func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *string, label *models.Label, request models.ProjectSpecFile) (*models.Project, error) {
 	var project *models.Project
 	var err error
-	if id != nil {
-		project, err = r.Database.Projects().GetByID(ctx, id.String())
+	if id != nil && *id != "" {
+		project, err = r.Database.Projects().GetByID(ctx, *id)
 	} else if label != nil {
 		project, err = r.Database.Projects().Get(ctx, *label)
 	} else {
@@ -113,11 +112,11 @@ func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *database.I
 	return project, err
 }
 
-func (r *mutationResolver) ArchiveProject(ctx context.Context, id *database.ID, label *models.Label) (*models.Project, error) {
+func (r *mutationResolver) ArchiveProject(ctx context.Context, id *string, label *models.Label) (*models.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) UnarchiveProject(ctx context.Context, id *database.ID, label *models.Label) (*models.Project, error) {
+func (r *mutationResolver) UnarchiveProject(ctx context.Context, id *string, label *models.Label) (*models.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
@@ -127,10 +126,6 @@ func (r *mutationResolver) UpdateContributor(ctx context.Context, projectLabel m
 
 func (r *mutationResolver) RemoveContributor(ctx context.Context, projectLabel models.Label, userEmail models.Email) (*models.Contributor, error) {
 	return r.Database.Contributors().Delete(ctx, projectLabel, userEmail)
-}
-
-func (r *projectResolver) ID(ctx context.Context, obj *models.Project) (database.ID, error) {
-	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *projectResolver) CurrentSpec(ctx context.Context, obj *models.Project) (*models.ProjectSpec, error) {
@@ -157,18 +152,6 @@ func (r *projectResolver) Contributors(ctx context.Context, obj *models.Project)
 	return contributors, nil
 }
 
-func (r *projectResolver) CreatedAt(ctx context.Context, obj *models.Project) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *projectResolver) UpdatedAt(ctx context.Context, obj *models.Project) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *projectSpecResolver) ID(ctx context.Context, obj *models.ProjectSpec) (database.ID, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
 func (r *projectSpecResolver) Project(ctx context.Context, obj *models.ProjectSpec) (*models.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }
@@ -185,17 +168,38 @@ func (r *projectSpecResolver) UpdatedAt(ctx context.Context, obj *models.Project
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) Projects(ctx context.Context, status []models.ProjectStatus) ([]*models.Project, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Projects(ctx context.Context, status models.ProjectStatus) ([]*models.Project, error) {
+	if err := status.Validate(); err != nil {
+		return nil, err
+	}
+
+	var projects []models.Project
+	var err error
+	if status == models.Any {
+		projects, err = r.Database.Projects().List(ctx)
+	} else {
+		projects, err = r.Database.Projects().ListByStatus(ctx, status)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*models.Project, len(projects))
+	for i, p := range projects {
+		res[i] = &p
+	}
+
+	return res, nil
 }
 
-func (r *queryResolver) Project(ctx context.Context, id *database.ID, label *models.Label) (*models.Project, error) {
+func (r *queryResolver) Project(ctx context.Context, id *string, label *models.Label) (*models.Project, error) {
 	if id == nil && label == nil {
 		return nil, errs.New(fw.InvalidParametersCause, "Must provide an id or label")
 	}
 
 	if id != nil {
-		return r.Database.Projects().GetByID(ctx, id.String())
+		return r.Database.Projects().GetByID(ctx, *id)
 	}
 
 	// otherwise, get by label
@@ -236,6 +240,15 @@ type projectSpecResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *projectSpecResolver) Policy(ctx context.Context, obj *models.ProjectSpec) ([]*primitives.Rule, error) {
+func (r *projectResolver) ID(ctx context.Context, obj *models.Project) (database.ID, error) {
+	return database.DecodeFromString(obj.ID)
+}
+func (r *projectResolver) CreatedAt(ctx context.Context, obj *models.Project) (*time.Time, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+func (r *projectResolver) UpdatedAt(ctx context.Context, obj *models.Project) (*time.Time, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+func (r *projectSpecResolver) ID(ctx context.Context, obj *models.ProjectSpec) (database.ID, error) {
 	panic(fmt.Errorf("not implemented"))
 }

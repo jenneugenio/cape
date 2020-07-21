@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/capeprivacy/cape/models"
+	modelmigration "github.com/capeprivacy/cape/models/migration"
+	"github.com/capeprivacy/cape/primitives"
 
 	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/urfave/cli/v2"
@@ -124,7 +126,7 @@ func projectsList(c *cli.Context) error {
 		return err
 	}
 
-	projects, err := client.ListProjects(c.Context, nil)
+	projects, err := client.ListProjects(c.Context, models.Any)
 	if err != nil {
 		return err
 	}
@@ -155,7 +157,8 @@ func projectsList(c *cli.Context) error {
 }
 
 func updateProjectSpec(c *cli.Context, specFile string) error {
-	projectLabel := Arguments(c.Context, ProjectLabelArg).(models.Label)
+	deprecatedLabel := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
+	projectLabel := modelmigration.LabelFromPrimitive(deprecatedLabel)
 
 	bytes, err := ioutil.ReadFile(specFile)
 	if err != nil {
@@ -202,7 +205,8 @@ func projectsUpdate(c *cli.Context) error {
 		return err
 	}
 
-	label := Arguments(c.Context, ProjectLabelArg).(models.Label)
+	deprecatedLabel := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
+	label := modelmigration.LabelFromPrimitive(deprecatedLabel)
 
 	var name *models.ProjectDisplayName
 	var desc *models.ProjectDescription
@@ -216,7 +220,7 @@ func projectsUpdate(c *cli.Context) error {
 		desc = &descFlag
 	}
 
-	project, err := client.UpdateProject(c.Context, nil, &label, name, desc)
+	project, err := client.UpdateProject(c.Context, "", &label, name, desc)
 	if err != nil {
 		return err
 	}
