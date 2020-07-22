@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
@@ -16,53 +17,6 @@ import (
 	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
-
-func (r *modelRoleResolver) ID(ctx context.Context, obj *models.Role) (database.ID, error) {
-	return database.DecodeFromString(obj.ID)
-}
-
-func (r *mutationResolver) CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error) {
-	role, err := primitives.NewRole(input.Label, false)
-	if err != nil {
-		return nil, err
-	}
-
-	tx, err := r.Backend.Transaction(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback(ctx) // nolint: errcheck
-
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	err = enforcer.Create(ctx, role)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(input.UserIds) > 0 {
-		assignments := make([]database.Entity, len(input.UserIds))
-		for i, id := range input.UserIds {
-			assignment, err := primitives.NewAssignment(id, role.ID)
-			if err != nil {
-				return nil, err
-			}
-			assignments[i] = assignment
-		}
-		err = enforcer.Create(ctx, assignments...)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return role, nil
-}
 
 func (r *mutationResolver) DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error) {
 	currSession := fw.Session(ctx)
@@ -144,7 +98,7 @@ func (r *mutationResolver) UnassignRole(ctx context.Context, input model.AssignR
 	return nil, nil
 }
 
-func (r *queryResolver) Role(ctx context.Context, id database.ID) (*primitives.Role, error) {
+func (r *queryResolver) Role(ctx context.Context, id string) (*models.Role, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -157,7 +111,7 @@ func (r *queryResolver) Role(ctx context.Context, id database.ID) (*primitives.R
 	return &primitive, nil
 }
 
-func (r *queryResolver) RoleByLabel(ctx context.Context, label primitives.Label) (*primitives.Role, error) {
+func (r *queryResolver) RoleByLabel(ctx context.Context, label models.Label) (*models.Role, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -170,7 +124,7 @@ func (r *queryResolver) RoleByLabel(ctx context.Context, label primitives.Label)
 	return role, nil
 }
 
-func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
+func (r *queryResolver) Roles(ctx context.Context) ([]*models.Role, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -183,7 +137,7 @@ func (r *queryResolver) Roles(ctx context.Context) ([]*primitives.Role, error) {
 	return roles, nil
 }
 
-func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]*models.User, error) {
+func (r *queryResolver) RoleMembers(ctx context.Context, roleID string) ([]*models.User, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
@@ -217,7 +171,23 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID database.ID) ([]
 	return userPtrs, nil
 }
 
-// ModelRole returns generated.ModelRoleResolver implementation.
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *modelRoleResolver) ID(ctx context.Context, obj *models.Role) (database.ID, error) {
+	return database.DecodeFromString(obj.ID)
+}
+func (r *roleResolver) ID(ctx context.Context, obj *models.Role) (database.ID, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+func (r *roleResolver) Label(ctx context.Context, obj *models.Role) (primitives.Label, error) {
+	panic(fmt.Errorf("not implemented"))
+}
 func (r *Resolver) ModelRole() generated.ModelRoleResolver { return &modelRoleResolver{r} }
+func (r *Resolver) Role() generated.RoleResolver           { return &roleResolver{r} }
 
 type modelRoleResolver struct{ *Resolver }
+type roleResolver struct{ *Resolver }

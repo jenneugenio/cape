@@ -15,16 +15,16 @@ type ActionInput struct {
 }
 
 type AssignRoleRequest struct {
-	RoleID database.ID `json:"role_id"`
-	UserID string      `json:"user_id"`
+	RoleID string `json:"role_id"`
+	UserID string `json:"user_id"`
 }
 
 type Assignment struct {
-	ID        database.ID      `json:"id"`
-	Role      *primitives.Role `json:"role"`
-	User      *models.User     `json:"user"`
-	CreatedAt time.Time        `json:"created_at"`
-	UpdatedAt time.Time        `json:"updated_at"`
+	ID        string       `json:"id"`
+	Role      *models.Role `json:"role"`
+	User      *models.User `json:"user"`
+	CreatedAt time.Time    `json:"created_at"`
+	UpdatedAt time.Time    `json:"updated_at"`
 }
 
 type AttachPolicyRequest struct {
@@ -33,11 +33,11 @@ type AttachPolicyRequest struct {
 }
 
 type Attachment struct {
-	ID        database.ID      `json:"id"`
-	CreatedAt time.Time        `json:"created_at"`
-	UpdatedAt time.Time        `json:"updated_at"`
-	Role      *primitives.Role `json:"role"`
-	Policy    *models.Policy   `json:"policy"`
+	ID        database.ID    `json:"id"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	Role      *models.Role   `json:"role"`
+	Policy    *models.Policy `json:"policy"`
 }
 
 type AttemptRecoveryRequest struct {
@@ -62,8 +62,8 @@ type CreateRecoveryRequest struct {
 }
 
 type CreateRoleRequest struct {
-	Label   primitives.Label `json:"label"`
-	UserIds []string         `json:"user_ids"`
+	Label   models.Label `json:"label"`
+	UserIds []string     `json:"user_ids"`
 }
 
 type CreateTokenRequest struct {
@@ -94,7 +94,7 @@ type DeleteRecoveriesRequest struct {
 }
 
 type DeleteRoleRequest struct {
-	ID database.ID `json:"id"`
+	ID string `json:"id"`
 }
 
 type DetachPolicyRequest struct {

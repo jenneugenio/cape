@@ -29,7 +29,7 @@ type Contributor {
     id: String!
     user: User!
     project: Project!
-    role: ModelRole!
+    role: Role!
 
     created_at: Time!
     updated_at: Time!

@@ -135,7 +135,7 @@ type SetupRequest struct {
 }
 
 func SetupHandler(db database.Backend, capedb db.Interface, cp auth.CredentialProducer, ta *auth.TokenAuthority, rootKey [32]byte) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		logger := Logger(ctx)
 
@@ -252,7 +252,7 @@ func SetupHandler(db database.Backend, capedb db.Interface, cp auth.CredentialPr
 		}
 
 		respondWithJSON(w, http.StatusOK, user)
-	})
+	}
 }
 
 type LogoutRequest struct {

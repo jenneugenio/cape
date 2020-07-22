@@ -40,7 +40,6 @@ type Config struct {
 
 type ResolverRoot interface {
 	Contributor() ContributorResolver
-	ModelRole() ModelRoleResolver
 	Mutation() MutationResolver
 	Project() ProjectResolver
 	ProjectSpec() ProjectSpecResolver
@@ -93,14 +92,6 @@ type ComplexityRoot struct {
 
 	Match struct {
 		Name func(childComplexity int) int
-	}
-
-	ModelRole struct {
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Label     func(childComplexity int) int
-		System    func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -164,9 +155,9 @@ type ComplexityRoot struct {
 		PolicyByLabel    func(childComplexity int, label string) int
 		Project          func(childComplexity int, id *string, label *models.Label) int
 		Projects         func(childComplexity int, status models.ProjectStatus) int
-		Role             func(childComplexity int, id database.ID) int
-		RoleByLabel      func(childComplexity int, label primitives.Label) int
-		RoleMembers      func(childComplexity int, roleID database.ID) int
+		Role             func(childComplexity int, id string) int
+		RoleByLabel      func(childComplexity int, label models.Label) int
+		RoleMembers      func(childComplexity int, roleID string) int
 		RolePolicies     func(childComplexity int, roleID database.ID) int
 		Roles            func(childComplexity int) int
 		Tokens           func(childComplexity int, userID string) int
@@ -209,9 +200,6 @@ type ContributorResolver interface {
 	Project(ctx context.Context, obj *models.Contributor) (*models.Project, error)
 	Role(ctx context.Context, obj *models.Contributor) (*models.Role, error)
 }
-type ModelRoleResolver interface {
-	ID(ctx context.Context, obj *models.Role) (database.ID, error)
-}
 type MutationResolver interface {
 	CreatePolicy(ctx context.Context, input model.CreatePolicyRequest) (*models.Policy, error)
 	DeletePolicy(ctx context.Context, input model.DeletePolicyRequest) (*string, error)
@@ -226,7 +214,7 @@ type MutationResolver interface {
 	RemoveContributor(ctx context.Context, projectLabel models.Label, userEmail models.Email) (*models.Contributor, error)
 	CreateRecovery(ctx context.Context, input model.CreateRecoveryRequest) (*string, error)
 	AttemptRecovery(ctx context.Context, input model.AttemptRecoveryRequest) (*string, error)
-	CreateRole(ctx context.Context, input model.CreateRoleRequest) (*primitives.Role, error)
+	CreateRole(ctx context.Context, input model.CreateRoleRequest) (*models.Role, error)
 	DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error)
 	AssignRole(ctx context.Context, input model.AssignRoleRequest) (*model.Assignment, error)
 	UnassignRole(ctx context.Context, input model.AssignRoleRequest) (*string, error)
@@ -241,9 +229,6 @@ type ProjectResolver interface {
 type ProjectSpecResolver interface {
 	Project(ctx context.Context, obj *models.ProjectSpec) (*models.Project, error)
 	Parent(ctx context.Context, obj *models.ProjectSpec) (*models.ProjectSpec, error)
-
-	CreatedAt(ctx context.Context, obj *models.ProjectSpec) (*time.Time, error)
-	UpdatedAt(ctx context.Context, obj *models.ProjectSpec) (*time.Time, error)
 }
 type QueryResolver interface {
 	Me(ctx context.Context) (*models.User, error)
@@ -256,16 +241,16 @@ type QueryResolver interface {
 	Projects(ctx context.Context, status models.ProjectStatus) ([]*models.Project, error)
 	Project(ctx context.Context, id *string, label *models.Label) (*models.Project, error)
 	ListContributors(ctx context.Context, projectLabel models.Label) ([]*models.Contributor, error)
-	Role(ctx context.Context, id database.ID) (*primitives.Role, error)
-	RoleByLabel(ctx context.Context, label primitives.Label) (*primitives.Role, error)
-	Roles(ctx context.Context) ([]*primitives.Role, error)
-	RoleMembers(ctx context.Context, roleID database.ID) ([]*models.User, error)
+	Role(ctx context.Context, id string) (*models.Role, error)
+	RoleByLabel(ctx context.Context, label models.Label) (*models.Role, error)
+	Roles(ctx context.Context) ([]*models.Role, error)
+	RoleMembers(ctx context.Context, roleID string) ([]*models.User, error)
 	Tokens(ctx context.Context, userID string) ([]database.ID, error)
 	User(ctx context.Context, id string) (*models.User, error)
 	Users(ctx context.Context) ([]*models.User, error)
 }
 type UserResolver interface {
-	Roles(ctx context.Context, obj *models.User) ([]*primitives.Role, error)
+	Roles(ctx context.Context, obj *models.User) ([]*models.Role, error)
 }
 
 type executableSchema struct {
@@ -436,41 +421,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Match.Name(childComplexity), true
-
-	case "ModelRole.created_at":
-		if e.complexity.ModelRole.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.ModelRole.CreatedAt(childComplexity), true
-
-	case "ModelRole.id":
-		if e.complexity.ModelRole.ID == nil {
-			break
-		}
-
-		return e.complexity.ModelRole.ID(childComplexity), true
-
-	case "ModelRole.label":
-		if e.complexity.ModelRole.Label == nil {
-			break
-		}
-
-		return e.complexity.ModelRole.Label(childComplexity), true
-
-	case "ModelRole.system":
-		if e.complexity.ModelRole.System == nil {
-			break
-		}
-
-		return e.complexity.ModelRole.System(childComplexity), true
-
-	case "ModelRole.updated_at":
-		if e.complexity.ModelRole.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.ModelRole.UpdatedAt(childComplexity), true
 
 	case "Mutation.archiveProject":
 		if e.complexity.Mutation.ArchiveProject == nil {
@@ -948,7 +898,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Role(childComplexity, args["id"].(database.ID)), true
+		return e.complexity.Query.Role(childComplexity, args["id"].(string)), true
 
 	case "Query.roleByLabel":
 		if e.complexity.Query.RoleByLabel == nil {
@@ -960,7 +910,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.RoleByLabel(childComplexity, args["label"].(primitives.Label)), true
+		return e.complexity.Query.RoleByLabel(childComplexity, args["label"].(models.Label)), true
 
 	case "Query.roleMembers":
 		if e.complexity.Query.RoleMembers == nil {
@@ -972,7 +922,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.RoleMembers(childComplexity, args["role_id"].(database.ID)), true
+		return e.complexity.Query.RoleMembers(childComplexity, args["role_id"].(string)), true
 
 	case "Query.rolePolicies":
 		if e.complexity.Query.RolePolicies == nil {
@@ -1323,7 +1273,7 @@ type Contributor {
     id: String!
     user: User!
     project: Project!
-    role: ModelRole!
+    role: Role!
 
     created_at: Time!
     updated_at: Time!
@@ -1388,24 +1338,16 @@ extend type Mutation {
   attemptRecovery(input: AttemptRecoveryRequest!): String
 }
 `, BuiltIn: false},
-	&ast.Source{Name: "coordinator/schema/roles.graphql", Input: `type ModelRole {
-  id: ID!
+	&ast.Source{Name: "coordinator/schema/roles.graphql", Input: `type Role {
+  id: String!
   label: ModelLabel!
   system: Boolean!
   created_at: Time!
   updated_at: Time!
 }
 
-type Role {
-  id: ID!
-  label: Label!
-  system: Boolean!
-  created_at: Time!
-  updated_at: Time!
-}
-
 type Assignment {
-  id: ID!
+  id: String!
   role: Role!
   user: User!
   created_at: Time!
@@ -1413,24 +1355,24 @@ type Assignment {
 }
 
 input CreateRoleRequest {
-  label: Label!
+  label: ModelLabel!
   user_ids: [String!]
 }
 
 input DeleteRoleRequest {
-  id: ID!
+  id: String!
 }
 
 input AssignRoleRequest {
-  role_id: ID!
+  role_id: String!
   user_id: String!
 }
 
 extend type Query {
-  role(id: ID!): Role!
-  roleByLabel(label: Label!): Role!
+  role(id: String!): Role!
+  roleByLabel(label: ModelLabel!): Role!
   roles: [Role!]
-  roleMembers(role_id: ID!): [User]
+  roleMembers(role_id: String!): [User]
 }
 
 extend type Mutation {
@@ -1992,9 +1934,9 @@ func (ec *executionContext) field_Query_projects_args(ctx context.Context, rawAr
 func (ec *executionContext) field_Query_roleByLabel_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 primitives.Label
+	var arg0 models.Label
 	if tmp, ok := rawArgs["label"]; ok {
-		arg0, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, tmp)
+		arg0, err = ec.unmarshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2006,9 +1948,9 @@ func (ec *executionContext) field_Query_roleByLabel_args(ctx context.Context, ra
 func (ec *executionContext) field_Query_roleMembers_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 database.ID
+	var arg0 string
 	if tmp, ok := rawArgs["role_id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2034,9 +1976,9 @@ func (ec *executionContext) field_Query_rolePolicies_args(ctx context.Context, r
 func (ec *executionContext) field_Query_role_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 database.ID
+	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2183,9 +2125,9 @@ func (ec *executionContext) _Assignment_id(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(database.ID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Assignment_role(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
@@ -2217,9 +2159,9 @@ func (ec *executionContext) _Assignment_role(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.Role)
+	res := resTmp.(*models.Role)
 	fc.Result = res
-	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Assignment_user(ctx context.Context, field graphql.CollectedField, obj *model.Assignment) (ret graphql.Marshaler) {
@@ -2455,9 +2397,9 @@ func (ec *executionContext) _Attachment_role(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.Role)
+	res := resTmp.(*models.Role)
 	fc.Result = res
-	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Attachment_policy(ctx context.Context, field graphql.CollectedField, obj *model.Attachment) (ret graphql.Marshaler) {
@@ -2627,7 +2569,7 @@ func (ec *executionContext) _Contributor_role(ctx context.Context, field graphql
 	}
 	res := resTmp.(*models.Role)
 	fc.Result = res
-	return ec.marshalNModelRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx, field.Selections, res)
+	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Contributor_created_at(ctx context.Context, field graphql.CollectedField, obj *models.Contributor) (ret graphql.Marshaler) {
@@ -2866,176 +2808,6 @@ func (ec *executionContext) _Match_name(ctx context.Context, field graphql.Colle
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ModelRole_id(ctx context.Context, field graphql.CollectedField, obj *models.Role) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "ModelRole",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ModelRole().ID(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(database.ID)
-	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ModelRole_label(ctx context.Context, field graphql.CollectedField, obj *models.Role) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "ModelRole",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Label, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(models.Label)
-	fc.Result = res
-	return ec.marshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ModelRole_system(ctx context.Context, field graphql.CollectedField, obj *models.Role) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "ModelRole",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.System, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ModelRole_created_at(ctx context.Context, field graphql.CollectedField, obj *models.Role) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "ModelRole",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ModelRole_updated_at(ctx context.Context, field graphql.CollectedField, obj *models.Role) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "ModelRole",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createPolicy(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3595,9 +3367,9 @@ func (ec *executionContext) _Mutation_createRole(ctx context.Context, field grap
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.Role)
+	res := resTmp.(*models.Role)
 	fc.Result = res
-	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4454,13 +4226,13 @@ func (ec *executionContext) _ProjectSpec_created_at(ctx context.Context, field g
 		Object:   "ProjectSpec",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ProjectSpec().CreatedAt(rctx, obj)
+		return obj.CreatedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4472,9 +4244,9 @@ func (ec *executionContext) _ProjectSpec_created_at(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*time.Time)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ProjectSpec_updated_at(ctx context.Context, field graphql.CollectedField, obj *models.ProjectSpec) (ret graphql.Marshaler) {
@@ -4488,13 +4260,13 @@ func (ec *executionContext) _ProjectSpec_updated_at(ctx context.Context, field g
 		Object:   "ProjectSpec",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ProjectSpec().UpdatedAt(rctx, obj)
+		return obj.UpdatedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4506,9 +4278,9 @@ func (ec *executionContext) _ProjectSpec_updated_at(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*time.Time)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_me(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4919,7 +4691,7 @@ func (ec *executionContext) _Query_role(ctx context.Context, field graphql.Colle
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Role(rctx, args["id"].(database.ID))
+		return ec.resolvers.Query().Role(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4931,9 +4703,9 @@ func (ec *executionContext) _Query_role(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.Role)
+	res := resTmp.(*models.Role)
 	fc.Result = res
-	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_roleByLabel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4960,7 +4732,7 @@ func (ec *executionContext) _Query_roleByLabel(ctx context.Context, field graphq
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().RoleByLabel(rctx, args["label"].(primitives.Label))
+		return ec.resolvers.Query().RoleByLabel(rctx, args["label"].(models.Label))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4972,9 +4744,9 @@ func (ec *executionContext) _Query_roleByLabel(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.Role)
+	res := resTmp.(*models.Role)
 	fc.Result = res
-	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx, field.Selections, res)
+	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_roles(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5003,9 +4775,9 @@ func (ec *executionContext) _Query_roles(ctx context.Context, field graphql.Coll
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*primitives.Role)
+	res := resTmp.([]*models.Role)
 	fc.Result = res
-	return ec.marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRoleᚄ(ctx, field.Selections, res)
+	return ec.marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRoleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_roleMembers(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5032,7 +4804,7 @@ func (ec *executionContext) _Query_roleMembers(ctx context.Context, field graphq
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().RoleMembers(rctx, args["role_id"].(database.ID))
+		return ec.resolvers.Query().RoleMembers(rctx, args["role_id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5330,7 +5102,7 @@ func (ec *executionContext) _Recovery_updated_at(ctx context.Context, field grap
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Role_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
+func (ec *executionContext) _Role_id(ctx context.Context, field graphql.CollectedField, obj *models.Role) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5359,12 +5131,12 @@ func (ec *executionContext) _Role_id(ctx context.Context, field graphql.Collecte
 		}
 		return graphql.Null
 	}
-	res := resTmp.(database.ID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Role_label(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
+func (ec *executionContext) _Role_label(ctx context.Context, field graphql.CollectedField, obj *models.Role) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5393,12 +5165,12 @@ func (ec *executionContext) _Role_label(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(primitives.Label)
+	res := resTmp.(models.Label)
 	fc.Result = res
-	return ec.marshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, field.Selections, res)
+	return ec.marshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Role_system(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
+func (ec *executionContext) _Role_system(ctx context.Context, field graphql.CollectedField, obj *models.Role) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5432,7 +5204,7 @@ func (ec *executionContext) _Role_system(ctx context.Context, field graphql.Coll
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Role_created_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
+func (ec *executionContext) _Role_created_at(ctx context.Context, field graphql.CollectedField, obj *models.Role) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5466,7 +5238,7 @@ func (ec *executionContext) _Role_created_at(ctx context.Context, field graphql.
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Role_updated_at(ctx context.Context, field graphql.CollectedField, obj *primitives.Role) (ret graphql.Marshaler) {
+func (ec *executionContext) _Role_updated_at(ctx context.Context, field graphql.CollectedField, obj *models.Role) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5764,9 +5536,9 @@ func (ec *executionContext) _User_roles(ctx context.Context, field graphql.Colle
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*primitives.Role)
+	res := resTmp.([]*models.Role)
 	fc.Result = res
-	return ec.marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRoleᚄ(ctx, field.Selections, res)
+	return ec.marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRoleᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -6850,7 +6622,7 @@ func (ec *executionContext) unmarshalInputAssignRoleRequest(ctx context.Context,
 		switch k {
 		case "role_id":
 			var err error
-			it.RoleID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
+			it.RoleID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7000,7 +6772,7 @@ func (ec *executionContext) unmarshalInputCreateRoleRequest(ctx context.Context,
 		switch k {
 		case "label":
 			var err error
-			it.Label, err = ec.unmarshalNLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐLabel(ctx, v)
+			it.Label, err = ec.unmarshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7102,7 +6874,7 @@ func (ec *executionContext) unmarshalInputDeleteRoleRequest(ctx context.Context,
 		switch k {
 		case "id":
 			var err error
-			it.ID, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, v)
+			it.ID, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7516,62 +7288,6 @@ func (ec *executionContext) _Match(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
-var modelRoleImplementors = []string{"ModelRole"}
-
-func (ec *executionContext) _ModelRole(ctx context.Context, sel ast.SelectionSet, obj *models.Role) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, modelRoleImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("ModelRole")
-		case "id":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._ModelRole_id(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "label":
-			out.Values[i] = ec._ModelRole_label(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "system":
-			out.Values[i] = ec._ModelRole_system(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "created_at":
-			out.Values[i] = ec._ModelRole_created_at(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "updated_at":
-			out.Values[i] = ec._ModelRole_updated_at(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -7853,33 +7569,15 @@ func (ec *executionContext) _ProjectSpec(ctx context.Context, sel ast.SelectionS
 				atomic.AddUint32(&invalids, 1)
 			}
 		case "created_at":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._ProjectSpec_created_at(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._ProjectSpec_created_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "updated_at":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._ProjectSpec_updated_at(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._ProjectSpec_updated_at(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8177,7 +7875,7 @@ func (ec *executionContext) _Recovery(ctx context.Context, sel ast.SelectionSet,
 
 var roleImplementors = []string{"Role"}
 
-func (ec *executionContext) _Role(ctx context.Context, sel ast.SelectionSet, obj *primitives.Role) graphql.Marshaler {
+func (ec *executionContext) _Role(ctx context.Context, sel ast.SelectionSet, obj *models.Role) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, roleImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -8842,20 +8540,6 @@ func (ec *executionContext) marshalNModelName2githubᚗcomᚋcapeprivacyᚋcape�
 	return res
 }
 
-func (ec *executionContext) marshalNModelRole2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx context.Context, sel ast.SelectionSet, v models.Role) graphql.Marshaler {
-	return ec._ModelRole(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNModelRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx context.Context, sel ast.SelectionSet, v *models.Role) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._ModelRole(ctx, sel, v)
-}
-
 func (ec *executionContext) unmarshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPassword(ctx context.Context, v interface{}) (primitives.Password, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return primitives.Password(tmp), err
@@ -8985,11 +8669,11 @@ func (ec *executionContext) marshalNProjectStatus2githubᚗcomᚋcapeprivacyᚋc
 	return res
 }
 
-func (ec *executionContext) marshalNRole2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx context.Context, sel ast.SelectionSet, v primitives.Role) graphql.Marshaler {
+func (ec *executionContext) marshalNRole2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx context.Context, sel ast.SelectionSet, v models.Role) graphql.Marshaler {
 	return ec._Role(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx context.Context, sel ast.SelectionSet, v *primitives.Role) graphql.Marshaler {
+func (ec *executionContext) marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx context.Context, sel ast.SelectionSet, v *models.Role) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -9093,24 +8777,6 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalNTime2timeᚐTime(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) marshalNTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec.marshalNTime2timeᚐTime(ctx, sel, *v)
 }
 
 func (ec *executionContext) marshalNToken2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐToken(ctx context.Context, sel ast.SelectionSet, v primitives.Token) graphql.Marshaler {
@@ -9548,7 +9214,7 @@ func (ec *executionContext) marshalOProjectSpec2ᚖgithubᚗcomᚋcapeprivacyᚋ
 	return ec._ProjectSpec(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []*primitives.Role) graphql.Marshaler {
+func (ec *executionContext) marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRoleᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Role) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -9575,7 +9241,7 @@ func (ec *executionContext) marshalORole2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcape
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐRole(ctx, sel, v[i])
+			ret[i] = ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

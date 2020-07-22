@@ -26,7 +26,7 @@ models:
   User:
     model: github.com/capeprivacy/cape/models.User
   Role:
-    model: github.com/capeprivacy/cape/primitives.Role
+    model: github.com/capeprivacy/cape/models.Role
   ModelRole:
     model: github.com/capeprivacy/cape/models.Role
   Session:

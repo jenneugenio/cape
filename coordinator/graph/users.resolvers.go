@@ -85,7 +85,7 @@ func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
 	return userPtrs, nil
 }
 
-func (r *userResolver) Roles(ctx context.Context, obj *models.User) ([]*primitives.Role, error) {
+func (r *userResolver) Roles(ctx context.Context, obj *models.User) ([]*models.Role, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 

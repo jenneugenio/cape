@@ -1,21 +1,13 @@
-type ModelRole {
-  id: ID!
+type Role {
+  id: String!
   label: ModelLabel!
   system: Boolean!
   created_at: Time!
   updated_at: Time!
 }
 
-type Role {
-  id: ID!
-  label: Label!
-  system: Boolean!
-  created_at: Time!
-  updated_at: Time!
-}
-
 type Assignment {
-  id: ID!
+  id: String!
   role: Role!
   user: User!
   created_at: Time!
@@ -23,30 +15,27 @@ type Assignment {
 }
 
 input CreateRoleRequest {
-  label: Label!
+  label: ModelLabel!
   user_ids: [String!]
 }
 
 input DeleteRoleRequest {
-  id: ID!
+  id: String!
 }
 
 input AssignRoleRequest {
-  role_id: ID!
+  role_id: String!
   user_id: String!
 }
 
 extend type Query {
-  role(id: ID!): Role!
-  roleByLabel(label: Label!): Role!
+  role(id: String!): Role!
+  roleByLabel(label: ModelLabel!): Role!
   roles: [Role!]
-  roleMembers(role_id: ID!): [User]
+  roleMembers(role_id: String!): [User]
 }
 
 extend type Mutation {
-  createRole(input: CreateRoleRequest!): Role!
-  deleteRole(input: DeleteRoleRequest!): String
-
   assignRole(input: AssignRoleRequest!): Assignment!
   unassignRole(input: AssignRoleRequest!): String
 }

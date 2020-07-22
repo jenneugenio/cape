@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"fmt"
+
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
