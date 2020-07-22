@@ -1,6 +1,7 @@
 scalar ProjectStatus
 scalar ProjectDisplayName
 scalar ProjectDescription
+scalar NamedTransformation
 
 type Project {
     id: String!
@@ -19,6 +20,7 @@ type ProjectSpec {
     id: String!
     project: Project!
     parent: ProjectSpec
+    transformations: [NamedTransformation!]
     policy: [Rule!]!
 
     created_at: Time!
@@ -47,6 +49,7 @@ input UpdateProjectRequest {
 }
 
 input ProjectSpecFile {
+    transformations: [NamedTransformation!]
     policy: [Rule!]!
 }
 

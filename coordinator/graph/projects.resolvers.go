@@ -96,7 +96,7 @@ func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *string, la
 
 	// Insert the spec
 	// TODO -- How do you specify the parent? This concept doesn't make sense until we have proposals & diffing
-	spec := models.NewProjectSpec(project.ID, nil, request.Policy)
+	spec := models.NewProjectSpec(project.ID, nil, request.Policy, request.Transformations)
 	err = r.Database.Projects().CreateProjectSpec(ctx, spec)
 	if err != nil {
 		return nil, err

@@ -44,7 +44,7 @@ require (
 	github.com/markbates/pkger v0.17.0
 	github.com/matryer/is v1.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.7 // indirect
-	github.com/mitchellh/mapstructure v1.3.2
+	github.com/mitchellh/mapstructure v1.3.3
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/oklog/ulid v1.3.1
 	github.com/onsi/gomega v1.9.0

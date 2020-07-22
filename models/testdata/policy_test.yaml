@@ -1,0 +1,16 @@
+version: 1
+transformations:
+  - name: plusOne
+    type: plusN
+    n: 1
+  - name: plusTwo
+    type: plusN
+    n: 2
+rules:
+  - match:
+      name: test
+    actions:
+      - transform:
+          name: plusOne
+      - transform:
+          name: plusTwo

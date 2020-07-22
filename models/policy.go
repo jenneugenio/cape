@@ -23,9 +23,10 @@ func NewPolicy(label Label, rules []Rule) Policy {
 }
 
 type Policy struct {
-	ID      string `json:"id"`
-	Version uint8  `json:"version"`
-	Label   Label  `json:"label"`
+	ID              string                `json:"id"`
+	Version         uint8                 `json:"version"`
+	Label           Label                 `json:"label"`
+	Transformations []NamedTransformation `json:"transformations"`
 
 	Rules []Rule `json:"rules"`
 
@@ -104,6 +105,71 @@ func (t *Transformation) UnmarshalGQL(v interface{}) error {
 // MarshalGQL implements the graphql.Marshaler interface
 func (t Transformation) MarshalGQL(w io.Writer) {
 	json, err := json.Marshal(t)
+	if err != nil {
+		fmt.Fprint(w, strconv.Quote(err.Error()))
+		return
+	}
+
+	fmt.Fprint(w, string(json))
+}
+
+type NamedTransformation struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+	Args map[string]interface{}
+}
+
+func (n NamedTransformation) MarshalJSON() ([]byte, error) {
+	val := make(map[string]interface{})
+	val["name"] = n.Name
+	val["type"] = n.Type
+
+	for key, arg := range n.Args {
+		val[key] = arg
+	}
+
+	return json.Marshal(val)
+}
+
+func (n *NamedTransformation) UnmarshalJSON(data []byte) error {
+	var transformMap map[string]interface{}
+	err := json.Unmarshal(data, &transformMap)
+	if err != nil {
+		return err
+	}
+
+	n.Name = transformMap["name"].(string)
+	n.Type = transformMap["type"].(string)
+
+	delete(transformMap, "name")
+	delete(transformMap, "type")
+
+	n.Args = transformMap
+
+	return nil
+}
+
+// UnmarshalGQL implements the graphql.Unmarshaler interfacemin
+func (n *NamedTransformation) UnmarshalGQL(v interface{}) error {
+	switch val := v.(type) {
+	case map[string]interface{}:
+		n.Name = val["name"].(string)
+		n.Type = val["type"].(string)
+
+		delete(val, "name")
+		delete(val, "type")
+
+		n.Args = val
+
+		return nil
+	default:
+		return errors.New("unable to unmarshal gql policy spec")
+	}
+}
+
+// MarshalGQL implements the graphql.Marshaler interface
+func (n NamedTransformation) MarshalGQL(w io.Writer) {
+	json, err := json.Marshal(n)
 	if err != nil {
 		fmt.Fprint(w, strconv.Quote(err.Error()))
 		return

@@ -147,12 +147,13 @@ type ComplexityRoot struct {
 	}
 
 	ProjectSpec struct {
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Parent    func(childComplexity int) int
-		Policy    func(childComplexity int) int
-		Project   func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
+		CreatedAt       func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Parent          func(childComplexity int) int
+		Policy          func(childComplexity int) int
+		Project         func(childComplexity int) int
+		Transformations func(childComplexity int) int
+		UpdatedAt       func(childComplexity int) int
 	}
 
 	Query struct {
@@ -842,6 +843,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ProjectSpec.Project(childComplexity), true
 
+	case "ProjectSpec.transformations":
+		if e.complexity.ProjectSpec.Transformations == nil {
+			break
+		}
+
+		return e.complexity.ProjectSpec.Transformations(childComplexity), true
+
 	case "ProjectSpec.updated_at":
 		if e.complexity.ProjectSpec.UpdatedAt == nil {
 			break
@@ -1292,6 +1300,7 @@ extend type Mutation {
 	&ast.Source{Name: "coordinator/schema/projects.graphql", Input: `scalar ProjectStatus
 scalar ProjectDisplayName
 scalar ProjectDescription
+scalar NamedTransformation
 
 type Project {
     id: String!
@@ -1310,6 +1319,7 @@ type ProjectSpec {
     id: String!
     project: Project!
     parent: ProjectSpec
+    transformations: [NamedTransformation!]
     policy: [Rule!]!
 
     created_at: Time!
@@ -1338,6 +1348,7 @@ input UpdateProjectRequest {
 }
 
 input ProjectSpecFile {
+    transformations: [NamedTransformation!]
     policy: [Rule!]!
 }
 
@@ -4406,6 +4417,37 @@ func (ec *executionContext) _ProjectSpec_parent(ctx context.Context, field graph
 	return ec.marshalOProjectSpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐProjectSpec(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _ProjectSpec_transformations(ctx context.Context, field graphql.CollectedField, obj *models.ProjectSpec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ProjectSpec",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Transformations, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]models.NamedTransformation)
+	fc.Result = res
+	return ec.marshalONamedTransformation2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformationᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ProjectSpec_policy(ctx context.Context, field graphql.CollectedField, obj *models.ProjectSpec) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7157,6 +7199,12 @@ func (ec *executionContext) unmarshalInputProjectSpecFile(ctx context.Context, o
 
 	for k, v := range asMap {
 		switch k {
+		case "transformations":
+			var err error
+			it.Transformations, err = ec.unmarshalONamedTransformation2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformationᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "policy":
 			var err error
 			it.Policy, err = ec.unmarshalNRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRuleᚄ(ctx, v)
@@ -7844,6 +7892,8 @@ func (ec *executionContext) _ProjectSpec(ctx context.Context, sel ast.SelectionS
 				res = ec._ProjectSpec_parent(ctx, field, obj)
 				return res
 			})
+		case "transformations":
+			out.Values[i] = ec._ProjectSpec_transformations(ctx, field, obj)
 		case "policy":
 			out.Values[i] = ec._ProjectSpec_policy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -8835,6 +8885,15 @@ func (ec *executionContext) marshalNModelRole2ᚖgithubᚗcomᚋcapeprivacyᚋca
 	return ec._ModelRole(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNNamedTransformation2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformation(ctx context.Context, v interface{}) (models.NamedTransformation, error) {
+	var res models.NamedTransformation
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNNamedTransformation2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformation(ctx context.Context, sel ast.SelectionSet, v models.NamedTransformation) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPassword(ctx context.Context, v interface{}) (primitives.Password, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return primitives.Password(tmp), err
@@ -9397,6 +9456,38 @@ func (ec *executionContext) marshalOModelLabel2ᚖgithubᚗcomᚋcapeprivacyᚋc
 		return graphql.Null
 	}
 	return ec.marshalOModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalONamedTransformation2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformationᚄ(ctx context.Context, v interface{}) ([]models.NamedTransformation, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]models.NamedTransformation, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNNamedTransformation2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformation(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalONamedTransformation2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformationᚄ(ctx context.Context, sel ast.SelectionSet, v []models.NamedTransformation) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNNamedTransformation2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformation(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicyᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Policy) graphql.Marshaler {
