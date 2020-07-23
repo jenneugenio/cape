@@ -1,4 +1,4 @@
-package framework
+package coordinator
 
 import (
 	"encoding/json"

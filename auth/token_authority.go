@@ -100,7 +100,3 @@ func (t *TokenAuthority) Generate(sessionID database.ID) (*base64.Value, time.Ti
 
 	return base64.New([]byte(signedToken)), expiresIn, nil
 }
-
-func (t *TokenAuthority) SetKeyPair(keypair *Keypair) {
-	t.keypair = keypair
-}

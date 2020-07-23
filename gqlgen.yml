@@ -69,6 +69,8 @@ models:
     model: github.com/capeprivacy/cape/models.ProjectSpec
   ProjectSpecFile:
     model: github.com/capeprivacy/cape/models.ProjectSpecFile
+  NamedTransformation:
+    model: github.com/capeprivacy/cape/models.NamedTransformation
   ProjectDescription:
     model: github.com/capeprivacy/cape/models.ProjectDescription
   ProjectStatus:

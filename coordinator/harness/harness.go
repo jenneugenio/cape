@@ -144,6 +144,11 @@ func (h *Harness) Setup(ctx context.Context) error {
 		Port:                  1, // This port is ignored!
 		RootKey:               base64.New(rootKey[:]),
 		CredentialProducerAlg: primitives.SHA256,
+		User: &coordinator.UserConfig{
+			Name:     AdminName,
+			Email:    AdminEmail,
+			Password: AdminPassword,
+		},
 	}, logger, h.mailer)
 	if err != nil {
 		return err

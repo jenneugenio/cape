@@ -13,8 +13,6 @@ import (
 type Resolver struct {
 	Database           db.Interface
 	Backend            database.Backend
-	TokenAuthority     *auth.TokenAuthority
 	CredentialProducer auth.CredentialProducer
-	RootKey            [32]byte
 	Mailer             mailer.Mailer
 }

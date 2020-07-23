@@ -13,9 +13,10 @@ type CapeDBEncrypt struct {
 
 var _ db.Interface = &CapeDBEncrypt{}
 
-func New(db db.Interface) *CapeDBEncrypt {
+func New(db db.Interface, codec crypto.EncryptionCodec) *CapeDBEncrypt {
 	return &CapeDBEncrypt{
-		db: db,
+		db:    db,
+		codec: codec,
 	}
 }
 
@@ -25,7 +26,4 @@ func (c *CapeDBEncrypt) Users() db.UserDB               { return &userEncrypt{db
 func (c *CapeDBEncrypt) RBAC() db.RBACDB                { return c.db.RBAC() }
 func (c *CapeDBEncrypt) Contributors() db.ContributorDB { return c.db.Contributors() }
 func (c *CapeDBEncrypt) Projects() db.ProjectsDB        { return c.db.Projects() }
-
-func (c *CapeDBEncrypt) SetEncryptionCodec(codec crypto.EncryptionCodec) {
-	c.codec = codec
-}
+func (c *CapeDBEncrypt) Config() db.ConfigDB            { return c.db.Config() }

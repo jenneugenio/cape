@@ -1,12 +1,14 @@
 package models
 
 import (
-	"sigs.k8s.io/yaml"
 	"time"
+
+	"sigs.k8s.io/yaml"
 )
 
 type ProjectSpecFile struct {
-	Policy []*Rule `json:"policy"`
+	Transformations []NamedTransformation `json:"transformations"`
+	Policy          []*Rule               `json:"policy"`
 }
 
 func ParseProjectSpecFile(data []byte) (*ProjectSpecFile, error) {
@@ -19,12 +21,13 @@ func ParseProjectSpecFile(data []byte) (*ProjectSpecFile, error) {
 }
 
 type ProjectSpec struct {
-	ID        string `json:"id"`
-	ProjectID string
-	ParentID  *string
-	Policy    []*Rule   `json:"policy"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID              string                `json:"id"`
+	ProjectID       string                `json:"project_id"`
+	ParentID        *string               `json:"parent_id"`
+	Transformations []NamedTransformation `json:"transformations"`
+	Policy          []*Rule               `json:"policy"`
+	CreatedAt       time.Time             `json:"created_at"`
+	UpdatedAt       time.Time             `json:"updated_at"`
 }
 
 func (p *ProjectSpec) Validate() error {
@@ -35,11 +38,14 @@ func NewProjectSpec(
 	projectID string,
 	parent *string,
 	policy []*Rule,
+	named []NamedTransformation,
 ) ProjectSpec {
 	return ProjectSpec{
-		ID:        NewID(),
-		ProjectID: projectID,
-		ParentID:  parent,
-		Policy:    policy,
+		ID:              NewID(),
+		CreatedAt:       now(),
+		ProjectID:       projectID,
+		ParentID:        parent,
+		Policy:          policy,
+		Transformations: named,
 	}
 }

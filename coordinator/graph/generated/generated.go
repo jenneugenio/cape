@@ -102,11 +102,9 @@ type ComplexityRoot struct {
 		CreatePolicy      func(childComplexity int, input model.CreatePolicyRequest) int
 		CreateProject     func(childComplexity int, project model.CreateProjectRequest) int
 		CreateRecovery    func(childComplexity int, input model.CreateRecoveryRequest) int
-		CreateRole        func(childComplexity int, input model.CreateRoleRequest) int
 		CreateToken       func(childComplexity int, input model.CreateTokenRequest) int
 		CreateUser        func(childComplexity int, input model.CreateUserRequest) int
 		DeletePolicy      func(childComplexity int, input model.DeletePolicyRequest) int
-		DeleteRole        func(childComplexity int, input model.DeleteRoleRequest) int
 		DetachPolicy      func(childComplexity int, input model.DetachPolicyRequest) int
 		RemoveContributor func(childComplexity int, projectLabel models.Label, userEmail models.Email) int
 		RemoveToken       func(childComplexity int, id database.ID) int
@@ -138,12 +136,13 @@ type ComplexityRoot struct {
 	}
 
 	ProjectSpec struct {
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Parent    func(childComplexity int) int
-		Policy    func(childComplexity int) int
-		Project   func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
+		CreatedAt       func(childComplexity int) int
+		ID              func(childComplexity int) int
+		Parent          func(childComplexity int) int
+		Policy          func(childComplexity int) int
+		Project         func(childComplexity int) int
+		Transformations func(childComplexity int) int
+		UpdatedAt       func(childComplexity int) int
 	}
 
 	Query struct {
@@ -214,8 +213,6 @@ type MutationResolver interface {
 	RemoveContributor(ctx context.Context, projectLabel models.Label, userEmail models.Email) (*models.Contributor, error)
 	CreateRecovery(ctx context.Context, input model.CreateRecoveryRequest) (*string, error)
 	AttemptRecovery(ctx context.Context, input model.AttemptRecoveryRequest) (*string, error)
-	CreateRole(ctx context.Context, input model.CreateRoleRequest) (*models.Role, error)
-	DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error)
 	AssignRole(ctx context.Context, input model.AssignRoleRequest) (*model.Assignment, error)
 	UnassignRole(ctx context.Context, input model.AssignRoleRequest) (*string, error)
 	CreateToken(ctx context.Context, input model.CreateTokenRequest) (*model.CreateTokenResponse, error)
@@ -506,18 +503,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateRecovery(childComplexity, args["input"].(model.CreateRecoveryRequest)), true
 
-	case "Mutation.createRole":
-		if e.complexity.Mutation.CreateRole == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createRole_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateRole(childComplexity, args["input"].(model.CreateRoleRequest)), true
-
 	case "Mutation.createToken":
 		if e.complexity.Mutation.CreateToken == nil {
 			break
@@ -553,18 +538,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeletePolicy(childComplexity, args["input"].(model.DeletePolicyRequest)), true
-
-	case "Mutation.deleteRole":
-		if e.complexity.Mutation.DeleteRole == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteRole_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteRole(childComplexity, args["input"].(model.DeleteRoleRequest)), true
 
 	case "Mutation.detachPolicy":
 		if e.complexity.Mutation.DetachPolicy == nil {
@@ -794,6 +767,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ProjectSpec.Project(childComplexity), true
+
+	case "ProjectSpec.transformations":
+		if e.complexity.ProjectSpec.Transformations == nil {
+			break
+		}
+
+		return e.complexity.ProjectSpec.Transformations(childComplexity), true
 
 	case "ProjectSpec.updated_at":
 		if e.complexity.ProjectSpec.UpdatedAt == nil {
@@ -1245,6 +1225,7 @@ extend type Mutation {
 	&ast.Source{Name: "coordinator/schema/projects.graphql", Input: `scalar ProjectStatus
 scalar ProjectDisplayName
 scalar ProjectDescription
+scalar NamedTransformation
 
 type Project {
     id: String!
@@ -1263,6 +1244,7 @@ type ProjectSpec {
     id: String!
     project: Project!
     parent: ProjectSpec
+    transformations: [NamedTransformation!]
     policy: [Rule!]!
 
     created_at: Time!
@@ -1291,6 +1273,7 @@ input UpdateProjectRequest {
 }
 
 input ProjectSpecFile {
+    transformations: [NamedTransformation!]
     policy: [Rule!]!
 }
 
@@ -1376,9 +1359,6 @@ extend type Query {
 }
 
 extend type Mutation {
-  createRole(input: CreateRoleRequest!): Role!
-  deleteRole(input: DeleteRoleRequest!): String
-
   assignRole(input: AssignRoleRequest!): Assignment!
   unassignRole(input: AssignRoleRequest!): String
 }
@@ -1571,20 +1551,6 @@ func (ec *executionContext) field_Mutation_createRecovery_args(ctx context.Conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.CreateRoleRequest
-	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNCreateRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateRoleRequest(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_createToken_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1619,20 +1585,6 @@ func (ec *executionContext) field_Mutation_deletePolicy_args(ctx context.Context
 	var arg0 model.DeletePolicyRequest
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalNDeletePolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeletePolicyRequest(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.DeleteRoleRequest
-	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNDeleteRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteRoleRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -3331,85 +3283,6 @@ func (ec *executionContext) _Mutation_attemptRecovery(ctx context.Context, field
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_createRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Mutation",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_createRole_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateRole(rctx, args["input"].(model.CreateRoleRequest))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*models.Role)
-	fc.Result = res
-	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_deleteRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Mutation",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_deleteRole_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteRole(rctx, args["input"].(model.DeleteRoleRequest))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Mutation_assignRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4179,6 +4052,37 @@ func (ec *executionContext) _ProjectSpec_parent(ctx context.Context, field graph
 	res := resTmp.(*models.ProjectSpec)
 	fc.Result = res
 	return ec.marshalOProjectSpec2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐProjectSpec(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ProjectSpec_transformations(ctx context.Context, field graphql.CollectedField, obj *models.ProjectSpec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ProjectSpec",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Transformations, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]models.NamedTransformation)
+	fc.Result = res
+	return ec.marshalONamedTransformation2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformationᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ProjectSpec_policy(ctx context.Context, field graphql.CollectedField, obj *models.ProjectSpec) (ret graphql.Marshaler) {
@@ -6932,6 +6836,12 @@ func (ec *executionContext) unmarshalInputProjectSpecFile(ctx context.Context, o
 
 	for k, v := range asMap {
 		switch k {
+		case "transformations":
+			var err error
+			it.Transformations, err = ec.unmarshalONamedTransformation2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformationᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "policy":
 			var err error
 			it.Policy, err = ec.unmarshalNRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRuleᚄ(ctx, v)
@@ -7356,13 +7266,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_createRecovery(ctx, field)
 		case "attemptRecovery":
 			out.Values[i] = ec._Mutation_attemptRecovery(ctx, field)
-		case "createRole":
-			out.Values[i] = ec._Mutation_createRole(ctx, field)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "deleteRole":
-			out.Values[i] = ec._Mutation_deleteRole(ctx, field)
 		case "assignRole":
 			out.Values[i] = ec._Mutation_assignRole(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -7563,6 +7466,8 @@ func (ec *executionContext) _ProjectSpec(ctx context.Context, sel ast.SelectionS
 				res = ec._ProjectSpec_parent(ctx, field, obj)
 				return res
 			})
+		case "transformations":
+			out.Values[i] = ec._ProjectSpec_transformations(ctx, field, obj)
 		case "policy":
 			out.Values[i] = ec._ProjectSpec_policy(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -8384,10 +8289,6 @@ func (ec *executionContext) unmarshalNCreateRecoveryRequest2githubᚗcomᚋcapep
 	return ec.unmarshalInputCreateRecoveryRequest(ctx, v)
 }
 
-func (ec *executionContext) unmarshalNCreateRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateRoleRequest(ctx context.Context, v interface{}) (model.CreateRoleRequest, error) {
-	return ec.unmarshalInputCreateRoleRequest(ctx, v)
-}
-
 func (ec *executionContext) unmarshalNCreateTokenRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐCreateTokenRequest(ctx context.Context, v interface{}) (model.CreateTokenRequest, error) {
 	return ec.unmarshalInputCreateTokenRequest(ctx, v)
 }
@@ -8426,10 +8327,6 @@ func (ec *executionContext) marshalNCreateUserResponse2ᚖgithubᚗcomᚋcapepri
 
 func (ec *executionContext) unmarshalNDeletePolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeletePolicyRequest(ctx context.Context, v interface{}) (model.DeletePolicyRequest, error) {
 	return ec.unmarshalInputDeletePolicyRequest(ctx, v)
-}
-
-func (ec *executionContext) unmarshalNDeleteRoleRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDeleteRoleRequest(ctx context.Context, v interface{}) (model.DeleteRoleRequest, error) {
-	return ec.unmarshalInputDeleteRoleRequest(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNDetachPolicyRequest2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐDetachPolicyRequest(ctx context.Context, v interface{}) (model.DetachPolicyRequest, error) {
@@ -8538,6 +8435,15 @@ func (ec *executionContext) marshalNModelName2githubᚗcomᚋcapeprivacyᚋcape�
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNNamedTransformation2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformation(ctx context.Context, v interface{}) (models.NamedTransformation, error) {
+	var res models.NamedTransformation
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNNamedTransformation2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformation(ctx context.Context, sel ast.SelectionSet, v models.NamedTransformation) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPassword(ctx context.Context, v interface{}) (primitives.Password, error) {
@@ -9102,6 +9008,38 @@ func (ec *executionContext) marshalOModelLabel2ᚖgithubᚗcomᚋcapeprivacyᚋc
 		return graphql.Null
 	}
 	return ec.marshalOModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalONamedTransformation2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformationᚄ(ctx context.Context, v interface{}) ([]models.NamedTransformation, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]models.NamedTransformation, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNNamedTransformation2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformation(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalONamedTransformation2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformationᚄ(ctx context.Context, sel ast.SelectionSet, v []models.NamedTransformation) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNNamedTransformation2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformation(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) marshalOPolicy2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicyᚄ(ctx context.Context, sel ast.SelectionSet, v []*models.Policy) graphql.Marshaler {

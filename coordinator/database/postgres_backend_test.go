@@ -555,12 +555,10 @@ func TestPostgresBackend(t *testing.T) {
 }
 
 func dbConnect(ctx context.Context, t dbtest.TestDatabase, codec crypto.EncryptionCodec) (Backend, error) {
-	db, err := New(t.URL(), "testing")
+	db, err := New(t.URL(), "testing", codec)
 	if err != nil {
 		return nil, err
 	}
-
-	db.SetEncryptionCodec(codec)
 
 	err = db.Open(ctx)
 	if err != nil {

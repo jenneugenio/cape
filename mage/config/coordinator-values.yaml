@@ -23,6 +23,10 @@ config:
       enable: true
       allow_origin:
         - 'localhost:8080'
+  user:
+    name: cape_user
+    email: cape_user@mycape.com
+    password: capecape
 
 service:
   type: "NodePort"

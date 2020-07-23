@@ -18,28 +18,6 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
-func (r *mutationResolver) DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	role := &primitives.Role{}
-	err := enforcer.Get(ctx, input.ID, role)
-	if err != nil {
-		return nil, err
-	}
-
-	if role.System {
-		return nil, errs.New(CannotDeleteSystemRole, "Role %s is a system role. Cannot delete", role.Label)
-	}
-
-	err = enforcer.Delete(ctx, primitives.RoleType, input.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, nil
-}
-
 func (r *mutationResolver) AssignRole(ctx context.Context, input model.AssignRoleRequest) (*model.Assignment, error) {
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
@@ -177,6 +155,27 @@ func (r *queryResolver) RoleMembers(ctx context.Context, roleID string) ([]*mode
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) DeleteRole(ctx context.Context, input model.DeleteRoleRequest) (*string, error) {
+	currSession := fw.Session(ctx)
+	enforcer := auth.NewEnforcer(currSession, r.Backend)
+
+	role := &primitives.Role{}
+	err := enforcer.Get(ctx, input.ID, role)
+	if err != nil {
+		return nil, err
+	}
+
+	if role.System {
+		return nil, errs.New(CannotDeleteSystemRole, "Role %s is a system role. Cannot delete", role.Label)
+	}
+
+	err = enforcer.Delete(ctx, primitives.RoleType, input.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
 func (r *modelRoleResolver) ID(ctx context.Context, obj *models.Role) (database.ID, error) {
 	return database.DecodeFromString(obj.ID)
 }
