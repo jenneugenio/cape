@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	modelmigration "github.com/capeprivacy/cape/models/migration"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/db"
@@ -14,8 +15,8 @@ import (
 // model representation of it
 func buildAttachment(ctx context.Context, enforcer *auth.Enforcer, db db.Interface,
 	attachment *primitives.Attachment) (*model.Attachment, error) {
-	role := &primitives.Role{}
-	err := enforcer.Get(ctx, attachment.RoleID, role)
+	deprecatedRole := &primitives.Role{}
+	err := enforcer.Get(ctx, attachment.RoleID, deprecatedRole)
 	if err != nil {
 		return nil, err
 	}
@@ -25,16 +26,18 @@ func buildAttachment(ctx context.Context, enforcer *auth.Enforcer, db db.Interfa
 		return nil, err
 	}
 
+	role := modelmigration.RoleFromPrimitive(*deprecatedRole)
+
 	return &model.Attachment{
 		ID:        attachment.ID,
 		CreatedAt: attachment.CreatedAt,
 		UpdatedAt: attachment.UpdatedAt,
-		Role:      role,
+		Role:      &role,
 		Policy:    policy,
 	}, nil
 }
 
-func hasRole(roles []*primitives.Role, label primitives.Label) bool {
+func hasRole(roles []*models.Role, label models.Label) bool {
 	found := false
 	for _, role := range roles {
 		if role.Label == label {

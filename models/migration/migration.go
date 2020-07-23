@@ -40,6 +40,17 @@ func CredentialsFromPrimitives(prim *primitives.Credentials) *models.Credentials
 	}
 }
 
+func RoleFromPrimitive(r primitives.Role) models.Role {
+	return models.Role{
+		ID:        r.ID.String(),
+		Version:   r.Version,
+		Label:     LabelFromPrimitive(r.Label),
+		System:    true,
+		CreatedAt: r.CreatedAt,
+		UpdatedAt: r.UpdatedAt,
+	}
+}
+
 func PrimitiveFromRole(r models.Role) (*primitives.Role, error) {
 	id, err := database.DecodeFromString(r.ID)
 	if err != nil {

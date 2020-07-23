@@ -19,14 +19,6 @@ type AssignRoleRequest struct {
 	UserID string `json:"user_id"`
 }
 
-type Assignment struct {
-	ID        string       `json:"id"`
-	Role      *models.Role `json:"role"`
-	User      *models.User `json:"user"`
-	CreatedAt time.Time    `json:"created_at"`
-	UpdatedAt time.Time    `json:"updated_at"`
-}
-
 type AttachPolicyRequest struct {
 	PolicyID string      `json:"policy_id"`
 	RoleID   database.ID `json:"role_id"`

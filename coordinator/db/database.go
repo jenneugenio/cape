@@ -15,6 +15,7 @@ type Interface interface {
 	Contributors() ContributorDB
 	RBAC() RBACDB
 	Config() ConfigDB
+	Assignments() AssignmentDB
 }
 
 // Interfaces
@@ -39,6 +40,11 @@ type UserDB interface {
 	Get(context.Context, models.Email) (*models.User, error)
 	GetByID(context.Context, string) (*models.User, error)
 	List(context.Context, *ListUserOptions) ([]models.User, error)
+}
+
+type AssignmentDB interface {
+	SetOrg(context.Context, models.Email, models.Label) (*models.Assignment, error)
+	SetProject(context.Context, models.Email, models.Label, models.Label) (*models.Assignment, error)
 }
 
 type RoleDB interface {

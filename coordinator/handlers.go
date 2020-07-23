@@ -143,7 +143,7 @@ type LogoutRequest struct {
 }
 
 func LogoutHandler(coordinator *Coordinator) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		backend := coordinator.backend
@@ -161,7 +161,7 @@ func LogoutHandler(coordinator *Coordinator) http.HandlerFunc {
 			respondWithError(w, r.URL.Path, err)
 			return
 		}
-	})
+	}
 }
 
 func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAuthority, input LogoutRequest) error {
@@ -178,7 +178,7 @@ func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAutho
 
 	found := false
 	for _, role := range currSession.Roles {
-		if role.Label == primitives.AdminRole {
+		if role.Label == models.AdminRole {
 			found = true
 		}
 	}

@@ -287,8 +287,7 @@ func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]*mod
 }
 
 // AssignRole assigns a role to an user
-func (c *Client) AssignRole(ctx context.Context, userID string,
-	roleID database.ID) (*model.Assignment, error) {
+func (c *Client) AssignRole(ctx context.Context, userID string, roleID database.ID) (*model.Assignment, error) {
 	var resp struct {
 		Assignment model.Assignment `json:"assignRole"`
 	}

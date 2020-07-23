@@ -13,7 +13,7 @@ type Session struct {
 	User               *models.User
 	Session            *primitives.Session
 	Policies           []*models.RBACPolicy
-	Roles              []*primitives.Role
+	Roles              []*models.Role
 	CredentialProvider primitives.CredentialProvider
 }
 
@@ -22,7 +22,7 @@ func NewSession(
 	user *models.User,
 	session *primitives.Session,
 	policies []*models.RBACPolicy,
-	roles []*primitives.Role,
+	roles []*models.Role,
 	cp primitives.CredentialProvider) (*Session, error) {
 	s := &Session{
 		User:               user,

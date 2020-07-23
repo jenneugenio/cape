@@ -117,7 +117,8 @@ func QueryUserRBAC(ctx context.Context, querier database.Querier, capedb db.Inte
 	return rbacPtrs, nil
 }
 
-func QueryRoles(ctx context.Context, db database.Querier, userID string) ([]*primitives.Role, error) {
+// TODO -- Don't think this function makes sense anymore (currently returns no roles)
+func QueryRoles(ctx context.Context, db database.Querier, userID string) ([]*models.Role, error) {
 	var assignments []*primitives.Assignment
 	filter := database.NewFilter(database.Where{
 		"user_id": userID,
@@ -139,7 +140,7 @@ func QueryRoles(ctx context.Context, db database.Querier, userID string) ([]*pri
 		return nil, err
 	}
 
-	return roles, nil
+	return nil, nil
 }
 
 type malformedRequest struct {
