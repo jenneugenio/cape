@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/manifoldco/go-base64"
 	"github.com/mitchellh/mapstructure"
 	"sigs.k8s.io/yaml"
 )
@@ -41,7 +42,6 @@ func ParsePolicy(data []byte) (*Policy, error) {
 		dec.DisallowUnknownFields()
 		return dec
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (n *NamedTransformation) UnmarshalJSON(data []byte) error {
 
 	n.Args = transformMap
 
-	return nil
+	return findSecretArgs(n.Args)
 }
 
 // UnmarshalGQL implements the graphql.Unmarshaler interfacemin
@@ -160,8 +160,7 @@ func (n *NamedTransformation) UnmarshalGQL(v interface{}) error {
 		delete(val, "type")
 
 		n.Args = val
-
-		return nil
+		return findSecretArgs(n.Args)
 	default:
 		return errors.New("unable to unmarshal gql policy spec")
 	}
@@ -176,4 +175,41 @@ func (n NamedTransformation) MarshalGQL(w io.Writer) {
 	}
 
 	fmt.Fprint(w, string(json))
+}
+
+type SecretArg struct {
+	Type  string        `json:"type"`
+	Name  string        `json:"name"`
+	Value *base64.Value `json:"value"`
+}
+
+// findSecretArgs is used by UnmarshalGQL and UnmarshalJSON to find secret args
+// amongst the other generic args. These can then later be encrypted or treated
+// differently.
+func findSecretArgs(args map[string]interface{}) error {
+	// Need to convert generic args to SecretArgs if they exist
+	for key, arg := range args {
+		argMap, ok := arg.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		sec := SecretArg{
+			Type: argMap["type"].(string),
+			Name: argMap["name"].(string),
+		}
+
+		val, ok := argMap["value"].(string)
+		if ok {
+			bVal, err := base64.NewFromString(val)
+			if err != nil {
+				return err
+			}
+			sec.Value = bVal
+		}
+
+		args[key] = sec
+	}
+
+	return nil
 }
