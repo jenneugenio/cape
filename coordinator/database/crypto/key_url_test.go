@@ -1,7 +1,10 @@
 package crypto
 
 import (
+	"strconv"
 	"testing"
+
+	"net/url"
 
 	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
@@ -36,5 +39,33 @@ func TestKeyURL(t *testing.T) {
 		bytes := make([]byte, 31)
 		_, err := NewBase64KeyURL(bytes)
 		g.Expect(err).NotTo(gm.BeNil())
+	})
+
+	t.Run("new azure key url", func(t *testing.T) {
+		key, err := NewKeyURL("azurekeyvault://mykey.com/mykey")
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(key).ToNot(gm.BeNil())
+	})
+
+	t.Run("invalid scheme", func(t *testing.T) {
+		_, err := NewKeyURL("http://haha.com")
+		gm.Expect(err).ToNot(gm.BeNil())
+	})
+
+	t.Run("key url from url", func(t *testing.T) {
+		u, _ := url.Parse("azurekeyvault://mykey.com/mykey")
+
+		key, err := KeyURLFromURL(u)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(key).ToNot(gm.BeNil())
+	})
+
+	t.Run("unmarhsal json", func(t *testing.T) {
+		str := "azurekeyvault://mykey.com/mykey"
+		key := &KeyURL{}
+		err := key.UnmarshalJSON([]byte(strconv.Quote(str)))
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(key.String()).To(gm.Equal(str))
 	})
 }

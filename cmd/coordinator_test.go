@@ -5,8 +5,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"sigs.k8s.io/yaml"
 	"testing"
+
+	"sigs.k8s.io/yaml"
 
 	gm "github.com/onsi/gomega"
 
@@ -45,7 +46,7 @@ func TestCoordinatorConfiguration(t *testing.T) {
 
 		gm.Expect(cfg.Port).To(gm.Equal(8080))
 		gm.Expect(cfg.Version).To(gm.Equal(1))
-		gm.Expect(len(*cfg.RootKey)).To(gm.Equal(32))
+		gm.Expect(len(cfg.RootKey)).To(gm.Equal(43))
 		gm.Expect(cfg.DB.Addr.String()).To(gm.Equal(url))
 	})
 
@@ -75,7 +76,7 @@ func TestCoordinatorConfiguration(t *testing.T) {
 
 		gm.Expect(cfg.Port).To(gm.Equal(8080))
 		gm.Expect(cfg.Version).To(gm.Equal(1))
-		gm.Expect(len(*cfg.RootKey)).To(gm.Equal(32))
+		gm.Expect(len(cfg.RootKey)).To(gm.Equal(43))
 		gm.Expect(cfg.DB.Addr.String()).To(gm.Equal(url))
 	})
 
@@ -109,7 +110,7 @@ func TestCoordinatorConfiguration(t *testing.T) {
 
 		gm.Expect(cfg.Port).To(gm.Equal(8080))
 		gm.Expect(cfg.Version).To(gm.Equal(1))
-		gm.Expect(len(*cfg.RootKey)).To(gm.Equal(32))
+		gm.Expect(len(cfg.RootKey)).To(gm.Equal(43))
 		gm.Expect(cfg.DB.Addr.String()).To(gm.Equal(url))
 	})
 }

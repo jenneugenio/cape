@@ -160,4 +160,18 @@ func TestKeypair(t *testing.T) {
 			})
 		}
 	})
+
+	t.Run("(un)marshal keypair", func(t *testing.T) {
+		kp, err := NewKeypair()
+		gm.Expect(err).To(gm.BeNil())
+
+		by, err := kp.MarshalJSON()
+		gm.Expect(err).To(gm.BeNil())
+
+		newKp := &Keypair{}
+		err = newKp.UnmarshalJSON(by)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(newKp).To(gm.Equal(kp))
+	})
 }

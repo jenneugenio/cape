@@ -11,9 +11,8 @@ import (
 )
 
 const (
-	NonceLength        = 24
-	KeyLength          = 32
-	EncryptedKeyLength = NonceLength + KeyLength + secretbox.Overhead // 72
+	NonceLength = 24
+	KeyLength   = 32
 )
 
 func NewSecretBoxCodec(kms KMS) *SecretBoxCodec {
@@ -68,11 +67,12 @@ func (s *SecretBoxCodec) Encrypt(ctx context.Context, data *base64.Value) (*base
 func (s *SecretBoxCodec) Decrypt(ctx context.Context, data *base64.Value) (*base64.Value, error) {
 	encrypted := []byte(*data)
 
+	encryptedKeyLength := s.kms.EncryptedKeyLength()
 	// separate the wrapped dek from the encrypted payload
-	var wrappedDEK [EncryptedKeyLength]byte
-	copy(wrappedDEK[:], encrypted[:EncryptedKeyLength])
+	wrappedDEK := make([]byte, encryptedKeyLength)
+	copy(wrappedDEK[:], encrypted[:encryptedKeyLength])
 
-	encrypted = encrypted[EncryptedKeyLength:]
+	encrypted = encrypted[encryptedKeyLength:]
 
 	key, err := s.kms.Decrypt(ctx, wrappedDEK[:])
 	if err != nil {

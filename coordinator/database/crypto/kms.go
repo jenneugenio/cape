@@ -17,6 +17,7 @@ type KMS interface {
 	Open(context.Context) error
 	Encrypt(context.Context, []byte) ([]byte, error)
 	Decrypt(context.Context, []byte) ([]byte, error)
+	EncryptedKeyLength() int
 	Close() error
 }
 
@@ -31,8 +32,9 @@ func NewLocalKMS(url *KeyURL) (*LocalKMS, error) {
 	copy(key[:], *k)
 
 	return &LocalKMS{
-		key: key,
-		url: url,
+		key:                key,
+		url:                url,
+		encryptedKeyLength: NonceLength + KeyLength + secretbox.Overhead, // 72
 	}, nil
 }
 
@@ -41,8 +43,9 @@ func NewLocalKMS(url *KeyURL) (*LocalKMS, error) {
 // able to be expanded to something that can handle rotating
 // keys.
 type LocalKMS struct {
-	url *KeyURL
-	key [KeyLength]byte
+	url                *KeyURL
+	key                [KeyLength]byte
+	encryptedKeyLength int
 }
 
 // Encrypt encrypts the data encryption key (dek) returning the encrypted bytes. The
@@ -64,13 +67,35 @@ func (l *LocalKMS) Close() error {
 	return nil
 }
 
+func (l *LocalKMS) EncryptedKeyLength() int {
+	return l.encryptedKeyLength
+}
+
 func LoadKMS(url *KeyURL) (KMS, error) {
+	var k KMS
 	switch url.Type() {
 	case Base64Key:
-		return NewLocalKMS(url)
+		kms, err := NewLocalKMS(url)
+		if err != nil {
+			return nil, err
+		}
+		k = kms
+	case AzureKey:
+		kms, err := NewAzureKMS(url)
+		if err != nil {
+			return nil, err
+		}
+		k = kms
 	default:
 		return nil, errors.New(InvalidKeyURLCause, "Could not find url type %s for loading KMS", url.Type())
 	}
+
+	err := k.Open(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+
+	return k, nil
 }
 
 func GenerateKey() ([KeyLength]byte, error) {
