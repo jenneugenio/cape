@@ -4,6 +4,7 @@ serviceAccount:
 
 service:
   type: "ClusterIP"
+  portName: service
   port: 8080
   targetPort: 3000
   uiPortName: ui
@@ -11,7 +12,6 @@ service:
   uiTargetPort: 80
   annotations: {}
   labels: {}
-  portName: service
 
 labels: {}
 annotations: {}
