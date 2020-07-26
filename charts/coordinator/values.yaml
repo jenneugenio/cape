@@ -6,6 +6,7 @@ service:
   type: "ClusterIP"
   port: 8080
   targetPort: 3000
+  uiPortName: ui
   uiPort: 80
   uiTargetPort: 80
   annotations: {}
