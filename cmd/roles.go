@@ -9,83 +9,41 @@ import (
 )
 
 func init() {
-	createCmd := &Command{
-		Usage:     "Create a new role",
-		Arguments: []*Argument{RoleLabelArg},
-		Examples: []*Example{
-			{
-				Example:     "cape roles create data-scientist",
-				Description: "Creates a new role with the label 'data-scientist'.",
-			},
-			{
-				Example:     "CAPE_CLUSTER=prod cape roles create data-scientist",
-				Description: "Creates a role on the cape cluster called prod.",
-			},
-		},
-		Command: &cli.Command{
-			Name:   "create",
-			Action: handleSessionOverrides(rolesCreateCmd),
-			Flags: []cli.Flag{
-				clusterFlag(),
-				membersFlag(),
-			},
-		},
-	}
+	//listCmd := &Command{
+	//	Usage: "Lists all the roles on the cluster",
+	//	Examples: []*Example{
+	//		{
+	//			Example:     "cape roles list",
+	//			Description: "Lists all roles",
+	//		},
+	//	},
+	//	Command: &cli.Command{
+	//		Name:   "list",
+	//		Action: handleSessionOverrides(rolesListCmd),
+	//		Flags: []cli.Flag{
+	//			clusterFlag(),
+	//		},
+	//	},
+	//}
 
-	removeCmd := &Command{
-		Usage:     "Remove command removes a role",
-		Arguments: []*Argument{RoleLabelArg},
+	meCmd := &Command{
+		Usage: "Tells you what your role is",
 		Examples: []*Example{
 			{
-				Example:     "cape roles remove data-scientist",
-				Description: "Removes a new role with the label 'data-scientist'.",
+				Example: "cape roles me",
+				Description: "Tells you what your role in the org is (admin or user)",
 			},
 			{
-				Example:     "cape roles remove --yes data-scientist",
-				Description: "Removes a role skipping the confirm dialog.",
+				Example: "cape roles me --project my-project",
+				Description: "Tells you what your role in the specified project is",
 			},
 		},
 		Command: &cli.Command{
-			Name:   "remove",
-			Action: handleSessionOverrides(rolesRemoveCmd),
+			Name: "me",
+			Action: handleSessionOverrides(rolesMeCmd),
 			Flags: []cli.Flag{
 				clusterFlag(),
-				yesFlag(),
-			},
-		},
-	}
-
-	listCmd := &Command{
-		Usage: "Lists all the roles on the cluster",
-		Examples: []*Example{
-			{
-				Example:     "cape roles list",
-				Description: "Lists all roles",
-			},
-		},
-		Command: &cli.Command{
-			Name:   "list",
-			Action: handleSessionOverrides(rolesListCmd),
-			Flags: []cli.Flag{
-				clusterFlag(),
-			},
-		},
-	}
-
-	membersCmd := &Command{
-		Usage:     "Lists all the users assigned a role",
-		Arguments: []*Argument{RoleLabelArg},
-		Examples: []*Example{
-			{
-				Example:     "cape roles members admin",
-				Description: "Lists all the users assigned role admin",
-			},
-		},
-		Command: &cli.Command{
-			Name:   "members",
-			Action: handleSessionOverrides(rolesMembersCmd),
-			Flags: []cli.Flag{
-				clusterFlag(),
+				projectLabelFlag(),
 			},
 		},
 	}
@@ -95,15 +53,20 @@ func init() {
 		Command: &cli.Command{
 			Name: "roles",
 			Subcommands: []*cli.Command{
-				createCmd.Package(),
-				removeCmd.Package(),
-				listCmd.Package(),
-				membersCmd.Package(),
+				meCmd.Package(),
 			},
 		},
 	}
 
 	commands = append(commands, rolesCmd.Package())
+}
+
+func rolesMeCmd(c *cli.Context) error {
+	project := c.String("project")
+
+	fmt.Println("Getting role for ... ", project)
+
+	return nil
 }
 
 func rolesCreateCmd(c *cli.Context) error {
