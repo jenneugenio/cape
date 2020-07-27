@@ -45,6 +45,12 @@ func TestRoles(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(r.Label).To(gm.Equal(models.ProjectOwnerRole))
 	})
+
+	t.Run("Can't get a role for a project you don't belong to", func(t *testing.T) {
+		_, err := client.MyProjectRole(ctx, "fake-project")
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: you are not a member of the requested project: fake-project"))
+	})
 }
 //
 //func TestListRoles(t *testing.T) {

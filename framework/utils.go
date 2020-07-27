@@ -72,49 +72,54 @@ func QueryUserPolicies(ctx context.Context, querier database.Querier, capedb db.
 // QueryUserRBAC is a helper function to query all roles assigned to an user and then
 // all policies attached to those roles.
 func QueryUserRBAC(ctx context.Context, querier database.Querier, capedb db.Interface, userID string) ([]*models.RBACPolicy, error) {
-	var assignments []*primitives.Assignment
-	assignmentFilter := database.NewFilter(database.Where{"user_id": userID}, nil, nil)
-	err := querier.Query(ctx, &assignments, assignmentFilter)
-	if err != nil {
-		return nil, err
-	}
 
-	roleIDs := database.InFromEntities(assignments, func(e interface{}) interface{} {
-		return e.(*primitives.Assignment).RoleID
-	})
+	// TODO -- bring back
+	return make([]*models.RBACPolicy, 0), nil
 
-	if len(roleIDs) == 0 {
-		return nil, nil
-	}
-
-	var attachments []*primitives.Attachment
-	attachmentFilter := database.NewFilter(database.Where{"role_id": roleIDs}, nil, nil)
-	err = querier.Query(ctx, &attachments, attachmentFilter)
-	if err != nil {
-		return nil, err
-	}
-
-	var policyIDs []string
-	for _, a := range attachments {
-		policyIDs = append(policyIDs, a.PolicyID)
-	}
-
-	if len(policyIDs) == 0 {
-		return []*models.RBACPolicy{}, nil
-	}
-
-	rbacs, err := capedb.RBAC().List(ctx, &db.ListRBACOptions{FilterIDs: policyIDs})
-	if err != nil {
-		return nil, err
-	}
-
-	rbacPtrs := make([]*models.RBACPolicy, len(rbacs))
-	for i, policy := range rbacs {
-		p := policy
-		rbacPtrs[i] = &p
-	}
-
-	return rbacPtrs, nil
+	//var assignments []*primitives.Assignment
+	//
+	//assignmentFilter := database.NewFilter(database.Where{"user_id": userID}, nil, nil)
+	//err := querier.Query(ctx, &assignments, assignmentFilter)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//roleIDs := database.InFromEntities(assignments, func(e interface{}) interface{} {
+	//	return e.(*primitives.Assignment).RoleID
+	//})
+	//
+	//if len(roleIDs) == 0 {
+	//	return nil, nil
+	//}
+	//
+	//var attachments []*primitives.Attachment
+	//attachmentFilter := database.NewFilter(database.Where{"role_id": roleIDs}, nil, nil)
+	//err = querier.Query(ctx, &attachments, attachmentFilter)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//var policyIDs []string
+	//for _, a := range attachments {
+	//	policyIDs = append(policyIDs, a.PolicyID)
+	//}
+	//
+	//if len(policyIDs) == 0 {
+	//	return []*models.RBACPolicy{}, nil
+	//}
+	//
+	//rbacs, err := capedb.RBAC().List(ctx, &db.ListRBACOptions{FilterIDs: policyIDs})
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//rbacPtrs := make([]*models.RBACPolicy, len(rbacs))
+	//for i, policy := range rbacs {
+	//	p := policy
+	//	rbacPtrs[i] = &p
+	//}
+	//
+	//return rbacPtrs, nil
 }
 
 // TODO -- Don't think this function makes sense anymore (currently returns no roles)

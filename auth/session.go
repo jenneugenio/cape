@@ -13,7 +13,7 @@ type Session struct {
 	User               *models.User
 	Session            *primitives.Session
 	Policies           []*models.RBACPolicy
-	Roles              []models.Role
+	Roles              models.UserRoles
 	CredentialProvider primitives.CredentialProvider
 }
 
@@ -22,7 +22,7 @@ func NewSession(
 	user *models.User,
 	session *primitives.Session,
 	policies []*models.RBACPolicy,
-	roles []models.Role,
+	roles models.UserRoles,
 	cp primitives.CredentialProvider) (*Session, error) {
 	s := &Session{
 		User:               user,
@@ -47,10 +47,6 @@ func (s *Session) Validate() error {
 
 	if s.Policies == nil {
 		return errors.New(InvalidInfo, "Policies must not be nil")
-	}
-
-	if s.Roles == nil {
-		return errors.New(InvalidInfo, "Roles must not be nil")
 	}
 
 	return nil

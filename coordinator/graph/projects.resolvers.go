@@ -24,7 +24,8 @@ func (r *contributorResolver) Project(ctx context.Context, obj *models.Contribut
 }
 
 func (r *contributorResolver) Role(ctx context.Context, obj *models.Contributor) (*models.Role, error) {
-	return r.Database.Roles().GetByID(ctx, obj.RoleID)
+	// return r.Database.Roles().GetByID(ctx, obj.RoleID)
+	panic("not implemented")
 }
 
 func (r *mutationResolver) CreateProject(ctx context.Context, project model.CreateProjectRequest) (*models.Project, error) {
@@ -44,7 +45,12 @@ func (r *mutationResolver) CreateProject(ctx context.Context, project model.Crea
 
 	// Now make the creator the project owner
 	// TODO -- this should happen in a transaction
-	_, err := r.Database.Contributors().Add(ctx, label, currSession.User.Email, models.ProjectOwnerRole)
+	_, err := r.Database.Contributors().Add(ctx, label, currSession.User.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.Database.Roles().SetProjectRole(ctx, currSession.User.Email, label, models.ProjectOwnerRole)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +125,8 @@ func (r *mutationResolver) UnarchiveProject(ctx context.Context, id *string, lab
 }
 
 func (r *mutationResolver) UpdateContributor(ctx context.Context, projectLabel models.Label, userEmail models.Email, roleLabel models.Label) (*models.Contributor, error) {
-	return r.Database.Contributors().Add(ctx, projectLabel, userEmail, roleLabel)
+	//return r.Database.Contributors().Add(ctx, projectLabel, userEmail, roleLabel)
+	panic("not implemented")
 }
 
 func (r *mutationResolver) RemoveContributor(ctx context.Context, projectLabel models.Label, userEmail models.Email) (*models.Contributor, error) {

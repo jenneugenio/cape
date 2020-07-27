@@ -177,10 +177,8 @@ func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAutho
 	}
 
 	found := false
-	for _, role := range currSession.Roles {
-		if role.Label == models.AdminRole {
-			found = true
-		}
+	if currSession.Roles.Global.Label == models.AdminRole {
+		found = true
 	}
 
 	if !found {

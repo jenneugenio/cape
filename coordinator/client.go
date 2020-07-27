@@ -198,7 +198,27 @@ func (c *Client) MyRole(ctx context.Context) (*models.Role, error) {
 }
 
 func (c *Client) MyProjectRole(ctx context.Context, project models.Label) (*models.Role, error) {
-	return nil, nil
+	var resp struct {
+		Role models.Role `json:"myRole"`
+	}
+
+	variables := make(map[string]interface{})
+	variables["project_label"] = project
+
+	err := c.transport.Raw(ctx, `
+		query MyRole($project_label: ModelLabel) {
+			myRole(project_label: $project_label) {
+				id,
+				label
+			}
+		}
+	`, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Role, nil
 }
 
 // CreateRole creates a new role with a label

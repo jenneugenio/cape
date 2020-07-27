@@ -6,9 +6,9 @@ package graph
 import (
 	"context"
 	"fmt"
-	fw "github.com/capeprivacy/cape/framework"
 
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
+	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 )
 
@@ -38,7 +38,17 @@ func (r *mutationResolver) SetProjectRole(ctx context.Context, userEmail models.
 
 func (r *queryResolver) MyRole(ctx context.Context, projectLabel *models.Label) (*models.Role, error) {
 	currSession := fw.Session(ctx)
-	return &currSession.Roles[0], nil
+
+	if projectLabel == nil {
+		return &currSession.Roles.Global, nil
+	}
+
+	role, ok := currSession.Roles.Project[*projectLabel]
+	if !ok {
+		return nil, fmt.Errorf("you are not a member of the requested project: %s", projectLabel)
+	}
+
+	return &role, nil
 }
 
 // Assignment returns generated.AssignmentResolver implementation.

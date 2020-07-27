@@ -22,7 +22,7 @@ type contributorAddIDs struct {
 	ProjectID string `json:"project_id"`
 }
 
-func (p *pgContributor) Add(ctx context.Context, project models.Label, email models.Email, role models.Label) (*models.Contributor, error) {
+func (p *pgContributor) Add(ctx context.Context, project models.Label, email models.Email) (*models.Contributor, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
@@ -31,13 +31,11 @@ func (p *pgContributor) Add(ctx context.Context, project models.Label, email mod
 
 	IDsQuery := `select json_build_object(
 		'user_id', users.data->>'id',
-		'role_id', roles.data->>'id',
-		'project_id', projects.data->>'id') from users, roles, projects where
+		'project_id', projects.data->>'id') from users, projects where
 		users.data->>'email' = $1 and
-		roles.data->>'label' = $2 and
-		projects.data->>'label' = $3;`
+		projects.data->>'label' = $2;`
 
-	row := p.pool.QueryRow(ctx, IDsQuery, email, role, project)
+	row := p.pool.QueryRow(ctx, IDsQuery, email, project)
 	err := row.Scan(&ids)
 	if err != nil {
 		return nil, err
@@ -47,7 +45,6 @@ func (p *pgContributor) Add(ctx context.Context, project models.Label, email mod
 		ID:        models.NewID(),
 		UserID:    ids.UserID,
 		ProjectID: ids.ProjectID,
-		RoleID:    ids.RoleID,
 		Version:   1,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),

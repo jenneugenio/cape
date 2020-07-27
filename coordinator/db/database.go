@@ -46,7 +46,7 @@ type RoleDB interface {
 	GetByID(context.Context, string) (*models.Role, error)
 	List(context.Context, *ListRoleOptions) ([]*models.Role, error)
 
-	GetByUserID(context.Context, string) ([]models.Role, error)
+	GetAll(context.Context, string) (*models.UserRoles, error)
 
 	SetOrgRole(context.Context, models.Email, models.Label) (*models.Assignment, error)
 	SetProjectRole(context.Context, models.Email, models.Label, models.Label) (*models.Assignment, error)
@@ -61,7 +61,7 @@ type ConfigDB interface {
 }
 
 type ContributorDB interface {
-	Add(context.Context, models.Label, models.Email, models.Label) (*models.Contributor, error)
+	Add(context.Context, models.Label, models.Email) (*models.Contributor, error)
 	Get(context.Context, models.Label, models.Email) (*models.Contributor, error)
 	List(context.Context, models.Label) ([]models.Contributor, error)
 	Delete(context.Context, models.Label, models.Email) (*models.Contributor, error)

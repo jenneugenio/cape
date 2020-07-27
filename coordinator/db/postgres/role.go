@@ -87,35 +87,44 @@ func (r *pgRole) DetachPolicy(context.Context, models.Label) error {
 	return errors.New("not implemented")
 }
 
-func (r *pgRole) GetByUserID(ctx context.Context, userId string) ([]models.Role, error) {
+// Return all of the roles (global & project) that a user belongs to
+func (r *pgRole) GetAll(ctx context.Context, userId string) (*models.UserRoles, error) {
 	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
-	// get all global roles
-
+	// get the users global role
 	s := `select roles.data 
 			from roles, assignments 
 			where roles.id = assignments.role_id and assignments.user_id = $1;`
 
-	rows, err := r.pool.Query(ctx, s, userId)
+	userRoles := models.UserRoles{}
+	row := r.pool.QueryRow(ctx, s, userId)
+	err := row.Scan(&userRoles.Global)
 	if err != nil {
 		return nil, err
 	}
 
-	var roles []models.Role
-	for rows.Next() {
-		var r models.Role
-		rows.Scan(&r)
+	// get the project roles
+	s = `select json_build_object(projects.data->>'label', roles.data)
+		from roles, assignments, projects
+		where roles.id = assignments.role_id and assignments.user_id = $1 and projects.id = assignments.data->>'project_id';`
 
-		roles = append(roles, r)
+	row = r.pool.QueryRow(ctx, s, userId)
+	err = row.Scan(&userRoles.Project)
+	if err != nil {
+		if err.Error() == "no rows in result set" {
+			return &userRoles, nil
+		}
+
+		return nil, err
 	}
 
-	return roles, nil
+	return &userRoles, nil
 }
 
 type assignmentIDs struct {
 	UserID    string `json:"user_id"`
-	RoleID    string `json:"user_id"`
+	RoleID    string `json:"role_id"`
 	ProjectID string `json:"project_id"`
 }
 
@@ -161,8 +170,49 @@ func (r *pgRole) SetOrgRole(ctx context.Context, email models.Email, label model
 	return &assignment, nil
 }
 
-func (r *pgRole) SetProjectRole(ctx context.Context, email models.Email, label models.Label, label2 models.Label) (*models.Assignment, error) {
-	panic("implement me")
+func (r *pgRole) SetProjectRole(ctx context.Context, email models.Email, project models.Label, role models.Label) (*models.Assignment, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	var ids assignmentIDs
+	IDsQuery := `select json_build_object(
+		'user_id', users.data->>'id',
+		'project_id', projects.data->>'id',
+		'role_id', roles.data->>'id')
+
+		from users, roles, projects
+		where 
+			users.data->>'email' = $1 AND
+			projects.data->>'label' = $2 AND
+			roles.data->>'label' = $3;
+`
+
+	row := r.pool.QueryRow(ctx, IDsQuery, email, project, role)
+	err := row.Scan(&ids)
+	if err != nil {
+		return nil, err
+	}
+
+	assignment := models.Assignment{
+		ID:        models.NewID(),
+		UserID:    ids.UserID,
+		RoleID:    ids.RoleID,
+		ProjectID: ids.ProjectID,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	s := `insert into assignments (data) VALUES ($1)`
+	_, err = r.pool.Exec(ctx, s, assignment)
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+			return nil, db.ErrDuplicateKey
+		}
+
+		return nil, fmt.Errorf("error creating contributor: %w", err)
+	}
+
+	return &assignment, nil
 }
 
 

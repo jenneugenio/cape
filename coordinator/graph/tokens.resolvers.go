@@ -59,7 +59,7 @@ func (r *mutationResolver) RemoveToken(ctx context.Context, id database.ID) (dat
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	hasAdminRole := hasRole(currSession.Roles, models.AdminRole)
+	hasAdminRole := currSession.Roles.Global.Label == models.AdminRole
 
 	token := &primitives.Token{}
 	err := enforcer.Get(ctx, id, token)
@@ -79,7 +79,7 @@ func (r *queryResolver) Tokens(ctx context.Context, userID string) ([]database.I
 	currSession := fw.Session(ctx)
 	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	hasAdminRole := hasRole(currSession.Roles, models.AdminRole)
+	hasAdminRole := currSession.Roles.Global.Label == models.AdminRole
 
 	if !hasAdminRole && currSession.User.ID != userID {
 		return nil, errs.New(auth.AuthorizationFailure, "Can only list tokens you own")

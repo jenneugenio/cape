@@ -39,6 +39,11 @@ func ValidProjectRole(role Label) bool {
 	return false
 }
 
+type UserRoles struct {
+	Global Role
+	Project map[Label]Role
+}
+
 // Role in a role in the system (e.g. Admin, user, etc)
 type Role struct {
 	ID        string    `json:"id"`

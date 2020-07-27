@@ -218,13 +218,13 @@ func IsAuthenticatedMiddleware(coordinator *Coordinator) func(http.Handler) http
 				return
 			}
 
-			roles, err := capedb.Roles().GetByUserID(ctx, cp.GetUserID())
+			roles, err := capedb.Roles().GetAll(ctx, cp.GetUserID())
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return
 			}
 
-			aSession, err := auth.NewSession(user, session, rbacs, roles, cp)
+			aSession, err := auth.NewSession(user, session, rbacs, *roles, cp)
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return
