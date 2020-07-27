@@ -5,7 +5,6 @@ package graph
 
 import (
 	"context"
-
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
@@ -71,13 +70,8 @@ func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
 	return userPtrs, nil
 }
 
-func (r *userResolver) Roles(ctx context.Context, obj *models.User) ([]*models.Role, error) {
-	return nil, nil
-	// TODO -- be able to query roles
-	//currSession := fw.Session(ctx)
-	//enforcer := auth.NewEnforcer(currSession, r.Backend)
-	//
-	//return fw.QueryRoles(ctx, enforcer, obj.ID)
+func (r *userResolver) Role(ctx context.Context, obj *models.User) (*models.Role, error) {
+	return r.Database.Roles().GetOrgRole(ctx, obj.Email)
 }
 
 // User returns generated.UserResolver implementation.

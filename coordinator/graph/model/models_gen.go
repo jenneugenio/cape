@@ -8,11 +8,6 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 )
 
-type AssignRoleRequest struct {
-	RoleID string `json:"role_id"`
-	UserID string `json:"user_id"`
-}
-
 type AttemptRecoveryRequest struct {
 	NewPassword primitives.Password `json:"new_password"`
 	Secret      primitives.Password `json:"secret"`
@@ -27,11 +22,6 @@ type CreateProjectRequest struct {
 
 type CreateRecoveryRequest struct {
 	Email models.Email `json:"email"`
-}
-
-type CreateRoleRequest struct {
-	Label   models.Label `json:"label"`
-	UserIds []string     `json:"user_ids"`
 }
 
 type CreateTokenRequest struct {
@@ -55,10 +45,6 @@ type CreateUserResponse struct {
 
 type DeleteRecoveriesRequest struct {
 	Ids []database.ID `json:"ids"`
-}
-
-type DeleteRoleRequest struct {
-	ID string `json:"id"`
 }
 
 type UpdateProjectRequest struct {

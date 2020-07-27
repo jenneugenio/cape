@@ -59,7 +59,7 @@ func (c *Client) Me(ctx context.Context) (*models.User, error) {
 // GraphQL type.
 type UserResponse struct {
 	*models.User
-	Roles []*models.Role `json:"roles"`
+	Role models.Role `json:"role"`
 }
 
 // GetUser returns a user and it's roles!
@@ -77,7 +77,7 @@ func (c *Client) GetUser(ctx context.Context, id string) (*UserResponse, error) 
 				id
 				name
 				email
-				roles {
+				role {
 					id
 					label
 				}

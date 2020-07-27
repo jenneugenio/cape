@@ -14,20 +14,6 @@ type Assignment {
   updated_at: Time!
 }
 
-input CreateRoleRequest {
-  label: ModelLabel!
-  user_ids: [String!]
-}
-
-input DeleteRoleRequest {
-  id: String!
-}
-
-input AssignRoleRequest {
-  role_id: String!
-  user_id: String!
-}
-
 extend type Query {
   # Get your global role, you can optionally specify a project label to get your role within a project
   myRole(project_label: ModelLabel): Role!

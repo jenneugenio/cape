@@ -49,6 +49,7 @@ type RoleDB interface {
 	GetAll(context.Context, string) (*models.UserRoles, error)
 
 	SetOrgRole(context.Context, models.Email, models.Label) (*models.Assignment, error)
+	GetOrgRole(context.Context, models.Email) (*models.Role, error)
 	SetProjectRole(context.Context, models.Email, models.Label, models.Label) (*models.Assignment, error)
 
 	CreateSystemRoles(context.Context) error

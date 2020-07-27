@@ -7,9 +7,8 @@ type User {
   email: ModelEmail!
   created_at: Time!
   updated_at: Time!
-  roles: [Role!]
+  role: Role!
 }
-
 
 input CreateUserRequest {
   name: ModelName!
