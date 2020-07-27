@@ -42,8 +42,6 @@ type UserDB interface {
 }
 
 type RoleDB interface {
-	Create(context.Context, *models.Role) error
-	Delete(context.Context, models.Label) (DeleteStatus, error)
 	Get(context.Context, models.Label) (*models.Role, error)
 	GetByID(context.Context, string) (*models.Role, error)
 	List(context.Context, *ListRoleOptions) ([]*models.Role, error)

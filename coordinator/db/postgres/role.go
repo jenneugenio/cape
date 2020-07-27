@@ -20,13 +20,6 @@ type pgRole struct {
 
 var _ db.RoleDB = &pgRole{}
 
-func (r *pgRole) Create(context.Context, *models.Role) error {
-	return errors.New("not implemented")
-}
-
-func (r *pgRole) Delete(context.Context, models.Label) (db.DeleteStatus, error) {
-	return db.DeleteStatusError, errors.New("not implemented")
-}
 
 func (r *pgRole) Get(ctx context.Context, label models.Label) (*models.Role, error) {
 	ctx, cancel := context.WithTimeout(ctx, r.timeout)
