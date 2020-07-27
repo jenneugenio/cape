@@ -25,7 +25,7 @@ func (r *mutationResolver) SetOrgRole(ctx context.Context, userEmail models.Emai
 		return nil, fmt.Errorf("invalid role: %s", roleLabel)
 	}
 
-	return r.Database.Assignments().SetOrg(ctx, userEmail, roleLabel)
+	return r.Database.Roles().SetOrgRole(ctx, userEmail, roleLabel)
 }
 
 func (r *mutationResolver) SetProjectRole(ctx context.Context, userEmail models.Email, projectLabel models.Label, roleLabel models.Label) (*models.Assignment, error) {
@@ -33,7 +33,7 @@ func (r *mutationResolver) SetProjectRole(ctx context.Context, userEmail models.
 		return nil, fmt.Errorf("invalid role: %s", roleLabel)
 	}
 
-	return r.Database.Assignments().SetProject(ctx, userEmail, projectLabel, roleLabel)
+	return r.Database.Roles().SetProjectRole(ctx, userEmail, projectLabel, roleLabel)
 }
 
 func (r *queryResolver) MyRole(ctx context.Context, projectLabel *models.Label) (*models.Role, error) {

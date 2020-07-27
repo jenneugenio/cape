@@ -3,8 +3,10 @@ package capepg
 import (
 	"context"
 	"errors"
+	"fmt"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
+	"strings"
 	"time"
 
 	"github.com/capeprivacy/cape/coordinator/db"
@@ -117,4 +119,57 @@ func (r *pgRole) GetByUserID(ctx context.Context, userId string) ([]models.Role,
 
 	return roles, nil
 }
+
+type assignmentIDs struct {
+	UserID    string `json:"user_id"`
+	RoleID    string `json:"user_id"`
+	ProjectID string `json:"project_id"`
+}
+
+func (r *pgRole) SetOrgRole(ctx context.Context, email models.Email, label models.Label) (*models.Assignment, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	var ids assignmentIDs
+	IDsQuery := `select json_build_object(
+		'user_id', users.data->>'id',
+		'role_id', roles.data->>'id')
+
+		from users, roles
+		where 
+			users.data->>'email' = $1 AND
+			roles.data->>'label' = $2;`
+
+	row := r.pool.QueryRow(ctx, IDsQuery, email, label)
+	err := row.Scan(&ids)
+	if err != nil {
+		return nil, err
+	}
+
+	assignment := models.Assignment{
+		ID:        models.NewID(),
+		UserID:    ids.UserID,
+		RoleID:    ids.RoleID,
+		ProjectID: "",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	s := `insert into assignments (data) VALUES ($1)`
+	_, err = r.pool.Exec(ctx, s, assignment)
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+			return nil, db.ErrDuplicateKey
+		}
+
+		return nil, fmt.Errorf("error creating contributor: %w", err)
+	}
+
+	return &assignment, nil
+}
+
+func (r *pgRole) SetProjectRole(ctx context.Context, email models.Email, label models.Label, label2 models.Label) (*models.Assignment, error) {
+	panic("implement me")
+}
+
 

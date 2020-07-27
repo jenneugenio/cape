@@ -15,7 +15,6 @@ type Interface interface {
 	Contributors() ContributorDB
 	RBAC() RBACDB
 	Config() ConfigDB
-	Assignments() AssignmentDB
 }
 
 // Interfaces
@@ -42,11 +41,6 @@ type UserDB interface {
 	List(context.Context, *ListUserOptions) ([]models.User, error)
 }
 
-type AssignmentDB interface {
-	SetOrg(context.Context, models.Email, models.Label) (*models.Assignment, error)
-	SetProject(context.Context, models.Email, models.Label, models.Label) (*models.Assignment, error)
-}
-
 type RoleDB interface {
 	Create(context.Context, *models.Role) error
 	Delete(context.Context, models.Label) (DeleteStatus, error)
@@ -55,6 +49,9 @@ type RoleDB interface {
 	List(context.Context, *ListRoleOptions) ([]*models.Role, error)
 
 	GetByUserID(context.Context, string) ([]models.Role, error)
+
+	SetOrgRole(context.Context, models.Email, models.Label) (*models.Assignment, error)
+	SetProjectRole(context.Context, models.Email, models.Label, models.Label) (*models.Assignment, error)
 
 	AttachPolicy(context.Context, models.Label) error
 	DetachPolicy(context.Context, models.Label) error
