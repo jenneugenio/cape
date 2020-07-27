@@ -91,3 +91,30 @@ func (r *pgRole) AttachPolicy(context.Context, models.Label) error {
 func (r *pgRole) DetachPolicy(context.Context, models.Label) error {
 	return errors.New("not implemented")
 }
+
+func (r *pgRole) GetByUserID(ctx context.Context, userId string) ([]models.Role, error) {
+	ctx, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	// get all global roles
+
+	s := `select roles.data 
+			from roles, assignments 
+			where roles.id = assignments.role_id and assignments.user_id = $1;`
+
+	rows, err := r.pool.Query(ctx, s, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	var roles []models.Role
+	for rows.Next() {
+		var r models.Role
+		rows.Scan(&r)
+
+		roles = append(roles, r)
+	}
+
+	return roles, nil
+}
+

@@ -54,6 +54,8 @@ type RoleDB interface {
 	GetByID(context.Context, string) (*models.Role, error)
 	List(context.Context, *ListRoleOptions) ([]*models.Role, error)
 
+	GetByUserID(context.Context, string) ([]models.Role, error)
+
 	AttachPolicy(context.Context, models.Label) error
 	DetachPolicy(context.Context, models.Label) error
 }

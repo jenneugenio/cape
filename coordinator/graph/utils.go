@@ -37,7 +37,7 @@ func buildAttachment(ctx context.Context, enforcer *auth.Enforcer, db db.Interfa
 	}, nil
 }
 
-func hasRole(roles []*models.Role, label models.Label) bool {
+func hasRole(roles []models.Role, label models.Label) bool {
 	found := false
 	for _, role := range roles {
 		if role.Label == label {

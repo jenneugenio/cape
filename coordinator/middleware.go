@@ -218,7 +218,7 @@ func IsAuthenticatedMiddleware(coordinator *Coordinator) func(http.Handler) http
 				return
 			}
 
-			roles, err := fw.QueryRoles(ctx, db, cp.GetUserID())
+			roles, err := capedb.Roles().GetByUserID(ctx, cp.GetUserID())
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return
