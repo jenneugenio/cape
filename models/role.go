@@ -4,6 +4,24 @@ import (
 	"time"
 )
 
+type Permission uint64
+
+const (
+	WritePolicy Permission = 1 << iota
+	CreateProject
+	ArchiveProject
+	UnarchiveProject
+	DeleteProject
+	AddUser
+	DeleteUser
+	UpdateProject
+	SuggestPolicy
+	AcceptPolicy
+	ReadPolicy
+)
+
+type Principal interface {}
+
 const (
 	// AdminRole is the label of the admin role
 	AdminRole = Label("admin")
@@ -15,6 +33,45 @@ const (
 	ProjectContributorRole = Label("project-contributor")
 	ProjectReaderRole      = Label("project-reader")
 )
+
+var (
+	adminRules = withRules(
+		WritePolicy, CreateProject, AddUser, DeleteUser,
+		)
+
+	userRules = withRules(
+		WritePolicy, CreateProject,
+		)
+
+	projectReaderRules = withRules(
+		ReadPolicy,
+		)
+
+	projectContributorRules = withRules(
+		projectReaderRules, UpdateProject, SuggestPolicy,
+		)
+
+	projectOwnerRules = withRules(
+		projectContributorRules, AcceptPolicy, UnarchiveProject, DeleteProject,
+		)
+
+	DefaultPermissions = map[Label]Permission{
+		AdminRole: adminRules,
+		UserRole: userRules,
+		ProjectOwnerRole: projectOwnerRules,
+		ProjectContributorRole: projectContributorRules,
+		ProjectReaderRole: projectReaderRules,
+	}
+)
+
+func withRules(perms ...Permission) Permission {
+	var p Permission
+	for _, perm := range perms {
+		p |= perm
+	}
+
+	return p
+}
 
 var OrgRoles = []Label{AdminRole, UserRole}
 var ProjectRoles = []Label{ProjectOwnerRole, ProjectContributorRole, ProjectReaderRole}
@@ -39,9 +96,15 @@ func ValidProjectRole(role Label) bool {
 	return false
 }
 
+type ProjectRolesMap map[Label]Role
+
+func (p ProjectRolesMap) Get(l Label) Role {
+	return p[l]
+}
+
 type UserRoles struct {
 	Global Role
-	Project map[Label]Role
+	Projects ProjectRolesMap
 }
 
 // Role in a role in the system (e.g. Admin, user, etc)
@@ -63,4 +126,8 @@ func NewRole(label Label, system bool) Role {
 		System:    system,
 		CreatedAt: now(),
 	}
+}
+
+func (r *Role) Can(action Permission) bool {
+	return DefaultPermissions[r.Label]&action != 0
 }

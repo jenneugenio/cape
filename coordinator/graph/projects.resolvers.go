@@ -6,7 +6,6 @@ package graph
 import (
 	"context"
 	"fmt"
-
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
@@ -36,6 +35,11 @@ func (r *mutationResolver) CreateProject(ctx context.Context, project model.Crea
 	} else {
 		labelStr := slug.Make(project.Name.String())
 		label = models.Label(labelStr)
+	}
+
+	projectRole := currSession.Roles.Projects.Get(label)
+	if !projectRole.Can(models.CreateProject) {
+		return nil, fmt.Errorf("not allowed :O")
 	}
 
 	p := models.NewProject(project.Name, label, project.Description)
