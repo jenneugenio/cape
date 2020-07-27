@@ -3,44 +3,20 @@
 package model
 
 import (
-	"time"
-
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
-
-type ActionInput struct {
-	Transform models.Transformation `json:"transform"`
-}
 
 type AssignRoleRequest struct {
 	RoleID string `json:"role_id"`
 	UserID string `json:"user_id"`
 }
 
-type AttachPolicyRequest struct {
-	PolicyID string      `json:"policy_id"`
-	RoleID   database.ID `json:"role_id"`
-}
-
-type Attachment struct {
-	ID        database.ID    `json:"id"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-	Role      *models.Role   `json:"role"`
-	Policy    *models.Policy `json:"policy"`
-}
-
 type AttemptRecoveryRequest struct {
 	NewPassword primitives.Password `json:"new_password"`
 	Secret      primitives.Password `json:"secret"`
 	ID          database.ID         `json:"id"`
-}
-
-type CreatePolicyRequest struct {
-	Label primitives.Label `json:"label"`
-	Rules []*RuleInput     `json:"rules"`
 }
 
 type CreateProjectRequest struct {
@@ -77,30 +53,12 @@ type CreateUserResponse struct {
 	User     *models.User        `json:"user"`
 }
 
-type DeletePolicyRequest struct {
-	Label string `json:"label"`
-}
-
 type DeleteRecoveriesRequest struct {
 	Ids []database.ID `json:"ids"`
 }
 
 type DeleteRoleRequest struct {
 	ID string `json:"id"`
-}
-
-type DetachPolicyRequest struct {
-	PolicyID string      `json:"policy_id"`
-	RoleID   database.ID `json:"role_id"`
-}
-
-type MatchInput struct {
-	Name string `json:"name"`
-}
-
-type RuleInput struct {
-	Match   *MatchInput    `json:"match"`
-	Actions []*ActionInput `json:"actions"`
 }
 
 type UpdateProjectRequest struct {

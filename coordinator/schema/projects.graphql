@@ -2,6 +2,7 @@ scalar ProjectStatus
 scalar ProjectDisplayName
 scalar ProjectDescription
 scalar NamedTransformation
+scalar Rule
 
 type Project {
     id: String!

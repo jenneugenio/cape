@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"fmt"
+
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
@@ -225,6 +226,9 @@ func (r *queryResolver) ListContributors(ctx context.Context, projectLabel model
 // Contributor returns generated.ContributorResolver implementation.
 func (r *Resolver) Contributor() generated.ContributorResolver { return &contributorResolver{r} }
 
+// Mutation returns generated.MutationResolver implementation.
+func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
+
 // Project returns generated.ProjectResolver implementation.
 func (r *Resolver) Project() generated.ProjectResolver { return &projectResolver{r} }
 
@@ -232,5 +236,6 @@ func (r *Resolver) Project() generated.ProjectResolver { return &projectResolver
 func (r *Resolver) ProjectSpec() generated.ProjectSpecResolver { return &projectSpecResolver{r} }
 
 type contributorResolver struct{ *Resolver }
+type mutationResolver struct{ *Resolver }
 type projectResolver struct{ *Resolver }
 type projectSpecResolver struct{ *Resolver }

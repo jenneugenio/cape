@@ -51,8 +51,7 @@ type RoleDB interface {
 	SetOrgRole(context.Context, models.Email, models.Label) (*models.Assignment, error)
 	SetProjectRole(context.Context, models.Email, models.Label, models.Label) (*models.Assignment, error)
 
-	AttachPolicy(context.Context, models.Label) error
-	DetachPolicy(context.Context, models.Label) error
+	CreateSystemRoles(context.Context) error
 }
 
 type ConfigDB interface {

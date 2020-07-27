@@ -76,6 +76,8 @@ func withRules(perms ...Permission) Permission {
 var OrgRoles = []Label{AdminRole, UserRole}
 var ProjectRoles = []Label{ProjectOwnerRole, ProjectContributorRole, ProjectReaderRole}
 
+var SystemRoles = []Label{AdminRole, UserRole, ProjectReaderRole, ProjectContributorRole, ProjectOwnerRole}
+
 func ValidOrgRole(role Label) bool {
 	for _, r := range OrgRoles {
 		if role == r {

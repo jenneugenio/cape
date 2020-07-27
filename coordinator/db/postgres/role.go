@@ -79,14 +79,6 @@ func (r *pgRole) List(context.Context, *db.ListRoleOptions) ([]*models.Role, err
 	return nil, errors.New("not implemented")
 }
 
-func (r *pgRole) AttachPolicy(context.Context, models.Label) error {
-	return errors.New("not implemented")
-}
-
-func (r *pgRole) DetachPolicy(context.Context, models.Label) error {
-	return errors.New("not implemented")
-}
-
 // Return all of the roles (global & project) that a user belongs to
 func (r *pgRole) GetAll(ctx context.Context, userId string) (*models.UserRoles, error) {
 	ctx, cancel := context.WithTimeout(ctx, r.timeout)
@@ -110,7 +102,7 @@ func (r *pgRole) GetAll(ctx context.Context, userId string) (*models.UserRoles, 
 		where roles.id = assignments.role_id and assignments.user_id = $1 and projects.id = assignments.data->>'project_id';`
 
 	row = r.pool.QueryRow(ctx, s, userId)
-	err = row.Scan(&userRoles.Project)
+	err = row.Scan(&userRoles.Projects)
 	if err != nil {
 		if err.Error() == "no rows in result set" {
 			return &userRoles, nil
@@ -215,4 +207,33 @@ func (r *pgRole) SetProjectRole(ctx context.Context, email models.Email, project
 	return &assignment, nil
 }
 
+func (r *pgRole) CreateSystemRoles(ctx context.Context) error {
+	roles := make([]models.Role, len(models.SystemRoles))
+	insert := sq.Insert("roles").
+		PlaceholderFormat(sq.Dollar).
+		Columns("data")
+
+	for i, r := range models.SystemRoles {
+		role := models.Role{
+			ID:        models.NewID(),
+			Version:   1,
+			Label:     r,
+			System:    true,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		}
+
+		roles[i] = role
+
+		insert = insert.Values(role)
+	}
+
+	s, args, err := insert.ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = r.pool.Exec(ctx, s, args...)
+	return err
+}
 

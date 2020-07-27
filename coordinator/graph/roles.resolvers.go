@@ -43,10 +43,11 @@ func (r *queryResolver) MyRole(ctx context.Context, projectLabel *models.Label) 
 		return &currSession.Roles.Global, nil
 	}
 
-	role, ok := currSession.Roles.Project[*projectLabel]
-	if !ok {
-		return nil, fmt.Errorf("you are not a member of the requested project: %s", projectLabel)
-	}
+	role := currSession.Roles.Projects.Get(*projectLabel)
+	// TODO -- bring this check back!
+	//if !ok {
+	//	return nil, fmt.Errorf("you are not a member of the requested project: %s", projectLabel)
+	//}
 
 	return &role, nil
 }
