@@ -28,16 +28,16 @@ func init() {
 		Usage: "Tells you what your role is",
 		Examples: []*Example{
 			{
-				Example: "cape roles me",
+				Example:     "cape roles me",
 				Description: "Tells you what your role in the org is (admin or user)",
 			},
 			{
-				Example: "cape roles me --project my-project",
+				Example:     "cape roles me --project my-project",
 				Description: "Tells you what your role in the specified project is",
 			},
 		},
 		Command: &cli.Command{
-			Name: "me",
+			Name:   "me",
 			Action: handleSessionOverrides(rolesMeCmd),
 			Flags: []cli.Flag{
 				clusterFlag(),

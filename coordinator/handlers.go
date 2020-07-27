@@ -166,9 +166,8 @@ func LogoutHandler(coordinator *Coordinator) http.HandlerFunc {
 
 func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAuthority, input LogoutRequest) error {
 	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, backend)
 	if input.Token == nil {
-		err := enforcer.Delete(ctx, primitives.SessionType, currSession.Session.ID)
+		err := backend.Delete(ctx, primitives.SessionType, currSession.Session.ID)
 		if err != nil {
 			return err
 		}
@@ -190,7 +189,7 @@ func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAutho
 		return err
 	}
 
-	err = enforcer.Delete(ctx, primitives.SessionType, id)
+	err = backend.Delete(ctx, primitives.SessionType, id)
 	if err != nil {
 		return err
 	}

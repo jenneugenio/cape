@@ -18,12 +18,12 @@ import (
 func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTokenRequest) (*model.CreateTokenResponse, error) {
 	logger := fw.Logger(ctx)
 	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
 	user := currSession.User
 
-	if user.ID != input.UserID {
-		return nil, errs.New(auth.AuthorizationFailure, "Can only create a token for yourself")
+	if user.ID != input.UserID && !currSession.Roles.Global.Can(models.CreateAnyToken) {
+		return nil, errs.New(auth.AuthorizationFailure, "invalid permissions to create a token")
+	} else if !currSession.Roles.Global.Can(models.CreateOwnToken) {
+		return nil, errs.New(auth.AuthorizationFailure, "invalid permissions to create a token")
 	}
 
 	password := primitives.GeneratePassword()
@@ -43,7 +43,7 @@ func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTo
 		return nil, err
 	}
 
-	err = enforcer.Create(ctx, token)
+	err = r.Backend.Create(ctx, token)
 	if err != nil {
 		logger.Info().Err(err).Msg("Could not insert token into database")
 		return nil, err
@@ -57,38 +57,34 @@ func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTo
 
 func (r *mutationResolver) RemoveToken(ctx context.Context, id database.ID) (database.ID, error) {
 	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	hasAdminRole := currSession.Roles.Global.Label == models.AdminRole
+	if !currSession.Roles.Global.Can(models.RemoveAnyToken) {
+		return database.EmptyID, errs.New(auth.AuthorizationFailure, "invalid permissions to remove a token")
+	}
 
 	token := &primitives.Token{}
-	err := enforcer.Get(ctx, id, token)
+	err := r.Backend.Get(ctx, id, token)
 	if err != nil {
 		return database.EmptyID, err
 	}
 
-	if !hasAdminRole && currSession.User.ID != token.UserID {
-		return database.EmptyID, errs.New(auth.AuthorizationFailure, "Can only remove tokens you own")
-	}
-
-	err = enforcer.Delete(ctx, primitives.TokenPrimitiveType, id)
+	err = r.Backend.Delete(ctx, primitives.TokenPrimitiveType, id)
 	return id, err
 }
 
 func (r *queryResolver) Tokens(ctx context.Context, userID string) ([]database.ID, error) {
 	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
 
-	hasAdminRole := currSession.Roles.Global.Label == models.AdminRole
-
-	if !hasAdminRole && currSession.User.ID != userID {
-		return nil, errs.New(auth.AuthorizationFailure, "Can only list tokens you own")
+	if currSession.User.ID != userID && !currSession.Roles.Global.Can(models.ListAnyTokens) {
+		return nil, errs.New(auth.AuthorizationFailure, "unable to list tokens")
+	} else if !currSession.Roles.Global.Can(models.ListOwnTokens) {
+		return nil, errs.New(auth.AuthorizationFailure, "unable to list tokens")
 	}
 
 	var tokens []*primitives.Token
 	filter := database.Filter{Where: database.Where{"user_id": userID}}
 
-	err := enforcer.Query(ctx, &tokens, filter)
+	err := r.Backend.Query(ctx, &tokens, filter)
 	if err != nil {
 		return nil, err
 	}

@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime/middleware/header"
 )
 
-
 type malformedRequest struct {
 	status int
 	msg    string

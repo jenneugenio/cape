@@ -20,7 +20,6 @@ type pgRole struct {
 
 var _ db.RoleDB = &pgRole{}
 
-
 func (r *pgRole) Get(ctx context.Context, label models.Label) (*models.Role, error) {
 	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
@@ -236,4 +235,3 @@ func (r *pgRole) CreateSystemRoles(ctx context.Context) error {
 	_, err = r.pool.Exec(ctx, s, args...)
 	return err
 }
-

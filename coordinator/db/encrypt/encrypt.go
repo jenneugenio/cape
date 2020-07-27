@@ -28,4 +28,4 @@ func (c *CapeDBEncrypt) Contributors() db.ContributorDB { return c.db.Contributo
 func (c *CapeDBEncrypt) Projects() db.ProjectsDB {
 	return &projectEncrypt{db: c.db.Projects(), codec: c.codec}
 }
-func (c *CapeDBEncrypt) Config() db.ConfigDB          { return c.db.Config() }
+func (c *CapeDBEncrypt) Config() db.ConfigDB { return c.db.Config() }

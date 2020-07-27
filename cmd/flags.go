@@ -169,8 +169,8 @@ func projectNameFlag() cli.Flag {
 
 func projectLabelFlag() cli.Flag {
 	return &cli.StringFlag{
-		Name: "project",
-		Usage: "The label identifier for the project",
+		Name:    "project",
+		Usage:   "The label identifier for the project",
 		EnvVars: []string{"CAPE_PROJECT_LABEL"},
 	}
 }

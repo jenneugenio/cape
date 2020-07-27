@@ -9,6 +9,14 @@ type Permission uint64
 const (
 	WritePolicy Permission = 1 << iota
 	CreateProject
+
+	CreateOwnToken
+	CreateAnyToken
+	RemoveOwnToken
+	RemoveAnyToken
+	ListOwnTokens
+	ListAnyTokens
+
 	ArchiveProject
 	UnarchiveProject
 	DeleteProject
@@ -20,7 +28,7 @@ const (
 	ReadPolicy
 )
 
-type Principal interface {}
+type Principal interface{}
 
 const (
 	// AdminRole is the label of the admin role
@@ -37,30 +45,35 @@ const (
 var (
 	adminRules = withRules(
 		WritePolicy, CreateProject, AddUser, DeleteUser,
-		)
+
+		CreateOwnToken, RemoveOwnToken, ListOwnTokens,
+		CreateAnyToken, RemoveAnyToken, ListAnyTokens,
+	)
 
 	userRules = withRules(
 		WritePolicy, CreateProject,
-		)
+
+		CreateOwnToken, RemoveOwnToken, ListOwnTokens,
+	)
 
 	projectReaderRules = withRules(
 		ReadPolicy,
-		)
+	)
 
 	projectContributorRules = withRules(
 		projectReaderRules, UpdateProject, SuggestPolicy,
-		)
+	)
 
 	projectOwnerRules = withRules(
 		projectContributorRules, AcceptPolicy, UnarchiveProject, DeleteProject,
-		)
+	)
 
 	DefaultPermissions = map[Label]Permission{
-		AdminRole: adminRules,
-		UserRole: userRules,
-		ProjectOwnerRole: projectOwnerRules,
+		AdminRole:              adminRules,
+		UserRole:               userRules,
+		ProjectOwnerRole:       projectOwnerRules,
 		ProjectContributorRole: projectContributorRules,
-		ProjectReaderRole: projectReaderRules,
+		ProjectReaderRole:      projectReaderRules,
 	}
 )
 
@@ -105,7 +118,7 @@ func (p ProjectRolesMap) Get(l Label) Role {
 }
 
 type UserRoles struct {
-	Global Role
+	Global   Role
 	Projects ProjectRolesMap
 }
 
