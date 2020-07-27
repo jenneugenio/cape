@@ -85,7 +85,7 @@ func TestSecretBox(t *testing.T) {
 
 		corruptedBytes := []byte(*encrypted)
 
-		corruptedBytes[EncryptedKeyLength+1] = 'f'
+		corruptedBytes[kms.encryptedKeyLength+1] = 'f'
 
 		_, err = codec.Decrypt(ctx, base64.New(corruptedBytes))
 		gm.Expect(err).ToNot(gm.BeNil())

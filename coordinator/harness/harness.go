@@ -6,7 +6,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/manifoldco/go-base64"
 	"github.com/rs/zerolog"
 
 	"github.com/capeprivacy/cape/coordinator"
@@ -135,6 +134,11 @@ func (h *Harness) Setup(ctx context.Context) error {
 		return err
 	}
 
+	keyURL, err := crypto.NewBase64KeyURL(rootKey[:])
+	if err != nil {
+		return err
+	}
+
 	coordinator, err := coordinator.New(&coordinator.Config{
 		Version: 1,
 		DB: &coordinator.DBConfig{
@@ -142,7 +146,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 		},
 		InstanceID:            "cape",
 		Port:                  1, // This port is ignored!
-		RootKey:               base64.New(rootKey[:]),
+		RootKey:               keyURL.String(),
 		CredentialProducerAlg: primitives.SHA256,
 		User: &coordinator.UserConfig{
 			Name:     AdminName,
@@ -255,7 +259,7 @@ func (h *Harness) URL() (*primitives.URL, error) {
 	return primitives.NewURL(h.server.URL)
 }
 
-// Mail returns a list of emails sent by this server instance
+// Mails returns a list of emails sent by this server instance
 func (h *Harness) Mails() []*mailer.TestMail {
 	return h.mailer.Mails
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"crypto/rand"
+	"encoding/json"
 
 	"github.com/manifoldco/go-base64"
 	"golang.org/x/crypto/scrypt"
@@ -37,6 +38,31 @@ type Keypair struct {
 
 	PublicKey ed25519.PublicKey             `json:"-"`
 	Alg       primitives.CredentialsAlgType `json:"-"`
+}
+
+func (k *Keypair) UnmarshalJSON(data []byte) error {
+	var kp KeypairPackage
+	err := json.Unmarshal(data, &kp)
+	if err != nil {
+		return err
+	}
+
+	kTmp, err := kp.Unpackage()
+	if err != nil {
+		return err
+	}
+
+	k.secret = kTmp.secret
+	k.salt = kTmp.salt
+	k.PrivateKey = kTmp.PrivateKey
+	k.PublicKey = kTmp.PublicKey
+	k.Alg = kTmp.Alg
+
+	return nil
+}
+
+func (k *Keypair) MarshalJSON() ([]byte, error) {
+	return json.Marshal(k.Package())
 }
 
 // KeypairPackage represents a packaged keypair that can be shared outside of

@@ -25,6 +25,8 @@ func (c *CapeDBEncrypt) Roles() db.RoleDB               { return c.db.Roles() }
 func (c *CapeDBEncrypt) Users() db.UserDB               { return &userEncrypt{db: c.db.Users(), codec: c.codec} }
 func (c *CapeDBEncrypt) RBAC() db.RBACDB                { return c.db.RBAC() }
 func (c *CapeDBEncrypt) Contributors() db.ContributorDB { return c.db.Contributors() }
-func (c *CapeDBEncrypt) Projects() db.ProjectsDB        { return c.db.Projects() }
-func (c *CapeDBEncrypt) Config() db.ConfigDB            { return c.db.Config() }
-func (c *CapeDBEncrypt) Assignments() db.AssignmentDB   { return c.db.Assignments() }
+func (c *CapeDBEncrypt) Projects() db.ProjectsDB {
+	return &projectEncrypt{db: c.db.Projects(), codec: c.codec}
+}
+func (c *CapeDBEncrypt) Config() db.ConfigDB          { return c.db.Config() }
+func (c *CapeDBEncrypt) Assignments() db.AssignmentDB { return c.db.Assignments() }

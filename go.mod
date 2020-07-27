@@ -3,7 +3,6 @@ module github.com/capeprivacy/cape
 go 1.14
 
 require (
-	cloud.google.com/go v0.44.3 // indirect
 	github.com/99designs/gqlgen v0.11.3
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/Masterminds/semver v1.5.0
@@ -54,13 +53,9 @@ require (
 	github.com/spf13/viper v1.6.2 // indirect
 	github.com/urfave/cli/v2 v2.2.0
 	github.com/vektah/gqlparser/v2 v2.0.1
-	go.opencensus.io v0.22.2 // indirect
 	go.uber.org/multierr v1.5.0
+	gocloud.dev v0.20.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
-	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f // indirect
-	golang.org/x/net v0.0.0-20200301022130-244492dfa37a // indirect
-	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd // indirect
-	google.golang.org/grpc v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.55.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1
 	helm.sh/helm/v3 v3.2.0

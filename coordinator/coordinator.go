@@ -95,9 +95,6 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		return nil, errors.New(InvalidConfigCause, "Unknown credential producer algorithm supplied")
 	}
 
-	var rootKey [32]byte
-	copy(rootKey[:], *cfg.RootKey)
-
 	pgxPool := mustPgxPool(cfg.DB.Addr.ToURL().String(), cfg.InstanceID.String())
 	capedb := capepg.New(pgxPool)
 
@@ -109,7 +106,7 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 		credentialProducer: cp,
 	}
 
-	err := coor.doSetup(context.TODO(), capedb, rootKey)
+	err := coor.doSetup(context.TODO(), capedb)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +169,7 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 	return coor, nil
 }
 
-func (c *Coordinator) doSetup(ctx context.Context, capedb db.Interface, rootKey [32]byte) error {
+func (c *Coordinator) doSetup(ctx context.Context, capedb db.Interface) error {
 	_, codec, kp, err := getDatabaseConfig(ctx, capedb, c.cfg.RootKey)
 	if err == nil {
 		backend, err := database.New(c.cfg.DB.Addr.ToURL(), c.cfg.InstanceID.String(), codec)
@@ -203,7 +200,7 @@ func (c *Coordinator) doSetup(ctx context.Context, capedb db.Interface, rootKey 
 
 	// We must create the config and load up the state before we can make
 	// requests against the backend that requires the encryptionKey.
-	config, encryptionKey, kp, err := createDatabaseConfig(rootKey)
+	config, encryptionKey, kp, err := createDatabaseConfig(c.cfg.RootKey)
 	if err != nil {
 		c.logger.Error().Err(err).Msg("Could not generate config")
 		return err
@@ -303,43 +300,35 @@ func (c *Coordinator) doSetup(ctx context.Context, capedb db.Interface, rootKey 
 	return nil
 }
 
-func decryptBase64s(rootKey *base64.Value, data *base64.Value) ([]byte, error) {
-	var key [32]byte
-
-	copy(key[:], *rootKey)
-
-	decrypted, err := crypto.Decrypt(key, *data)
-	if err != nil {
-		return nil, err
-	}
-
-	return decrypted, nil
-}
-
-func getDatabaseConfig(ctx context.Context, db db.Interface, rootKey *base64.Value) (*models.Config, crypto.EncryptionCodec, *auth.Keypair, error) {
+func getDatabaseConfig(ctx context.Context, db db.Interface, rootKey string) (*models.Config, crypto.EncryptionCodec, *auth.Keypair, error) {
 	cfg, err := db.Config().Get(ctx)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	unencrypted, err := decryptBase64s(rootKey, cfg.AuthKeypair)
+	u, err := crypto.NewKeyURL(rootKey)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	pkg := &auth.KeypairPackage{}
-	err = json.Unmarshal(unencrypted, pkg)
+	tmpKms, err := crypto.LoadKMS(u)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	kp, err := pkg.Unpackage()
+	unencrypted, err := tmpKms.Decrypt(context.TODO(), *cfg.AuthKeypair)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	kp := &auth.Keypair{}
+	err = json.Unmarshal(unencrypted, kp)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
 	// if setup has been run we create and add the codec here
-	encryptionKey, err := decryptBase64s(rootKey, cfg.EncryptionKey)
+	encryptionKey, err := tmpKms.Decrypt(context.TODO(), *cfg.EncryptionKey)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -359,13 +348,28 @@ func getDatabaseConfig(ctx context.Context, db db.Interface, rootKey *base64.Val
 	return cfg, codec, kp, err
 }
 
-func createDatabaseConfig(rootKey [32]byte) (*models.Config, *crypto.KeyURL, *auth.Keypair, error) {
-	encryptionKey, err := crypto.NewBase64KeyURL(nil)
+func createDatabaseConfig(rootKey string) (*models.Config, *crypto.KeyURL, *auth.Keypair, error) {
+	u, err := crypto.NewKeyURL(rootKey)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	encryptedKey, err := crypto.Encrypt(rootKey, []byte(encryptionKey.String()))
+	encryptionKey := u
+	if u.Type() == crypto.Base64Key {
+		key, err := crypto.NewBase64KeyURL(nil)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+
+		encryptionKey = key
+	}
+
+	kms, err := crypto.LoadKMS(u)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	encryptedKey, err := kms.Encrypt(context.TODO(), []byte(encryptionKey.String()))
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -375,12 +379,12 @@ func createDatabaseConfig(rootKey [32]byte) (*models.Config, *crypto.KeyURL, *au
 		return nil, nil, nil, err
 	}
 
-	by, err := json.Marshal(keypair.Package())
+	by, err := json.Marshal(keypair)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	encryptedAuth, err := crypto.Encrypt(rootKey, by)
+	encryptedAuth, err := kms.Encrypt(context.TODO(), by)
 	if err != nil {
 		return nil, nil, nil, err
 	}

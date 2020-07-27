@@ -14,12 +14,15 @@ import (
 type KeyURLType string
 
 const (
-	Base64Key = "base64key"
+	Base64Key KeyURLType = "base64key"
+	AzureKey  KeyURLType = "azurekeyvault"
 )
 
 func (k KeyURLType) Validate() error {
 	switch k {
 	case Base64Key:
+		return nil
+	case AzureKey:
 		return nil
 	default:
 		return errors.New(InvalidKeyURLCause, "Invalid scheme got %s", k)
@@ -71,11 +74,6 @@ func (d *KeyURL) ToURL() *url.URL {
 	return d.URL
 }
 
-// Copy creates a copy of this KeyURL
-func (d *KeyURL) Copy() (*KeyURL, error) {
-	return NewKeyURL(d.String())
-}
-
 // MarshalJSON implements the JSON.Marshaller interface
 func (d *KeyURL) MarshalJSON() ([]byte, error) {
 	return []byte(strconv.Quote(d.String())), nil
@@ -86,7 +84,7 @@ func (d *KeyURL) UnmarshalJSON(b []byte) error {
 	var keyURL string
 	err := json.Unmarshal(b, &keyURL)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	u, err := url.Parse(keyURL)

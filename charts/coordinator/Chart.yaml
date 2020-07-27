@@ -1,4 +1,4 @@
 apiVersion: v2
 description: A Helm chart for deploying Cape Coordinator on k8s
-name: cape-coordinator
-version: 0.0.2
+name: coordinator
+version: 0.0.3

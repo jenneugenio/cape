@@ -23,7 +23,7 @@ type Config struct {
 	// RootKey is used to encrypt/decrypt EncryptionKey and should
 	// be stored in a separate config file in a secret or
 	// other secure location.
-	RootKey *base64.Value `json:"root_key"`
+	RootKey string `json:"root_key"`
 
 	// The kdf algorithm is not externally configurable (e.g. not available on
 	// the configuration file) as it's only required to be configurable for
@@ -114,12 +114,8 @@ func (c *Config) Validate() error {
 		return err
 	}
 
-	if c.RootKey == nil {
+	if c.RootKey == "" {
 		return errors.New(InvalidConfigCause, "Missing root key")
-	}
-
-	if len(*c.RootKey) != 32 {
-		return errors.New(InvalidConfigCause, "Root key must be 32 bytes long not %d", len(*c.RootKey))
 	}
 
 	return nil
@@ -174,7 +170,7 @@ func NewConfig(port int, dbURL *primitives.DBURL) (*Config, error) {
 		DB: &DBConfig{
 			Addr: dbURL,
 		},
-		RootKey: base64.New(key[:]),
+		RootKey: base64.New(key[:]).String(),
 	}
 
 	if err := cfg.Validate(); err != nil {
