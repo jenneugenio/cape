@@ -79,7 +79,7 @@ func (r *pgRole) List(context.Context, *db.ListRoleOptions) ([]*models.Role, err
 }
 
 // Return all of the roles (global & project) that a user belongs to
-func (r *pgRole) GetAll(ctx context.Context, userId string) (*models.UserRoles, error) {
+func (r *pgRole) GetAll(ctx context.Context, userID string) (*models.UserRoles, error) {
 	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
@@ -89,7 +89,7 @@ func (r *pgRole) GetAll(ctx context.Context, userId string) (*models.UserRoles, 
 			where roles.id = assignments.role_id and assignments.user_id = $1;`
 
 	userRoles := models.UserRoles{}
-	row := r.pool.QueryRow(ctx, s, userId)
+	row := r.pool.QueryRow(ctx, s, userID)
 	err := row.Scan(&userRoles.Global)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (r *pgRole) GetAll(ctx context.Context, userId string) (*models.UserRoles, 
 		from roles, assignments, projects
 		where roles.id = assignments.role_id and assignments.user_id = $1 and projects.id = assignments.data->>'project_id';`
 
-	row = r.pool.QueryRow(ctx, s, userId)
+	row = r.pool.QueryRow(ctx, s, userID)
 	err = row.Scan(&userRoles.Projects)
 	if err != nil {
 		if err.Error() == "no rows in result set" {

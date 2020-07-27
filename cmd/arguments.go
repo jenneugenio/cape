@@ -10,8 +10,6 @@ import (
 
 var (
 	ClusterLabelArg = LabelArg("cluster")
-	RoleLabelArg    = LabelArg("role")
-	PolicyLabelArg  = LabelArg("policy")
 	ProjectLabelArg = LabelArg("project-label")
 
 	ClusterURLArg = &Argument{
