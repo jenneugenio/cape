@@ -62,7 +62,7 @@ helm charts to get the coordinator and the database running. This can be done wi
 following `mage` command:
 
 ```
-$ mage local:deploy
+$ mage local:setup
 ```
 
 You should see something like:
@@ -78,13 +78,51 @@ TEST SUITE: None
 
 to know it has completed successfully.
 
-Once that command is done running there are a few more commands to get everything set up.
+This creates an admin account for you which has the email *cape_user@mycape.com*
+and password *capecape*. If required, you can login again with:
 
-First, run setup to create an admin account, create the default roles and the default policies.
+```bash
+$ CAPE_PASSWORD=capecape cape login --email cape_user@mycape.com
+```
+
+### Creating API Token
+
+Logging in from cape-python requires an API token. An APIT token also optionally be used to log in via the CLI.
+This token can be acquired by running:
+
+```bash
+$ cape tokens create
+```
+
+You should see an output like:
 
 ```
-$ cape setup local http://localhost:8080
+A token for cape_user@mycape.com has been created!
+
+Token:    2015te16gduwfrq5reedt7ygjr,AR0GdmFMKzC42u7pA5sfYMgiQEGXp2aa6A
+
+‼ Remember: Please keep the token safe and share it only over secure channels.
 ```
+
+`2015te16gduwfrq5reedt7ygjr,AR0GdmFMKzC42u7pA5sfYMgiQEGXp2aa6A` can be copied and pasted to
+where its needed.
+
+### Create an Initial Project
+
+Projects are used to manage which version of policy is applied to a dataset. To create a
+first project run:
+
+```bash
+$ cape projects create first-project "Hello Project World"
+```
+
+Once the project is created we can add policy to it from a policy specification:
+
+```bash
+$ cape projects update --from-spec examples/perturb_ones_field.yaml first-project
+```
+
+This project can now be used to perturb actual data from cape-python.
 
 ## Troubleshooting
 

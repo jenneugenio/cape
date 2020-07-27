@@ -1,8 +1,0 @@
-version: 1
-label: allow-processor-field
-rules:
-    - target: "records:creditcards.transactions"
-      action: read
-      effect: allow
-      fields:
-          - processor
