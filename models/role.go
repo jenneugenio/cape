@@ -9,7 +9,7 @@ const (
 	AdminRole = Label("admin")
 
 	// UserRole is the label of the global role
-	UserRole = Label("global")
+	UserRole = Label("user")
 
 	ProjectOwnerRole       = Label("project-owner")
 	ProjectContributorRole = Label("project-contributor")

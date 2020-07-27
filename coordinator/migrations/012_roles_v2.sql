@@ -2,7 +2,9 @@ BEGIN;
 
 alter table assignments add column project_id char(29);
 alter table assignments drop constraint assignments_user_id_role_id_key;
-alter table assignments add constraint unique_assignment unique (user_id, role_id, project_id);
+
+-- TODO when project_id is null, this index doesn't work properly (doesn't get enforced for global roles)
+alter table assignments add constraint unique_assignment unique (user_id, project_id);
 
 COMMIT;
 

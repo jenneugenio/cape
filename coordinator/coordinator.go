@@ -272,7 +272,6 @@ func (c *Coordinator) doSetup(ctx context.Context, capedb db.Interface) error {
 	}
 
 	roles, err := fw.GetRolesByLabel(ctx, tx, []primitives.Label{
-		primitives.GlobalRole,
 		primitives.AdminRole,
 	})
 	if err != nil {

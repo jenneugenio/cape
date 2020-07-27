@@ -10,15 +10,15 @@ const (
 	// AdminRole is the label of the admin role
 	AdminRole = Label("admin")
 
-	// GlobalRole is the label of the global role
-	GlobalRole = Label("global")
+	// UserRole is the label of the global role
+	UserRole = Label("user")
 
 	ProjectOwnerRole       = Label("project-owner")
 	ProjectContributorRole = Label("project-contributor")
 	ProjectReaderRole      = Label("project-reader")
 )
 
-var SystemRoles = []Label{AdminRole, GlobalRole, ProjectOwnerRole, ProjectContributorRole, ProjectReaderRole}
+var SystemRoles = []Label{AdminRole, UserRole, ProjectOwnerRole, ProjectContributorRole, ProjectReaderRole}
 
 // Role in a role in the system (e.g. Admin, user, etc)
 type Role struct {

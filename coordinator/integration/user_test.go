@@ -46,7 +46,7 @@ func TestUsers(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(len(resp.Roles)).To(gm.Equal(1))
-		gm.Expect(resp.Roles[0].Label).To(gm.Equal(primitives.GlobalRole))
+		gm.Expect(resp.Roles[0].Label).To(gm.Equal(primitives.UserRole))
 	})
 
 	t.Run("cannot create multiple users with same email", func(t *testing.T) {

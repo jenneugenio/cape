@@ -254,7 +254,7 @@ func AttachDefaultPolicy(ctx context.Context, db database.Querier, capedb db.Int
 		return err
 	}
 
-	globalAttachment, err := createAttachment(ctx, db, globalRBAC.ID, primitives.GlobalRole)
+	globalAttachment, err := createAttachment(ctx, db, globalRBAC.ID, primitives.UserRole)
 	if err != nil {
 		return err
 	}
@@ -321,8 +321,7 @@ func GetRolesByLabel(ctx context.Context, db database.Querier, labels []primitiv
 
 // CreateAssignments is a helper function that makes it easy to assign roles to
 // a given user.
-func CreateAssignments(ctx context.Context, db database.Querier,
-	userID string, roles []*primitives.Role) error {
+func CreateAssignments(ctx context.Context, db database.Querier, userID string, roles []*primitives.Role) error {
 	assignments := make([]database.Entity, len(roles))
 	for i, role := range roles {
 		assignment, err := primitives.NewAssignment(userID, role.ID)

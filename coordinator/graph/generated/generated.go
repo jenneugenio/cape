@@ -150,6 +150,7 @@ type ComplexityRoot struct {
 		Attachment       func(childComplexity int, roleID database.ID, policyID string) int
 		ListContributors func(childComplexity int, projectLabel models.Label) int
 		Me               func(childComplexity int) int
+		MyRole           func(childComplexity int, projectLabel *models.Label) int
 		Policies         func(childComplexity int) int
 		Policy           func(childComplexity int, id string) int
 		PolicyByLabel    func(childComplexity int, label string) int
@@ -239,6 +240,7 @@ type QueryResolver interface {
 	Projects(ctx context.Context, status models.ProjectStatus) ([]*models.Project, error)
 	Project(ctx context.Context, id *string, label *models.Label) (*models.Project, error)
 	ListContributors(ctx context.Context, projectLabel models.Label) ([]*models.Contributor, error)
+	MyRole(ctx context.Context, projectLabel *models.Label) (*models.Role, error)
 	Tokens(ctx context.Context, userID string) ([]database.ID, error)
 	User(ctx context.Context, id string) (*models.User, error)
 	Users(ctx context.Context) ([]*models.User, error)
@@ -810,6 +812,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Me(childComplexity), true
 
+	case "Query.myRole":
+		if e.complexity.Query.MyRole == nil {
+			break
+		}
+
+		args, err := ec.field_Query_myRole_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MyRole(childComplexity, args["project_label"].(*models.Label)), true
+
 	case "Query.policies":
 		if e.complexity.Query.Policies == nil {
 			break
@@ -1305,12 +1319,15 @@ input AssignRoleRequest {
   user_id: String!
 }
 
-#extend type Query {
+extend type Query {
+  # Get your global role, you can optionally specify a project label to get your role within a project
+  myRole(project_label: ModelLabel): Role!
+  
 #  role(id: String!): Role!
 #  roleByLabel(label: ModelLabel!): Role!
 #  roles: [Role!]
 #  roleMembers(role_id: String!): [User]
-#}
+}
 
 extend type Mutation {
   setOrgRole(user_email: ModelEmail!, role_label: ModelLabel!): Assignment!
@@ -1789,6 +1806,20 @@ func (ec *executionContext) field_Query_listContributors_args(ctx context.Contex
 	var arg0 models.Label
 	if tmp, ok := rawArgs["project_label"]; ok {
 		arg0, err = ec.unmarshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["project_label"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_myRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *models.Label
+	if tmp, ok := rawArgs["project_label"]; ok {
+		arg0, err = ec.unmarshalOModelLabel2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐLabel(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -4508,6 +4539,47 @@ func (ec *executionContext) _Query_listContributors(ctx context.Context, field g
 	res := resTmp.([]*models.Contributor)
 	fc.Result = res
 	return ec.marshalNContributor2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐContributorᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_myRole(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_myRole_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MyRole(rctx, args["project_label"].(*models.Label))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Role)
+	fc.Result = res
+	return ec.marshalNRole2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_tokens(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -7441,6 +7513,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_listContributors(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "myRole":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_myRole(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

@@ -45,7 +45,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 	// We need to get the system roles back from the database so we can
 	// assignment them to this user appropriately.
 	systemRoles, err := fw.GetRolesByLabel(ctx, tx, []primitives.Label{
-		primitives.GlobalRole,
+		primitives.UserRole,
 	})
 	if err != nil {
 		return nil, err

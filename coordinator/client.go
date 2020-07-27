@@ -178,7 +178,7 @@ func (c *Client) SessionToken() *base64.Value {
 
 func (c *Client) MyRole(ctx context.Context) (*models.Role, error) {
 	var resp struct {
-		Role models.Role `json:"my_role"`
+		Role models.Role `json:"myRole"`
 	}
 
 	err := c.transport.Raw(ctx, `
@@ -195,10 +195,6 @@ func (c *Client) MyRole(ctx context.Context) (*models.Role, error) {
 	}
 
 	return &resp.Role, nil
-
-	//variables := make(map[string]interface{})
-	//variables["ids"] =
-	//variables["label"] = label
 }
 
 func (c *Client) MyProjectRole(ctx context.Context, project models.Label) (*models.Role, error) {

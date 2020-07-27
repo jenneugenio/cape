@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	fw "github.com/capeprivacy/cape/framework"
 
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/models"
@@ -33,6 +34,11 @@ func (r *mutationResolver) SetProjectRole(ctx context.Context, userEmail models.
 	}
 
 	return r.Database.Assignments().SetProject(ctx, userEmail, projectLabel, roleLabel)
+}
+
+func (r *queryResolver) MyRole(ctx context.Context, projectLabel *models.Label) (*models.Role, error) {
+	currSession := fw.Session(ctx)
+	return &currSession.Roles[0], nil
 }
 
 // Assignment returns generated.AssignmentResolver implementation.

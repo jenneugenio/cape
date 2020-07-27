@@ -5,12 +5,12 @@ package graph
 
 import (
 	"context"
-	"github.com/capeprivacy/cape/models"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
+	"github.com/capeprivacy/cape/models"
 	errs "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
