@@ -134,8 +134,12 @@ func (r *mutationResolver) UnarchiveProject(ctx context.Context, id *string, lab
 }
 
 func (r *mutationResolver) UpdateContributor(ctx context.Context, projectLabel models.Label, userEmail models.Email, roleLabel models.Label) (*models.Contributor, error) {
-	//return r.Database.Contributors().Add(ctx, projectLabel, userEmail, roleLabel)
-	panic("not implemented")
+	_, err := r.Database.Roles().SetProjectRole(ctx, userEmail, projectLabel, roleLabel)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Database.Contributors().Add(ctx, projectLabel, userEmail)
 }
 
 func (r *mutationResolver) RemoveContributor(ctx context.Context, projectLabel models.Label, userEmail models.Email) (*models.Contributor, error) {

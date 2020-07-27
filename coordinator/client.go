@@ -136,7 +136,7 @@ func (c *Client) ListUsers(ctx context.Context) ([]*models.User, error) {
 				id
 				name
 				email
-				roles {
+				role {
 					id
 					label
 				}
