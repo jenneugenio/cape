@@ -19,7 +19,9 @@ const (
 
 	ArchiveProject
 	UnarchiveProject
-	DeleteProject
+	DeleteOwnedProject
+	DeleteAnyProject
+
 	AddUser
 	DeleteUser
 	UpdateProject
@@ -48,6 +50,8 @@ var (
 
 		CreateOwnToken, RemoveOwnToken, ListOwnTokens,
 		CreateAnyToken, RemoveAnyToken, ListAnyTokens,
+
+		DeleteAnyProject,
 	)
 
 	userRules = withRules(
@@ -65,7 +69,7 @@ var (
 	)
 
 	projectOwnerRules = withRules(
-		projectContributorRules, AcceptPolicy, UnarchiveProject, DeleteProject,
+		projectContributorRules, AcceptPolicy, UnarchiveProject, DeleteOwnedProject,
 	)
 
 	DefaultPermissions = map[Label]Permission{

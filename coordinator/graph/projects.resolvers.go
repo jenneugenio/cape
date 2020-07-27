@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	"github.com/capeprivacy/cape/auth"
 
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
@@ -24,8 +25,12 @@ func (r *contributorResolver) Project(ctx context.Context, obj *models.Contribut
 }
 
 func (r *contributorResolver) Role(ctx context.Context, obj *models.Contributor) (*models.Role, error) {
-	// return r.Database.Roles().GetByID(ctx, obj.RoleID)
-	panic("not implemented")
+	user, err := r.Database.Users().GetByID(ctx, obj.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Database.Roles().GetProjectRole(ctx, user.Email, obj.ProjectID)
 }
 
 func (r *mutationResolver) CreateProject(ctx context.Context, project model.CreateProjectRequest) (*models.Project, error) {
@@ -38,9 +43,8 @@ func (r *mutationResolver) CreateProject(ctx context.Context, project model.Crea
 		label = models.Label(labelStr)
 	}
 
-	projectRole := currSession.Roles.Projects.Get(label)
-	if !projectRole.Can(models.CreateProject) {
-		return nil, fmt.Errorf("not allowed :O")
+	if !currSession.Roles.Global.Can(models.CreateProject) {
+		return nil, errs.New(auth.AuthorizationFailure, "invalid permissions to create a project")
 	}
 
 	p := models.NewProject(project.Name, label, project.Description)

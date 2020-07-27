@@ -223,6 +223,23 @@ func (r *pgRole) GetOrgRole(ctx context.Context, email models.Email) (*models.Ro
 	return &role, nil
 }
 
+func (r *pgRole) GetProjectRole(ctx context.Context, email models.Email, project string) (*models.Role, error) {
+	s := `select roles.data from roles, assignments, users 
+		where roles.data->>'id' = assignments.data->>'role_id' and 
+		assignments.data->>'user_id' = users.data->>'id' and
+		users.data->>'email' = $1 and
+		assignments.data->>'project_id' = $2;`
+
+	var role models.Role
+	row := r.pool.QueryRow(ctx, s, email, project)
+	err := row.Scan(&role)
+	if err != nil {
+		return nil, err
+	}
+
+	return &role, nil
+}
+
 func (r *pgRole) CreateSystemRoles(ctx context.Context) error {
 	roles := make([]models.Role, len(models.SystemRoles))
 	insert := sq.Insert("roles").
