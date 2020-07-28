@@ -3,38 +3,10 @@ package models
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
-	"path/filepath"
 	"testing"
 
 	gm "github.com/onsi/gomega"
 )
-
-func loadPolicy(file string) ([]byte, error) {
-	path := filepath.Join("./testdata", file)
-	return ioutil.ReadFile(path)
-}
-
-func TestParsePolicy(t *testing.T) {
-	gm.RegisterTestingT(t)
-
-	policy, err := loadPolicy("policy_test.yaml")
-	gm.Expect(err).To(gm.BeNil())
-
-	p, err := ParsePolicy(policy)
-	gm.Expect(err).To(gm.BeNil())
-
-	gm.Expect(len(p.Transformations)).To(gm.Equal(2))
-	gm.Expect(len(p.Rules)).To(gm.Equal(1))
-}
-
-func TestNewPolicy(t *testing.T) {
-	gm.RegisterTestingT(t)
-
-	p := NewPolicy("label", nil)
-
-	gm.Expect(p.Label.String()).To(gm.Equal("label"))
-}
 
 func TestMarshallNamedTransform(t *testing.T) {
 	gm.RegisterTestingT(t)

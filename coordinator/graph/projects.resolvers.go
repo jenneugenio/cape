@@ -94,7 +94,7 @@ func (r *mutationResolver) UpdateProject(ctx context.Context, id *string, label 
 	return project, err
 }
 
-func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *string, label *models.Label, request models.ProjectSpecFile) (*models.Project, error) {
+func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *string, label *models.Label, request model.ProjectSpecFile) (*models.Project, error) {
 	var project *models.Project
 	var err error
 	if id != nil && *id != "" {
@@ -111,7 +111,7 @@ func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *string, la
 
 	// Insert the spec
 	// TODO -- How do you specify the parent? This concept doesn't make sense until we have proposals & diffing
-	spec := models.NewProjectSpec(project.ID, nil, request.Policy, request.Transformations)
+	spec := models.NewPolicy(project.ID, nil, request.Policy, request.Transformations)
 	err = r.Database.Projects().CreateProjectSpec(ctx, spec)
 	if err != nil {
 		return nil, err
@@ -146,7 +146,19 @@ func (r *mutationResolver) RemoveContributor(ctx context.Context, projectLabel m
 	return r.Database.Contributors().Delete(ctx, projectLabel, userEmail)
 }
 
-func (r *projectResolver) CurrentSpec(ctx context.Context, obj *models.Project) (*models.ProjectSpec, error) {
+func (r *policyResolver) Project(ctx context.Context, obj *models.Policy) (*models.Project, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *policyResolver) Parent(ctx context.Context, obj *models.Policy) (*models.Policy, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *policyResolver) Policy(ctx context.Context, obj *models.Policy) ([]*models.Rule, error) {
+	return obj.Rules, nil
+}
+
+func (r *projectResolver) CurrentSpec(ctx context.Context, obj *models.Project) (*models.Policy, error) {
 	if obj.CurrentSpecID == "" {
 		return nil, errs.New(NoActiveSpecCause, "Project %s has no active project spec", obj.Name)
 	}
@@ -168,14 +180,6 @@ func (r *projectResolver) Contributors(ctx context.Context, obj *models.Project)
 	}
 
 	return contributors, nil
-}
-
-func (r *projectSpecResolver) Project(ctx context.Context, obj *models.ProjectSpec) (*models.Project, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *projectSpecResolver) Parent(ctx context.Context, obj *models.ProjectSpec) (*models.ProjectSpec, error) {
-	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) Projects(ctx context.Context, status models.ProjectStatus) ([]*models.Project, error) {
@@ -237,13 +241,13 @@ func (r *Resolver) Contributor() generated.ContributorResolver { return &contrib
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
+// Policy returns generated.PolicyResolver implementation.
+func (r *Resolver) Policy() generated.PolicyResolver { return &policyResolver{r} }
+
 // Project returns generated.ProjectResolver implementation.
 func (r *Resolver) Project() generated.ProjectResolver { return &projectResolver{r} }
 
-// ProjectSpec returns generated.ProjectSpecResolver implementation.
-func (r *Resolver) ProjectSpec() generated.ProjectSpecResolver { return &projectSpecResolver{r} }
-
 type contributorResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
+type policyResolver struct{ *Resolver }
 type projectResolver struct{ *Resolver }
-type projectSpecResolver struct{ *Resolver }

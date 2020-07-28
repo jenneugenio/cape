@@ -65,9 +65,7 @@ models:
     model: github.com/capeprivacy/cape/primitives.Password
   Project:
     model: github.com/capeprivacy/cape/models.Project
-  ProjectSpec:
-    model: github.com/capeprivacy/cape/models.ProjectSpec
-  ProjectSpecFile:
+  PolicyFile:
     model: github.com/capeprivacy/cape/models.ProjectSpecFile
   NamedTransformation:
     model: github.com/capeprivacy/cape/models.NamedTransformation

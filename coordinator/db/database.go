@@ -71,8 +71,8 @@ type ProjectsDB interface {
 	List(context.Context) ([]models.Project, error)
 	ListByStatus(context.Context, models.ProjectStatus) ([]models.Project, error)
 
-	CreateProjectSpec(context.Context, models.ProjectSpec) error
-	GetProjectSpec(context.Context, string) (*models.ProjectSpec, error)
+	CreateProjectSpec(context.Context, models.Policy) error
+	GetProjectSpec(context.Context, string) (*models.Policy, error)
 }
 
 // Options

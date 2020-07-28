@@ -510,14 +510,14 @@ func (c *Client) GetProject(ctx context.Context, id string, label *models.Label)
 
 type UpdateProjectSpecResponseBody struct {
 	*models.Project
-	ProjectSpec *models.ProjectSpec `json:"current_spec"`
+	ProjectSpec *models.Policy `json:"current_spec"`
 }
 
 type UpdateProjectSpecResponse struct {
 	UpdateProjectSpecResponseBody `json:"updateProjectSpec"`
 }
 
-func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel models.Label, spec *models.ProjectSpecFile) (*models.Project, *models.ProjectSpec, error) {
+func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel models.Label, spec *models.PolicyFile) (*models.Project, *models.Policy, error) {
 	variables := make(map[string]interface{})
 	variables["project"] = &projectLabel
 	variables["projectSpecFile"] = spec

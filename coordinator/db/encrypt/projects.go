@@ -34,7 +34,7 @@ func (p *projectEncrypt) Update(ctx context.Context, project models.Project) err
 	return p.db.Update(ctx, project)
 }
 
-func (p *projectEncrypt) CreateProjectSpec(ctx context.Context, spec models.ProjectSpec) error {
+func (p *projectEncrypt) CreateProjectSpec(ctx context.Context, spec models.Policy) error {
 	for _, transform := range spec.Transformations {
 		for key, arg := range transform.Args {
 			sec, ok := arg.(models.SecretArg)
@@ -62,7 +62,7 @@ func (p *projectEncrypt) CreateProjectSpec(ctx context.Context, spec models.Proj
 	return p.db.CreateProjectSpec(ctx, spec)
 }
 
-func (p *projectEncrypt) GetProjectSpec(ctx context.Context, id string) (*models.ProjectSpec, error) {
+func (p *projectEncrypt) GetProjectSpec(ctx context.Context, id string) (*models.Policy, error) {
 	spec, err := p.db.GetProjectSpec(ctx, id)
 	if err != nil {
 		return nil, err

@@ -12,9 +12,9 @@ import (
 	gm "github.com/onsi/gomega"
 )
 
-var SecretProjectSpec = models.ProjectSpec{
+var SecretProjectSpec = models.Policy{
 	ID: "ididid",
-	Transformations: []models.NamedTransformation{
+	Transformations: []*models.NamedTransformation{
 		{
 			Name: "TestTransform",
 			Type: "secret",
@@ -31,7 +31,7 @@ var SecretProjectSpec = models.ProjectSpec{
 
 func TestProjectSpecCreate(t *testing.T) {
 	tests := []struct {
-		spec    models.ProjectSpec
+		spec    models.Policy
 		wantErr error
 		err     error
 	}{
@@ -82,9 +82,9 @@ func TestProjectSpecGet(t *testing.T) {
 	codec := crypto.NewSecretBoxCodec(kms)
 
 	encryptedSecret, _ := codec.Encrypt(context.TODO(), secret)
-	encryptedSpec := models.ProjectSpec{
+	encryptedSpec := models.Policy{
 		ID: "ididid",
-		Transformations: []models.NamedTransformation{
+		Transformations: []*models.NamedTransformation{
 			{
 				Name: "TestTransform",
 				Type: "secret",
@@ -99,9 +99,9 @@ func TestProjectSpecGet(t *testing.T) {
 		},
 	}
 
-	secretSpec := models.ProjectSpec{
+	secretSpec := models.Policy{
 		ID: "ididid",
-		Transformations: []models.NamedTransformation{
+		Transformations: []*models.NamedTransformation{
 			{
 				Name: "TestTransform",
 				Type: "secret",
@@ -117,8 +117,8 @@ func TestProjectSpecGet(t *testing.T) {
 	}
 
 	tests := []struct {
-		spec     models.ProjectSpec
-		wantSpec *models.ProjectSpec
+		spec     models.Policy
+		wantSpec *models.Policy
 		wantErr  error
 		err      error
 	}{
@@ -156,19 +156,19 @@ func TestProjectSpecGet(t *testing.T) {
 }
 
 type testPgProjects struct {
-	returnProjectSpec   models.ProjectSpec
-	receivedProjectSpec models.ProjectSpec
+	returnProjectSpec   models.Policy
+	receivedProjectSpec models.Policy
 	err                 error
 }
 
 // only testing the below two for now, rest can remain unimplemented
 
-func (t *testPgProjects) CreateProjectSpec(ctx context.Context, spec models.ProjectSpec) error {
+func (t *testPgProjects) CreateProjectSpec(ctx context.Context, spec models.Policy) error {
 	t.receivedProjectSpec = spec
 	return t.err
 }
 
-func (t *testPgProjects) GetProjectSpec(ctx context.Context, spec string) (*models.ProjectSpec, error) {
+func (t *testPgProjects) GetProjectSpec(ctx context.Context, spec string) (*models.Policy, error) {
 	if t.err != nil {
 		return nil, t.err
 	}

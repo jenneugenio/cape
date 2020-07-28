@@ -10,17 +10,17 @@ type Project {
     label: ModelLabel!
     description: ProjectDescription!
     status: ProjectStatus!
-    current_spec: ProjectSpec
+    current_spec: Policy
     contributors: [Contributor!]!
 
     created_at: Time!
     updated_at: Time!
 }
 
-type ProjectSpec {
+type Policy {
     id: String!
     project: Project!
-    parent: ProjectSpec
+    parent: Policy
     transformations: [NamedTransformation!]
     policy: [Rule!]!
 
