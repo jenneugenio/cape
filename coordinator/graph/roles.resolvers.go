@@ -6,12 +6,12 @@ package graph
 import (
 	"context"
 	"fmt"
-	"github.com/capeprivacy/cape/auth"
-	errs "github.com/capeprivacy/cape/partyerrors"
 
+	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
+	errs "github.com/capeprivacy/cape/partyerrors"
 )
 
 func (r *assignmentResolver) Role(ctx context.Context, obj *models.Assignment) (*models.Role, error) {
@@ -51,13 +51,7 @@ func (r *queryResolver) MyRole(ctx context.Context, projectLabel *models.Label) 
 		return &currSession.Roles.Global, nil
 	}
 
-	role := currSession.Roles.Projects.Get(*projectLabel)
-	// TODO -- bring this check back!
-	//if !ok {
-	//	return nil, fmt.Errorf("you are not a member of the requested project: %s", projectLabel)
-	//}
-
-	return &role, nil
+	return currSession.Roles.Projects.Get(*projectLabel)
 }
 
 // Assignment returns generated.AssignmentResolver implementation.

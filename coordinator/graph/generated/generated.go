@@ -986,11 +986,6 @@ type Assignment {
 extend type Query {
   # Get your global role, you can optionally specify a project label to get your role within a project
   myRole(project_label: ModelLabel): Role!
-
-#  role(id: String!): Role!
-#  roleByLabel(label: ModelLabel!): Role!
-#  roles: [Role!]
-#  roleMembers(role_id: String!): [User]
 }
 
 extend type Mutation {

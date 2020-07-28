@@ -6,23 +6,6 @@ import (
 )
 
 func init() {
-	//listCmd := &Command{
-	//	Usage: "Lists all the roles on the cluster",
-	//	Examples: []*Example{
-	//		{
-	//			Example:     "cape roles list",
-	//			Description: "Lists all roles",
-	//		},
-	//	},
-	//	Command: &cli.Command{
-	//		Name:   "list",
-	//		Action: handleSessionOverrides(rolesListCmd),
-	//		Flags: []cli.Flag{
-	//			clusterFlag(),
-	//		},
-	//	},
-	//}
-
 	meCmd := &Command{
 		Usage: "Tells you what your role is",
 		Examples: []*Example{

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"time"
 )
 
@@ -124,8 +125,13 @@ func ValidProjectRole(role Label) bool {
 
 type ProjectRolesMap map[Label]Role
 
-func (p ProjectRolesMap) Get(l Label) Role {
-	return p[l]
+func (p ProjectRolesMap) Get(l Label) (*Role, error) {
+	r, ok := p[l]
+	if !ok {
+		return nil, fmt.Errorf("unable to find membership in requested project")
+	}
+
+	return &r, nil
 }
 
 type UserRoles struct {
