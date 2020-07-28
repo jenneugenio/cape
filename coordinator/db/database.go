@@ -13,7 +13,6 @@ type Interface interface {
 	Users() UserDB
 	Projects() ProjectsDB
 	Contributors() ContributorDB
-	RBAC() RBACDB
 	Config() ConfigDB
 }
 
@@ -25,11 +24,6 @@ type PolicyDB interface {
 	Get(context.Context, models.Label) (*models.Policy, error)
 	GetByID(context.Context, string) (*models.Policy, error)
 	List(ctx context.Context, opts *ListPolicyOptions) ([]models.Policy, error)
-}
-
-type RBACDB interface {
-	Create(context.Context, models.RBACPolicy) error
-	List(ctx context.Context, opts *ListRBACOptions) ([]models.RBACPolicy, error)
 }
 
 type UserDB interface {
@@ -89,10 +83,6 @@ type ListPolicyOptions struct {
 		Limit  uint64
 	}
 
-	FilterIDs []string
-}
-
-type ListRBACOptions struct {
 	FilterIDs []string
 }
 

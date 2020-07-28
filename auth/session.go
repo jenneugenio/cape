@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"github.com/capeprivacy/cape/coordinator/database/types"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -47,11 +46,4 @@ func (s *Session) Validate() error {
 
 func (s *Session) GetID() string {
 	return s.User.ID
-}
-
-// Can checks to see if the given user can do an action on the given primitive type. This
-// is intended to work on internal authorization and policy decisions.
-func (s *Session) Can(action models.RBACAction, typ types.Type) error {
-	// TODO -- remove, deprecated
-	return nil
 }
