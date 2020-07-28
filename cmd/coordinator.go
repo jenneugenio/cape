@@ -224,7 +224,7 @@ func configureCoordinatorCmd(c *cli.Context) error {
 		return err
 	}
 
-	return u.Template("Cape coordinator configuration generated. Run `cape coordinator start --file {{ . }}` to continue.", out)
+	return u.Template("Cape coordinator configuration generated. Run `cape coordinator start --file {{ . }}` to continue.\n", out)
 }
 
 func handleK8sFormat(cfg *coordinator.Config, format string, out string) error {

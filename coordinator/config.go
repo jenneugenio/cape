@@ -44,7 +44,7 @@ type Config struct {
 	Cors CorsConfig `json:"cors"`
 
 	// Required if no admin user has been c
-	User *UserConfig `json:"user"`
+	User *UserConfig `json:"user,omitempty"`
 }
 
 type UserConfig struct {
@@ -170,7 +170,7 @@ func NewConfig(port int, dbURL *primitives.DBURL) (*Config, error) {
 		DB: &DBConfig{
 			Addr: dbURL,
 		},
-		RootKey: base64.New(key[:]).String(),
+		RootKey: "base64key://" + base64.New(key[:]).String(),
 	}
 
 	if err := cfg.Validate(); err != nil {
