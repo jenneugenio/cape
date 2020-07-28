@@ -148,8 +148,11 @@ func (r *pgRole) SetOrgRole(ctx context.Context, email models.Email, label model
 		UpdatedAt: time.Now(),
 	}
 
-	s := `insert into assignments (data) VALUES ($1)`
-	_, err = r.pool.Exec(ctx, s, assignment)
+	s := `insert into assignments (data) VALUES ($1)
+			on conflict on constraint unique_assignment
+			do update set data = assignments.data || jsonb_build_object('role_id', $2::text), role_id = $2;`
+
+	_, err = r.pool.Exec(ctx, s, assignment, ids.RoleID) // , ids.UserID)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			return nil, db.ErrDuplicateKey
@@ -193,8 +196,10 @@ func (r *pgRole) SetProjectRole(ctx context.Context, email models.Email, project
 		UpdatedAt: time.Now(),
 	}
 
-	s := `insert into assignments (data) VALUES ($1)`
-	_, err = r.pool.Exec(ctx, s, assignment)
+	s := `insert into assignments (data) VALUES ($1)
+			on conflict on constraint unique_assignment
+			do update set data = assignments.data || jsonb_build_object('role_id', $2::text), role_id = $2;`
+	_, err = r.pool.Exec(ctx, s, assignment, ids.RoleID)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			return nil, db.ErrDuplicateKey

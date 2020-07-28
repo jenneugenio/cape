@@ -221,6 +221,35 @@ func (c *Client) MyProjectRole(ctx context.Context, project models.Label) (*mode
 	return &resp.Role, nil
 }
 
+func (c *Client) SetOrgRole(ctx context.Context, user models.Email, role models.Label) error {
+	variables := make(map[string]interface{})
+	variables["user_email"] = user
+	variables["role_label"] = role
+
+	err := c.transport.Raw(ctx, `
+		mutation SetOrgRole($user_email: ModelEmail!, $role_label: ModelLabel!) {
+			setOrgRole(user_email: $user_email, role_label: $role_label) { id }
+		}
+	`, variables, nil)
+
+	return err
+}
+
+func (c *Client) SetProjectRole(ctx context.Context, user models.Email, project models.Label, role models.Label) error {
+	variables := make(map[string]interface{})
+	variables["user_email"] = user
+	variables["role_label"] = role
+	variables["project_label"] = project
+
+	err := c.transport.Raw(ctx, `
+		mutation SetProjectRole($user_email: ModelEmail!, $project_label: ModelLabel!, $role_label: ModelLabel!) {
+			setProjectRole(user_email: $user_email, project_label: $project_label, role_label: $role_label) { id }
+		}
+	`, variables, nil)
+
+	return err
+}
+
 // CreateRole creates a new role with a label
 //func (c *Client) CreateRole(ctx context.Context, label primitives.Label, userIDs []string) (*primitives.Role, error) {
 //	var resp struct {

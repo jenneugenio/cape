@@ -10,6 +10,7 @@ const (
 	WritePolicy Permission = 1 << iota
 	CreateProject
 
+	// Tokens
 	CreateOwnToken
 	CreateAnyToken
 	RemoveOwnToken
@@ -17,6 +18,7 @@ const (
 	ListOwnTokens
 	ListAnyTokens
 
+	// Projects
 	ArchiveProject
 	UnarchiveProject
 	DeleteOwnedProject
@@ -28,6 +30,9 @@ const (
 	SuggestPolicy
 	AcceptPolicy
 	ReadPolicy
+
+	// Roles
+	ChangeRole
 )
 
 type Principal interface{}
@@ -52,6 +57,8 @@ var (
 		CreateAnyToken, RemoveAnyToken, ListAnyTokens,
 
 		DeleteAnyProject,
+
+		ChangeRole,
 	)
 
 	userRules = withRules(

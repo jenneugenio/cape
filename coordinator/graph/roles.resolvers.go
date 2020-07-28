@@ -6,6 +6,8 @@ package graph
 import (
 	"context"
 	"fmt"
+	"github.com/capeprivacy/cape/auth"
+	errs "github.com/capeprivacy/cape/partyerrors"
 
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	fw "github.com/capeprivacy/cape/framework"
@@ -21,8 +23,14 @@ func (r *assignmentResolver) User(ctx context.Context, obj *models.Assignment) (
 }
 
 func (r *mutationResolver) SetOrgRole(ctx context.Context, userEmail models.Email, roleLabel models.Label) (*models.Assignment, error) {
+	currSession := fw.Session(ctx)
+
 	if !models.ValidOrgRole(roleLabel) {
 		return nil, fmt.Errorf("invalid role: %s", roleLabel)
+	}
+
+	if !currSession.Roles.Global.Can(models.ChangeRole) {
+		return nil, errs.New(auth.AuthorizationFailure, "invalid permissions to change user role")
 	}
 
 	return r.Database.Roles().SetOrgRole(ctx, userEmail, roleLabel)

@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-
+	"github.com/capeprivacy/cape/models"
 	"github.com/urfave/cli/v2"
 )
 
@@ -60,9 +59,24 @@ func init() {
 }
 
 func rolesMeCmd(c *cli.Context) error {
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
 	project := c.String("project")
+	var role *models.Role
+	if project != "" {
+		role, err = client.MyRole(c.Context)
+	} else {
+		role, err = client.MyProjectRole(c.Context, models.Label(project))
+	}
 
-	fmt.Println("Getting role for ... ", project)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	u := provider.UI(c.Context)
+	return u.Template("Role: {{ . | bold }}!\n\n", role.Label.String())
 }
