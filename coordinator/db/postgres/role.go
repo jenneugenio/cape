@@ -86,7 +86,7 @@ func (r *pgRole) GetAll(ctx context.Context, userID string) (*models.UserRoles, 
 	// get the users global role
 	s := `select roles.data 
 			from roles, assignments 
-			where roles.id = assignments.role_id and assignments.user_id = $1;`
+			where roles.id = assignments.role_id and assignments.user_id = $1 and assignments.data->>'project_id' = '';`
 
 	userRoles := models.UserRoles{}
 	row := r.pool.QueryRow(ctx, s, userID)
@@ -102,11 +102,7 @@ func (r *pgRole) GetAll(ctx context.Context, userID string) (*models.UserRoles, 
 
 	row = r.pool.QueryRow(ctx, s, userID)
 	err = row.Scan(&userRoles.Projects)
-	if err != nil {
-		if err.Error() == "no rows in result set" {
-			return &userRoles, nil
-		}
-
+	if err != nil && err.Error() != "no rows in result set" {
 		return nil, err
 	}
 
