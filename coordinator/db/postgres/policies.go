@@ -16,7 +16,6 @@ type PolicyType string
 
 const (
 	PolicyTypeData PolicyType = "data_policy"
-	PolicyTypeRBAC PolicyType = "rbac_policy"
 )
 
 type pgPolicy struct {
