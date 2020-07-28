@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
@@ -24,7 +25,12 @@ func (r *contributorResolver) Project(ctx context.Context, obj *models.Contribut
 }
 
 func (r *contributorResolver) Role(ctx context.Context, obj *models.Contributor) (*models.Role, error) {
-	return r.Database.Roles().GetByID(ctx, obj.RoleID)
+	user, err := r.Database.Users().GetByID(ctx, obj.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Database.Roles().GetProjectRole(ctx, user.Email, obj.ProjectID)
 }
 
 func (r *mutationResolver) CreateProject(ctx context.Context, project model.CreateProjectRequest) (*models.Project, error) {
@@ -37,6 +43,10 @@ func (r *mutationResolver) CreateProject(ctx context.Context, project model.Crea
 		label = models.Label(labelStr)
 	}
 
+	if !currSession.Roles.Global.Can(models.CreateProject) {
+		return nil, errs.New(auth.AuthorizationFailure, "invalid permissions to create a project")
+	}
+
 	p := models.NewProject(project.Name, label, project.Description)
 	if err := r.Database.Projects().Create(ctx, p); err != nil {
 		return nil, err
@@ -44,7 +54,12 @@ func (r *mutationResolver) CreateProject(ctx context.Context, project model.Crea
 
 	// Now make the creator the project owner
 	// TODO -- this should happen in a transaction
-	_, err := r.Database.Contributors().Add(ctx, label, currSession.User.Email, models.ProjectOwnerRole)
+	_, err := r.Database.Contributors().Add(ctx, label, currSession.User.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.Database.Roles().SetProjectRole(ctx, currSession.User.Email, label, models.ProjectOwnerRole)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +134,12 @@ func (r *mutationResolver) UnarchiveProject(ctx context.Context, id *string, lab
 }
 
 func (r *mutationResolver) UpdateContributor(ctx context.Context, projectLabel models.Label, userEmail models.Email, roleLabel models.Label) (*models.Contributor, error) {
-	return r.Database.Contributors().Add(ctx, projectLabel, userEmail, roleLabel)
+	_, err := r.Database.Roles().SetProjectRole(ctx, userEmail, projectLabel, roleLabel)
+	if err != nil {
+		return nil, err
+	}
+
+	return r.Database.Contributors().Add(ctx, projectLabel, userEmail)
 }
 
 func (r *mutationResolver) RemoveContributor(ctx context.Context, projectLabel models.Label, userEmail models.Email) (*models.Contributor, error) {
@@ -214,6 +234,9 @@ func (r *queryResolver) ListContributors(ctx context.Context, projectLabel model
 // Contributor returns generated.ContributorResolver implementation.
 func (r *Resolver) Contributor() generated.ContributorResolver { return &contributorResolver{r} }
 
+// Mutation returns generated.MutationResolver implementation.
+func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
+
 // Project returns generated.ProjectResolver implementation.
 func (r *Resolver) Project() generated.ProjectResolver { return &projectResolver{r} }
 
@@ -221,5 +244,6 @@ func (r *Resolver) Project() generated.ProjectResolver { return &projectResolver
 func (r *Resolver) ProjectSpec() generated.ProjectSpecResolver { return &projectSpecResolver{r} }
 
 type contributorResolver struct{ *Resolver }
+type mutationResolver struct{ *Resolver }
 type projectResolver struct{ *Resolver }
 type projectSpecResolver struct{ *Resolver }

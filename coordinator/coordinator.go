@@ -26,7 +26,6 @@ import (
 	"github.com/capeprivacy/cape/coordinator/graph"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/mailer"
-	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -259,30 +258,13 @@ func (c *Coordinator) doSetup(ctx context.Context, capedb db.Interface) error {
 	}
 	defer tx.Rollback(ctx) // nolint: errcheck
 
-	err = fw.CreateSystemRoles(ctx, tx)
+	err = enc.Roles().CreateSystemRoles(ctx)
 	if err != nil {
-		c.logger.Error().Err(err).Msg("Could not insert roles into database")
 		return err
 	}
 
-	err = fw.AttachDefaultPolicy(ctx, tx, enc)
+	_, err = enc.Roles().SetOrgRole(ctx, c.cfg.User.Email, models.AdminRole)
 	if err != nil {
-		c.logger.Error().Err(err).Msg("Could not attach default policies inside database")
-		return err
-	}
-
-	roles, err := fw.GetRolesByLabel(ctx, tx, []primitives.Label{
-		primitives.GlobalRole,
-		primitives.AdminRole,
-	})
-	if err != nil {
-		c.logger.Error().Err(err).Msg("Could not retrieve roles")
-		return err
-	}
-
-	err = fw.CreateAssignments(ctx, tx, user.ID, roles)
-	if err != nil {
-		c.logger.Error().Err(err).Msg("Could not create assignments in database")
 		return err
 	}
 

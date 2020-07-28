@@ -107,24 +107,6 @@ func clusterFlag() cli.Flag {
 	}
 }
 
-func membersFlag() cli.Flag {
-	usage := "Members to assign the specified role to"
-	return &cli.StringSliceFlag{
-		Name:    "member",
-		Aliases: []string{"m"},
-		Usage:   usage,
-		EnvVars: []string{"CAPE_MEMBERS"},
-	}
-}
-
-func fileFlag() cli.Flag {
-	return &cli.StringFlag{
-		Name:    "from-file",
-		Usage:   "Loads a policy from a file and creates it",
-		EnvVars: []string{"CAPE_FILEPATH"},
-	}
-}
-
 func configFilesFlag() cli.Flag {
 	return &cli.StringSliceFlag{
 		Name:    "file",
@@ -164,6 +146,14 @@ func projectNameFlag() cli.Flag {
 		Name:    "name",
 		Usage:   "The name of the project",
 		EnvVars: []string{"CAPE_PROJECT_NAME"},
+	}
+}
+
+func projectLabelFlag() cli.Flag {
+	return &cli.StringFlag{
+		Name:    "project",
+		Usage:   "The label identifier for the project",
+		EnvVars: []string{"CAPE_PROJECT_LABEL"},
 	}
 }
 

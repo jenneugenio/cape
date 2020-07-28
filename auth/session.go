@@ -12,8 +12,7 @@ import (
 type Session struct {
 	User               *models.User
 	Session            *primitives.Session
-	Policies           []*models.RBACPolicy
-	Roles              []*primitives.Role
+	Roles              models.UserRoles
 	CredentialProvider primitives.CredentialProvider
 }
 
@@ -21,13 +20,11 @@ type Session struct {
 func NewSession(
 	user *models.User,
 	session *primitives.Session,
-	policies []*models.RBACPolicy,
-	roles []*primitives.Role,
+	roles models.UserRoles,
 	cp primitives.CredentialProvider) (*Session, error) {
 	s := &Session{
 		User:               user,
 		Session:            session,
-		Policies:           policies,
 		Roles:              roles,
 		CredentialProvider: cp,
 	}
@@ -45,14 +42,6 @@ func (s *Session) Validate() error {
 		return errors.New(InvalidInfo, "Session must not be nil")
 	}
 
-	if s.Policies == nil {
-		return errors.New(InvalidInfo, "Policies must not be nil")
-	}
-
-	if s.Roles == nil {
-		return errors.New(InvalidInfo, "Roles must not be nil")
-	}
-
 	return nil
 }
 
@@ -63,22 +52,6 @@ func (s *Session) GetID() string {
 // Can checks to see if the given user can do an action on the given primitive type. This
 // is intended to work on internal authorization and policy decisions.
 func (s *Session) Can(action models.RBACAction, typ types.Type) error {
-	var rules []*models.RBACRule
-
-	for _, p := range s.Policies {
-		for _, r := range p.Spec.Rules {
-			if r.Target.Type().String() == typ.String() && r.Action == action {
-				if r.Effect == models.Deny {
-					return errors.New(AuthorizationFailure, "A rule denies this action")
-				}
-				rules = append(rules, r)
-			}
-		}
-	}
-
-	if len(rules) == 0 {
-		return errors.New(AuthorizationFailure, "You don't have sufficient permissions to perform a %s on %s", action, typ)
-	}
-
+	// TODO -- remove, deprecated
 	return nil
 }

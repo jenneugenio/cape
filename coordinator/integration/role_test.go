@@ -10,7 +10,6 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestRoles(t *testing.T) {
@@ -32,204 +31,62 @@ func TestRoles(t *testing.T) {
 	client, err := m.Setup(ctx)
 	gm.Expect(err).To(gm.BeNil())
 
-	t.Run("create role", func(t *testing.T) {
-		gm.RegisterTestingT(t)
-
-		label, err := primitives.NewLabel("data-scientist")
+	t.Run("Getting your own role", func(t *testing.T) {
+		r, err := client.MyRole(ctx)
 		gm.Expect(err).To(gm.BeNil())
-		role, err := client.CreateRole(ctx, label, nil)
-		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(role.Label).To(gm.Equal(label))
-
-		// make sure the role exists!!
-		role, err = client.GetRole(ctx, role.ID)
-		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(role.Label).To(gm.Equal(label))
+		gm.Expect(r.Label).To(gm.Equal(models.AdminRole))
 	})
 
-	t.Run("delete role", func(t *testing.T) {
-		gm.RegisterTestingT(t)
-
-		label, err := primitives.NewLabel("cio-person")
-		gm.Expect(err).To(gm.BeNil())
-		role, err := client.CreateRole(ctx, label, nil)
+	t.Run("Getting your own role in a project", func(t *testing.T) {
+		_, err := client.CreateProject(ctx, "My Project", nil, "Who cares")
 		gm.Expect(err).To(gm.BeNil())
 
-		err = client.DeleteRole(ctx, role.ID)
+		r, err := client.MyProjectRole(ctx, "my-project")
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(r.Label).To(gm.Equal(models.ProjectOwnerRole))
+	})
+
+	t.Run("Can't change your own role as a member", func(t *testing.T ) {
+		_, pw, err := client.CreateUser(ctx, "Cool Guy", "cool@person.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		// make sure the role is deleted
-		_, err = client.GetRole(ctx, role.ID)
+		_, err = client.EmailLogin(ctx, "cool@person.com", pw)
+		gm.Expect(err).To(gm.BeNil())
+
+		err = client.SetOrgRole(ctx, "cool@person.com", models.AdminRole)
 		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: invalid permissions to change user role"))
+
+		// Return to the admin user
+		_, err = client.EmailLogin(ctx, h.Manager().Admin.User.Email, h.Manager().Admin.Password)
+		gm.Expect(err).To(gm.BeNil())
 	})
 
-	t.Run("create role with members", func(t *testing.T) {
-		gm.RegisterTestingT(t)
-
-		label, err := primitives.NewLabel("cto-person")
+	t.Run("Admin can change member roles", func(t *testing.T ) {
+		u, _, err := client.CreateUser(ctx, "Best Friend", "bestfriend@person.com")
 		gm.Expect(err).To(gm.BeNil())
-		role, err := client.CreateRole(ctx, label, []string{m.Admin.User.ID})
-		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(role).ToNot(gm.BeNil())
 
-		users, err := client.GetMembersRole(ctx, role.ID)
+		err = client.SetOrgRole(ctx, "bestfriend@person.com", models.AdminRole)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(len(users)).To(gm.Equal(1))
 
-		gm.Expect(users[0].ID).To(gm.Equal(m.Admin.User.ID))
+		user, err := client.GetUser(ctx, u.ID)
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(user.Role.Label, models.AdminRole)
 	})
 
-	t.Run("create role with multiple members", func(t *testing.T) {
-		gm.RegisterTestingT(t)
-
-		label, err := primitives.NewLabel("ceoooo")
+	t.Run("Project owner can change member roles", func(t *testing.T) {
+		label := models.Label("epic-project")
+		p, err := client.CreateProject(ctx, "Epic Project With My Friends", &label, "Who cares")
 		gm.Expect(err).To(gm.BeNil())
 
-		email := models.Email("jye@jdfjkf.com")
-		name := models.Name("My Name")
-
-		user, _, err := client.CreateUser(ctx, name, email)
+		u, _, err := client.CreateUser(ctx, "Abc Def", "alphabet@person.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		role, err := client.CreateRole(ctx, label, []string{m.Admin.User.ID, user.ID})
-		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(role).ToNot(gm.BeNil())
-
-		users, err := client.GetMembersRole(ctx, role.ID)
-		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(len(users)).To(gm.Equal(2))
-
-		gm.Expect(users[0].ID).To(gm.Equal(m.Admin.User.ID))
-		gm.Expect(users[1].ID).To(gm.Equal(user.ID))
-	})
-
-	t.Run("Roles will not default to system roles", func(t *testing.T) {
-		l, err := primitives.NewLabel("coolguy")
+		_, err = client.AddContributor(ctx, *p, *u, models.ProjectContributorRole)
 		gm.Expect(err).To(gm.BeNil())
 
-		role, err := client.CreateRole(ctx, l, []string{m.Admin.User.ID})
-
+		err = client.SetProjectRole(ctx, "alphabet@person.com", label, models.ProjectReaderRole)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(role.System).To(gm.BeFalse())
-	})
-
-	t.Run("role by label", func(t *testing.T) {
-		l, err := primitives.NewLabel("coolguy-five")
-		gm.Expect(err).To(gm.BeNil())
-
-		role, err := client.CreateRole(ctx, l, []string{m.Admin.User.ID})
-		gm.Expect(err).To(gm.BeNil())
-
-		otherRole, err := client.GetRoleByLabel(ctx, role.Label)
-		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(role).To(gm.Equal(otherRole))
-	})
-
-	t.Run("cannot delete system role", func(t *testing.T) {
-		admin, err := primitives.NewLabel("admin")
-		gm.Expect(err).To(gm.BeNil())
-
-		role, err := client.GetRoleByLabel(ctx, admin)
-		gm.Expect(err).To(gm.BeNil())
-
-		err = client.DeleteRole(ctx, role.ID)
-		gm.Expect(err).ToNot(gm.BeNil())
-	})
-}
-
-func TestListRoles(t *testing.T) {
-	gm.RegisterTestingT(t)
-
-	ctx := context.Background()
-	cfg, err := harness.NewConfig()
-	gm.Expect(err).To(gm.BeNil())
-
-	h, err := harness.NewHarness(cfg)
-	gm.Expect(err)
-
-	err = h.Setup(ctx)
-	gm.Expect(err).To(gm.BeNil())
-
-	defer h.Teardown(ctx) // nolint: errcheck
-
-	m := h.Manager()
-	client, err := m.Setup(ctx)
-	gm.Expect(err).To(gm.BeNil())
-
-	dsRole, err := client.CreateRole(ctx, "data-scientist", nil)
-	gm.Expect(err).To(gm.BeNil())
-
-	ctoRole, err := client.CreateRole(ctx, "ctoo", nil)
-	gm.Expect(err).To(gm.BeNil())
-
-	roles, err := client.ListRoles(ctx)
-	gm.Expect(err).To(gm.BeNil())
-
-	// create two roles + the system roles
-	gm.Expect(len(roles)).To(gm.Equal(2 + len(primitives.SystemRoles)))
-	gm.Expect(roles).To(gm.ContainElements(dsRole, ctoRole))
-}
-
-func TestAssignments(t *testing.T) {
-	gm.RegisterTestingT(t)
-
-	ctx := context.Background()
-	cfg, err := harness.NewConfig()
-	gm.Expect(err).To(gm.BeNil())
-
-	h, err := harness.NewHarness(cfg)
-	gm.Expect(err)
-
-	err = h.Setup(ctx)
-	gm.Expect(err).To(gm.BeNil())
-
-	defer h.Teardown(ctx) // nolint: errcheck
-
-	m := h.Manager()
-	client, err := m.Setup(ctx)
-	gm.Expect(err).To(gm.BeNil())
-
-	t.Run("assign role", func(t *testing.T) {
-		gm.RegisterTestingT(t)
-
-		label, err := primitives.NewLabel("data-scientist")
-		gm.Expect(err).To(gm.BeNil())
-		role, err := client.CreateRole(ctx, label, nil)
-		gm.Expect(err).To(gm.BeNil())
-
-		assignment, err := client.AssignRole(ctx, m.Admin.User.ID, role.ID)
-		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(assignment).NotTo(gm.BeNil())
-		gm.Expect(assignment.User.ID).To(gm.Equal(m.Admin.User.ID))
-		gm.Expect(assignment.Role.Label).To(gm.Equal(label))
-
-		users, err := client.GetMembersRole(ctx, role.ID)
-		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(len(users)).To(gm.Equal(1))
-
-		gm.Expect(users[0].ID).To(gm.Equal(m.Admin.User.ID))
-	})
-
-	t.Run("unassign role", func(t *testing.T) {
-		gm.RegisterTestingT(t)
-
-		label, err := primitives.NewLabel("iamarole")
-		gm.Expect(err).To(gm.BeNil())
-		role, err := client.CreateRole(ctx, label, nil)
-		gm.Expect(err).To(gm.BeNil())
-
-		assignment, err := client.AssignRole(ctx, m.Admin.User.ID, role.ID)
-		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(assignment).NotTo(gm.BeNil())
-
-		err = client.UnassignRole(ctx, m.Admin.User.ID, role.ID)
-		gm.Expect(err).To(gm.BeNil())
-
-		users, err := client.GetMembersRole(ctx, role.ID)
-		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(len(users)).To(gm.Equal(0))
 	})
 }

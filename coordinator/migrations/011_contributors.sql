@@ -4,7 +4,6 @@ CREATE TABLE contributors (
     id char(29) primary key not null,
     user_id char(29) references users(id) not null,
     project_id char(29) references projects(id) not null,
-    role_id char(29) references roles(id) not null,
 
     data jsonb not null,
     constraint user_project unique (user_id, project_id)
@@ -12,7 +11,7 @@ CREATE TABLE contributors (
 
 create trigger contributors_hoist_tgr
     before insert on contributors
-    for each row execute procedure hoist_values('id', 'user_id', 'project_id', 'role_id');
+    for each row execute procedure hoist_values('id', 'user_id', 'project_id');
 
 COMMIT;
 

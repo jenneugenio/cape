@@ -35,7 +35,7 @@ func TestContributor(t *testing.T) {
 	gm.Expect(err).To(gm.BeNil())
 
 	t.Run("Can't create a contributor if the project doesn't exist", func(t *testing.T) {
-		_, err := cape.Contributors().Add(ctx, "my-contributor", "me@google.com", models.ProjectOwnerRole)
+		_, err := cape.Contributors().Add(ctx, "my-contributor", "me@google.com")
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 }

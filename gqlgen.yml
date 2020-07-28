@@ -26,7 +26,7 @@ models:
   User:
     model: github.com/capeprivacy/cape/models.User
   Role:
-    model: github.com/capeprivacy/cape/primitives.Role
+    model: github.com/capeprivacy/cape/models.Role
   ModelRole:
     model: github.com/capeprivacy/cape/models.Role
   Session:
@@ -81,3 +81,5 @@ models:
     model: github.com/capeprivacy/cape/primitives.Recovery
   Contributor:
     model: github.com/capeprivacy/cape/models.Contributor
+  Assignment:
+    model: github.com/capeprivacy/cape/models.Assignment

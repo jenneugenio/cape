@@ -143,7 +143,7 @@ type LogoutRequest struct {
 }
 
 func LogoutHandler(coordinator *Coordinator) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		backend := coordinator.backend
@@ -161,14 +161,13 @@ func LogoutHandler(coordinator *Coordinator) http.HandlerFunc {
 			respondWithError(w, r.URL.Path, err)
 			return
 		}
-	})
+	}
 }
 
 func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAuthority, input LogoutRequest) error {
 	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, backend)
 	if input.Token == nil {
-		err := enforcer.Delete(ctx, primitives.SessionType, currSession.Session.ID)
+		err := backend.Delete(ctx, primitives.SessionType, currSession.Session.ID)
 		if err != nil {
 			return err
 		}
@@ -177,10 +176,8 @@ func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAutho
 	}
 
 	found := false
-	for _, role := range currSession.Roles {
-		if role.Label == primitives.AdminRole {
-			found = true
-		}
+	if currSession.Roles.Global.Label == models.AdminRole {
+		found = true
 	}
 
 	if !found {
@@ -192,7 +189,7 @@ func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAutho
 		return err
 	}
 
-	err = enforcer.Delete(ctx, primitives.SessionType, id)
+	err = backend.Delete(ctx, primitives.SessionType, id)
 	if err != nil {
 		return err
 	}

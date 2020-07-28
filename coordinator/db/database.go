@@ -42,14 +42,18 @@ type UserDB interface {
 }
 
 type RoleDB interface {
-	Create(context.Context, *models.Role) error
-	Delete(context.Context, models.Label) (DeleteStatus, error)
 	Get(context.Context, models.Label) (*models.Role, error)
 	GetByID(context.Context, string) (*models.Role, error)
 	List(context.Context, *ListRoleOptions) ([]*models.Role, error)
 
-	AttachPolicy(context.Context, models.Label) error
-	DetachPolicy(context.Context, models.Label) error
+	GetAll(context.Context, string) (*models.UserRoles, error)
+
+	SetOrgRole(context.Context, models.Email, models.Label) (*models.Assignment, error)
+	GetOrgRole(context.Context, models.Email) (*models.Role, error)
+	SetProjectRole(context.Context, models.Email, models.Label, models.Label) (*models.Assignment, error)
+	GetProjectRole(context.Context, models.Email, string) (*models.Role, error)
+
+	CreateSystemRoles(context.Context) error
 }
 
 type ConfigDB interface {
@@ -58,7 +62,7 @@ type ConfigDB interface {
 }
 
 type ContributorDB interface {
-	Add(context.Context, models.Label, models.Email, models.Label) (*models.Contributor, error)
+	Add(context.Context, models.Label, models.Email) (*models.Contributor, error)
 	Get(context.Context, models.Label, models.Email) (*models.Contributor, error)
 	List(context.Context, models.Label) ([]models.Contributor, error)
 	Delete(context.Context, models.Label, models.Email) (*models.Contributor, error)

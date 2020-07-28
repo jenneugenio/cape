@@ -6,7 +6,6 @@ package graph
 import (
 	"context"
 
-	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
@@ -16,8 +15,6 @@ import (
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserRequest) (*model.CreateUserResponse, error) {
 	logger := fw.Logger(ctx)
-	session := fw.Session(ctx)
-
 	password := primitives.GeneratePassword()
 
 	creds, err := r.CredentialProducer.Generate(password)
@@ -40,18 +37,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 
 	defer tx.Rollback(ctx) // nolint: errcheck
 
-	enforcer := auth.NewEnforcer(session, tx)
-
-	// We need to get the system roles back from the database so we can
-	// assignment them to this user appropriately.
-	systemRoles, err := fw.GetRolesByLabel(ctx, tx, []primitives.Label{
-		primitives.GlobalRole,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	err = fw.CreateAssignments(ctx, enforcer, user.ID, systemRoles)
+	_, err = r.Database.Roles().SetOrgRole(ctx, user.Email, models.UserRole)
 	if err != nil {
 		return nil, err
 	}
@@ -85,11 +71,8 @@ func (r *queryResolver) Users(ctx context.Context) ([]*models.User, error) {
 	return userPtrs, nil
 }
 
-func (r *userResolver) Roles(ctx context.Context, obj *models.User) ([]*primitives.Role, error) {
-	currSession := fw.Session(ctx)
-	enforcer := auth.NewEnforcer(currSession, r.Backend)
-
-	return fw.QueryRoles(ctx, enforcer, obj.ID)
+func (r *userResolver) Role(ctx context.Context, obj *models.User) (*models.Role, error) {
+	return r.Database.Roles().GetOrgRole(ctx, obj.Email)
 }
 
 // User returns generated.UserResolver implementation.

@@ -1,52 +1,25 @@
-type ModelRole {
-  id: ID!
+type Role {
+  id: String!
   label: ModelLabel!
   system: Boolean!
   created_at: Time!
   updated_at: Time!
 }
 
-type Role {
-  id: ID!
-  label: Label!
-  system: Boolean!
-  created_at: Time!
-  updated_at: Time!
-}
-
 type Assignment {
-  id: ID!
+  id: String!
   role: Role!
   user: User!
   created_at: Time!
   updated_at: Time!
 }
 
-input CreateRoleRequest {
-  label: Label!
-  user_ids: [String!]
-}
-
-input DeleteRoleRequest {
-  id: ID!
-}
-
-input AssignRoleRequest {
-  role_id: ID!
-  user_id: String!
-}
-
 extend type Query {
-  role(id: ID!): Role!
-  roleByLabel(label: Label!): Role!
-  roles: [Role!]
-  roleMembers(role_id: ID!): [User]
+  # Get your global role, you can optionally specify a project label to get your role within a project
+  myRole(project_label: ModelLabel): Role!
 }
 
 extend type Mutation {
-  createRole(input: CreateRoleRequest!): Role!
-  deleteRole(input: DeleteRoleRequest!): String
-
-  assignRole(input: AssignRoleRequest!): Assignment!
-  unassignRole(input: AssignRoleRequest!): String
+  setOrgRole(user_email: ModelEmail!, role_label: ModelLabel!): Assignment!
+  setProjectRole(user_email: ModelEmail!, project_label: ModelLabel!, role_label: ModelLabel!): Assignment!
 }

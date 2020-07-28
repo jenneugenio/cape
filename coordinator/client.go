@@ -59,7 +59,7 @@ func (c *Client) Me(ctx context.Context) (*models.User, error) {
 // GraphQL type.
 type UserResponse struct {
 	*models.User
-	Roles []*primitives.Role `json:"roles"`
+	Role models.Role `json:"role"`
 }
 
 // GetUser returns a user and it's roles!
@@ -77,7 +77,7 @@ func (c *Client) GetUser(ctx context.Context, id string) (*UserResponse, error) 
 				id
 				name
 				email
-				roles {
+				role {
 					id
 					label
 				}
@@ -136,7 +136,7 @@ func (c *Client) ListUsers(ctx context.Context) ([]*models.User, error) {
 				id
 				name
 				email
-				roles {
+				role {
 					id
 					label
 				}
@@ -176,25 +176,20 @@ func (c *Client) SessionToken() *base64.Value {
 
 // Role Routes
 
-// CreateRole creates a new role with a label
-func (c *Client) CreateRole(ctx context.Context, label primitives.Label, userIDs []string) (*primitives.Role, error) {
+func (c *Client) MyRole(ctx context.Context) (*models.Role, error) {
 	var resp struct {
-		Role primitives.Role `json:"createRole"`
+		Role models.Role `json:"myRole"`
 	}
 
-	variables := make(map[string]interface{})
-	variables["ids"] = userIDs
-	variables["label"] = label
-
 	err := c.transport.Raw(ctx, `
-		mutation CreateRole($label: Label!, $ids: [String!]) {
-			createRole(input: { label: $label, user_ids: $ids }) {
-				id
+		query MyRole() {
+			myRole() {
+				id,
 				label
-				system
 			}
 		}
-	`, variables, &resp)
+	`, nil, &resp)
+
 	if err != nil {
 		return nil, err
 	}
@@ -202,46 +197,63 @@ func (c *Client) CreateRole(ctx context.Context, label primitives.Label, userIDs
 	return &resp.Role, nil
 }
 
-// DeleteRole deletes a role with the given id
-func (c *Client) DeleteRole(ctx context.Context, id database.ID) error {
-	variables := make(map[string]interface{})
-	variables["id"] = id
+func (c *Client) MyProjectRole(ctx context.Context, project models.Label) (*models.Role, error) {
+	var resp struct {
+		Role models.Role `json:"myRole"`
+	}
 
-	return c.transport.Raw(ctx, `
-		mutation DeleteRole($id: ID!) {
-			deleteRole(input: { id: $id })
+	variables := make(map[string]interface{})
+	variables["project_label"] = project
+
+	err := c.transport.Raw(ctx, `
+		query MyRole($project_label: ModelLabel) {
+			myRole(project_label: $project_label) {
+				id,
+				label
+			}
+		}
+	`, variables, &resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Role, nil
+}
+
+func (c *Client) SetOrgRole(ctx context.Context, user models.Email, role models.Label) error {
+	variables := make(map[string]interface{})
+	variables["user_email"] = user
+	variables["role_label"] = role
+
+	err := c.transport.Raw(ctx, `
+		mutation SetOrgRole($user_email: ModelEmail!, $role_label: ModelLabel!) {
+			setOrgRole(user_email: $user_email, role_label: $role_label) { id }
 		}
 	`, variables, nil)
+
+	return err
 }
 
-// GetRole returns a specific role
-func (c *Client) GetRole(ctx context.Context, id database.ID) (*primitives.Role, error) {
-	var resp struct {
-		Role primitives.Role `json:"role"`
-	}
-
+func (c *Client) SetProjectRole(ctx context.Context, user models.Email, project models.Label, role models.Label) error {
 	variables := make(map[string]interface{})
-	variables["id"] = id
+	variables["user_email"] = user
+	variables["role_label"] = role
+	variables["project_label"] = project
 
 	err := c.transport.Raw(ctx, `
-		query Role($id: ID!) {
-			role(id: $id) {
-				id
-				label
-			}
+		mutation SetProjectRole($user_email: ModelEmail!, $project_label: ModelLabel!, $role_label: ModelLabel!) {
+			setProjectRole(user_email: $user_email, project_label: $project_label, role_label: $role_label) { id }
 		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
+	`, variables, nil)
 
-	return &resp.Role, nil
+	return err
 }
 
 // GetRoleByLabel returns a specific role by label
-func (c *Client) GetRoleByLabel(ctx context.Context, label primitives.Label) (*primitives.Role, error) {
+func (c *Client) GetRoleByLabel(ctx context.Context, label primitives.Label) (*models.Role, error) {
 	var resp struct {
-		Role primitives.Role `json:"roleByLabel"`
+		Role models.Role `json:"roleByLabel"`
 	}
 
 	variables := make(map[string]interface{})
@@ -260,300 +272,6 @@ func (c *Client) GetRoleByLabel(ctx context.Context, label primitives.Label) (*p
 	}
 
 	return &resp.Role, nil
-}
-
-// GetMembersRole returns the members of a role
-func (c *Client) GetMembersRole(ctx context.Context, roleID database.ID) ([]*models.User, error) {
-	var resp struct {
-		Users []*models.User `json:"roleMembers"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["role_id"] = roleID
-
-	err := c.transport.Raw(ctx, `
-		query GetMembersRole($role_id: ID!) {
-			roleMembers(role_id: $role_id) {
-				id
-				email
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Users, nil
-}
-
-// AssignRole assigns a role to an user
-func (c *Client) AssignRole(ctx context.Context, userID string,
-	roleID database.ID) (*model.Assignment, error) {
-	var resp struct {
-		Assignment model.Assignment `json:"assignRole"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["role_id"] = roleID
-	variables["user_id"] = userID
-
-	err := c.transport.Raw(ctx, `
-		mutation AssignRole($role_id: ID!, $user_id: String!) {
-			assignRole(input: { role_id: $role_id, user_id: $user_id }) {
-				role {
-					id
-					label
-				}
-				user {
-					id
-					email
-				}
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Assignment, nil
-}
-
-// UnassignRole unassigns a role from an identity
-func (c *Client) UnassignRole(ctx context.Context, userID string, roleID database.ID) error {
-	variables := make(map[string]interface{})
-	variables["role_id"] = roleID
-	variables["user_id"] = userID
-
-	return c.transport.Raw(ctx, `
-		mutation UnassignRole($role_id: ID!, $user_id: String!) {
-			unassignRole(input: { role_id: $role_id, user_id: $user_id })
-		}
-	`, variables, nil)
-}
-
-// ListRoles returns all of the roles in the database
-func (c *Client) ListRoles(ctx context.Context) ([]*primitives.Role, error) {
-	var resp struct {
-		Roles []*primitives.Role `json:"roles"`
-	}
-
-	err := c.transport.Raw(ctx, `
-		query Roles {
-			roles {
-				id
-				label
-				system
-			}
-		}
-	`, nil, &resp)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Roles, nil
-}
-
-// CreatePolicy creates a policy on the coordinator
-func (c *Client) CreatePolicy(ctx context.Context, policy *models.Policy) (*models.Policy, error) {
-	var resp struct {
-		Policy models.Policy `json:"createPolicy"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["label"] = policy.Label
-	variables["rules"] = policy.Rules
-
-	err := c.transport.Raw(ctx, `
-		mutation CreatePolicy($label: Label!, $rules: [RuleInput!]) {
-			createPolicy(input: { label: $label, rules: $rules }) {
-				id
-				label
-			}
-		}
-	`, variables, &resp)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Policy, nil
-}
-
-// DeletePolicy deletes a policy on the coordinator
-func (c *Client) DeletePolicy(ctx context.Context, label string) error {
-	variables := make(map[string]interface{})
-	variables["label"] = label
-
-	return c.transport.Raw(ctx, `
-		mutation DeletePolicy($label: String!) {
-			deletePolicy(input: { label: $label })
-		}
-	`, variables, nil)
-}
-
-// GetPolicy returns a policy by id
-func (c *Client) GetPolicy(ctx context.Context, id string) (*models.Policy, error) {
-	var resp struct {
-		Policy models.Policy `json:"policy"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["id"] = id
-
-	err := c.transport.Raw(ctx, `
-		query Policy($id: String!) {
-			policy(id: $id) {
-				id
-				label
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Policy, nil
-}
-
-// GetPolicyByLabel returns a specific policy by label
-func (c *Client) GetPolicyByLabel(ctx context.Context, label string) (*models.Policy, error) {
-	var resp struct {
-		Policy models.Policy `json:"policyByLabel"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["label"] = label
-
-	err := c.transport.Raw(ctx, `
-		query PolicyByLabel($label: String!) {
-			policyByLabel(label: $label) {
-				id
-				label
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Policy, nil
-}
-
-// ListPolicies returns all policies
-func (c *Client) ListPolicies(ctx context.Context) ([]*models.Policy, error) {
-	var resp struct {
-		Policies []*models.Policy `json:"policies"`
-	}
-
-	err := c.transport.Raw(ctx, `
-		query Policies {
-			policies {
-				id
-				label
-			}
-		}
-	`, nil, &resp)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Policies, nil
-}
-
-// AttachPolicy attaches a policy to a role
-func (c *Client) AttachPolicy(ctx context.Context, policyID string,
-	roleID database.ID) (*model.Attachment, error) {
-	var resp struct {
-		Attachment model.Attachment `json:"attachPolicy"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["role_id"] = roleID
-	variables["policy_id"] = policyID
-
-	err := c.transport.Raw(ctx, `
-		mutation AttachPolicy($role_id: ID!, $policy_id: ID!) {
-			attachPolicy(input: { role_id: $role_id, policy_id: $policy_id }) {
-				role {
-					id
-					label
-				}
-				policy {
-					id
-					label
-				}
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return &resp.Attachment, nil
-}
-
-// DetachPolicy unattaches a policy from a role
-func (c *Client) DetachPolicy(ctx context.Context, policyID string, roleID database.ID) error {
-	variables := make(map[string]interface{})
-	variables["role_id"] = roleID
-	variables["policy_id"] = policyID
-
-	return c.transport.Raw(ctx, `
-		mutation detachPolicy($role_id: ID!, $policy_id: String!) {
-			detachPolicy(input: { role_id: $role_id, policy_id: $policy_id })
-		}
-	`, variables, nil)
-}
-
-// GetRolePolicies returns all policies attached to a role
-func (c *Client) GetRolePolicies(ctx context.Context, roleID database.ID) ([]*models.Policy, error) {
-	var resp struct {
-		Policies []*models.Policy `json:"rolePolicies"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["role_id"] = roleID
-
-	err := c.transport.Raw(ctx, `
-		query RolePolicies($role_id: ID!) {
-			rolePolicies(role_id: $role_id) {
-				id
-				label
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Policies, nil
-}
-
-// GetUserPolicies returns all policies related to an user
-func (c *Client) GetUserPolicies(ctx context.Context, userID database.ID) ([]*models.Policy, error) {
-	var resp struct {
-		Policies []*models.Policy `json:"userPolicies"`
-	}
-
-	variables := make(map[string]interface{})
-	variables["user_id"] = userID
-
-	err := c.transport.Raw(ctx, `
-		query UserPolicies($user_id: ID!) {
-			userPolicies(user_id: $user_id) {
-				id
-				label
-				spec
-			}
-		}
-	`, variables, &resp)
-	if err != nil {
-		return nil, err
-	}
-
-	return resp.Policies, nil
 }
 
 // GetUsers returns all users for the given emails

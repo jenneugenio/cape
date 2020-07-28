@@ -48,7 +48,7 @@ func TestAddContributor(t *testing.T) {
 			pool.row = test.row
 			contributorDB := pgContributor{pool, 0}
 
-			_, gotErr := contributorDB.Add(context.TODO(), "my-project", "me.com", models.ProjectOwnerRole)
+			_, gotErr := contributorDB.Add(context.TODO(), "my-project", "me.com")
 			if (test.wantErr == nil && gotErr != nil) ||
 				(test.wantErr != nil && gotErr.Error() != test.wantErr.Error()) {
 				t.Errorf("unexpected error on Add() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)

@@ -2,8 +2,6 @@ package harness
 
 import (
 	"context"
-	"io/ioutil"
-
 	"github.com/manifoldco/go-base64"
 
 	"github.com/capeprivacy/cape/coordinator"
@@ -65,36 +63,6 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 	m.Admin = user
 
 	return client, nil
-}
-
-// CreatePolicy creates a policy on the coordinator!
-func (m *Manager) CreatePolicy(ctx context.Context, policyPath string) error {
-	data, err := ioutil.ReadFile(policyPath)
-	if err != nil {
-		return err
-	}
-
-	policy, err := models.ParsePolicy(data)
-	if err != nil {
-		return err
-	}
-
-	policy, err = m.Admin.Client.CreatePolicy(ctx, policy)
-	if err != nil {
-		return err
-	}
-
-	role, err := m.Admin.Client.GetRoleByLabel(ctx, primitives.AdminRole)
-	if err != nil {
-		return err
-	}
-
-	_, err = m.Admin.Client.AttachPolicy(ctx, policy.ID, role.ID)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // URL returns the url of the coordinator

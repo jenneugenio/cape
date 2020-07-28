@@ -1,7 +1,6 @@
 package modelmigration
 
 import (
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -38,17 +37,4 @@ func CredentialsFromPrimitives(prim *primitives.Credentials) *models.Credentials
 		Salt:   prim.Salt,
 		Alg:    models.CredentialsAlgType(prim.Alg),
 	}
-}
-
-func PrimitiveFromRole(r models.Role) (*primitives.Role, error) {
-	id, err := database.DecodeFromString(r.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return &primitives.Role{
-		Primitive: &database.Primitive{ID: id},
-		Label:     primitives.Label(r.Label),
-		System:    true,
-	}, nil
 }

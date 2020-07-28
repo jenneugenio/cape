@@ -10,7 +10,6 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestUsers(t *testing.T) {
@@ -44,9 +43,7 @@ func TestUsers(t *testing.T) {
 
 		resp, err := client.GetUser(ctx, result.ID)
 		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(len(resp.Roles)).To(gm.Equal(1))
-		gm.Expect(resp.Roles[0].Label).To(gm.Equal(primitives.GlobalRole))
+		gm.Expect(resp.Role.Label).To(gm.Equal(models.UserRole))
 	})
 
 	t.Run("cannot create multiple users with same email", func(t *testing.T) {
