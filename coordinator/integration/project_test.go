@@ -227,4 +227,18 @@ func TestProjectSpecCreate(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(len(suggestions)).To(gm.Equal(10))
 	})
+
+	t.Run("Can approve suggestions", func(t *testing.T) {
+		p, err := client.CreateProject(ctx, "approve-me", nil, "This is my project")
+		gm.Expect(err).To(gm.BeNil())
+
+		s, err := client.SuggestPolicy(ctx, p.Label, spec)
+		gm.Expect(err).To(gm.BeNil())
+		err = client.ApproveSuggestion(ctx, *s)
+		gm.Expect(err).To(gm.BeNil())
+
+		projectResp, err := client.GetProject(ctx, p.ID, nil)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(projectResp.Policy.ID).To(gm.Equal(s.PolicyID))
+	})
 }

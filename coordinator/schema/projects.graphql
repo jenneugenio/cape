@@ -78,6 +78,7 @@ extend type Mutation {
 
     suggestProjectPolicy(label: ModelLabel!, request: ProjectSpecFile!): Suggestion!
     getProjectSuggestions(label: ModelLabel!): [Suggestion!]!
+    approveProjectSuggestion(id: String!): Project!
 
     archiveProject(id: String, label: ModelLabel): Project!
     unarchiveProject(id: String, label: ModelLabel): Project!

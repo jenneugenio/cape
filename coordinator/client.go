@@ -491,7 +491,7 @@ func (c *Client) GetProject(ctx context.Context, id string, label *models.Label)
 
 				current_spec {
 					transformations
-					policy
+					rules
 				}
 					
 
@@ -569,6 +569,7 @@ func (c *Client) SuggestPolicy(ctx context.Context, projectLabel models.Label, s
 	err := c.transport.Raw(ctx, `
 		mutation SuggestProjectPolicy($project: ModelLabel!, $projectSpecFile: ProjectSpecFile!) {
 			suggestProjectPolicy(label: $project, request: $projectSpecFile) {
+				id
 				state
 				created_at
 				updated_at
@@ -604,6 +605,28 @@ func (c *Client) GetProjectSuggestions(ctx context.Context, projectLabel models.
 	}
 
 	return resp.Suggestions, nil
+}
+
+func (c *Client) ApproveSuggestion(ctx context.Context, suggestion models.Suggestion) error {
+	variables := make(map[string]interface{})
+	variables["id"] = suggestion.ID
+
+	var resp struct {
+		Project models.Project `json:"approveProjectSuggestion"`
+	}
+
+	err := c.transport.Raw(ctx, `
+		mutation ApproveProjectSuggestion($id: String!) {
+			approveProjectSuggestion(id: $id) {
+				id
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type UpdateProjectResponse struct {

@@ -199,6 +199,51 @@ func (r *mutationResolver) GetProjectSuggestions(ctx context.Context, label mode
 	return s, nil
 }
 
+func (r *mutationResolver) ApproveProjectSuggestion(ctx context.Context, id string) (*models.Project, error) {
+	session := fw.Session(ctx)
+
+	suggestion, err := r.Database.Projects().GetSuggestion(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	projectPolicy, err := r.Database.Projects().GetProjectSpec(ctx, suggestion.PolicyID)
+	if err != nil {
+		return nil, err
+	}
+
+	project, err := r.Database.Projects().GetByID(ctx, suggestion.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	role, err := session.Roles.Projects.Get(project.Label)
+	if err != nil {
+		return nil, err
+	}
+
+	if !role.Can(models.AcceptPolicy) {
+		return nil, fmt.Errorf("you must be a project contributor to suggest policy changes")
+	}
+
+	// Make this spec active on the project
+	project.CurrentSpecID = projectPolicy.ID
+	// A spec makes the project active!
+	project.Status = models.ProjectActive
+	err = r.Database.Projects().Update(ctx, *project)
+	if err != nil {
+		return nil, err
+	}
+
+	suggestion.State = models.SuggestionApproved
+	err = r.Database.Projects().UpdateSuggestion(ctx, *suggestion)
+	if err != nil {
+		return nil, err
+	}
+
+	return project, nil
+}
+
 func (r *mutationResolver) ArchiveProject(ctx context.Context, id *string, label *models.Label) (*models.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }

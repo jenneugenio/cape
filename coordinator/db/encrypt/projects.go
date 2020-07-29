@@ -101,3 +101,11 @@ func (p *projectEncrypt) CreateSuggestion(ctx context.Context, suggestion models
 func (p *projectEncrypt) GetSuggestions(ctx context.Context, projectLabel models.Label) ([]models.Suggestion, error) {
 	return p.db.GetSuggestions(ctx, projectLabel)
 }
+
+func (p *projectEncrypt) GetSuggestion(ctx context.Context, id string) (*models.Suggestion, error) {
+	return p.db.GetSuggestion(ctx, id)
+}
+
+func (p *projectEncrypt) UpdateSuggestion(ctx context.Context, suggestion models.Suggestion) error {
+	return p.db.UpdateSuggestion(ctx, suggestion)
+}

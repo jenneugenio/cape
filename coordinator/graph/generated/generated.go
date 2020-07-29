@@ -81,22 +81,23 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		ArchiveProject        func(childComplexity int, id *string, label *models.Label) int
-		AttemptRecovery       func(childComplexity int, input model.AttemptRecoveryRequest) int
-		CreateProject         func(childComplexity int, project model.CreateProjectRequest) int
-		CreateRecovery        func(childComplexity int, input model.CreateRecoveryRequest) int
-		CreateToken           func(childComplexity int, input model.CreateTokenRequest) int
-		CreateUser            func(childComplexity int, input model.CreateUserRequest) int
-		GetProjectSuggestions func(childComplexity int, label models.Label) int
-		RemoveContributor     func(childComplexity int, projectLabel models.Label, userEmail models.Email) int
-		RemoveToken           func(childComplexity int, id database.ID) int
-		SetOrgRole            func(childComplexity int, userEmail models.Email, roleLabel models.Label) int
-		SetProjectRole        func(childComplexity int, userEmail models.Email, projectLabel models.Label, roleLabel models.Label) int
-		SuggestProjectPolicy  func(childComplexity int, label models.Label, request model.ProjectSpecFile) int
-		UnarchiveProject      func(childComplexity int, id *string, label *models.Label) int
-		UpdateContributor     func(childComplexity int, projectLabel models.Label, userEmail models.Email, roleLabel models.Label) int
-		UpdateProject         func(childComplexity int, id *string, label *models.Label, update model.UpdateProjectRequest) int
-		UpdateProjectSpec     func(childComplexity int, id *string, label *models.Label, request model.ProjectSpecFile) int
+		ApproveProjectSuggestion func(childComplexity int, id string) int
+		ArchiveProject           func(childComplexity int, id *string, label *models.Label) int
+		AttemptRecovery          func(childComplexity int, input model.AttemptRecoveryRequest) int
+		CreateProject            func(childComplexity int, project model.CreateProjectRequest) int
+		CreateRecovery           func(childComplexity int, input model.CreateRecoveryRequest) int
+		CreateToken              func(childComplexity int, input model.CreateTokenRequest) int
+		CreateUser               func(childComplexity int, input model.CreateUserRequest) int
+		GetProjectSuggestions    func(childComplexity int, label models.Label) int
+		RemoveContributor        func(childComplexity int, projectLabel models.Label, userEmail models.Email) int
+		RemoveToken              func(childComplexity int, id database.ID) int
+		SetOrgRole               func(childComplexity int, userEmail models.Email, roleLabel models.Label) int
+		SetProjectRole           func(childComplexity int, userEmail models.Email, projectLabel models.Label, roleLabel models.Label) int
+		SuggestProjectPolicy     func(childComplexity int, label models.Label, request model.ProjectSpecFile) int
+		UnarchiveProject         func(childComplexity int, id *string, label *models.Label) int
+		UpdateContributor        func(childComplexity int, projectLabel models.Label, userEmail models.Email, roleLabel models.Label) int
+		UpdateProject            func(childComplexity int, id *string, label *models.Label, update model.UpdateProjectRequest) int
+		UpdateProjectSpec        func(childComplexity int, id *string, label *models.Label, request model.ProjectSpecFile) int
 	}
 
 	Policy struct {
@@ -185,6 +186,7 @@ type MutationResolver interface {
 	UpdateProjectSpec(ctx context.Context, id *string, label *models.Label, request model.ProjectSpecFile) (*models.Project, error)
 	SuggestProjectPolicy(ctx context.Context, label models.Label, request model.ProjectSpecFile) (*models.Suggestion, error)
 	GetProjectSuggestions(ctx context.Context, label models.Label) ([]*models.Suggestion, error)
+	ApproveProjectSuggestion(ctx context.Context, id string) (*models.Project, error)
 	ArchiveProject(ctx context.Context, id *string, label *models.Label) (*models.Project, error)
 	UnarchiveProject(ctx context.Context, id *string, label *models.Label) (*models.Project, error)
 	UpdateContributor(ctx context.Context, projectLabel models.Label, userEmail models.Email, roleLabel models.Label) (*models.Contributor, error)
@@ -342,6 +344,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CreateUserResponse.User(childComplexity), true
+
+	case "Mutation.approveProjectSuggestion":
+		if e.complexity.Mutation.ApproveProjectSuggestion == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_approveProjectSuggestion_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.ApproveProjectSuggestion(childComplexity, args["id"].(string)), true
 
 	case "Mutation.archiveProject":
 		if e.complexity.Mutation.ArchiveProject == nil {
@@ -1031,6 +1045,7 @@ extend type Mutation {
 
     suggestProjectPolicy(label: ModelLabel!, request: ProjectSpecFile!): Suggestion!
     getProjectSuggestions(label: ModelLabel!): [Suggestion!]!
+    approveProjectSuggestion(id: String!): Project!
 
     archiveProject(id: String, label: ModelLabel): Project!
     unarchiveProject(id: String, label: ModelLabel): Project!
@@ -1170,6 +1185,20 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_approveProjectSuggestion_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_archiveProject_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -2354,6 +2383,47 @@ func (ec *executionContext) _Mutation_getProjectSuggestions(ctx context.Context,
 	res := resTmp.([]*models.Suggestion)
 	fc.Result = res
 	return ec.marshalNSuggestion2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐSuggestionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_approveProjectSuggestion(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_approveProjectSuggestion_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().ApproveProjectSuggestion(rctx, args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*models.Project)
+	fc.Result = res
+	return ec.marshalNProject2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐProject(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_archiveProject(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5955,6 +6025,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "getProjectSuggestions":
 			out.Values[i] = ec._Mutation_getProjectSuggestions(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "approveProjectSuggestion":
+			out.Values[i] = ec._Mutation_approveProjectSuggestion(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
