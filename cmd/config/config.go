@@ -342,7 +342,7 @@ func Parse() (*Config, error) {
 		return nil, err
 	}
 
-	src, err := os.Stat(filePath)
+	_, err = os.Stat(filePath)
 	if err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
@@ -350,10 +350,6 @@ func Parse() (*Config, error) {
 	cfg := Default()
 	if os.IsNotExist(err) {
 		return cfg, nil
-	}
-
-	if src.Mode().Perm() != requiredPermissions {
-		return nil, errors.New(InvalidPermissionsCause, "Invalid permissions for file %s, must be %o", filePath, requiredPermissions)
 	}
 
 	b, err := ioutil.ReadFile(filePath)
