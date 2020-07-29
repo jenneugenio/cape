@@ -460,6 +460,7 @@ func (c *Client) ListProjects(ctx context.Context, status models.ProjectStatus) 
 
 type GetProjectResponse struct {
 	*models.Project
+	Policy       *models.Policy   `json:"current_spec"`
 	Contributors []GQLContributor `json:"contributors"`
 }
 
@@ -488,10 +489,18 @@ func (c *Client) GetProject(ctx context.Context, id string, label *models.Label)
 				created_at,
 				updated_at,
 
+				current_spec {
+					transformations
+					policy
+				}
+					
+
 				contributors {
 					id
 					user {
 						id
+						name
+						email
 					}
 					role {
 						id
