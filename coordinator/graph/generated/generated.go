@@ -100,8 +100,8 @@ type ComplexityRoot struct {
 		CreatedAt       func(childComplexity int) int
 		ID              func(childComplexity int) int
 		Parent          func(childComplexity int) int
-		Policy          func(childComplexity int) int
 		Project         func(childComplexity int) int
+		Rules           func(childComplexity int) int
 		Transformations func(childComplexity int) int
 		UpdatedAt       func(childComplexity int) int
 	}
@@ -186,8 +186,6 @@ type MutationResolver interface {
 type PolicyResolver interface {
 	Project(ctx context.Context, obj *models.Policy) (*models.Project, error)
 	Parent(ctx context.Context, obj *models.Policy) (*models.Policy, error)
-
-	Policy(ctx context.Context, obj *models.Policy) ([]*models.Rule, error)
 }
 type ProjectResolver interface {
 	CurrentSpec(ctx context.Context, obj *models.Project) (*models.Policy, error)
@@ -516,19 +514,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Policy.Parent(childComplexity), true
 
-	case "Policy.policy":
-		if e.complexity.Policy.Policy == nil {
-			break
-		}
-
-		return e.complexity.Policy.Policy(childComplexity), true
-
 	case "Policy.project":
 		if e.complexity.Policy.Project == nil {
 			break
 		}
 
 		return e.complexity.Policy.Project(childComplexity), true
+
+	case "Policy.rules":
+		if e.complexity.Policy.Rules == nil {
+			break
+		}
+
+		return e.complexity.Policy.Rules(childComplexity), true
 
 	case "Policy.transformations":
 		if e.complexity.Policy.Transformations == nil {
@@ -893,7 +891,7 @@ type Policy {
     project: Project!
     parent: Policy
     transformations: [NamedTransformation!]
-    policy: [Rule!]!
+    rules: [Rule!]!
 
     created_at: Time!
     updated_at: Time!
@@ -922,7 +920,7 @@ input UpdateProjectRequest {
 
 input ProjectSpecFile {
     transformations: [NamedTransformation!]
-    policy: [Rule!]!
+    rules: [Rule!]!
 }
 
 extend type Query {
@@ -2718,7 +2716,7 @@ func (ec *executionContext) _Policy_transformations(ctx context.Context, field g
 	return ec.marshalONamedTransformation2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐNamedTransformationᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Policy_policy(ctx context.Context, field graphql.CollectedField, obj *models.Policy) (ret graphql.Marshaler) {
+func (ec *executionContext) _Policy_rules(ctx context.Context, field graphql.CollectedField, obj *models.Policy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2729,13 +2727,13 @@ func (ec *executionContext) _Policy_policy(ctx context.Context, field graphql.Co
 		Object:   "Policy",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Policy().Policy(rctx, obj)
+		return obj.Rules, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5249,9 +5247,9 @@ func (ec *executionContext) unmarshalInputProjectSpecFile(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
-		case "policy":
+		case "rules":
 			var err error
-			it.Policy, err = ec.unmarshalNRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRuleᚄ(ctx, v)
+			it.Rules, err = ec.unmarshalNRule2ᚕᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐRuleᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5634,20 +5632,11 @@ func (ec *executionContext) _Policy(ctx context.Context, sel ast.SelectionSet, o
 			})
 		case "transformations":
 			out.Values[i] = ec._Policy_transformations(ctx, field, obj)
-		case "policy":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Policy_policy(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+		case "rules":
+			out.Values[i] = ec._Policy_rules(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "created_at":
 			out.Values[i] = ec._Policy_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

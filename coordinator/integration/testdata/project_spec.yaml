@@ -1,5 +1,5 @@
 version: 1
-policy:
+rules:
     - target: "records:creditcards.transactions"
       action: read
       effect: allow

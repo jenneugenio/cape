@@ -532,7 +532,7 @@ func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel models.Labe
 				status,
 				current_spec {
 					id,
-					policy
+					rules
 				}
 			}
 		}

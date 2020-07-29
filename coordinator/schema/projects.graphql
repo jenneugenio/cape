@@ -22,7 +22,7 @@ type Policy {
     project: Project!
     parent: Policy
     transformations: [NamedTransformation!]
-    policy: [Rule!]!
+    rules: [Rule!]!
 
     created_at: Time!
     updated_at: Time!
@@ -51,7 +51,7 @@ input UpdateProjectRequest {
 
 input ProjectSpecFile {
     transformations: [NamedTransformation!]
-    policy: [Rule!]!
+    rules: [Rule!]!
 }
 
 extend type Query {
