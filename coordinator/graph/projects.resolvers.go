@@ -147,7 +147,7 @@ func (r *mutationResolver) SuggestProjectPolicy(ctx context.Context, label model
 		ProjectID:       project.ID,
 		ParentID:        nil,
 		Transformations: request.Transformations,
-		Rules:           request.Policy,
+		Rules:           request.Rules,
 		Version:         1,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
@@ -176,6 +176,16 @@ func (r *mutationResolver) SuggestProjectPolicy(ctx context.Context, label model
 }
 
 func (r *mutationResolver) GetProjectSuggestions(ctx context.Context, label models.Label) ([]*models.Suggestion, error) {
+	session := fw.Session(ctx)
+	role, err := session.Roles.Projects.Get(label)
+	if err != nil {
+		return nil, err
+	}
+
+	if !role.Can(models.ListPolicySuggestions) {
+		return nil, fmt.Errorf("you must be a project contributor to suggest policy changes")
+	}
+
 	suggestions, err := r.Database.Projects().GetSuggestions(ctx, label)
 	if err != nil {
 		return nil, err
