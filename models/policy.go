@@ -4,50 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/manifoldco/go-base64"
+	"github.com/mitchellh/mapstructure"
 	"io"
 	"strconv"
 	"time"
 
-	"github.com/manifoldco/go-base64"
-	"github.com/mitchellh/mapstructure"
 	"sigs.k8s.io/yaml"
 )
-
-func NewPolicy(label Label, rules []Rule) Policy {
-	return Policy{
-		ID:        NewID(),
-		Version:   modelVersion,
-		Label:     label,
-		Rules:     rules,
-		CreatedAt: now(),
-	}
-}
-
-type Policy struct {
-	ID              string                `json:"id"`
-	Version         uint8                 `json:"version"`
-	Label           Label                 `json:"label"`
-	Transformations []NamedTransformation `json:"transformations"`
-
-	Rules []Rule `json:"rules"`
-
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-func ParsePolicy(data []byte) (*Policy, error) {
-	var p Policy
-
-	err := yaml.Unmarshal(data, &p, func(dec *json.Decoder) *json.Decoder {
-		dec.DisallowUnknownFields()
-		return dec
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &p, nil
-}
 
 type Rule struct {
 	Match   Match    `json:"match"`
@@ -76,6 +40,11 @@ func (r Rule) MarshalGQL(w io.Writer) {
 	}
 
 	fmt.Fprint(w, string(json))
+}
+
+type PolicyFile struct {
+	Transformations []NamedTransformation `json:"transformations"`
+	Rules           []*Rule               `json:"policy"`
 }
 
 type Match struct {
@@ -212,4 +181,44 @@ func findSecretArgs(args map[string]interface{}) error {
 	}
 
 	return nil
+}
+
+func ParseProjectSpecFile(data []byte) (*PolicyFile, error) {
+	var spec PolicyFile
+	if err := yaml.Unmarshal(data, &spec); err != nil {
+		return nil, err
+	}
+
+	return &spec, nil
+}
+
+type Policy struct {
+	ID              string                 `json:"id"`
+	ProjectID       string                 `json:"project_id"`
+	ParentID        *string                `json:"parent_id"`
+	Transformations []*NamedTransformation `json:"transformations"`
+	Rules           []*Rule                `json:"policy"`
+	Version         uint8                  `json:"version"`
+	CreatedAt       time.Time              `json:"created_at"`
+	UpdatedAt       time.Time              `json:"updated_at"`
+}
+
+func (p *Policy) Validate() error {
+	return nil
+}
+
+func NewPolicy(
+	projectID string,
+	parent *string,
+	rules []*Rule,
+	named []*NamedTransformation,
+) Policy {
+	return Policy{
+		ID:              NewID(),
+		CreatedAt:       now(),
+		ProjectID:       projectID,
+		ParentID:        parent,
+		Rules:           rules,
+		Transformations: named,
+	}
 }

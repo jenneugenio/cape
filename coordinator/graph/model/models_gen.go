@@ -47,6 +47,11 @@ type DeleteRecoveriesRequest struct {
 	Ids []database.ID `json:"ids"`
 }
 
+type ProjectSpecFile struct {
+	Transformations []*models.NamedTransformation `json:"transformations"`
+	Policy          []*models.Rule                `json:"policy"`
+}
+
 type UpdateProjectRequest struct {
 	Name        *models.ProjectDisplayName `json:"name"`
 	Description *models.ProjectDescription `json:"description"`

@@ -107,7 +107,7 @@ func TestProjectsCreate(t *testing.T) {
 
 	t.Run("Can update a project spec", func(t *testing.T) {
 		project := models.NewProject("Project", "my-project", "What is this project even about")
-		spec := &models.ProjectSpec{}
+		spec := &models.Policy{}
 		spec.ID = "my-spec"
 
 		respBody := coordinator.UpdateProjectSpecResponseBody{

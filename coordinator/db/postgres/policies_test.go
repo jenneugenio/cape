@@ -100,7 +100,6 @@ func TestDelete(t *testing.T) {
 var EmptyPolicy = models.Policy{
 	ID:      "foo",
 	Version: 1,
-	Label:   models.Label("foo"),
 }
 
 func TestGet(t *testing.T) {

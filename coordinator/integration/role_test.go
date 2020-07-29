@@ -46,7 +46,7 @@ func TestRoles(t *testing.T) {
 		gm.Expect(r.Label).To(gm.Equal(models.ProjectOwnerRole))
 	})
 
-	t.Run("Can't change your own role as a member", func(t *testing.T ) {
+	t.Run("Can't change your own role as a member", func(t *testing.T) {
 		_, pw, err := client.CreateUser(ctx, "Cool Guy", "cool@person.com")
 		gm.Expect(err).To(gm.BeNil())
 
@@ -62,7 +62,7 @@ func TestRoles(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 	})
 
-	t.Run("Admin can change member roles", func(t *testing.T ) {
+	t.Run("Admin can change member roles", func(t *testing.T) {
 		u, _, err := client.CreateUser(ctx, "Best Friend", "bestfriend@person.com")
 		gm.Expect(err).To(gm.BeNil())
 

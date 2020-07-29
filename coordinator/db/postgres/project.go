@@ -92,7 +92,7 @@ func (p *pgProject) Update(ctx context.Context, project models.Project) error {
 	return err
 }
 
-func (p *pgProject) CreateProjectSpec(ctx context.Context, spec models.ProjectSpec) error {
+func (p *pgProject) CreateProjectSpec(ctx context.Context, spec models.Policy) error {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
@@ -101,13 +101,13 @@ func (p *pgProject) CreateProjectSpec(ctx context.Context, spec models.ProjectSp
 	return err
 }
 
-func (p *pgProject) GetProjectSpec(ctx context.Context, id string) (*models.ProjectSpec, error) {
+func (p *pgProject) GetProjectSpec(ctx context.Context, id string) (*models.Policy, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
 	s := `select data from project_specs where id = $1`
 	row := p.pool.QueryRow(ctx, s, id)
-	var spec models.ProjectSpec
+	var spec models.Policy
 	err := row.Scan(&spec)
 
 	return &spec, err
