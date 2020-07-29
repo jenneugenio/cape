@@ -2,8 +2,8 @@ BEGIN;
 
 CREATE TABLE contributors (
     id char(29) primary key not null,
-    user_id char(29) references users(id) not null,
-    project_id char(29) references projects(id) not null,
+    user_id char(29) references users(id) on delete cascade not null,
+    project_id char(29) references projects(id) on delete cascade not null,
 
     data jsonb not null,
     constraint user_project unique (user_id, project_id)

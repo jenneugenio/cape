@@ -43,6 +43,8 @@ type Suggestion {
     id: String!
     project: Project!
     policy: Policy!
+    title: String!
+    description: String!
     state: SuggestionState!
     created_at: Time!
     updated_at: Time!
@@ -76,7 +78,7 @@ extend type Mutation {
     updateProject(id: String, label: ModelLabel, update: UpdateProjectRequest!): Project!
     updateProjectSpec(id: String, label: ModelLabel, request: ProjectSpecFile!): Project!
 
-    suggestProjectPolicy(label: ModelLabel!, request: ProjectSpecFile!): Suggestion!
+    suggestProjectPolicy(label: ModelLabel!, name: String!, description: String!, request: ProjectSpecFile!): Suggestion!
     getProjectSuggestions(label: ModelLabel!): [Suggestion!]!
     approveProjectSuggestion(id: String!): Project!
 

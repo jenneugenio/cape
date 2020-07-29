@@ -68,7 +68,6 @@ func init() {
 			Flags: []cli.Flag{
 				projectNameFlag(),
 				projectDescriptionFlag(),
-				projectSpecFlag(),
 				clusterFlag(),
 			},
 		},
@@ -89,11 +88,79 @@ func init() {
 		},
 	}
 
+	suggestionsCreateCmd := &Command{
+		Usage: "Suggest a policy change in a project",
+		Examples: []*Example{
+			{
+				Example:     `cape projects suggestions create my-project "My Title" "Description for my change" --from-spec policy.yaml`,
+				Description: `Suggestions that my-project uses the policy declared in policy.yaml`,
+			},
+		},
+		Arguments: []*Argument{ProjectLabelArg, SuggestionNameArg, SuggestionDescriptionArg},
+		Command: &cli.Command{
+			Name:   "create",
+			Action: handleSessionOverrides(suggestionsCreate),
+			Flags: []cli.Flag{
+				clusterFlag(),
+				projectSpecFlag(),
+			},
+		},
+	}
+
+	suggestionsListCmd := &Command{
+		Usage: "List your a projects policy suggestions",
+		Examples: []*Example{
+			{
+				Example:     `cape projects suggestions list my-project`,
+				Description: `Lists all of the policy suggestions in "my-project"`,
+			},
+		},
+		Arguments: []*Argument{ProjectLabelArg},
+		Command: &cli.Command{
+			Name:   "list",
+			Action: handleSessionOverrides(suggestionsList),
+			Flags: []cli.Flag{
+				clusterFlag(),
+			},
+		},
+	}
+
+	suggestionsApproveCmd := &Command{
+		Usage: "Approve a policy suggestion",
+		Examples: []*Example{
+			{
+				Example:     `cape projects suggestions approve <suggestion-id>`,
+				Description: `Makes the provided suggestion active on the project`,
+			},
+		},
+		Arguments: []*Argument{SuggestionIDArg},
+		Command: &cli.Command{
+			Name:   "approve",
+			Action: handleSessionOverrides(suggestionsApprove),
+			Flags: []cli.Flag{
+				clusterFlag(),
+			},
+		},
+	}
+
+	suggestionsCmd := &Command{
+		Usage: "Commands for interacting with policy suggestions",
+		Command: &cli.Command{
+			Name: "suggestions",
+			Subcommands: []*cli.Command{
+				suggestionsApproveCmd.Package(),
+				suggestionsListCmd.Package(),
+				suggestionsCreateCmd.Package(),
+			},
+		},
+	}
+
 	projectsCmd := &Command{
 		Usage: "Commands for interacting with Cape projects",
 		Command: &cli.Command{
 			Name: "projects",
 			Subcommands: []*cli.Command{
+				suggestionsCmd.Package(),
 				projectsCreateCmd.Package(),
 				projectsListCmd.Package(),
 				projectsUpdateCmd.Package(),
@@ -134,6 +201,100 @@ func projectsCreate(c *cli.Context) error {
 	}
 
 	return u.Details(details)
+}
+
+func suggestionsCreate(c *cli.Context) error {
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
+	dep := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
+	project := modelmigration.LabelFromPrimitive(dep)
+	suggestionName := Arguments(c.Context, SuggestionNameArg).(models.ProjectDisplayName)
+	suggestionDescription := Arguments(c.Context, SuggestionDescriptionArg).(models.ProjectDescription)
+
+	specFile := c.String("from-spec")
+	bytes, err := ioutil.ReadFile(specFile)
+	if err != nil {
+		return err
+	}
+
+	spec, err := models.ParseProjectSpecFile(bytes)
+	if err != nil {
+		return err
+	}
+
+	suggestion, err := client.SuggestPolicy(c.Context, project, suggestionName, suggestionDescription, spec)
+	if err != nil {
+		return err
+	}
+
+	u := provider.UI(c.Context)
+	err = u.Template("Created policy suggestion for {{ . | faded }}\n", project.String())
+	if err != nil {
+		return err
+	}
+
+	details := ui.Details{
+		"ID":          suggestion.ID,
+		"Title":       suggestion.Title,
+		"Description": suggestion.Description,
+		"Status":      suggestion.State.String(),
+	}
+
+	return u.Details(details)
+}
+
+func suggestionsList(c *cli.Context) error {
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
+	deprecatedLabel := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
+	projectLabel := modelmigration.LabelFromPrimitive(deprecatedLabel)
+
+	suggs, err := client.GetProjectSuggestions(c.Context, projectLabel)
+	if err != nil {
+		return err
+	}
+
+	u := provider.UI(c.Context)
+	if len(suggs) > 0 {
+		header := []string{"ID", "Title", "Status"}
+		body := make([][]string, len(suggs))
+		for i, s := range suggs {
+			body[i] = []string{s.ID, s.Title, s.State.String()}
+		}
+
+		err = u.Table(header, body)
+		if err != nil {
+			return err
+		}
+	}
+
+	return u.Template("\nFound {{ . | toString | faded }} project{{ . | pluralize \"s\"}}\n", len(suggs))
+}
+
+func suggestionsApprove(c *cli.Context) error {
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
+	id := Arguments(c.Context, SuggestionIDArg).(string)
+	s := models.Suggestion{ID: id}
+	err = client.ApproveSuggestion(c.Context, s)
+	if err != nil {
+		return err
+	}
+
+	u := provider.UI(c.Context)
+	return u.Template("\nPolicy is now {{ . | faded }}\n", "active")
 }
 
 func projectsList(c *cli.Context) error {

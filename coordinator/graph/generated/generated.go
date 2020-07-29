@@ -93,7 +93,7 @@ type ComplexityRoot struct {
 		RemoveToken              func(childComplexity int, id database.ID) int
 		SetOrgRole               func(childComplexity int, userEmail models.Email, roleLabel models.Label) int
 		SetProjectRole           func(childComplexity int, userEmail models.Email, projectLabel models.Label, roleLabel models.Label) int
-		SuggestProjectPolicy     func(childComplexity int, label models.Label, request model.ProjectSpecFile) int
+		SuggestProjectPolicy     func(childComplexity int, label models.Label, name string, description string, request model.ProjectSpecFile) int
 		UnarchiveProject         func(childComplexity int, id *string, label *models.Label) int
 		UpdateContributor        func(childComplexity int, projectLabel models.Label, userEmail models.Email, roleLabel models.Label) int
 		UpdateProject            func(childComplexity int, id *string, label *models.Label, update model.UpdateProjectRequest) int
@@ -148,12 +148,14 @@ type ComplexityRoot struct {
 	}
 
 	Suggestion struct {
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Policy    func(childComplexity int) int
-		Project   func(childComplexity int) int
-		State     func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
+		CreatedAt   func(childComplexity int) int
+		Description func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Policy      func(childComplexity int) int
+		Project     func(childComplexity int) int
+		State       func(childComplexity int) int
+		Title       func(childComplexity int) int
+		UpdatedAt   func(childComplexity int) int
 	}
 
 	Token struct {
@@ -184,7 +186,7 @@ type MutationResolver interface {
 	CreateProject(ctx context.Context, project model.CreateProjectRequest) (*models.Project, error)
 	UpdateProject(ctx context.Context, id *string, label *models.Label, update model.UpdateProjectRequest) (*models.Project, error)
 	UpdateProjectSpec(ctx context.Context, id *string, label *models.Label, request model.ProjectSpecFile) (*models.Project, error)
-	SuggestProjectPolicy(ctx context.Context, label models.Label, request model.ProjectSpecFile) (*models.Suggestion, error)
+	SuggestProjectPolicy(ctx context.Context, label models.Label, name string, description string, request model.ProjectSpecFile) (*models.Suggestion, error)
 	GetProjectSuggestions(ctx context.Context, label models.Label) ([]*models.Suggestion, error)
 	ApproveProjectSuggestion(ctx context.Context, id string) (*models.Project, error)
 	ArchiveProject(ctx context.Context, id *string, label *models.Label) (*models.Project, error)
@@ -499,7 +501,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.SuggestProjectPolicy(childComplexity, args["label"].(models.Label), args["request"].(model.ProjectSpecFile)), true
+		return e.complexity.Mutation.SuggestProjectPolicy(childComplexity, args["label"].(models.Label), args["name"].(string), args["description"].(string), args["request"].(model.ProjectSpecFile)), true
 
 	case "Mutation.unarchiveProject":
 		if e.complexity.Mutation.UnarchiveProject == nil {
@@ -810,6 +812,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Suggestion.CreatedAt(childComplexity), true
 
+	case "Suggestion.description":
+		if e.complexity.Suggestion.Description == nil {
+			break
+		}
+
+		return e.complexity.Suggestion.Description(childComplexity), true
+
 	case "Suggestion.id":
 		if e.complexity.Suggestion.ID == nil {
 			break
@@ -837,6 +846,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Suggestion.State(childComplexity), true
+
+	case "Suggestion.title":
+		if e.complexity.Suggestion.Title == nil {
+			break
+		}
+
+		return e.complexity.Suggestion.Title(childComplexity), true
 
 	case "Suggestion.updated_at":
 		if e.complexity.Suggestion.UpdatedAt == nil {
@@ -1010,6 +1026,8 @@ type Suggestion {
     id: String!
     project: Project!
     policy: Policy!
+    title: String!
+    description: String!
     state: SuggestionState!
     created_at: Time!
     updated_at: Time!
@@ -1043,7 +1061,7 @@ extend type Mutation {
     updateProject(id: String, label: ModelLabel, update: UpdateProjectRequest!): Project!
     updateProjectSpec(id: String, label: ModelLabel, request: ProjectSpecFile!): Project!
 
-    suggestProjectPolicy(label: ModelLabel!, request: ProjectSpecFile!): Suggestion!
+    suggestProjectPolicy(label: ModelLabel!, name: String!, description: String!, request: ProjectSpecFile!): Suggestion!
     getProjectSuggestions(label: ModelLabel!): [Suggestion!]!
     approveProjectSuggestion(id: String!): Project!
 
@@ -1405,14 +1423,30 @@ func (ec *executionContext) field_Mutation_suggestProjectPolicy_args(ctx context
 		}
 	}
 	args["label"] = arg0
-	var arg1 model.ProjectSpecFile
-	if tmp, ok := rawArgs["request"]; ok {
-		arg1, err = ec.unmarshalNProjectSpecFile2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐProjectSpecFile(ctx, tmp)
+	var arg1 string
+	if tmp, ok := rawArgs["name"]; ok {
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["request"] = arg1
+	args["name"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["description"]; ok {
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["description"] = arg2
+	var arg3 model.ProjectSpecFile
+	if tmp, ok := rawArgs["request"]; ok {
+		arg3, err = ec.unmarshalNProjectSpecFile2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋgraphᚋmodelᚐProjectSpecFile(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["request"] = arg3
 	return args, nil
 }
 
@@ -2327,7 +2361,7 @@ func (ec *executionContext) _Mutation_suggestProjectPolicy(ctx context.Context, 
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().SuggestProjectPolicy(rctx, args["label"].(models.Label), args["request"].(model.ProjectSpecFile))
+		return ec.resolvers.Mutation().SuggestProjectPolicy(rctx, args["label"].(models.Label), args["name"].(string), args["description"].(string), args["request"].(model.ProjectSpecFile))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4155,6 +4189,74 @@ func (ec *executionContext) _Suggestion_policy(ctx context.Context, field graphq
 	res := resTmp.(*models.Policy)
 	fc.Result = res
 	return ec.marshalNPolicy2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPolicy(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Suggestion_title(ctx context.Context, field graphql.CollectedField, obj *models.Suggestion) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Suggestion",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Title, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Suggestion_description(ctx context.Context, field graphql.CollectedField, obj *models.Suggestion) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Suggestion",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Suggestion_state(ctx context.Context, field graphql.CollectedField, obj *models.Suggestion) (ret graphql.Marshaler) {
@@ -6508,6 +6610,16 @@ func (ec *executionContext) _Suggestion(ctx context.Context, sel ast.SelectionSe
 				}
 				return res
 			})
+		case "title":
+			out.Values[i] = ec._Suggestion_title(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "description":
+			out.Values[i] = ec._Suggestion_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "state":
 			out.Values[i] = ec._Suggestion_state(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

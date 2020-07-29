@@ -126,7 +126,7 @@ func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *string, la
 	return project, err
 }
 
-func (r *mutationResolver) SuggestProjectPolicy(ctx context.Context, label models.Label, request model.ProjectSpecFile) (*models.Suggestion, error) {
+func (r *mutationResolver) SuggestProjectPolicy(ctx context.Context, label models.Label, name string, description string, request model.ProjectSpecFile) (*models.Suggestion, error) {
 	session := fw.Session(ctx)
 	role, err := session.Roles.Projects.Get(label)
 	if err != nil {
@@ -159,12 +159,14 @@ func (r *mutationResolver) SuggestProjectPolicy(ctx context.Context, label model
 	}
 
 	suggestion := models.Suggestion{
-		ID:        models.NewID(),
-		ProjectID: project.ID,
-		PolicyID:  spec.ID,
-		State:     models.SuggestionPending,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		ID:          models.NewID(),
+		Title:       name,
+		Description: description,
+		ProjectID:   project.ID,
+		PolicyID:    spec.ID,
+		State:       models.SuggestionPending,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	err = r.Database.Projects().CreateSuggestion(ctx, suggestion)
@@ -192,8 +194,9 @@ func (r *mutationResolver) GetProjectSuggestions(ctx context.Context, label mode
 	}
 
 	s := make([]*models.Suggestion, len(suggestions))
-	for i, suggs := range suggestions {
-		s[i] = &suggs
+	for i, sugg := range suggestions {
+		suggestion := sugg
+		s[i] = &suggestion
 	}
 
 	return s, nil

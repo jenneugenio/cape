@@ -557,20 +557,33 @@ func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel models.Labe
 	return p, s, nil
 }
 
-func (c *Client) SuggestPolicy(ctx context.Context, projectLabel models.Label, spec *models.PolicyFile) (*models.Suggestion, error) {
+func (c *Client) SuggestPolicy(
+	ctx context.Context,
+	projectLabel models.Label,
+	name models.ProjectDisplayName,
+	description models.ProjectDescription,
+	spec *models.PolicyFile) (*models.Suggestion, error) {
 	variables := make(map[string]interface{})
 	variables["project"] = &projectLabel
 	variables["projectSpecFile"] = spec
+	variables["name"] = name
+	variables["description"] = description
 
 	var resp struct {
 		Suggestion models.Suggestion `json:"suggestProjectPolicy"`
 	}
 
 	err := c.transport.Raw(ctx, `
-		mutation SuggestProjectPolicy($project: ModelLabel!, $projectSpecFile: ProjectSpecFile!) {
-			suggestProjectPolicy(label: $project, request: $projectSpecFile) {
+		mutation SuggestProjectPolicy(
+			$project: ModelLabel!, 
+			$projectSpecFile: ProjectSpecFile!,
+			$name: String!
+			$description: String!) {
+			suggestProjectPolicy(label: $project, name: $name, description: $description, request: $projectSpecFile) {
 				id
 				state
+				title
+				description
 				created_at
 				updated_at
 			}
@@ -595,6 +608,8 @@ func (c *Client) GetProjectSuggestions(ctx context.Context, projectLabel models.
 		mutation GetProjectSuggestions($project: ModelLabel!) {
 			getProjectSuggestions(label: $project) {
 				state
+				title
+				id
 				created_at
 				updated_at
 			}

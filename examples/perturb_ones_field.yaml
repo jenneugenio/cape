@@ -1,5 +1,5 @@
 version: 1
-policy:
+rules:
   - match:
       name: ones
     actions:

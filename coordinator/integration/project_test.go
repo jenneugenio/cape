@@ -209,7 +209,7 @@ func TestProjectSpecCreate(t *testing.T) {
 		p, err := client.CreateProject(ctx, "suggest-me", nil, "This is my project")
 		gm.Expect(err).To(gm.BeNil())
 
-		suggestion, err := client.SuggestPolicy(ctx, p.Label, spec)
+		suggestion, err := client.SuggestPolicy(ctx, p.Label, "Make a change", "it's for the best", spec)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(suggestion.State).To(gm.Equal(models.SuggestionPending))
 	})
@@ -219,7 +219,7 @@ func TestProjectSpecCreate(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 
 		for i := 0; i < 10; i++ {
-			_, err := client.SuggestPolicy(ctx, p.Label, spec)
+			_, err := client.SuggestPolicy(ctx, p.Label, "Make a change", "it's for the best", spec)
 			gm.Expect(err).To(gm.BeNil())
 		}
 
@@ -232,7 +232,7 @@ func TestProjectSpecCreate(t *testing.T) {
 		p, err := client.CreateProject(ctx, "approve-me", nil, "This is my project")
 		gm.Expect(err).To(gm.BeNil())
 
-		s, err := client.SuggestPolicy(ctx, p.Label, spec)
+		s, err := client.SuggestPolicy(ctx, p.Label, "Make a change", "it's for the best", spec)
 		gm.Expect(err).To(gm.BeNil())
 		err = client.ApproveSuggestion(ctx, *s)
 		gm.Expect(err).To(gm.BeNil())
