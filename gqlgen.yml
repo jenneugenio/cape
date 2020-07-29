@@ -81,3 +81,7 @@ models:
     model: github.com/capeprivacy/cape/models.Contributor
   Assignment:
     model: github.com/capeprivacy/cape/models.Assignment
+  Suggestion:
+    model: github.com/capeprivacy/cape/models.Suggestion
+  SuggestionState:
+    model: github.com/capeprivacy/cape/models.SuggestionState

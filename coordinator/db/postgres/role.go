@@ -88,7 +88,9 @@ func (r *pgRole) GetAll(ctx context.Context, userID string) (*models.UserRoles, 
 			from roles, assignments 
 			where roles.id = assignments.role_id and assignments.user_id = $1 and assignments.data->>'project_id' = '';`
 
-	userRoles := models.UserRoles{}
+	userRoles := models.UserRoles{
+		Projects: models.ProjectRolesMap{},
+	}
 	row := r.pool.QueryRow(ctx, s, userID)
 	err := row.Scan(&userRoles.Global)
 	if err != nil {
@@ -96,14 +98,36 @@ func (r *pgRole) GetAll(ctx context.Context, userID string) (*models.UserRoles, 
 	}
 
 	// get the project roles
-	s = `select json_build_object(projects.data->>'label', roles.data)
-		from roles, assignments, projects
-		where roles.id = assignments.role_id and assignments.user_id = $1 and projects.id = assignments.data->>'project_id';`
+	//s = `select json_build_object(projects.data->>'label', roles.data)
+	//	from roles, assignments, projects
+	//	where roles.id = assignments.role_id and assignments.user_id = $1 and projects.id = assignments.data->>'project_id';`
 
-	row = r.pool.QueryRow(ctx, s, userID)
-	err = row.Scan(&userRoles.Projects)
-	if err != nil && err.Error() != "no rows in result set" {
+	s = `select projects.data->>'label' as project_label, roles.data as role
+		from 
+			roles, assignments, projects 
+		where 
+			assignments.data->>'role_id'=roles.data->>'id' and 
+			projects.data->>'id' = assignments.data->>'project_id' and
+			assignments.data->>'user_id' = $1;`
+
+	rows, err := r.pool.Query(ctx, s, userID)
+	if err != nil {
 		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		resp := struct {
+			Project string
+			Role    models.Role
+		}{}
+
+		err = rows.Scan(&resp.Project, &resp.Role)
+		if err != nil {
+			return nil, err
+		}
+
+		userRoles.Projects[models.Label(resp.Project)] = resp.Role
 	}
 
 	return &userRoles, nil

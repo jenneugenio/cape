@@ -93,3 +93,7 @@ func (p *projectEncrypt) List(ctx context.Context) ([]models.Project, error) {
 func (p *projectEncrypt) ListByStatus(ctx context.Context, status models.ProjectStatus) ([]models.Project, error) {
 	return p.db.ListByStatus(ctx, status)
 }
+
+func (p *projectEncrypt) CreateSuggestion(ctx context.Context, suggestion models.Suggestion) error {
+	return p.db.CreateSuggestion(ctx, suggestion)
+}

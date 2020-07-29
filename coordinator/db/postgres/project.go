@@ -113,6 +113,16 @@ func (p *pgProject) GetProjectSpec(ctx context.Context, id string) (*models.Poli
 	return &spec, err
 }
 
+func (p *pgProject) CreateSuggestion(ctx context.Context, suggestion models.Suggestion) error {
+	ctx, cancel := context.WithTimeout(ctx, p.timeout)
+	defer cancel()
+
+	s := `insert into suggestions (data) values ($1)`
+	_, err := p.pool.Exec(ctx, s, suggestion)
+
+	return err
+}
+
 func (p *pgProject) List(ctx context.Context) ([]models.Project, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()

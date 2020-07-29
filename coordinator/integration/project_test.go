@@ -204,4 +204,13 @@ func TestProjectSpecCreate(t *testing.T) {
 		gm.Expect(p.Status).To(gm.Equal(models.ProjectActive))
 		gm.Expect(p.CurrentSpecID).To(gm.Equal(s.ID))
 	})
+
+	t.Run("Can suggest a spec", func(t *testing.T) {
+		p, err := client.CreateProject(ctx, "suggest-me", nil, "This is my project")
+		gm.Expect(err).To(gm.BeNil())
+
+		suggestion, err := client.SuggestPolicy(ctx, p.Label, spec)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(suggestion.State).To(gm.Equal(models.SuggestionPending))
+	})
 }

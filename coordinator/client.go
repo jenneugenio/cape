@@ -557,6 +557,31 @@ func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel models.Labe
 	return p, s, nil
 }
 
+func (c *Client) SuggestPolicy(ctx context.Context, projectLabel models.Label, spec *models.PolicyFile) (*models.Suggestion, error) {
+	variables := make(map[string]interface{})
+	variables["project"] = &projectLabel
+	variables["projectSpecFile"] = spec
+
+	var resp struct {
+		Suggestion models.Suggestion `json:"suggestProjectPolicy"`
+	}
+
+	err := c.transport.Raw(ctx, `
+		mutation SuggestProjectPolicy($project: ModelLabel!, $projectSpecFile: ProjectSpecFile!) {
+			suggestProjectPolicy(label: $project, request: $projectSpecFile) {
+				state
+				created_at
+				updated_at
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Suggestion, nil
+}
+
 type UpdateProjectResponse struct {
 	Project *models.Project `json:"updateProject"`
 }

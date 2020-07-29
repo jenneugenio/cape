@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
@@ -125,6 +126,55 @@ func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *string, la
 	return project, err
 }
 
+func (r *mutationResolver) SuggestProjectPolicy(ctx context.Context, label models.Label, request model.ProjectSpecFile) (*models.Suggestion, error) {
+	session := fw.Session(ctx)
+	role, err := session.Roles.Projects.Get(label)
+	if err != nil {
+		return nil, err
+	}
+
+	if !role.Can(models.SuggestPolicy) {
+		return nil, fmt.Errorf("you must be a project contributor to suggest policy changes")
+	}
+
+	project, err := r.Database.Projects().Get(ctx, label)
+	if err != nil {
+		return nil, err
+	}
+
+	spec := models.Policy{
+		ID:              models.NewID(),
+		ProjectID:       project.ID,
+		ParentID:        nil,
+		Transformations: request.Transformations,
+		Rules:           request.Policy,
+		Version:         1,
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
+	}
+
+	err = r.Database.Projects().CreateProjectSpec(ctx, spec)
+	if err != nil {
+		return nil, err
+	}
+
+	suggestion := models.Suggestion{
+		ID:        models.NewID(),
+		ProjectID: project.ID,
+		PolicyID:  spec.ID,
+		State:     models.SuggestionPending,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	err = r.Database.Projects().CreateSuggestion(ctx, suggestion)
+	if err != nil {
+		return nil, err
+	}
+
+	return &suggestion, nil
+}
+
 func (r *mutationResolver) ArchiveProject(ctx context.Context, id *string, label *models.Label) (*models.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }
@@ -156,6 +206,7 @@ func (r *policyResolver) Parent(ctx context.Context, obj *models.Policy) (*model
 
 func (r *projectResolver) CurrentSpec(ctx context.Context, obj *models.Project) (*models.Policy, error) {
 	if obj.CurrentSpecID == "" {
+		// If there is no set spec ID, it means the project doesn't yet have a policy
 		return nil, nil
 	}
 
@@ -163,7 +214,6 @@ func (r *projectResolver) CurrentSpec(ctx context.Context, obj *models.Project) 
 }
 
 func (r *projectResolver) Contributors(ctx context.Context, obj *models.Project) ([]*models.Contributor, error) {
-	// TODO -- can this not be a copy of listContributors?
 	contribs, err := r.Database.Contributors().List(ctx, obj.Label)
 	if err != nil {
 		return nil, err
@@ -243,6 +293,14 @@ func (r *queryResolver) ListContributors(ctx context.Context, projectLabel model
 	return contributors, nil
 }
 
+func (r *suggestionResolver) Project(ctx context.Context, obj *models.Suggestion) (*models.Project, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *suggestionResolver) Policy(ctx context.Context, obj *models.Suggestion) (*models.Policy, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 // Contributor returns generated.ContributorResolver implementation.
 func (r *Resolver) Contributor() generated.ContributorResolver { return &contributorResolver{r} }
 
@@ -255,7 +313,11 @@ func (r *Resolver) Policy() generated.PolicyResolver { return &policyResolver{r}
 // Project returns generated.ProjectResolver implementation.
 func (r *Resolver) Project() generated.ProjectResolver { return &projectResolver{r} }
 
+// Suggestion returns generated.SuggestionResolver implementation.
+func (r *Resolver) Suggestion() generated.SuggestionResolver { return &suggestionResolver{r} }
+
 type contributorResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type policyResolver struct{ *Resolver }
 type projectResolver struct{ *Resolver }
+type suggestionResolver struct{ *Resolver }
