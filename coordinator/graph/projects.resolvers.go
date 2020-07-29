@@ -156,7 +156,7 @@ func (r *policyResolver) Parent(ctx context.Context, obj *models.Policy) (*model
 
 func (r *projectResolver) CurrentSpec(ctx context.Context, obj *models.Project) (*models.Policy, error) {
 	if obj.CurrentSpecID == "" {
-		return nil, errs.New(NoActiveSpecCause, "Project %s has no active project spec", obj.Name)
+		return nil, nil
 	}
 
 	return r.Database.Projects().GetProjectSpec(ctx, obj.CurrentSpecID)
@@ -208,12 +208,24 @@ func (r *queryResolver) Project(ctx context.Context, id *string, label *models.L
 		return nil, errs.New(fw.InvalidParametersCause, "Must provide an id or label")
 	}
 
+	var project *models.Project
+	var err error
+
 	if id != nil {
-		return r.Database.Projects().GetByID(ctx, *id)
+		project, err = r.Database.Projects().GetByID(ctx, *id)
+	} else {
+		project, err = r.Database.Projects().Get(ctx, *label)
 	}
 
-	// otherwise, get by label
-	return r.Database.Projects().Get(ctx, *label)
+	if err != nil {
+		if err.Error() == "no rows" {
+			return nil, fmt.Errorf("could not find %s", label)
+		}
+
+		return nil, err
+	}
+
+	return project, nil
 }
 
 func (r *queryResolver) ListContributors(ctx context.Context, projectLabel models.Label) ([]*models.Contributor, error) {

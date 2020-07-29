@@ -5,6 +5,7 @@ import (
 	"github.com/capeprivacy/cape/models"
 	modelmigration "github.com/capeprivacy/cape/models/migration"
 	"github.com/capeprivacy/cape/primitives"
+	"sigs.k8s.io/yaml"
 
 	"github.com/capeprivacy/cape/cmd/ui"
 	"github.com/urfave/cli/v2"
@@ -73,6 +74,21 @@ func init() {
 		},
 	}
 
+	projectsGetCmd := &Command{
+		Usage:     "Get a details of a project",
+		Arguments: []*Argument{ProjectLabelArg},
+		Examples: []*Example{
+			{
+				Example:     `cape projects get my-project`,
+				Description: `Gets all of the details of a project including the active policy`,
+			},
+		},
+		Command: &cli.Command{
+			Name:   "get",
+			Action: handleSessionOverrides(projectsGet),
+		},
+	}
+
 	projectsCmd := &Command{
 		Usage: "Commands for interacting with Cape projects",
 		Command: &cli.Command{
@@ -81,6 +97,7 @@ func init() {
 				projectsCreateCmd.Package(),
 				projectsListCmd.Package(),
 				projectsUpdateCmd.Package(),
+				projectsGetCmd.Package(),
 			},
 		},
 	}
@@ -239,4 +256,78 @@ func projectsUpdate(c *cli.Context) error {
 	}
 
 	return u.Details(details)
+}
+
+func projectsGet(c *cli.Context) error {
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
+	deprecatedLabel := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
+	label := modelmigration.LabelFromPrimitive(deprecatedLabel)
+
+	project, err := client.GetProject(c.Context, "", &label)
+	if err != nil {
+		return err
+	}
+
+	details := ui.Details{
+		"Name":        project.Name.String(),
+		"Description": project.Description.String(),
+		"Label":       project.Label.String(),
+		"Status":      project.Status.String(),
+	}
+
+	u := provider.UI(c.Context)
+	err = u.Details(details)
+	if err != nil {
+		return err
+	}
+
+	err = u.Template("{{ . | faded }}\n", "Contributors")
+	if err != nil {
+		return err
+	}
+
+	header := ui.TableHeader{"Name", "Email", "Role"}
+	body := ui.TableBody{}
+	for _, c := range project.Contributors {
+		body = append(body, []string{c.User.Name.String(), c.User.Email.String(), c.Role.Label.String()})
+	}
+
+	err = u.Table(header, body)
+	if err != nil {
+		return err
+	}
+
+	// Print the policy if there is one, but there may not be, in which case we are done
+	if project.Policy == nil {
+		return nil
+	}
+
+	err = u.Template("\n{{ . | faded }}\n", "Policy")
+	if err != nil {
+		return err
+	}
+
+	rules, err := yaml.Marshal(project.Policy.Rules)
+	if err != nil {
+		return err
+	}
+
+	transformations, err := yaml.Marshal(project.Policy.Transformations)
+	if err != nil {
+		return err
+	}
+
+	args := struct {
+		Rules           string
+		Transformations string
+	}{
+		string(rules), string(transformations),
+	}
+
+	return u.Template("policy:\n{{ .Rules }}\ntransformations:{{ .Transformations }}\n", args)
 }
