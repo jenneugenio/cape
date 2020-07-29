@@ -240,5 +240,25 @@ func TestProjectSpecCreate(t *testing.T) {
 		projectResp, err := client.GetProject(ctx, p.ID, nil)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(projectResp.Policy.ID).To(gm.Equal(s.PolicyID))
+
+		suggs, err := client.GetProjectSuggestions(ctx, "approve-me")
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(suggs[0].State).To(gm.Equal(models.SuggestionApproved))
+	})
+
+	t.Run("Can reject suggestions", func(t *testing.T) {
+		p, err := client.CreateProject(ctx, "reject-me", nil, "This is my project")
+		gm.Expect(err).To(gm.BeNil())
+
+		s, err := client.SuggestPolicy(ctx, p.Label, "Make a change", "it's for the best", spec)
+		gm.Expect(err).To(gm.BeNil())
+		err = client.RejectSuggestion(ctx, *s)
+		gm.Expect(err).To(gm.BeNil())
+
+		suggs, err := client.GetProjectSuggestions(ctx, "reject-me")
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(suggs[0].State).To(gm.Equal(models.SuggestionRejected))
 	})
 }

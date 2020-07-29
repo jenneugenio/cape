@@ -622,6 +622,28 @@ func (c *Client) GetProjectSuggestions(ctx context.Context, projectLabel models.
 	return resp.Suggestions, nil
 }
 
+func (c *Client) RejectSuggestion(ctx context.Context, suggestion models.Suggestion) error {
+	variables := make(map[string]interface{})
+	variables["id"] = suggestion.ID
+
+	var resp struct {
+		Project models.Project `json:"rejectProjectSuggestion"`
+	}
+
+	err := c.transport.Raw(ctx, `
+		mutation RejectProjectSuggestion($id: String!) {
+			rejectProjectSuggestion(id: $id) {
+				id
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *Client) ApproveSuggestion(ctx context.Context, suggestion models.Suggestion) error {
 	variables := make(map[string]interface{})
 	variables["id"] = suggestion.ID

@@ -247,6 +247,37 @@ func (r *mutationResolver) ApproveProjectSuggestion(ctx context.Context, id stri
 	return project, nil
 }
 
+func (r *mutationResolver) RejectProjectSuggestion(ctx context.Context, id string) (*models.Project, error) {
+	session := fw.Session(ctx)
+
+	suggestion, err := r.Database.Projects().GetSuggestion(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	project, err := r.Database.Projects().GetByID(ctx, suggestion.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	role, err := session.Roles.Projects.Get(project.Label)
+	if err != nil {
+		return nil, err
+	}
+
+	if !role.Can(models.RejectPolicy) {
+		return nil, fmt.Errorf("you must be a project contributor to reject policy changes")
+	}
+
+	suggestion.State = models.SuggestionRejected
+	err = r.Database.Projects().UpdateSuggestion(ctx, *suggestion)
+	if err != nil {
+		return nil, err
+	}
+
+	return project, nil
+}
+
 func (r *mutationResolver) ArchiveProject(ctx context.Context, id *string, label *models.Label) (*models.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }

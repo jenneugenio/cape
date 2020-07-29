@@ -30,6 +30,7 @@ const (
 	UpdateProject
 	SuggestPolicy
 	AcceptPolicy
+	RejectPolicy
 	ReadPolicy
 	ListPolicySuggestions
 
@@ -74,7 +75,7 @@ var (
 	)
 
 	projectContributorRules = withRules(
-		projectReaderRules, UpdateProject, SuggestPolicy, ListPolicySuggestions,
+		projectReaderRules, UpdateProject, SuggestPolicy, ListPolicySuggestions, RejectPolicy,
 	)
 
 	projectOwnerRules = withRules(

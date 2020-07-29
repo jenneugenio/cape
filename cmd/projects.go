@@ -143,12 +143,31 @@ func init() {
 		},
 	}
 
+	suggestionsRejectCmd := &Command{
+		Usage: "Reject a policy suggestion",
+		Examples: []*Example{
+			{
+				Example:     `cape projects suggestions reject <suggestion-id>`,
+				Description: `Makes the provided suggestion active on the project`,
+			},
+		},
+		Arguments: []*Argument{SuggestionIDArg},
+		Command: &cli.Command{
+			Name:   "reject",
+			Action: handleSessionOverrides(suggestionsReject),
+			Flags: []cli.Flag{
+				clusterFlag(),
+			},
+		},
+	}
+
 	suggestionsCmd := &Command{
 		Usage: "Commands for interacting with policy suggestions",
 		Command: &cli.Command{
 			Name: "suggestions",
 			Subcommands: []*cli.Command{
 				suggestionsApproveCmd.Package(),
+				suggestionsRejectCmd.Package(),
 				suggestionsListCmd.Package(),
 				suggestionsCreateCmd.Package(),
 			},
@@ -295,6 +314,24 @@ func suggestionsApprove(c *cli.Context) error {
 
 	u := provider.UI(c.Context)
 	return u.Template("\nPolicy is now {{ . | faded }}\n", "active")
+}
+
+func suggestionsReject(c *cli.Context) error {
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
+	id := Arguments(c.Context, SuggestionIDArg).(string)
+	s := models.Suggestion{ID: id}
+	err = client.RejectSuggestion(c.Context, s)
+	if err != nil {
+		return err
+	}
+
+	u := provider.UI(c.Context)
+	return u.Template("\nPolicy suggestion rejected\n", nil)
 }
 
 func projectsList(c *cli.Context) error {
