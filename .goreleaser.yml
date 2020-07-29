@@ -19,8 +19,6 @@ builds:
      - -v
   ldflags:
      - -s -w -X github.com/capeprivacy/cape/version.Version={{.Version}} -X github.com/capeprivacy/cape/version.BuildData={{.Date}}
-release:
-    disable: true
 archives:
 - replacements:
     darwin: Darwin
@@ -28,6 +26,9 @@ archives:
     windows: Windows
     386: i386
     amd64: x86_64
+  format_overrides:
+    - goos: windows
+      format: zip
 checksum:
   name_template: 'checksums.txt'
 snapshot:
