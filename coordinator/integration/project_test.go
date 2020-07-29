@@ -213,4 +213,18 @@ func TestProjectSpecCreate(t *testing.T) {
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(suggestion.State).To(gm.Equal(models.SuggestionPending))
 	})
+
+	t.Run("Can list suggestions", func(t *testing.T) {
+		p, err := client.CreateProject(ctx, "suggest-me-lots", nil, "This is my project")
+		gm.Expect(err).To(gm.BeNil())
+
+		for i := 0; i < 10; i++ {
+			_, err := client.SuggestPolicy(ctx, p.Label, spec)
+			gm.Expect(err).To(gm.BeNil())
+		}
+
+		suggestions, err := client.GetProjectSuggestions(ctx, p.Label)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(len(suggestions)).To(gm.Equal(10))
+	})
 }

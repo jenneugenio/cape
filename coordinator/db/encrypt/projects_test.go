@@ -203,3 +203,7 @@ func (t *testPgProjects) ListByStatus(_ context.Context, _ models.ProjectStatus)
 func (t *testPgProjects) CreateSuggestion(_ context.Context, _ models.Suggestion) error {
 	panic("not implemented")
 }
+
+func (t *testPgProjects) GetSuggestions(_ context.Context, _ models.Label) ([]models.Suggestion, error) {
+	panic("not implemented")
+}

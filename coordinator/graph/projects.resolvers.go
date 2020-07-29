@@ -175,6 +175,20 @@ func (r *mutationResolver) SuggestProjectPolicy(ctx context.Context, label model
 	return &suggestion, nil
 }
 
+func (r *mutationResolver) GetProjectSuggestions(ctx context.Context, label models.Label) ([]*models.Suggestion, error) {
+	suggestions, err := r.Database.Projects().GetSuggestions(ctx, label)
+	if err != nil {
+		return nil, err
+	}
+
+	s := make([]*models.Suggestion, len(suggestions))
+	for i, suggs := range suggestions {
+		s[i] = &suggs
+	}
+
+	return s, nil
+}
+
 func (r *mutationResolver) ArchiveProject(ctx context.Context, id *string, label *models.Label) (*models.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }

@@ -123,6 +123,31 @@ func (p *pgProject) CreateSuggestion(ctx context.Context, suggestion models.Sugg
 	return err
 }
 
+func (p *pgProject) GetSuggestions(ctx context.Context, projectLabel models.Label) ([]models.Suggestion, error) {
+	ctx, cancel := context.WithTimeout(ctx, p.timeout)
+	defer cancel()
+
+	s := `select data from suggestions where project_id = (select id from projects where projects.data->>'label' = $1)`
+	rows, err := p.pool.Query(ctx, s, projectLabel)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var suggestions []models.Suggestion
+	for rows.Next() {
+		var s models.Suggestion
+		err = rows.Scan(&s)
+		if err != nil {
+			return nil, err
+		}
+
+		suggestions = append(suggestions, s)
+	}
+
+	return suggestions, err
+}
+
 func (p *pgProject) List(ctx context.Context) ([]models.Project, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
