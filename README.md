@@ -1,126 +1,75 @@
 # Cape
 
-## Development
+![](https://github.com/capeprivacy/cape/workflows/Main/badge.svg)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Gitub release]("https://img.shields.io/github/v/release/capeprivacy/cape.svg?logo=github")](https://github.com/capeprivacy/cape/releases/latest)
+[![Chat on Slack](https://img.shields.io/badge/chat-on%20slack-7A5979.svg)](https://join.slack.com/t/capecommunity/shared_invite/zt-f8jeskkm-r9_FD0o4LkuQqhJSa~~IQA)
 
-In the following section we describe how to setup your environment so you can
-develop Cape itself locally including how to test, build, and deploy Cape to a
-local kubernetes cluster.
+Cape Core contains the key functionality of Cape Privacy, including:
 
-### Getting Started
+* A CLI (command line interface)
+* Cape Coordinator, which provides policy management workflows, and controllers to work with the Cape Privacy libraries.
 
-To get up and running with contributing to Cape or to run Cape locally using
-our development tooling you will need to have the following dependencies
-installed:
+View the [documentation](https://docs.capeprivacy.com/cape-core/).
 
-- [git](https://git-scm.com/) (version 2.0+)
-- [docker](https://docs.docker.com/get-docker/) (version 18.0+)
-- [golang](https://golang.org/doc/install) (version 1.14+)
+## Getting started
 
-Once you have the base dependencies available on your system you can bootstrap
-your local environment by running:
+Cape Core comprises multiple elements, some of which interact with other parts of the Cape ecosystem. The following links point to the correct getting started resources for each element:
 
-```
-$ go run bootstrap.go bootstrap
-```
+* [Cape Coordinator installation guides](https://docs.capeprivacy.com/cape-core/coordinator)
+* [Cape CLI installation guide](https://docs.capeprivacy.com/cape-core/cli/installation/)
+* [Cape CLI usage guide](https://docs.capeprivacy.com/cape-core/cli/usage/)
+* [Tutorial: using Coordinator and CLI with Cape Python](https://docs.capeprivacy.com/libraries/cape-python/coordinator-quickstart/)
 
-This will install any additional local dependencies and check that your system
-has everything installed to build and deploy Cape to your local environment.
+For information on how to work on Cape development locally, refer to [Contributing](./CONTRIBUTING.md).
 
-To see a list of all local development options please run `mage -l` in the root
-of the repository.
 
-At any time, you can run `mage check` to check the status of your local
-development environment.
+## About Cape Privacy and Cape
 
-### Building
+[Cape Privacy](https://capeprivacy.com) helps teams share data and make decisions for safer and more powerful data science. Learn more at [capeprivacy.com](https://capeprivacy.com).
 
-Once your development environment is bootstrapped you can build the Cape binary
-by running the following command:
+Cape contains the core functionality of Cape Privacy, including a CLI (command line interface), policy management workflow, and controllers to work with the [Cape Privacy libraries](https://docs.capeprivacy.com/libraries/).
 
-```
-$ mage build:binary
-```
+### Cape architecture
 
-This will output the cape binary to `bin/cape`.
+Cape is comprised of multiples services and libraries. The Coordinator provides policy and user management through a CLI. This in turn can interact with Cape's libraries, applying your data policy directly to the data transformation scripts.
 
-### Testing
+### Project status and roadmap
 
-You can run the full test suite locally through mage by running `mage test:ci`.
-For these tests to pass you must have an instance of postgres running that is
-connectable and configured. See the list of testing commands via `mage -l`.
+Cape Core was released 30th July 2020. It is actively maintained and developed, alongside other elements of the Cape ecosystem.
 
-We're using [GitHub Actions](https://github.com/features/actions) to automate
-our continus integration and delivery suite which invokes `mage test:ci` to
-determine the state of the build.
+**Upcoming features:**
 
-### Local Deployment
+* Audit logging configuration: set up configuration for how and where you log actions in Cape Coordinator, such as project and policy creation, user changes and user actions in Cape.
+* Governance tooling: integrate basic data governance information to be used within Cape Coordinator for writing better policy, with a possible integration with Apache Atlas or other open-source governance tools.
+* Pipeline orchestrator integration: ability to connect with Spark orchestration tools (such as YARN, Mesos, and Airflow) and pull information on jobs that are running for easier management of running Spark installations.
 
-We're using [kind](https://kind.sigs.k8s.io/) for deploying Cape into kubernetes locally.
+The goal is a complete data management ecosystem. Cape Privacy provides [Cape Coordinator](https://docs.capeprivacy.com/cape-core/coordinator/), to manage policy and users. This will interact with the Cape Privacy libraries (such as [Cape Python](https://docs.capeprivacy.com/libraries/cape-python/)) through a workers interface, and with your own data services through an API.
 
-To get started you need to first startup kind, build the docker images and deploy the
-helm charts to get the coordinator and the database running. This can be done with the
-following `mage` command:
+## Help and resources
 
-```
-$ mage local:deploy
-```
+If you need help using Cape, you can:
 
-You should see something like:
+* View the [documentation](https://docs.capeprivacy.com/).
+* Submit an issue.
+* Talk to us on our [community Slack](https://join.slack.com/t/capecommunity/shared_invite/zt-f8jeskkm-r9_FD0o4LkuQqhJSa~~IQA).
 
-```
-NAME: coordinator
-LAST DEPLOYED: Fri May 15 16:23:30 2020
-NAMESPACE: default
-STATUS: deployed
-REVISION: 1
-TEST SUITE: None
-```
+Please file [feature requests](https://github.com/capeprivacy/cape/issues/new?template=feature_request.md) and
+[bug reports](https://github.com/capeprivacy/cape/issues/new?template=bug_report.md) as GitHub issues.
 
-to know it has completed successfully.
+## Community
 
-Once that command is done running there are a few more commands to get everything set up.
+[![](https://sourcerer.io/fame/justin1121/capeprivacy/cape/images/0)](https://sourcerer.io/fame/justin1121/capeprivacy/cape/links/0)[![](https://sourcerer.io/fame/justin1121/capeprivacy/cape/images/1)](https://sourcerer.io/fame/justin1121/capeprivacy/cape/links/1)[![](https://sourcerer.io/fame/justin1121/capeprivacy/cape/images/2)](https://sourcerer.io/fame/justin1121/capeprivacy/cape/links/2)[![](https://sourcerer.io/fame/justin1121/capeprivacy/cape/images/3)](https://sourcerer.io/fame/justin1121/capeprivacy/cape/links/3)[![](https://sourcerer.io/fame/justin1121/capeprivacy/cape/images/4)](https://sourcerer.io/fame/justin1121/capeprivacy/cape/links/4)[![](https://sourcerer.io/fame/justin1121/capeprivacy/cape/images/5)](https://sourcerer.io/fame/justin1121/capeprivacy/cape/links/5)[![](https://sourcerer.io/fame/justin1121/capeprivacy/cape/images/6)](https://sourcerer.io/fame/justin1121/capeprivacy/cape/links/6)[![](https://sourcerer.io/fame/justin1121/capeprivacy/cape/images/7)](https://sourcerer.io/fame/justin1121/capeprivacy/cape/links/7)
 
-First, run setup to create an admin account, create the default roles and the default policies.
+### Contributing
 
-```
-$ cape setup local http://localhost:8080
-```
+View our [contributing](CONTRIBUTING.md) guide for more information.
 
-## Troubleshooting
+### Code of conduct
 
-Here are some steps to try if you've installed `cape` and you're
-having one of these problems:
+Our [code of conduct](https://capeprivacy.com/conduct/) is included on the Cape Privacy website. All community members are expected to follow it. Please refer to that page for information on how to report problems.
 
-### Fedora
 
-#### Docker does not support cgroups v2
+## License
 
-Fedora 31 migrated from cgroups v1 to v2, but Docker and Kubernetes
-don't support cgroups v2. Update the kernel to use cgroups v1.
-
-```sh
-sudo dnf install -y grubby && \
-  sudo grubby \
-  --update-kernel=ALL \
-  --args="systemd.unified_cgroup_hierarchy=0"
-```
-
-#### Unable to resolve host from inside the container
-
-This is an
-[issue](https://github.com/kubernetes-sigs/kind/issues/1547) that
-surfaced in Fedora 32 when using kind.
-
-Run `nmcli connection show` in your terminal to get the ethernet
-interface device ID.
-
-```sh
-firewall-cmd --permanent --zone=trusted --add-interface=docker0
-firewall-cmd --get-zone-of-interface=<your eth interface>
-firewall-cmd --zone=<zone from above> --add-masquerade --permanent
-firewall-cmd --reload
-```
-
-Destroy your local environment with `mage local:destroy` and run
-through the setup process once more.
-
+Licensed under Apache License, Version 2.0 (see [LICENSE](https://github.com/capeprivacy/cape/blob/master/LICENSE) or http://www.apache.org/licenses/LICENSE-2.0). Copyright as specified in [NOTICE](https://github.com/capeprivacy/cape/blob/master/NOTICE).

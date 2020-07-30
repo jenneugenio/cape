@@ -36,7 +36,7 @@ func (t Test) Lint(ctx context.Context) error {
 	return sh.RunV("golangci-lint", "run")
 }
 
-// Unit runs the unit test portion of the test suite (does not require postgres)
+// Unit runs the unit test portion of the test suite (does not require Postgres)
 func (t Test) Unit(ctx context.Context) error {
 	mg.SerialCtxDeps(ctx, Build.Generate)
 
@@ -51,7 +51,7 @@ func (t Test) Unit(ctx context.Context) error {
 	return sh.RunV("go", "test", "-v", "./...")
 }
 
-// Integration runs the integration portion of the test suite (requires postgres)
+// Integration runs the integration portion of the test suite (requires Postgres)
 func (t Test) Integration(ctx context.Context) error {
 	mg.SerialCtxDeps(ctx, Build.Generate)
 
@@ -91,7 +91,7 @@ func (t Test) Integration(ctx context.Context) error {
 	return err
 }
 
-// CI runs the full test suite that is ran during continuous integration
+// CI runs the full test suite that is run during continuous integration
 func (t Test) CI(ctx context.Context) error {
 	mg.SerialCtxDeps(ctx, t.Lint, t.Integration, Build.Docker, t.Tidy)
 	return nil
