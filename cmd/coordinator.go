@@ -31,17 +31,17 @@ var typeRegistry = map[FormatType]string{
 
 func init() {
 	startCmd := &Command{
-		Usage: "Start an instance of the Cape coordinator",
+		Usage: "Start an instance of the Cape coordinator.",
 		Variables: []*EnvVar{
 			{
 				Name:        "CAPE_CORS_ENABLED",
 				Required:    false,
-				Description: "Serve CORS headers in HTTP responses",
+				Description: "Serve CORS headers in HTTP responses.",
 			},
 			{
 				Name:        "CAPE_CORS_ALLOW_ORIGIN",
 				Required:    false,
-				Description: "Specify the value of the CORS Allow Origin Header",
+				Description: "Specify the value of the CORS Allow Origin Header.",
 			},
 		},
 		Command: &cli.Command{
@@ -57,16 +57,16 @@ func init() {
 	}
 
 	configureCmd := &Command{
-		Usage:     "Generates a Cape coordinator configuration file",
+		Usage:     "Generates a Cape Coordinator configuration file.",
 		Variables: []*EnvVar{capeDBURLNotRequired},
 		Examples: []*Example{
 			{
 				Example:     "cape coordinator configure",
-				Description: "Generates a configuration file by prompting for the port and database url.",
+				Description: "Generates a configuration file by prompting for the port and database URL.",
 			},
 			{
 				Example:     "cape coordinator configure --out my-config.yaml",
-				Description: "Generates a configuration file and outputs it to my-config.yaml",
+				Description: "Generates a configuration file and outputs it to my-config.yaml.",
 			},
 			{
 				Example: "CAPE_DB_URL=postgres://user:pass@host:5432/database cape coordinator configure --port 8080",

@@ -15,15 +15,15 @@ import (
 
 func init() {
 	tokensCreateCmd := &Command{
-		Usage: "Creates a token for the specified user",
+		Usage: "Creates a token for the specified user.",
 		Examples: []*Example{
 			{
 				Example:     "cape tokens create",
-				Description: "Creates a token for the current user",
+				Description: "Creates a token for the current user.",
 			},
 			{
 				Example:     "cape tokens create user@cape.com",
-				Description: "Creates a token for the user with the email user@cape.com",
+				Description: "Creates a token for the user with the email user@cape.com.",
 			},
 		},
 		Arguments: []*Argument{TokenUserArg},
@@ -34,15 +34,15 @@ func init() {
 	}
 
 	tokensListCmd := &Command{
-		Usage: "Lists the tokens ids for a specified user",
+		Usage: "Lists the tokens IDs for a specified user.",
 		Examples: []*Example{
 			{
 				Example:     "cape tokens list",
-				Description: "Lists the token ids for the current user",
+				Description: "Lists the token ids for the current user.",
 			},
 			{
 				Example:     "cape tokens create data-user@cape.com",
-				Description: "Lists the token ids for the user with email data-user@cape.com",
+				Description: "Lists the token ids for the user with email data-user@cape.com.",
 			},
 		},
 		Arguments: []*Argument{TokenUserArg},
@@ -53,7 +53,7 @@ func init() {
 	}
 
 	tokensRemoveCmd := &Command{
-		Usage: "Removes the provided token from Cape",
+		Usage: "Removes the provided token from Cape.",
 		Examples: []*Example{
 			{
 				Example:     "cape tokens remove 2011e949qta0quff3n4yx7ny3r",
@@ -68,7 +68,7 @@ func init() {
 	}
 
 	tokensCmd := &Command{
-		Usage: "Commands for managing API tokens",
+		Usage: "Commands for managing API tokens.",
 		Command: &cli.Command{
 			Name: "tokens",
 			Subcommands: []*cli.Command{

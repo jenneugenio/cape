@@ -12,7 +12,7 @@ import (
 
 func init() {
 	createCmd := &Command{
-		Usage:     "Create a new user",
+		Usage:     "Create a new user.",
 		Arguments: []*Argument{UserEmailArg},
 		Examples: []*Example{
 			{
@@ -35,7 +35,7 @@ func init() {
 	}
 
 	usersCmd := &Command{
-		Usage: "Commands for querying information about users and modifying them",
+		Usage: "Commands for querying information about users and modifying them.",
 		Command: &cli.Command{
 			Name:        "users",
 			Subcommands: []*cli.Command{createCmd.Package()},

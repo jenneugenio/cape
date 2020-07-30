@@ -83,7 +83,7 @@ func NewApp() *cli.App {
 	app := cli.NewApp()
 	app.Name = cliName
 	app.HelpName = cliName
-	app.Usage = "Cape is used to manage access to your sensitive data"
+	app.Usage = "Cape is used to manage access to your sensitive data."
 	app.Version = version.Version
 	app.Commands = commands
 	app.EnableBashCompletion = true

@@ -7,7 +7,7 @@ import (
 
 func init() {
 	meCmd := &Command{
-		Usage: "Tells you what your role is",
+		Usage: "Tells you what your role is.",
 		Examples: []*Example{
 			{
 				Example:     "cape roles me",
@@ -29,7 +29,7 @@ func init() {
 	}
 
 	rolesCmd := &Command{
-		Usage: "Commands for querying information about roles and modifying them",
+		Usage: "Commands for querying information about roles and modifying them.",
 		Command: &cli.Command{
 			Name: "roles",
 			Subcommands: []*cli.Command{

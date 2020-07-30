@@ -12,7 +12,7 @@ import (
 
 func init() {
 	viewConfigCmd := &Command{
-		Usage:       "List all local configuration settings",
+		Usage:       "List all local configuration settings.",
 		Description: "Use this command to list all configuration settings, their defaults, and current values.",
 		Command: &cli.Command{
 			Name:   "view",
@@ -21,8 +21,8 @@ func init() {
 	}
 
 	addClusterCmd := &Command{
-		Usage:       "Add configuration for a cape cluster",
-		Description: "Use this command to add configuration enabling a user to execute commands against a cluster of Cape",
+		Usage:       "Add configuration for a cape cluster.",
+		Description: "Use this command to add configuration enabling a user to execute commands against a cluster of Cape.",
 		Arguments:   []*Argument{ClusterLabelArg, ClusterURLArg},
 		Examples: []*Example{
 			{
@@ -42,8 +42,8 @@ func init() {
 	}
 
 	removeClusterCmd := &Command{
-		Usage:       "Remove configuration for a cape cluster",
-		Description: "Use this command to remove local connection information for a cape cluster",
+		Usage:       "Remove configuration for a cape cluster.",
+		Description: "Use this command to remove local connection information for a cape cluster.",
 		Arguments:   []*Argument{ClusterLabelArg},
 		Examples: []*Example{
 			{
@@ -81,7 +81,7 @@ func init() {
 	}
 
 	clustersCmd := &Command{
-		Usage:       "Commands for adding, removing, and selecting cape clusters",
+		Usage:       "Commands for adding, removing, and selecting cape clusters.",
 		Description: "Use these commands for adding, removing, and selecting your current cape cluster.",
 		Command: &cli.Command{
 			Name: "clusters",
@@ -94,7 +94,7 @@ func init() {
 	}
 
 	configCmd := &Command{
-		Usage: "Commands for setting and viewing local command line configuration",
+		Usage: "Commands for setting and viewing local command line configuration.",
 		Command: &cli.Command{
 			Name: "config",
 			Subcommands: []*cli.Command{
