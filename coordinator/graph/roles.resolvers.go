@@ -41,6 +41,37 @@ func (r *mutationResolver) SetProjectRole(ctx context.Context, userEmail models.
 		return nil, fmt.Errorf("invalid role: %s", roleLabel)
 	}
 
+	s := fw.Session(ctx)
+	role, err := s.Roles.Projects.Get(projectLabel)
+	if err != nil {
+		return nil, err
+	}
+
+	if !role.Can(models.ChangeProjectRole) {
+		return nil, fmt.Errorf("invalid permissions to change roles in project %s", projectLabel)
+	}
+
+	contributors, err := r.Database.Contributors().List(ctx, projectLabel)
+	if err != nil {
+		return nil, err
+	}
+
+	found := false
+	for _, c := range contributors {
+		user, err := r.Database.Users().GetByID(ctx, c.UserID)
+		if err != nil {
+			return nil, err
+		}
+
+		if user.Email == userEmail {
+			found = true
+		}
+	}
+
+	if !found {
+		return nil, fmt.Errorf("provided user %s not found in project %s", userEmail, projectLabel)
+	}
+
 	return r.Database.Roles().SetProjectRole(ctx, userEmail, projectLabel, roleLabel)
 }
 

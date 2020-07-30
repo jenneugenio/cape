@@ -36,6 +36,7 @@ const (
 
 	// Roles
 	ChangeRole
+	ChangeProjectRole
 )
 
 type Principal interface{}
@@ -79,7 +80,7 @@ var (
 	)
 
 	projectOwnerRules = withRules(
-		projectContributorRules, AcceptPolicy, UnarchiveProject, DeleteOwnedProject,
+		projectContributorRules, AcceptPolicy, UnarchiveProject, DeleteOwnedProject, ChangeProjectRole,
 	)
 
 	DefaultPermissions = map[Label]Permission{

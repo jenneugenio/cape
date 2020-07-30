@@ -89,4 +89,17 @@ func TestRoles(t *testing.T) {
 		err = client.SetProjectRole(ctx, "alphabet@person.com", label, models.ProjectReaderRole)
 		gm.Expect(err).To(gm.BeNil())
 	})
+
+	t.Run("Can't change project roles for non-contributors", func(t *testing.T) {
+		label := models.Label("epic-project-two")
+		_, err := client.CreateProject(ctx, "Hmmmmmmm", &label, "Who cares")
+		gm.Expect(err).To(gm.BeNil())
+
+		_, _, err = client.CreateUser(ctx, "Person Person", "iexist@realperson.com")
+		gm.Expect(err).To(gm.BeNil())
+
+		err = client.SetProjectRole(ctx, "iexist@realperson.com", label, models.ProjectReaderRole)
+		gm.Expect(err).ToNot(gm.BeNil())
+		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: provided user iexist@realperson.com not found in project epic-project-two"))
+	})
 }
