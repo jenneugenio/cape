@@ -16,6 +16,7 @@ vendor/
 bin/
 deploy/
 build/
+dist/
 
 # For users using GoLand
 .idea/
