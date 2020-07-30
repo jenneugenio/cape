@@ -93,6 +93,21 @@ var (
 			return in, nil
 		},
 	}
+
+	RoleArg = &Argument{
+		Name:        "role",
+		Description: "The role you wish to assign.",
+		Required:    true,
+		Processor: func(in string) (interface{}, error) {
+			for _, r := range models.SystemRoles {
+				if in == r.String() {
+					return models.Label(in), nil
+				}
+			}
+
+			return nil, fmt.Errorf("invalid role specified")
+		},
+	}
 )
 
 func LabelArg(f string) *Argument {

@@ -175,11 +175,12 @@ func (c *Client) SessionToken() *base64.Value {
 }
 
 // Role Routes
+type MyRoleResponse struct {
+	Role models.Role `json:"myRole"`
+}
 
 func (c *Client) MyRole(ctx context.Context) (*models.Role, error) {
-	var resp struct {
-		Role models.Role `json:"myRole"`
-	}
+	var resp MyRoleResponse
 
 	err := c.transport.Raw(ctx, `
 		query MyRole() {
