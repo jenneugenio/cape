@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/coordinator/graph/generated"
@@ -125,6 +126,183 @@ func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *string, la
 	return project, err
 }
 
+func (r *mutationResolver) SuggestProjectPolicy(ctx context.Context, label models.Label, name string, description string, request model.ProjectSpecFile) (*models.Suggestion, error) {
+	session := fw.Session(ctx)
+	role, err := session.Roles.Projects.Get(label)
+	if err != nil {
+		return nil, err
+	}
+
+	if !role.Can(models.SuggestPolicy) {
+		return nil, fmt.Errorf("you must be a project contributor to suggest policy changes")
+	}
+
+	project, err := r.Database.Projects().Get(ctx, label)
+	if err != nil {
+		return nil, err
+	}
+
+	spec := models.Policy{
+		ID:              models.NewID(),
+		ProjectID:       project.ID,
+		ParentID:        nil,
+		Transformations: request.Transformations,
+		Rules:           request.Rules,
+		Version:         1,
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
+	}
+
+	err = r.Database.Projects().CreateProjectSpec(ctx, spec)
+	if err != nil {
+		return nil, err
+	}
+
+	suggestion := models.Suggestion{
+		ID:          models.NewID(),
+		Title:       name,
+		Description: description,
+		ProjectID:   project.ID,
+		PolicyID:    spec.ID,
+		State:       models.SuggestionPending,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	err = r.Database.Projects().CreateSuggestion(ctx, suggestion)
+	if err != nil {
+		return nil, err
+	}
+
+	return &suggestion, nil
+}
+
+func (r *mutationResolver) GetProjectSuggestions(ctx context.Context, label models.Label) ([]*models.Suggestion, error) {
+	session := fw.Session(ctx)
+	role, err := session.Roles.Projects.Get(label)
+	if err != nil {
+		return nil, err
+	}
+
+	if !role.Can(models.ListPolicySuggestions) {
+		return nil, fmt.Errorf("you must be a project contributor to suggest policy changes")
+	}
+
+	suggestions, err := r.Database.Projects().GetSuggestions(ctx, label)
+	if err != nil {
+		return nil, err
+	}
+
+	s := make([]*models.Suggestion, len(suggestions))
+	for i, sugg := range suggestions {
+		suggestion := sugg
+		s[i] = &suggestion
+	}
+
+	return s, nil
+}
+
+func (r *mutationResolver) ApproveProjectSuggestion(ctx context.Context, id string) (*models.Project, error) {
+	session := fw.Session(ctx)
+
+	suggestion, err := r.Database.Projects().GetSuggestion(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	projectPolicy, err := r.Database.Projects().GetProjectSpec(ctx, suggestion.PolicyID)
+	if err != nil {
+		return nil, err
+	}
+
+	project, err := r.Database.Projects().GetByID(ctx, suggestion.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	role, err := session.Roles.Projects.Get(project.Label)
+	if err != nil {
+		return nil, err
+	}
+
+	if !role.Can(models.AcceptPolicy) {
+		return nil, fmt.Errorf("you must be a project contributor to suggest policy changes")
+	}
+
+	// Make this spec active on the project
+	project.CurrentSpecID = projectPolicy.ID
+	// A spec makes the project active!
+	project.Status = models.ProjectActive
+	err = r.Database.Projects().Update(ctx, *project)
+	if err != nil {
+		return nil, err
+	}
+
+	suggestion.State = models.SuggestionApproved
+	err = r.Database.Projects().UpdateSuggestion(ctx, *suggestion)
+	if err != nil {
+		return nil, err
+	}
+
+	return project, nil
+}
+
+func (r *mutationResolver) RejectProjectSuggestion(ctx context.Context, id string) (*models.Project, error) {
+	session := fw.Session(ctx)
+
+	suggestion, err := r.Database.Projects().GetSuggestion(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	project, err := r.Database.Projects().GetByID(ctx, suggestion.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	role, err := session.Roles.Projects.Get(project.Label)
+	if err != nil {
+		return nil, err
+	}
+
+	if !role.Can(models.RejectPolicy) {
+		return nil, fmt.Errorf("you must be a project contributor to reject policy changes")
+	}
+
+	suggestion.State = models.SuggestionRejected
+	err = r.Database.Projects().UpdateSuggestion(ctx, *suggestion)
+	if err != nil {
+		return nil, err
+	}
+
+	return project, nil
+}
+
+func (r *mutationResolver) GetProjectSuggestion(ctx context.Context, id string) (*models.Suggestion, error) {
+	session := fw.Session(ctx)
+
+	suggestion, err := r.Database.Projects().GetSuggestion(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	project, err := r.Database.Projects().GetByID(ctx, suggestion.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	role, err := session.Roles.Projects.Get(project.Label)
+	if err != nil {
+		return nil, err
+	}
+
+	if !role.Can(models.ListPolicySuggestions) {
+		return nil, fmt.Errorf("you must be a project contributor to reject policy changes")
+	}
+
+	return suggestion, nil
+}
+
 func (r *mutationResolver) ArchiveProject(ctx context.Context, id *string, label *models.Label) (*models.Project, error) {
 	panic(fmt.Errorf("not implemented"))
 }
@@ -156,14 +334,14 @@ func (r *policyResolver) Parent(ctx context.Context, obj *models.Policy) (*model
 
 func (r *projectResolver) CurrentSpec(ctx context.Context, obj *models.Project) (*models.Policy, error) {
 	if obj.CurrentSpecID == "" {
-		return nil, errs.New(NoActiveSpecCause, "Project %s has no active project spec", obj.Name)
+		// If there is no set spec ID, it means the project doesn't yet have a policy
+		return nil, nil
 	}
 
 	return r.Database.Projects().GetProjectSpec(ctx, obj.CurrentSpecID)
 }
 
 func (r *projectResolver) Contributors(ctx context.Context, obj *models.Project) ([]*models.Contributor, error) {
-	// TODO -- can this not be a copy of listContributors?
 	contribs, err := r.Database.Contributors().List(ctx, obj.Label)
 	if err != nil {
 		return nil, err
@@ -208,12 +386,24 @@ func (r *queryResolver) Project(ctx context.Context, id *string, label *models.L
 		return nil, errs.New(fw.InvalidParametersCause, "Must provide an id or label")
 	}
 
+	var project *models.Project
+	var err error
+
 	if id != nil {
-		return r.Database.Projects().GetByID(ctx, *id)
+		project, err = r.Database.Projects().GetByID(ctx, *id)
+	} else {
+		project, err = r.Database.Projects().Get(ctx, *label)
 	}
 
-	// otherwise, get by label
-	return r.Database.Projects().Get(ctx, *label)
+	if err != nil {
+		if err.Error() == "no rows" {
+			return nil, fmt.Errorf("could not find %s", label)
+		}
+
+		return nil, err
+	}
+
+	return project, nil
 }
 
 func (r *queryResolver) ListContributors(ctx context.Context, projectLabel models.Label) ([]*models.Contributor, error) {
@@ -231,6 +421,14 @@ func (r *queryResolver) ListContributors(ctx context.Context, projectLabel model
 	return contributors, nil
 }
 
+func (r *suggestionResolver) Project(ctx context.Context, obj *models.Suggestion) (*models.Project, error) {
+	return r.Database.Projects().GetByID(ctx, obj.ProjectID)
+}
+
+func (r *suggestionResolver) Policy(ctx context.Context, obj *models.Suggestion) (*models.Policy, error) {
+	return r.Database.Projects().GetProjectSpec(ctx, obj.PolicyID)
+}
+
 // Contributor returns generated.ContributorResolver implementation.
 func (r *Resolver) Contributor() generated.ContributorResolver { return &contributorResolver{r} }
 
@@ -243,7 +441,11 @@ func (r *Resolver) Policy() generated.PolicyResolver { return &policyResolver{r}
 // Project returns generated.ProjectResolver implementation.
 func (r *Resolver) Project() generated.ProjectResolver { return &projectResolver{r} }
 
+// Suggestion returns generated.SuggestionResolver implementation.
+func (r *Resolver) Suggestion() generated.SuggestionResolver { return &suggestionResolver{r} }
+
 type contributorResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type policyResolver struct{ *Resolver }
 type projectResolver struct{ *Resolver }
+type suggestionResolver struct{ *Resolver }

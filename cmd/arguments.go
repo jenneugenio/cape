@@ -66,6 +66,33 @@ var (
 			return models.ProjectDescription(in), nil
 		},
 	}
+
+	SuggestionNameArg = &Argument{
+		Name:        "name",
+		Description: "The title for your suggestion.",
+		Required:    true,
+		Processor: func(in string) (interface{}, error) {
+			return models.ProjectDisplayName(in), nil
+		},
+	}
+
+	SuggestionDescriptionArg = &Argument{
+		Name:        "description",
+		Description: "Describe your policy suggestion.",
+		Required:    false,
+		Processor: func(in string) (interface{}, error) {
+			return models.ProjectDescription(in), nil
+		},
+	}
+
+	SuggestionIDArg = &Argument{
+		Name:        "suggestion-id",
+		Description: "The ID for your policy suggestion.",
+		Required:    false,
+		Processor: func(in string) (interface{}, error) {
+			return in, nil
+		},
+	}
 )
 
 func LabelArg(f string) *Argument {

@@ -73,6 +73,11 @@ type ProjectsDB interface {
 
 	CreateProjectSpec(context.Context, models.Policy) error
 	GetProjectSpec(context.Context, string) (*models.Policy, error)
+
+	CreateSuggestion(context.Context, models.Suggestion) error
+	GetSuggestions(context.Context, models.Label) ([]models.Suggestion, error)
+	GetSuggestion(context.Context, string) (*models.Suggestion, error)
+	UpdateSuggestion(context.Context, models.Suggestion) error
 }
 
 // Options

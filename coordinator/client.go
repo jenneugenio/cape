@@ -460,6 +460,7 @@ func (c *Client) ListProjects(ctx context.Context, status models.ProjectStatus) 
 
 type GetProjectResponse struct {
 	*models.Project
+	Policy       *models.Policy   `json:"current_spec"`
 	Contributors []GQLContributor `json:"contributors"`
 }
 
@@ -488,10 +489,18 @@ func (c *Client) GetProject(ctx context.Context, id string, label *models.Label)
 				created_at,
 				updated_at,
 
+				current_spec {
+					transformations
+					rules
+				}
+					
+
 				contributors {
 					id
 					user {
 						id
+						name
+						email
 					}
 					role {
 						id
@@ -546,6 +555,170 @@ func (c *Client) UpdateProjectSpec(ctx context.Context, projectLabel models.Labe
 
 	p.CurrentSpecID = s.ID
 	return p, s, nil
+}
+
+type SuggestPolicyResponse struct {
+	Suggestion models.Suggestion `json:"suggestProjectPolicy"`
+}
+
+func (c *Client) SuggestPolicy(
+	ctx context.Context,
+	projectLabel models.Label,
+	name models.ProjectDisplayName,
+	description models.ProjectDescription,
+	spec *models.PolicyFile) (*models.Suggestion, error) {
+	variables := make(map[string]interface{})
+	variables["project"] = &projectLabel
+	variables["projectSpecFile"] = spec
+	variables["name"] = name
+	variables["description"] = description
+
+	var resp SuggestPolicyResponse
+
+	err := c.transport.Raw(ctx, `
+		mutation SuggestProjectPolicy(
+			$project: ModelLabel!, 
+			$projectSpecFile: ProjectSpecFile!,
+			$name: String!
+			$description: String!) {
+			suggestProjectPolicy(label: $project, name: $name, description: $description, request: $projectSpecFile) {
+				id
+				state
+				title
+				description
+				created_at
+				updated_at
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.Suggestion, nil
+}
+
+type GetProjectSuggestionsResponse struct {
+	Suggestions []models.Suggestion `json:"getProjectSuggestions"`
+}
+
+func (c *Client) GetProjectSuggestions(ctx context.Context, projectLabel models.Label) ([]models.Suggestion, error) {
+	variables := make(map[string]interface{})
+	variables["project"] = &projectLabel
+
+	var resp GetProjectSuggestionsResponse
+
+	err := c.transport.Raw(ctx, `
+		mutation GetProjectSuggestions($project: ModelLabel!) {
+			getProjectSuggestions(label: $project) {
+				state
+				title
+				id
+				created_at
+				updated_at
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Suggestions, nil
+}
+
+type ProjectSuggestion struct {
+	*models.Suggestion
+	Policy  models.Policy  `json:"policy"`
+	Project models.Project `json:"project"`
+}
+
+type GetProjectSuggestionResponse struct {
+	SuggestionResponse ProjectSuggestion `json:"getProjectSuggestion"`
+}
+
+func (c *Client) GetProjectSuggestion(ctx context.Context, id string) (*ProjectSuggestion, error) {
+	variables := make(map[string]interface{})
+	variables["id"] = id
+
+	var resp GetProjectSuggestionResponse
+
+	err := c.transport.Raw(ctx, `
+		mutation GetProjectSuggestion($id: String!) {
+			getProjectSuggestion(id: $id) {
+				state
+				title
+				description
+				id
+				project {
+					id
+					name
+					label
+					description
+					status
+				}
+				policy {
+					id
+					rules
+					transformations
+				}
+				created_at
+				updated_at
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.SuggestionResponse, nil
+}
+
+type RejectSuggestionResponse struct {
+	Project models.Project `json:"rejectProjectSuggestion"`
+}
+
+func (c *Client) RejectSuggestion(ctx context.Context, suggestion models.Suggestion) error {
+	variables := make(map[string]interface{})
+	variables["id"] = suggestion.ID
+
+	var resp RejectSuggestionResponse
+
+	err := c.transport.Raw(ctx, `
+		mutation RejectProjectSuggestion($id: String!) {
+			rejectProjectSuggestion(id: $id) {
+				id
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type ApproveSuggestionResponse struct {
+	Project models.Project `json:"approveProjectSuggestion"`
+}
+
+func (c *Client) ApproveSuggestion(ctx context.Context, suggestion models.Suggestion) error {
+	variables := make(map[string]interface{})
+	variables["id"] = suggestion.ID
+
+	var resp ApproveSuggestionResponse
+
+	err := c.transport.Raw(ctx, `
+		mutation ApproveProjectSuggestion($id: String!) {
+			approveProjectSuggestion(id: $id) {
+				id
+			}
+		}
+	`, variables, &resp)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type UpdateProjectResponse struct {

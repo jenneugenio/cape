@@ -204,4 +204,75 @@ func TestProjectSpecCreate(t *testing.T) {
 		gm.Expect(p.Status).To(gm.Equal(models.ProjectActive))
 		gm.Expect(p.CurrentSpecID).To(gm.Equal(s.ID))
 	})
+
+	t.Run("Can suggest a spec", func(t *testing.T) {
+		p, err := client.CreateProject(ctx, "suggest-me", nil, "This is my project")
+		gm.Expect(err).To(gm.BeNil())
+
+		suggestion, err := client.SuggestPolicy(ctx, p.Label, "Make a change", "it's for the best", spec)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(suggestion.State).To(gm.Equal(models.SuggestionPending))
+	})
+
+	t.Run("Can list suggestions", func(t *testing.T) {
+		p, err := client.CreateProject(ctx, "suggest-me-lots", nil, "This is my project")
+		gm.Expect(err).To(gm.BeNil())
+
+		for i := 0; i < 10; i++ {
+			_, err := client.SuggestPolicy(ctx, p.Label, "Make a change", "it's for the best", spec)
+			gm.Expect(err).To(gm.BeNil())
+		}
+
+		suggestions, err := client.GetProjectSuggestions(ctx, p.Label)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(len(suggestions)).To(gm.Equal(10))
+	})
+
+	t.Run("Can approve suggestions", func(t *testing.T) {
+		p, err := client.CreateProject(ctx, "approve-me", nil, "This is my project")
+		gm.Expect(err).To(gm.BeNil())
+
+		s, err := client.SuggestPolicy(ctx, p.Label, "Make a change", "it's for the best", spec)
+		gm.Expect(err).To(gm.BeNil())
+		err = client.ApproveSuggestion(ctx, *s)
+		gm.Expect(err).To(gm.BeNil())
+
+		projectResp, err := client.GetProject(ctx, p.ID, nil)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(projectResp.Policy.ID).To(gm.Equal(s.PolicyID))
+
+		suggs, err := client.GetProjectSuggestions(ctx, "approve-me")
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(suggs[0].State).To(gm.Equal(models.SuggestionApproved))
+	})
+
+	t.Run("Can reject suggestions", func(t *testing.T) {
+		p, err := client.CreateProject(ctx, "reject-me", nil, "This is my project")
+		gm.Expect(err).To(gm.BeNil())
+
+		s, err := client.SuggestPolicy(ctx, p.Label, "Make a change", "it's for the best", spec)
+		gm.Expect(err).To(gm.BeNil())
+		err = client.RejectSuggestion(ctx, *s)
+		gm.Expect(err).To(gm.BeNil())
+
+		suggs, err := client.GetProjectSuggestions(ctx, "reject-me")
+		gm.Expect(err).To(gm.BeNil())
+
+		gm.Expect(suggs[0].State).To(gm.Equal(models.SuggestionRejected))
+	})
+
+	t.Run("Can get a specific suggestion", func(t *testing.T) {
+		p, err := client.CreateProject(ctx, "get-me", nil, "This is my project")
+		gm.Expect(err).To(gm.BeNil())
+
+		s, err := client.SuggestPolicy(ctx, p.Label, "Make a change", "it's for the best", spec)
+		gm.Expect(err).To(gm.BeNil())
+
+		resp, err := client.GetProjectSuggestion(ctx, s.ID)
+		gm.Expect(err).To(gm.BeNil())
+		gm.Expect(resp.Project.Label).To(gm.Equal(models.Label("get-me")))
+		gm.Expect(resp.State).To(gm.Equal(models.SuggestionPending))
+		gm.Expect(len(resp.Policy.Rules) > 0).To(gm.BeTrue())
+	})
 }

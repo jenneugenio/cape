@@ -132,6 +132,104 @@ func TestProjectsCreate(t *testing.T) {
 		gm.Expect(len(u.Calls)).To(gm.Equal(1))
 		gm.Expect(u.Calls[0].Name).To(gm.Equal("template"))
 	})
+
+	t.Run("Can suggest a policy", func(t *testing.T) {
+		resp := coordinator.SuggestPolicyResponse{
+			Suggestion: models.Suggestion{
+				ID: "123",
+			},
+		}
+
+		app, _ := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
+		err := app.Run([]string{
+			"cape", "projects", "suggestions", "create",
+			"--from-spec", "./testdata/project_spec.yaml",
+			"my-project",
+			"\"My Suggestion\"", "\"Rocks\"",
+			p.Label.String(),
+		})
+
+		gm.Expect(err).To(gm.BeNil())
+	})
+
+	t.Run("Can list suggestions", func(t *testing.T) {
+		resp := coordinator.GetProjectSuggestionsResponse{
+			Suggestions: []models.Suggestion{
+				{
+					ID: "123",
+				},
+			},
+		}
+
+		app, _ := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
+		err := app.Run([]string{
+			"cape", "projects", "suggestions", "list",
+			"my-project",
+			p.Label.String(),
+		})
+
+		gm.Expect(err).To(gm.BeNil())
+	})
+
+	t.Run("Can get a suggestions", func(t *testing.T) {
+		resp := coordinator.GetProjectSuggestionResponse{
+			SuggestionResponse: coordinator.ProjectSuggestion{
+				Suggestion: &models.Suggestion{
+					ID: "123",
+				},
+			},
+		}
+
+		app, _ := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
+		err := app.Run([]string{
+			"cape", "projects", "suggestions", "get", "123",
+			p.Label.String(),
+		})
+
+		gm.Expect(err).To(gm.BeNil())
+	})
+
+	t.Run("Can reject suggestions", func(t *testing.T) {
+		resp := coordinator.RejectSuggestionResponse{}
+		app, _ := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
+		err := app.Run([]string{
+			"cape", "projects", "suggestions", "reject", "123",
+			p.Label.String(),
+		})
+
+		gm.Expect(err).To(gm.BeNil())
+	})
+
+	t.Run("Can accept suggestions", func(t *testing.T) {
+		resp := coordinator.ApproveSuggestionResponse{}
+		app, _ := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: resp,
+			},
+		})
+		err := app.Run([]string{
+			"cape", "projects", "suggestions", "approve", "123",
+			p.Label.String(),
+		})
+
+		gm.Expect(err).To(gm.BeNil())
+	})
 }
 
 func TestProjectsList(t *testing.T) {

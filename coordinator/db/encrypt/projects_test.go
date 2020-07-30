@@ -199,3 +199,19 @@ func (t *testPgProjects) List(_ context.Context) ([]models.Project, error) {
 func (t *testPgProjects) ListByStatus(_ context.Context, _ models.ProjectStatus) ([]models.Project, error) {
 	panic("not implemented")
 }
+
+func (t *testPgProjects) CreateSuggestion(_ context.Context, _ models.Suggestion) error {
+	panic("not implemented")
+}
+
+func (t *testPgProjects) GetSuggestions(_ context.Context, _ models.Label) ([]models.Suggestion, error) {
+	panic("not implemented")
+}
+
+func (t *testPgProjects) GetSuggestion(_ context.Context, _ string) (*models.Suggestion, error) {
+	panic("not implemented")
+}
+
+func (t *testPgProjects) UpdateSuggestion(_ context.Context, _ models.Suggestion) error {
+	panic("not implemented")
+}

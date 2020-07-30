@@ -113,6 +113,66 @@ func (p *pgProject) GetProjectSpec(ctx context.Context, id string) (*models.Poli
 	return &spec, err
 }
 
+func (p *pgProject) CreateSuggestion(ctx context.Context, suggestion models.Suggestion) error {
+	ctx, cancel := context.WithTimeout(ctx, p.timeout)
+	defer cancel()
+
+	s := `insert into suggestions (data) values ($1)`
+	_, err := p.pool.Exec(ctx, s, suggestion)
+
+	return err
+}
+
+func (p *pgProject) GetSuggestions(ctx context.Context, projectLabel models.Label) ([]models.Suggestion, error) {
+	ctx, cancel := context.WithTimeout(ctx, p.timeout)
+	defer cancel()
+
+	s := `select data from suggestions where project_id = (select id from projects where projects.data->>'label' = $1)`
+	rows, err := p.pool.Query(ctx, s, projectLabel)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var suggestions []models.Suggestion
+	for rows.Next() {
+		var s models.Suggestion
+		err = rows.Scan(&s)
+		if err != nil {
+			return nil, err
+		}
+
+		suggestions = append(suggestions, s)
+	}
+
+	return suggestions, err
+}
+
+func (p *pgProject) GetSuggestion(ctx context.Context, id string) (*models.Suggestion, error) {
+	ctx, cancel := context.WithTimeout(ctx, p.timeout)
+	defer cancel()
+
+	s := `select data from suggestions where id = $1`
+	row := p.pool.QueryRow(ctx, s, id)
+	var suggestion models.Suggestion
+
+	err := row.Scan(&suggestion)
+	if err != nil {
+		return nil, err
+	}
+
+	return &suggestion, err
+}
+
+func (p *pgProject) UpdateSuggestion(ctx context.Context, suggestion models.Suggestion) error {
+	ctx, cancel := context.WithTimeout(ctx, p.timeout)
+	defer cancel()
+
+	s := `update suggestions set data = $1 where id = $2`
+	_, err := p.pool.Exec(ctx, s, suggestion, suggestion.ID)
+	return err
+}
+
 func (p *pgProject) List(ctx context.Context) ([]models.Project, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()

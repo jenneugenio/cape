@@ -3,6 +3,7 @@ scalar ProjectDisplayName
 scalar ProjectDescription
 scalar NamedTransformation
 scalar Rule
+scalar SuggestionState
 
 type Project {
     id: String!
@@ -38,6 +39,17 @@ type Contributor {
     updated_at: Time!
 }
 
+type Suggestion {
+    id: String!
+    project: Project!
+    policy: Policy!
+    title: String!
+    description: String!
+    state: SuggestionState!
+    created_at: Time!
+    updated_at: Time!
+}
+
 input CreateProjectRequest {
     name: ProjectDisplayName!
     label: ModelLabel
@@ -64,7 +76,13 @@ extend type Query {
 extend type Mutation {
     createProject(project: CreateProjectRequest!): Project!
     updateProject(id: String, label: ModelLabel, update: UpdateProjectRequest!): Project!
-    updateProjectSpec(id: String label: ModelLabel, request: ProjectSpecFile!): Project!
+    updateProjectSpec(id: String, label: ModelLabel, request: ProjectSpecFile!): Project!
+
+    suggestProjectPolicy(label: ModelLabel!, name: String!, description: String!, request: ProjectSpecFile!): Suggestion!
+    getProjectSuggestions(label: ModelLabel!): [Suggestion!]!
+    approveProjectSuggestion(id: String!): Project!
+    rejectProjectSuggestion(id: String!): Project!
+    getProjectSuggestion(id: String!): Suggestion!
 
     archiveProject(id: String, label: ModelLabel): Project!
     unarchiveProject(id: String, label: ModelLabel): Project!
