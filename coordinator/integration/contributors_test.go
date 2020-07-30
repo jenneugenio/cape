@@ -35,7 +35,7 @@ func TestContributors(t *testing.T) {
 		user, _, err := client.CreateUser(ctx, "Noname Mcgee", "dont@me.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		contributor, err := client.AddContributor(ctx, *project, *user, models.ProjectContributorRole)
+		contributor, err := client.AddContributor(ctx, *project, user.Email, models.ProjectContributorRole)
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(contributor).ToNot(gm.BeNil())
 	})
@@ -44,10 +44,10 @@ func TestContributors(t *testing.T) {
 		user, _, err := client.CreateUser(ctx, "Double Derry", "dd@cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.AddContributor(ctx, *project, *user, models.ProjectContributorRole)
+		_, err = client.AddContributor(ctx, *project, user.Email, models.ProjectContributorRole)
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.AddContributor(ctx, *project, *user, models.ProjectContributorRole)
+		_, err = client.AddContributor(ctx, *project, user.Email, models.ProjectContributorRole)
 		gm.Expect(err).ToNot(gm.BeNil())
 		gm.Expect(err.Error()).To(gm.Equal("unknown_cause: duplicate key"))
 	})
@@ -76,7 +76,7 @@ func TestContributors(t *testing.T) {
 		user, _, err := client.CreateUser(ctx, "Remove McMee", "rm@cape.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.AddContributor(ctx, *project, *user, models.ProjectContributorRole)
+		_, err = client.AddContributor(ctx, *project, user.Email, models.ProjectContributorRole)
 		gm.Expect(err).To(gm.BeNil())
 
 		contributors, err := client.ListContributors(ctx, *project)

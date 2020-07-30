@@ -459,17 +459,18 @@ func (c *Client) ListProjects(ctx context.Context, status models.ProjectStatus) 
 	return resp.Projects, nil
 }
 
-type GetProjectResponse struct {
+type GetProject struct {
 	*models.Project
 	Policy       *models.Policy   `json:"current_spec"`
 	Contributors []GQLContributor `json:"contributors"`
 }
 
-func (c *Client) GetProject(ctx context.Context, id string, label *models.Label) (*GetProjectResponse, error) {
-	var resp struct {
-		Project GetProjectResponse `json:"project"`
-	}
+type GetProjectResponse struct {
+	GetProject GetProject `json:"project"`
+}
 
+func (c *Client) GetProject(ctx context.Context, id string, label *models.Label) (*GetProject, error) {
+	var resp GetProjectResponse
 	variables := make(map[string]interface{})
 	if id != "" {
 		variables["id"] = id
@@ -515,7 +516,7 @@ func (c *Client) GetProject(ctx context.Context, id string, label *models.Label)
 		return nil, err
 	}
 
-	return &resp.Project, nil
+	return &resp.GetProject, nil
 }
 
 type UpdateProjectSpecResponseBody struct {
@@ -769,10 +770,10 @@ type UpdateContributorResponse struct {
 	User                *models.User `json:"user"`
 }
 
-func (c *Client) AddContributor(ctx context.Context, project models.Project, user models.User, role models.Label) (*models.Contributor, error) {
+func (c *Client) AddContributor(ctx context.Context, project models.Project, user models.Email, role models.Label) (*models.Contributor, error) {
 	variables := map[string]interface{}{
 		"project_label": project.Label,
-		"email":         user.Email,
+		"email":         user,
 		"role":          role,
 	}
 
@@ -849,6 +850,8 @@ func (c *Client) ListContributors(ctx context.Context, project models.Project) (
 
 			user {
 				id
+				name
+				email
 			}
 
 			project {

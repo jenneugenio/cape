@@ -83,7 +83,7 @@ func TestRoles(t *testing.T) {
 		u, _, err := client.CreateUser(ctx, "Abc Def", "alphabet@person.com")
 		gm.Expect(err).To(gm.BeNil())
 
-		_, err = client.AddContributor(ctx, *p, *u, models.ProjectContributorRole)
+		_, err = client.AddContributor(ctx, *p, u.Email, models.ProjectContributorRole)
 		gm.Expect(err).To(gm.BeNil())
 
 		err = client.SetProjectRole(ctx, "alphabet@person.com", label, models.ProjectReaderRole)

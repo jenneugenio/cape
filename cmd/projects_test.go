@@ -146,7 +146,7 @@ func TestProjectsCreate(t *testing.T) {
 			},
 		})
 		err := app.Run([]string{
-			"cape", "projects", "suggestions", "create",
+			"cape", "projects", "policy", "create",
 			"--from-spec", "./testdata/project_spec.yaml",
 			"my-project",
 			"\"My Suggestion\"", "\"Rocks\"",
@@ -171,7 +171,7 @@ func TestProjectsCreate(t *testing.T) {
 			},
 		})
 		err := app.Run([]string{
-			"cape", "projects", "suggestions", "list",
+			"cape", "projects", "policy", "list-suggestions",
 			"my-project",
 			p.Label.String(),
 		})
@@ -180,21 +180,28 @@ func TestProjectsCreate(t *testing.T) {
 	})
 
 	t.Run("Can get a suggestions", func(t *testing.T) {
-		resp := coordinator.GetProjectSuggestionResponse{
-			SuggestionResponse: coordinator.ProjectSuggestion{
-				Suggestion: &models.Suggestion{
-					ID: "123",
-				},
-			},
-		}
-
 		app, _ := NewHarness([]*coordinator.MockResponse{
 			{
-				Value: resp,
+				Value: coordinator.GetProjectResponse{
+					GetProject: coordinator.GetProject{
+						Project: &models.Project{
+							ID: "1234",
+						},
+					},
+				},
+			},
+			{
+				Value: coordinator.GetProjectSuggestionResponse{
+					SuggestionResponse: coordinator.ProjectSuggestion{
+						Suggestion: &models.Suggestion{
+							ID: "123",
+						},
+					},
+				},
 			},
 		})
 		err := app.Run([]string{
-			"cape", "projects", "suggestions", "get", "123",
+			"cape", "projects", "policy", "get", "abc123",
 			p.Label.String(),
 		})
 
@@ -209,7 +216,7 @@ func TestProjectsCreate(t *testing.T) {
 			},
 		})
 		err := app.Run([]string{
-			"cape", "projects", "suggestions", "reject", "123",
+			"cape", "projects", "policy", "reject", "123",
 			p.Label.String(),
 		})
 
@@ -224,7 +231,55 @@ func TestProjectsCreate(t *testing.T) {
 			},
 		})
 		err := app.Run([]string{
-			"cape", "projects", "suggestions", "approve", "123",
+			"cape", "projects", "policy", "approve", "123",
+			p.Label.String(),
+		})
+
+		gm.Expect(err).To(gm.BeNil())
+	})
+
+	t.Run("Can list contributors", func(t *testing.T) {
+		projectResponse := coordinator.GetProjectResponse{
+			GetProject: coordinator.GetProject{
+				Project: &models.Project{},
+			},
+		}
+		contribResponse := coordinator.ListContributorsResponse{
+			Contributors: []coordinator.GQLContributor{},
+		}
+		app, _ := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: projectResponse,
+			},
+			{
+				Value: contribResponse,
+			},
+		})
+		err := app.Run([]string{
+			"cape", "projects", "contributors", "list", "my-project",
+			p.Label.String(),
+		})
+
+		gm.Expect(err).To(gm.BeNil())
+	})
+
+	t.Run("Can add contributors", func(t *testing.T) {
+		projectResponse := coordinator.GetProjectResponse{
+			GetProject: coordinator.GetProject{
+				Project: &models.Project{},
+			},
+		}
+		contribResponse := coordinator.UpdateContributorResponse{}
+		app, _ := NewHarness([]*coordinator.MockResponse{
+			{
+				Value: projectResponse,
+			},
+			{
+				Value: contribResponse,
+			},
+		})
+		err := app.Run([]string{
+			"cape", "projects", "contributors", "add", "friend@cape.com", "my-project", "project-owner",
 			p.Label.String(),
 		})
 
