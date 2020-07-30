@@ -6,7 +6,7 @@ import (
 
 func init() {
 	logoutCmd := &Command{
-		Usage: "Removes session on the client and the server",
+		Usage: "Removes session on the client and the server.",
 		Command: &cli.Command{
 			Name:   "logout",
 			Action: handleSessionOverrides(logoutCmd),

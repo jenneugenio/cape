@@ -111,7 +111,7 @@ func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *string, la
 
 	// Insert the spec
 	// TODO -- How do you specify the parent? This concept doesn't make sense until we have proposals & diffing
-	spec := models.NewPolicy(project.ID, nil, request.Policy, request.Transformations)
+	spec := models.NewPolicy(project.ID, nil, request.Rules, request.Transformations)
 	err = r.Database.Projects().CreateProjectSpec(ctx, spec)
 	if err != nil {
 		return nil, err
@@ -152,10 +152,6 @@ func (r *policyResolver) Project(ctx context.Context, obj *models.Policy) (*mode
 
 func (r *policyResolver) Parent(ctx context.Context, obj *models.Policy) (*models.Policy, error) {
 	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *policyResolver) Policy(ctx context.Context, obj *models.Policy) ([]*models.Rule, error) {
-	return obj.Rules, nil
 }
 
 func (r *projectResolver) CurrentSpec(ctx context.Context, obj *models.Project) (*models.Policy, error) {

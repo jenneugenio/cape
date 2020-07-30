@@ -14,7 +14,7 @@ import (
 
 func init() {
 	projectsCreateCmd := &Command{
-		Usage:     "Creates a project in Cape",
+		Usage:     "Create a project in Cape.",
 		Arguments: []*Argument{ProjectNameArg, ProjectDescriptionArg},
 		Examples: []*Example{
 			{
@@ -33,7 +33,7 @@ func init() {
 
 	// TODO -- needs status filtering
 	projectsListCmd := &Command{
-		Usage: "List your Cape projects",
+		Usage: "List your Cape projects.",
 		Examples: []*Example{
 			{
 				Example:     `cape projects list"`,
@@ -50,7 +50,7 @@ func init() {
 	}
 
 	projectsUpdateCmd := &Command{
-		Usage:     "Update a projects attributes",
+		Usage:     "Update a project's attributes.",
 		Arguments: []*Argument{ProjectLabelArg},
 		Examples: []*Example{
 			{
@@ -90,7 +90,7 @@ func init() {
 	}
 
 	projectsCmd := &Command{
-		Usage: "Commands for interacting with Cape projects",
+		Usage: "Commands for interacting with Cape projects.",
 		Command: &cli.Command{
 			Name: "projects",
 			Subcommands: []*cli.Command{

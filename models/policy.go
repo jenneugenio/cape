@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/manifoldco/go-base64"
-	"github.com/mitchellh/mapstructure"
 	"io"
 	"strconv"
 	"time"
+
+	"github.com/manifoldco/go-base64"
+	"github.com/mitchellh/mapstructure"
 
 	"sigs.k8s.io/yaml"
 )
@@ -44,7 +45,7 @@ func (r Rule) MarshalGQL(w io.Writer) {
 
 type PolicyFile struct {
 	Transformations []NamedTransformation `json:"transformations"`
-	Rules           []*Rule               `json:"policy"`
+	Rules           []*Rule               `json:"rules"`
 }
 
 type Match struct {
@@ -197,7 +198,7 @@ type Policy struct {
 	ProjectID       string                 `json:"project_id"`
 	ParentID        *string                `json:"parent_id"`
 	Transformations []*NamedTransformation `json:"transformations"`
-	Rules           []*Rule                `json:"policy"`
+	Rules           []*Rule                `json:"rules"`
 	Version         uint8                  `json:"version"`
 	CreatedAt       time.Time              `json:"created_at"`
 	UpdatedAt       time.Time              `json:"updated_at"`

@@ -8,7 +8,7 @@ import (
 func init() {
 	loginCmd := &Command{
 
-		Usage:     "Creates a session on the coordinator",
+		Usage:     "Creates a session on the coordinator.",
 		Variables: []*EnvVar{capePasswordVar},
 		Command: &cli.Command{
 			Name:   "login",

@@ -49,7 +49,7 @@ type DeleteRecoveriesRequest struct {
 
 type ProjectSpecFile struct {
 	Transformations []*models.NamedTransformation `json:"transformations"`
-	Policy          []*models.Rule                `json:"policy"`
+	Rules           []*models.Rule                `json:"rules"`
 }
 
 type UpdateProjectRequest struct {

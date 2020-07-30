@@ -14,7 +14,7 @@ var (
 
 	ClusterURLArg = &Argument{
 		Name:        "url",
-		Description: "A url for the cluster",
+		Description: "A url for the cluster.",
 		Required:    true,
 		Processor: func(in string) (interface{}, error) {
 			return primitives.NewURL(in)
@@ -23,7 +23,7 @@ var (
 
 	UserEmailArg = &Argument{
 		Name:        "email",
-		Description: "An email for a user",
+		Description: "An email for a user.",
 		Required:    true,
 		Processor: func(in string) (interface{}, error) {
 			// validates!!
@@ -33,7 +33,7 @@ var (
 
 	TokenUserArg = &Argument{
 		Name:        "user",
-		Description: "The email of the user for this token",
+		Description: "The email of the user for this token.",
 		Required:    false,
 		Processor: func(in string) (interface{}, error) {
 			return primitives.NewEmail(in)
@@ -42,7 +42,7 @@ var (
 
 	TokenIDArg = &Argument{
 		Name:        "token-id",
-		Description: "The ID for the token",
+		Description: "The ID for the token.",
 		Required:    true,
 		Processor: func(in string) (interface{}, error) {
 			return database.DecodeFromString(in)
@@ -51,7 +51,7 @@ var (
 
 	ProjectNameArg = &Argument{
 		Name:        "name",
-		Description: "The name of your project",
+		Description: "The name of your project.",
 		Required:    true,
 		Processor: func(in string) (interface{}, error) {
 			return models.ProjectDisplayName(in), nil
@@ -60,7 +60,7 @@ var (
 
 	ProjectDescriptionArg = &Argument{
 		Name:        "description",
-		Description: "Describe what your project is for",
+		Description: "Describe what your project is for.",
 		Required:    false,
 		Processor: func(in string) (interface{}, error) {
 			return models.ProjectDescription(in), nil

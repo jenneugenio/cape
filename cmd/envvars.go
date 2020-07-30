@@ -8,7 +8,7 @@ var (
 	capePasswordVar = &EnvVar{
 		Name:        "CAPE_PASSWORD",
 		Required:    false,
-		Description: "The password used by a human to log into their Cape account",
+		Description: "The password used by a human to log into their Cape account.",
 		Processor: func(in string) (interface{}, error) {
 			if in == "" {
 				return in, nil

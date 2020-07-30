@@ -3,6 +3,9 @@
 before:
   hooks:
     - go mod download
+    # Meant to be run on github actions ubuntu runner
+    - sudo apt install -y zip
+    - zip -r capeprivacy-cape-postgres-{{.Version}}.zip coordinator/migrations/
 builds:
 - env:
   - CGO_ENABLED=0
@@ -19,6 +22,9 @@ builds:
      - -v
   ldflags:
      - -s -w -X github.com/capeprivacy/cape/version.Version={{.Version}} -X github.com/capeprivacy/cape/version.BuildData={{.Date}}
+release:
+  extra_files:
+    - glob: capeprivacy-cape-postgres-{{.Version}}.zip
 archives:
 - replacements:
     darwin: Darwin

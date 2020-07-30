@@ -13,7 +13,7 @@ func portFlag(name string, value int) cli.Flag {
 	return &cli.IntFlag{
 		Name:    "port",
 		Aliases: []string{"p"},
-		Usage:   fmt.Sprintf("The `PORT` the %s will attempt to listen on", name),
+		Usage:   fmt.Sprintf("The `PORT` the %s will attempt to listen on.", name),
 		Value:   value,
 		EnvVars: []string{"CAPE_PORT"},
 	}
@@ -23,7 +23,7 @@ func versionFlag() cli.Flag {
 	return &cli.BoolFlag{
 		Name:    "version",
 		Aliases: []string{"v"},
-		Usage:   "Display the current version of Cape",
+		Usage:   "Display the current version of Cape.",
 	}
 }
 
@@ -31,7 +31,7 @@ func helpFlag() cli.Flag {
 	return &cli.BoolFlag{
 		Name:    "help",
 		Aliases: []string{"h"},
-		Usage:   "Display documentation and examples for this command",
+		Usage:   "Display documentation and examples for this command.",
 	}
 }
 
@@ -39,7 +39,7 @@ func yesFlag() cli.Flag {
 	return &cli.BoolFlag{
 		Name:    "yes",
 		Aliases: []string{"y"},
-		Usage:   "If specified, the user will not be prompted to confirm their action before proceeding",
+		Usage:   "If specified, the user will not be prompted to confirm their action before proceeding.",
 		Value:   false,
 		EnvVars: []string{"CAPE_YES"},
 	}
@@ -49,7 +49,7 @@ func useClusterFlag() cli.Flag {
 	return &cli.BoolFlag{
 		Name:    "use",
 		Aliases: []string{"u"},
-		Usage:   "If provided, the cluster being created will also be set as the current cluster",
+		Usage:   "If provided, the cluster being created will also be set as the current cluster.",
 		EnvVars: []string{"CAPE_USE"},
 	}
 }
@@ -90,7 +90,7 @@ func loggingLevelFlag() cli.Flag {
 }
 
 func emailFlag() cli.Flag {
-	usage := "The email used to log into the cluster"
+	usage := "The email used to log into the cluster."
 	return &cli.StringFlag{
 		Name:    "email",
 		Usage:   usage,
@@ -99,7 +99,7 @@ func emailFlag() cli.Flag {
 }
 
 func clusterFlag() cli.Flag {
-	usage := "The cluster to login to"
+	usage := "The cluster to login to."
 	return &cli.StringFlag{
 		Name:    "cluster",
 		Usage:   usage,
@@ -120,7 +120,7 @@ func configFileOutFlag() cli.Flag {
 	return &cli.StringFlag{
 		Name:    "out",
 		Aliases: []string{"o"},
-		Usage:   "Where to output the config file",
+		Usage:   "Where to output the config file.",
 		Value:   "config.yaml",
 		EnvVars: []string{"CAPE_CONFIG_OUTPUT"},
 	}
@@ -144,7 +144,7 @@ func formatFlag() cli.Flag {
 func projectNameFlag() cli.Flag {
 	return &cli.StringFlag{
 		Name:    "name",
-		Usage:   "The name of the project",
+		Usage:   "The name of the project.",
 		EnvVars: []string{"CAPE_PROJECT_NAME"},
 	}
 }
@@ -152,7 +152,7 @@ func projectNameFlag() cli.Flag {
 func projectLabelFlag() cli.Flag {
 	return &cli.StringFlag{
 		Name:    "project",
-		Usage:   "The label identifier for the project",
+		Usage:   "The label identifier for the project.",
 		EnvVars: []string{"CAPE_PROJECT_LABEL"},
 	}
 }
@@ -160,7 +160,7 @@ func projectLabelFlag() cli.Flag {
 func projectDescriptionFlag() cli.Flag {
 	return &cli.StringFlag{
 		Name:    "description",
-		Usage:   "The description of the project",
+		Usage:   "The description of the project.",
 		EnvVars: []string{"CAPE_PROJECT_DESCRIPTION"},
 	}
 }
@@ -168,7 +168,7 @@ func projectDescriptionFlag() cli.Flag {
 func projectSpecFlag() cli.Flag {
 	return &cli.StringFlag{
 		Name:    "from-spec",
-		Usage:   "The spec file you wish to use",
+		Usage:   "The spec file you wish to use.",
 		EnvVars: []string{"CAPE_PROJECT_SPEC"},
 	}
 }

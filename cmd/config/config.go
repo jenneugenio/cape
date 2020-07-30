@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 
 	"github.com/manifoldco/go-base64"
@@ -26,6 +27,7 @@ const requiredPermissions = 0700
 var (
 	ErrNoCluster   = errors.New(MissingConfigCause, "Missing cluster configuration; please set via 'cape config clusters use'")
 	ErrMissingHome = errors.New(InvalidEnvCause, "The $HOME environment variable could not be found")
+	ErrUserInfo    = errors.New(InvalidEnvCause, "Unable to retrieve info about current user")
 )
 
 // Default returns a Config struct with the default values set
@@ -324,12 +326,12 @@ func FolderPath() (string, error) {
 		return filepath.Clean(capeHome), nil
 	}
 
-	home := os.Getenv("HOME")
-	if home == "" {
-		return "", ErrMissingHome
+	user, err := user.Current()
+	if err != nil {
+		return "", ErrUserInfo
 	}
 
-	return filepath.Join(home, ".cape"), nil
+	return filepath.Join(user.HomeDir, ".cape"), nil
 }
 
 // Parse reads the given file path and returns a Config object or returns an
@@ -340,7 +342,7 @@ func Parse() (*Config, error) {
 		return nil, err
 	}
 
-	src, err := os.Stat(filePath)
+	_, err = os.Stat(filePath)
 	if err != nil && !os.IsNotExist(err) {
 		return nil, err
 	}
@@ -348,10 +350,6 @@ func Parse() (*Config, error) {
 	cfg := Default()
 	if os.IsNotExist(err) {
 		return cfg, nil
-	}
-
-	if src.Mode().Perm() != requiredPermissions {
-		return nil, errors.New(InvalidPermissionsCause, "Invalid permissions for file %s, must be %o", filePath, requiredPermissions)
 	}
 
 	b, err := ioutil.ReadFile(filePath)
