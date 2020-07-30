@@ -89,18 +89,18 @@ func init() {
 		},
 	}
 
-	suggestionsCreateCmd := &Command{
+	policyCreateCmd := &Command{
 		Usage: "Suggest a policy change in a project.",
 		Examples: []*Example{
 			{
-				Example:     `cape projects suggestions create my-project "My Title" "Description for my change" --from-spec policy.yaml`,
-				Description: `Suggestions that my-project uses the policy declared in policy.yaml`,
+				Example:     `cape projects policy create my-project "My Title" "Description for my change" --from-spec policy.yaml`,
+				Description: `Create a policy suggestion in the project my-project`,
 			},
 		},
 		Arguments: []*Argument{ProjectLabelArg, SuggestionNameArg, SuggestionDescriptionArg},
 		Command: &cli.Command{
 			Name:   "create",
-			Action: handleSessionOverrides(suggestionsCreate),
+			Action: handleSessionOverrides(policyCreate),
 			Flags: []cli.Flag{
 				clusterFlag(),
 				projectSpecFlag(),
@@ -108,88 +108,107 @@ func init() {
 		},
 	}
 
-	suggestionsListCmd := &Command{
-		Usage: "List your a projects policy suggestions.",
+	policyListCmd := &Command{
+		Usage: "List the policy suggestions in a project.",
 		Examples: []*Example{
 			{
-				Example:     `cape projects suggestions list my-project`,
+				Example:     `cape projects policy list-suggestions my-project`,
 				Description: `Lists all of the policy suggestions in "my-project"`,
 			},
 		},
 		Arguments: []*Argument{ProjectLabelArg},
 		Command: &cli.Command{
-			Name:   "list",
-			Action: handleSessionOverrides(suggestionsList),
+			Name:   "list-suggestions",
+			Action: handleSessionOverrides(policyList),
 			Flags: []cli.Flag{
 				clusterFlag(),
 			},
 		},
 	}
 
-	suggestionsApproveCmd := &Command{
+	policyApproveCmd := &Command{
 		Usage: "Approve a policy suggestion.",
 		Examples: []*Example{
 			{
-				Example:     `cape projects suggestions approve <suggestion-id>`,
-				Description: `Makes the provided suggestion active on the project`,
+				Example:     `cape projects policy approve <suggestion-id>`,
+				Description: `Makes the provided policy suggestion active on the project`,
 			},
 		},
 		Arguments: []*Argument{SuggestionIDArg},
 		Command: &cli.Command{
 			Name:   "approve",
-			Action: handleSessionOverrides(suggestionsApprove),
+			Action: handleSessionOverrides(policyApprove),
 			Flags: []cli.Flag{
 				clusterFlag(),
 			},
 		},
 	}
 
-	suggestionsRejectCmd := &Command{
+	policyRejectCmd := &Command{
 		Usage: "Reject a policy suggestion.",
 		Examples: []*Example{
 			{
-				Example:     `cape projects suggestions reject <suggestion-id>`,
-				Description: `Makes the provided suggestion active on the project`,
+				Example:     `cape projects policy reject <suggestion-id>`,
+				Description: `Makes the provided policy suggestion active on the project`,
 			},
 		},
 		Arguments: []*Argument{SuggestionIDArg},
 		Command: &cli.Command{
 			Name:   "reject",
-			Action: handleSessionOverrides(suggestionsReject),
+			Action: handleSessionOverrides(policyReject),
 			Flags: []cli.Flag{
 				clusterFlag(),
 			},
 		},
 	}
 
-	suggestionGetCmd := &Command{
+	policyGetCmd := &Command{
+		Usage: "Get the active policy for a project.",
+		Examples: []*Example{
+			{
+				Example:     `cape projects policy get my-project`,
+				Description: `Get a detailed view of the projects active policy.`,
+			},
+		},
+		Arguments: []*Argument{ProjectLabelArg},
+		Command: &cli.Command{
+			Name:   "get",
+			Action: handleSessionOverrides(policyGet),
+			Flags: []cli.Flag{
+				clusterFlag(),
+			},
+		},
+	}
+
+	policyGetSuggestionCmd := &Command{
 		Usage: "Get more information about a policy suggestion.",
 		Examples: []*Example{
 			{
-				Example:     `cape projects suggestions get <suggestion-id>`,
-				Description: `Makes the provided suggestion active on the project.`,
+				Example:     `cape projects policy get-suggestion <suggestion-id>`,
+				Description: `Get a detailed view of the provided policy suggestion.`,
 			},
 		},
 		Arguments: []*Argument{SuggestionIDArg},
 		Command: &cli.Command{
-			Name:   "get",
-			Action: handleSessionOverrides(suggestionsGet),
+			Name:   "get-suggestion",
+			Action: handleSessionOverrides(policyGetSuggestion),
 			Flags: []cli.Flag{
 				clusterFlag(),
 			},
 		},
 	}
 
-	suggestionsCmd := &Command{
-		Usage: "Commands for interacting with policy suggestions.",
+	policyCmd := &Command{
+		Usage: "Commands for interacting with project policy.",
 		Command: &cli.Command{
-			Name: "suggestions",
+			Name: "policy",
 			Subcommands: []*cli.Command{
-				suggestionGetCmd.Package(),
-				suggestionsApproveCmd.Package(),
-				suggestionsRejectCmd.Package(),
-				suggestionsListCmd.Package(),
-				suggestionsCreateCmd.Package(),
+				policyGetCmd.Package(),
+				policyGetSuggestionCmd.Package(),
+				policyApproveCmd.Package(),
+				policyRejectCmd.Package(),
+				policyListCmd.Package(),
+				policyCreateCmd.Package(),
 			},
 		},
 	}
@@ -199,7 +218,7 @@ func init() {
 		Command: &cli.Command{
 			Name: "projects",
 			Subcommands: []*cli.Command{
-				suggestionsCmd.Package(),
+				policyCmd.Package(),
 				projectsCreateCmd.Package(),
 				projectsListCmd.Package(),
 				projectsUpdateCmd.Package(),
@@ -242,7 +261,7 @@ func projectsCreate(c *cli.Context) error {
 	return u.Details(details)
 }
 
-func suggestionsCreate(c *cli.Context) error {
+func policyCreate(c *cli.Context) error {
 	provider := GetProvider(c.Context)
 	client, err := provider.Client(c.Context)
 	if err != nil {
@@ -286,7 +305,7 @@ func suggestionsCreate(c *cli.Context) error {
 	return u.Details(details)
 }
 
-func suggestionsList(c *cli.Context) error {
+func policyList(c *cli.Context) error {
 	provider := GetProvider(c.Context)
 	client, err := provider.Client(c.Context)
 	if err != nil {
@@ -315,10 +334,10 @@ func suggestionsList(c *cli.Context) error {
 		}
 	}
 
-	return u.Template("\nFound {{ . | toString | faded }} project{{ . | pluralize \"s\"}}\n", len(suggs))
+	return u.Template("\nFound {{ . | toString | faded }} policy suggestion{{ . | pluralize \"s\"}}\n", len(suggs))
 }
 
-func suggestionsApprove(c *cli.Context) error {
+func policyApprove(c *cli.Context) error {
 	provider := GetProvider(c.Context)
 	client, err := provider.Client(c.Context)
 	if err != nil {
@@ -336,7 +355,7 @@ func suggestionsApprove(c *cli.Context) error {
 	return u.Template("\nPolicy is now {{ . | faded }}\n", "active")
 }
 
-func suggestionsReject(c *cli.Context) error {
+func policyReject(c *cli.Context) error {
 	provider := GetProvider(c.Context)
 	client, err := provider.Client(c.Context)
 	if err != nil {
@@ -354,7 +373,7 @@ func suggestionsReject(c *cli.Context) error {
 	return u.Template("\nPolicy suggestion rejected\n", nil)
 }
 
-func suggestionsGet(c *cli.Context) error {
+func policyGetSuggestion(c *cli.Context) error {
 	provider := GetProvider(c.Context)
 	client, err := provider.Client(c.Context)
 	if err != nil {
@@ -434,6 +453,47 @@ func projectsList(c *cli.Context) error {
 	}
 
 	return u.Template("\nFound {{ . | toString | faded }} project{{ . | pluralize \"s\"}}\n", len(projects))
+}
+
+func policyGet(c *cli.Context) error {
+	provider := GetProvider(c.Context)
+	client, err := provider.Client(c.Context)
+	if err != nil {
+		return err
+	}
+
+	deprecatedLabel := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
+	label := modelmigration.LabelFromPrimitive(deprecatedLabel)
+
+	project, err := client.GetProject(c.Context, "", &label)
+	if err != nil {
+		return err
+	}
+
+	u := provider.UI(c.Context)
+
+	if project.Policy == nil {
+		return u.Template("Project has no active policy\n", nil)
+	}
+
+	rules, err := yaml.Marshal(project.Policy.Rules)
+	if err != nil {
+		return err
+	}
+
+	transformations, err := yaml.Marshal(project.Policy.Transformations)
+	if err != nil {
+		return err
+	}
+
+	args := struct {
+		Rules           string
+		Transformations string
+	}{
+		string(rules), string(transformations),
+	}
+
+	return u.Template("policy:\n{{ .Rules }}\ntransformations:{{ .Transformations }}\n", args)
 }
 
 func updateProjectSpec(c *cli.Context, specFile string) error {
