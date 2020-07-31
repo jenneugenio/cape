@@ -2,7 +2,7 @@
 
 ![](https://github.com/capeprivacy/cape/workflows/Main/badge.svg)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Github Release](https://img.shields.io/github/v/release/capeprivacy/cape.svg?logo=github)](https://github.com/capeprivacy/cape/releases/tag/v0.0.1)
+[![Github Release](https://img.shields.io/github/v/release/capeprivacy/cape.svg?logo=github)](https://github.com/capeprivacy/cape/releases/latest)
 [![Chat on Slack](https://img.shields.io/badge/chat-on%20slack-7A5979.svg)](https://join.slack.com/t/capecommunity/shared_invite/zt-f8jeskkm-r9_FD0o4LkuQqhJSa~~IQA)
 
 Cape Core contains the key functionality of Cape Privacy, including:
