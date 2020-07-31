@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/capeprivacy/cape/cmd/ui"
+	"github.com/capeprivacy/cape/cmd/cape/ui"
 	"github.com/capeprivacy/cape/coordinator"
 )
 

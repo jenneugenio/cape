@@ -6,7 +6,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/capeprivacy/cape/cmd/config"
+	"github.com/capeprivacy/cape/cmd/cape/config"
 	"github.com/capeprivacy/cape/primitives"
 )
 

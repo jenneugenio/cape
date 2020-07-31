@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
 
-	"github.com/capeprivacy/cape/cmd/ui"
+	"github.com/capeprivacy/cape/cmd/cape/ui"
 	"github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"

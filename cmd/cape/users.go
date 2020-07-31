@@ -5,7 +5,7 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/capeprivacy/cape/cmd/ui"
+	"github.com/capeprivacy/cape/cmd/cape/ui"
 	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )

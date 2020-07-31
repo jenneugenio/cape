@@ -84,7 +84,7 @@ func (b Build) Binary(ctx context.Context) error {
 		return err
 	}
 
-	return golang.Build(ctx, version, "cmd", "bin/cape")
+	return golang.Build(ctx, version, "cmd/cape", "bin/cape")
 }
 
 // Generate generates any required files to build the binary (GraphQL, gRPC, Protobuf)

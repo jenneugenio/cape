@@ -4,7 +4,7 @@ import (
 	"github.com/capeprivacy/cape/models"
 	"testing"
 
-	"github.com/capeprivacy/cape/cmd/ui"
+	"github.com/capeprivacy/cape/cmd/cape/ui"
 	"github.com/capeprivacy/cape/coordinator"
 	gm "github.com/onsi/gomega"
 )

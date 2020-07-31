@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"github.com/capeprivacy/cape/cmd/config"
-	"github.com/capeprivacy/cape/cmd/ui"
+	"github.com/capeprivacy/cape/cmd/cape/config"
+	"github.com/capeprivacy/cape/cmd/cape/ui"
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/primitives"
 	"github.com/urfave/cli/v2"

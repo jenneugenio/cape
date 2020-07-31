@@ -7,7 +7,7 @@ import (
 	"github.com/capeprivacy/cape/primitives"
 	"sigs.k8s.io/yaml"
 
-	"github.com/capeprivacy/cape/cmd/ui"
+	"github.com/capeprivacy/cape/cmd/cape/ui"
 	"github.com/urfave/cli/v2"
 	"io/ioutil"
 )

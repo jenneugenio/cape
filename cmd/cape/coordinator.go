@@ -13,7 +13,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 
-	"github.com/capeprivacy/cape/cmd/ui"
+	"github.com/capeprivacy/cape/cmd/cape/ui"
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/coordinator/mailer"
 	"github.com/capeprivacy/cape/framework"

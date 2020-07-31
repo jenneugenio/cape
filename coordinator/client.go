@@ -105,7 +105,7 @@ func (c *Client) CreateUser(ctx context.Context, name models.Name, email models.
 	variables["email"] = email
 
 	err := c.transport.Raw(ctx, `
-		mutation CreateUser ($name: ModelName!, $email: ModelEmail!) {
+		mutation CreateUser ($name: Name!, $email: ModelEmail!) {
 			createUser(input: { name: $name, email: $email }) {
 				password
 				user {
