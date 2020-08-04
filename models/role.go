@@ -39,8 +39,6 @@ const (
 	ChangeProjectRole
 )
 
-type Principal interface{}
-
 const (
 	// AdminRole is the label of the admin role
 	AdminRole = Label("admin")
@@ -101,9 +99,15 @@ func withRules(perms ...Permission) Permission {
 	return p
 }
 
+// OrgRoles are roles that can occur outside the scope of a project. There are currently only
+// admin and user roles.
 var OrgRoles = []Label{AdminRole, UserRole}
+
+// ProjectRoles are roles that are only related to projects. Currently there is a project
+// owner, a contributor and a reader.
 var ProjectRoles = []Label{ProjectOwnerRole, ProjectContributorRole, ProjectReaderRole}
 
+// SystemRoles are all builtin roles
 var SystemRoles = append(OrgRoles, ProjectRoles...)
 
 func ValidOrgRole(role Label) bool {
@@ -137,8 +141,15 @@ func (p ProjectRolesMap) Get(l Label) (*Role, error) {
 	return &r, nil
 }
 
+// UserRoles represents the roles assigned to a user. A user
+// can only have one global role and then one project role per project
+// that they are a member of.
 type UserRoles struct {
-	Global   Role
+	// Global is the global role assigned to a user
+	Global Role
+
+	// Projects is a map between a projects Label and the role they have
+	// in that project.
 	Projects ProjectRolesMap
 }
 
@@ -163,6 +174,7 @@ func NewRole(label Label, system bool) Role {
 	}
 }
 
+// Can checks to see if a role can do an action
 func (r *Role) Can(action Permission) bool {
 	return DefaultPermissions[r.Label]&action != 0
 }

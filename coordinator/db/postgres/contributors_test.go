@@ -3,10 +3,12 @@ package capepg
 import (
 	"context"
 	"fmt"
+	"testing"
+
+	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/models"
 	"github.com/jackc/pgx/v4"
 	gm "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestAddContributor(t *testing.T) {
@@ -67,7 +69,7 @@ func TestGetContributor(t *testing.T) {
 	}{
 		{
 			name:        "querying a contributor that doesn't exist",
-			expectedErr: pgx.ErrNoRows,
+			expectedErr: db.ErrCannotFindContributor,
 			row: &testRow{
 				obj: []interface{}{},
 				err: nil,

@@ -8,7 +8,6 @@ import (
 )
 
 type Interface interface {
-	Policies() PolicyDB
 	Roles() RoleDB
 	Users() UserDB
 	Projects() ProjectsDB
@@ -17,14 +16,6 @@ type Interface interface {
 }
 
 // Interfaces
-
-type PolicyDB interface {
-	Create(context.Context, models.Policy) error
-	Delete(context.Context, models.Label) (DeleteStatus, error)
-	Get(context.Context, models.Label) (*models.Policy, error)
-	GetByID(context.Context, string) (*models.Policy, error)
-	List(ctx context.Context, opts *ListPolicyOptions) ([]models.Policy, error)
-}
 
 type UserDB interface {
 	Create(context.Context, models.User) error
@@ -119,3 +110,10 @@ const (
 
 var ErrDuplicateKey = errors.New("duplicate key")
 var ErrNoRows = errors.New("no rows")
+
+var ErrCannotFindUser = errors.New("cannot find requested user")
+var ErrCannotFindRole = errors.New("cannot find requested role")
+var ErrCannotFindProject = errors.New("cannot find requested project")
+var ErrCannotFindPolicy = errors.New("cannot find requested policy")
+var ErrCannotFindSuggestion = errors.New("cannot find requested suggestion")
+var ErrCannotFindContributor = errors.New("cannot find requested contributor")

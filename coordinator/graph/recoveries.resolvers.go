@@ -21,7 +21,7 @@ func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.Creat
 		// If the error is not found, we don't propagate it up, we pretend
 		// everything is groovy so an attacker can't enumerate email addresses
 		// through our recovery API
-		if err == db.ErrNoRows {
+		if err == db.ErrCannotFindUser {
 			logger.Info().Err(err).Msg("Could not find account to recover")
 			return nil, nil
 		}

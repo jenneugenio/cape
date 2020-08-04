@@ -163,7 +163,7 @@ func TestUserGet(t *testing.T) {
 		{
 			email:    models.Email("foo"),
 			wantUser: nil,
-			wantErr:  db.ErrNoRows,
+			wantErr:  db.ErrCannotFindUser,
 			row: testRow{
 				obj: []interface{}{EmptyUser},
 				err: pgx.ErrNoRows,
@@ -220,7 +220,7 @@ func TestUserGetByID(t *testing.T) {
 		{
 			id:       "idididid",
 			wantUser: nil,
-			wantErr:  db.ErrNoRows,
+			wantErr:  db.ErrCannotFindUser,
 			row: testRow{
 				obj: []interface{}{EmptyUser},
 				err: pgx.ErrNoRows,

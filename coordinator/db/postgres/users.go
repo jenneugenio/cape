@@ -99,7 +99,7 @@ func (p *pgUser) Get(ctx context.Context, e models.Email) (*models.User, error) 
 	err = row.Scan(user)
 	if err != nil {
 		if err.Error() == pgx.ErrNoRows.Error() {
-			return nil, db.ErrNoRows
+			return nil, db.ErrCannotFindUser
 		}
 		return nil, fmt.Errorf("error retrieving user: %w", err)
 	}
@@ -126,7 +126,7 @@ func (p *pgUser) GetByID(ctx context.Context, id string) (*models.User, error) {
 	err = row.Scan(user)
 	if err != nil {
 		if err.Error() == pgx.ErrNoRows.Error() {
-			return nil, db.ErrNoRows
+			return nil, db.ErrCannotFindUser
 		}
 		return nil, fmt.Errorf("error retrieving user: %w", err)
 	}

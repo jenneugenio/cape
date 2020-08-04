@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	sq "github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx/v4"
 	"strings"
 	"time"
+
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v4"
 
 	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/models"
@@ -39,7 +40,7 @@ func (r *pgRole) Get(ctx context.Context, label models.Label) (*models.Role, err
 	err = row.Scan(role)
 	if err != nil {
 		if err.Error() == pgx.ErrNoRows.Error() {
-			return nil, db.ErrNoRows
+			return nil, db.ErrCannotFindRole
 		}
 		return nil, err
 	}
@@ -66,7 +67,7 @@ func (r *pgRole) GetByID(ctx context.Context, ID string) (*models.Role, error) {
 	err = row.Scan(role)
 	if err != nil {
 		if err.Error() == pgx.ErrNoRows.Error() {
-			return nil, db.ErrNoRows
+			return nil, db.ErrCannotFindRole
 		}
 		return nil, err
 	}
@@ -74,18 +75,19 @@ func (r *pgRole) GetByID(ctx context.Context, ID string) (*models.Role, error) {
 	return role, nil
 }
 
+// List is not yet implemented
 func (r *pgRole) List(context.Context, *db.ListRoleOptions) ([]*models.Role, error) {
 	return nil, errors.New("not implemented")
 }
 
-// Return all of the roles (global & project) that a user belongs to
+// GetAll returns all of the roles (global & project) that a user belongs to
 func (r *pgRole) GetAll(ctx context.Context, userID string) (*models.UserRoles, error) {
 	ctx, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
 	// get the users global role
-	s := `select roles.data 
-			from roles, assignments 
+	s := `select roles.data
+			from roles, assignments
 			where roles.id = assignments.role_id and assignments.user_id = $1 and assignments.data->>'project_id' = '';`
 
 	userRoles := models.UserRoles{
@@ -98,10 +100,10 @@ func (r *pgRole) GetAll(ctx context.Context, userID string) (*models.UserRoles, 
 	}
 
 	s = `select projects.data->>'label' as project_label, roles.data as role
-		from 
-			roles, assignments, projects 
-		where 
-			assignments.data->>'role_id'=roles.data->>'id' and 
+		from
+			roles, assignments, projects
+		where
+			assignments.data->>'role_id'=roles.data->>'id' and
 			projects.data->>'id' = assignments.data->>'project_id' and
 			assignments.data->>'user_id' = $1;`
 
@@ -144,7 +146,7 @@ func (r *pgRole) SetOrgRole(ctx context.Context, email models.Email, label model
 		'role_id', roles.data->>'id')
 
 		from users, roles
-		where 
+		where
 			users.data->>'email' = $1 AND
 			roles.data->>'label' = $2;`
 
@@ -190,7 +192,7 @@ func (r *pgRole) SetProjectRole(ctx context.Context, email models.Email, project
 		'role_id', roles.data->>'id')
 
 		from users, roles, projects
-		where 
+		where
 			users.data->>'email' = $1 AND
 			projects.data->>'label' = $2 AND
 			roles.data->>'label' = $3;
@@ -227,8 +229,8 @@ func (r *pgRole) SetProjectRole(ctx context.Context, email models.Email, project
 }
 
 func (r *pgRole) GetOrgRole(ctx context.Context, email models.Email) (*models.Role, error) {
-	s := `select roles.data from roles, assignments, users 
-		where roles.data->>'id' = assignments.data->>'role_id' and 
+	s := `select roles.data from roles, assignments, users
+		where roles.data->>'id' = assignments.data->>'role_id' and
 		assignments.data->>'user_id' = users.data->>'id' and
 		users.data->>'email' = $1 and
 		assignments.data->>'project_id' = '';`
@@ -244,8 +246,8 @@ func (r *pgRole) GetOrgRole(ctx context.Context, email models.Email) (*models.Ro
 }
 
 func (r *pgRole) GetProjectRole(ctx context.Context, email models.Email, project string) (*models.Role, error) {
-	s := `select roles.data from roles, assignments, users 
-		where roles.data->>'id' = assignments.data->>'role_id' and 
+	s := `select roles.data from roles, assignments, users
+		where roles.data->>'id' = assignments.data->>'role_id' and
 		assignments.data->>'user_id' = users.data->>'id' and
 		users.data->>'email' = $1 and
 		assignments.data->>'project_id' = $2;`

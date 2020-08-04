@@ -3,11 +3,12 @@ package capepg
 import (
 	"context"
 	"fmt"
+	"time"
+
 	sq "github.com/Masterminds/squirrel"
 	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/models"
 	"github.com/jackc/pgx/v4"
-	"time"
 )
 
 type pgProject struct {
@@ -63,7 +64,7 @@ func (p *pgProject) Get(ctx context.Context, label models.Label) (*models.Projec
 	err = row.Scan(project)
 	if err != nil {
 		if err.Error() == pgx.ErrNoRows.Error() {
-			return nil, db.ErrNoRows
+			return nil, db.ErrCannotFindProject
 		}
 		return nil, err
 	}
@@ -109,8 +110,14 @@ func (p *pgProject) GetProjectSpec(ctx context.Context, id string) (*models.Poli
 	row := p.pool.QueryRow(ctx, s, id)
 	var spec models.Policy
 	err := row.Scan(&spec)
+	if err != nil {
+		if err.Error() == pgx.ErrNoRows.Error() {
+			return nil, db.ErrCannotFindPolicy
+		}
+		return nil, err
+	}
 
-	return &spec, err
+	return &spec, nil
 }
 
 func (p *pgProject) CreateSuggestion(ctx context.Context, suggestion models.Suggestion) error {
@@ -158,10 +165,14 @@ func (p *pgProject) GetSuggestion(ctx context.Context, id string) (*models.Sugge
 
 	err := row.Scan(&suggestion)
 	if err != nil {
+		if err.Error() == pgx.ErrNoRows.Error() {
+			return nil, db.ErrCannotFindSuggestion
+		}
+
 		return nil, err
 	}
 
-	return &suggestion, err
+	return &suggestion, nil
 }
 
 func (p *pgProject) UpdateSuggestion(ctx context.Context, suggestion models.Suggestion) error {

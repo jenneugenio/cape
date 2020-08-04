@@ -3,10 +3,12 @@ package capepg
 import (
 	"context"
 	"fmt"
-	"github.com/capeprivacy/cape/coordinator/db"
-	"github.com/capeprivacy/cape/models"
 	"strings"
 	"time"
+
+	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/models"
+	"github.com/jackc/pgx/v4"
 )
 
 type pgContributor struct {
@@ -77,6 +79,9 @@ func (p *pgContributor) Get(ctx context.Context, project models.Label, email mod
 	row := p.pool.QueryRow(ctx, s, email, project)
 	err := row.Scan(&c)
 	if err != nil {
+		if err.Error() == pgx.ErrNoRows.Error() {
+			return nil, db.ErrCannotFindContributor
+		}
 		return nil, err
 	}
 
@@ -113,14 +118,14 @@ func (p *pgContributor) Delete(ctx context.Context, projectLabel models.Label, u
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
-	s := `delete from contributors where 
+	s := `delete from contributors where
 		  data->>'user_id' = (
     	  	select id from users where data->>'email' = $1
           ) AND
           data->>'project_id' = (
 			select id from projects where data->>'label' = $2
 		  )
-          RETURNING data; 
+          RETURNING data;
 	`
 
 	rows, err := p.pool.Query(ctx, s, userEmail, projectLabel)

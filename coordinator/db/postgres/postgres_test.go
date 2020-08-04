@@ -16,14 +16,6 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestPolicies(t *testing.T) {
-	pg := New(&pgxpool.Pool{})
-	got := pg.Policies()
-	if got == nil {
-		t.Errorf("Policies() did not return a PolicyDB")
-	}
-}
-
 func TestRoles(t *testing.T) {
 	pg := New(&pgxpool.Pool{})
 	got := pg.Roles()
