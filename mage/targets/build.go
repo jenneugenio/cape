@@ -101,15 +101,10 @@ func (b Build) Generate(ctx context.Context) error {
 		return err
 	}
 
-	pkger, err := mage.NewPkger()
-	if err != nil {
-		return err
-	}
-
 	errors := mage.NewErrors()
 	wg := &sync.WaitGroup{}
 
-	generators := []mage.Generator{gql, pkger}
+	generators := []mage.Generator{gql}
 	for _, g := range generators {
 		generator := g
 		wg.Add(1)

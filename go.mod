@@ -39,7 +39,6 @@ require (
 	github.com/manifoldco/go-base64 v1.0.3
 	github.com/manifoldco/healthz v1.2.0
 	github.com/manifoldco/promptui v0.7.0
-	github.com/markbates/pkger v0.17.0
 	github.com/matryer/is v1.3.0 // indirect
 	github.com/mattn/go-runewidth v0.0.7 // indirect
 	github.com/mitchellh/mapstructure v1.3.3
