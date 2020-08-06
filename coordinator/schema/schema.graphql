@@ -9,7 +9,6 @@ scalar Base64
 scalar CredentialsAlgType
 scalar URL
 scalar DBURL
-scalar Name
 scalar Label
 scalar EmailType
 scalar Email

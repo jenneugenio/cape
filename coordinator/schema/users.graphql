@@ -1,9 +1,9 @@
-scalar ModelName
+scalar Name
 scalar ModelEmail
 
 type User {
   id: String!
-  name: ModelName!
+  name: Name!
   email: ModelEmail!
   created_at: Time!
   updated_at: Time!
@@ -11,7 +11,7 @@ type User {
 }
 
 input CreateUserRequest {
-  name: ModelName!
+  name: Name!
   email: ModelEmail!
 }
 

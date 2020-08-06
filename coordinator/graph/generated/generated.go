@@ -1164,7 +1164,6 @@ scalar Base64
 scalar CredentialsAlgType
 scalar URL
 scalar DBURL
-scalar Name
 scalar Label
 scalar EmailType
 scalar Email
@@ -1173,7 +1172,8 @@ scalar Password
 
 # Migration scalars
 
-scalar ModelLabel`, BuiltIn: false},
+scalar ModelLabel
+`, BuiltIn: false},
 	&ast.Source{Name: "coordinator/schema/tokens.graphql", Input: `type Token {
     id: ID!
     user_id: String!
@@ -1197,12 +1197,12 @@ extend type Mutation {
     removeToken(id: ID!): ID!
 }
 `, BuiltIn: false},
-	&ast.Source{Name: "coordinator/schema/users.graphql", Input: `scalar ModelName
+	&ast.Source{Name: "coordinator/schema/users.graphql", Input: `scalar Name
 scalar ModelEmail
 
 type User {
   id: String!
-  name: ModelName!
+  name: Name!
   email: ModelEmail!
   created_at: Time!
   updated_at: Time!
@@ -1210,7 +1210,7 @@ type User {
 }
 
 input CreateUserRequest {
-  name: ModelName!
+  name: Name!
   email: ModelEmail!
 }
 
@@ -1226,7 +1226,8 @@ extend type Query {
 
 extend type Mutation {
   createUser(input: CreateUserRequest!): CreateUserResponse!
-}`, BuiltIn: false},
+}
+`, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -4634,7 +4635,7 @@ func (ec *executionContext) _User_name(ctx context.Context, field graphql.Collec
 	}
 	res := resTmp.(models.Name)
 	fc.Result = res
-	return ec.marshalNModelName2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐName(ctx, field.Selections, res)
+	return ec.marshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐName(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_email(ctx context.Context, field graphql.CollectedField, obj *models.User) (ret graphql.Marshaler) {
@@ -5932,7 +5933,7 @@ func (ec *executionContext) unmarshalInputCreateUserRequest(ctx context.Context,
 		switch k {
 		case "name":
 			var err error
-			it.Name, err = ec.unmarshalNModelName2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐName(ctx, v)
+			it.Name, err = ec.unmarshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐName(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7329,12 +7330,12 @@ func (ec *executionContext) marshalNModelLabel2githubᚗcomᚋcapeprivacyᚋcape
 	return res
 }
 
-func (ec *executionContext) unmarshalNModelName2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐName(ctx context.Context, v interface{}) (models.Name, error) {
+func (ec *executionContext) unmarshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐName(ctx context.Context, v interface{}) (models.Name, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return models.Name(tmp), err
 }
 
-func (ec *executionContext) marshalNModelName2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐName(ctx context.Context, sel ast.SelectionSet, v models.Name) graphql.Marshaler {
+func (ec *executionContext) marshalNName2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐName(ctx context.Context, sel ast.SelectionSet, v models.Name) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
