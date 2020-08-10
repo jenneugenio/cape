@@ -148,9 +148,9 @@ func (n NamedTransformation) MarshalGQL(w io.Writer) {
 }
 
 type SecretArg struct {
-	Type  string        `json:"type"`
+	Type  string        `json:"type,omitempty"`
 	Name  string        `json:"name"`
-	Value *base64.Value `json:"value"`
+	Value *base64.Value `json:"value,omitempty"`
 }
 
 // findSecretArgs is used by UnmarshalGQL and UnmarshalJSON to find secret args

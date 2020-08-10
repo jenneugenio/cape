@@ -29,6 +29,7 @@ func (c *CapePg) Contributors() db.ContributorDB { return &pgContributor{c.pool,
 func (c *CapePg) Projects() db.ProjectsDB        { return &pgProject{c.pool, c.timeout} }
 func (c *CapePg) Users() db.UserDB               { return &pgUser{c.pool, c.timeout} }
 func (c *CapePg) Config() db.ConfigDB            { return &pgConfig{c.pool, c.timeout} }
+func (c *CapePg) Secrets() db.SecretDB           { return &pgSecret{c.pool, c.timeout} }
 
 type Pool interface {
 	Exec(_ context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error)

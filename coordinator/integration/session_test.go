@@ -118,7 +118,7 @@ func TestSessions(t *testing.T) {
 
 		creds, err := user.GetCredentials()
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(creds).To(gm.BeNil())
+		gm.Expect(creds.Secret).To(gm.BeNil())
 	})
 
 	t.Run("non-auth'd user cannot retrieve their user", func(t *testing.T) {

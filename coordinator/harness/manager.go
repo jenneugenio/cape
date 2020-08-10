@@ -2,6 +2,7 @@ package harness
 
 import (
 	"context"
+
 	"github.com/manifoldco/go-base64"
 
 	"github.com/capeprivacy/cape/coordinator"
@@ -45,7 +46,7 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 		return nil, err
 	}
 
-	u := models.NewUser(AdminName, AdminEmail, nil)
+	u := models.NewUser(AdminName, AdminEmail, models.Credentials{})
 
 	user := &User{
 		Client:   client,

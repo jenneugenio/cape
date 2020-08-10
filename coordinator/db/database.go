@@ -13,6 +13,7 @@ type Interface interface {
 	Projects() ProjectsDB
 	Contributors() ContributorDB
 	Config() ConfigDB
+	Secrets() SecretDB
 }
 
 // Interfaces
@@ -62,13 +63,19 @@ type ProjectsDB interface {
 	List(context.Context) ([]models.Project, error)
 	ListByStatus(context.Context, models.ProjectStatus) ([]models.Project, error)
 
-	CreateProjectSpec(context.Context, models.Policy) error
-	GetProjectSpec(context.Context, string) (*models.Policy, error)
+	CreateProjectSpec(context.Context, models.Policy, SecretDB) error
+	GetProjectSpec(context.Context, string, SecretDB) (*models.Policy, error)
 
 	CreateSuggestion(context.Context, models.Suggestion) error
 	GetSuggestions(context.Context, models.Label) ([]models.Suggestion, error)
 	GetSuggestion(context.Context, string) (*models.Suggestion, error)
 	UpdateSuggestion(context.Context, models.Suggestion) error
+}
+
+type SecretDB interface {
+	Create(context.Context, models.SecretArg) error
+	Delete(context.Context, string) (DeleteStatus, error)
+	Get(context.Context, string) (*models.SecretArg, error)
 }
 
 // Options
@@ -117,3 +124,4 @@ var ErrCannotFindProject = errors.New("cannot find requested project")
 var ErrCannotFindPolicy = errors.New("cannot find requested policy")
 var ErrCannotFindSuggestion = errors.New("cannot find requested suggestion")
 var ErrCannotFindContributor = errors.New("cannot find requested contributor")
+var ErrCannotFindSecret = errors.New("cannot find requested secret")

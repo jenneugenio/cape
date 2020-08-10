@@ -18,7 +18,7 @@ var Secret = base64.New([]byte("HEYEYEYEYYE"))
 
 var SecretUser = models.User{
 	Email: models.Email("hey@email.com"),
-	Credentials: &models.Credentials{
+	Credentials: models.Credentials{
 		Secret: Secret,
 	},
 }
@@ -60,8 +60,8 @@ func TestUsersCreate(t *testing.T) {
 			t.Errorf("unexpected error on Create() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
 		}
 
-		if !reflect.DeepEqual(SecretUser, pgUser.receivedUser) {
-			t.Errorf("user not encrypted: got %v", pgUser.receivedUser)
+		if reflect.DeepEqual(SecretUser.Credentials, pgUser.receivedUser.Credentials) {
+			t.Errorf("user not encrypted: got %v %v", SecretUser.Credentials, pgUser.receivedUser.Credentials)
 		}
 	}
 }
@@ -106,8 +106,8 @@ func TestUsersUpdate(t *testing.T) {
 			t.Errorf("unexpected error on Update() test %d of %d: got %v want %v", i+1, len(tests), gotErr, test.wantErr)
 		}
 
-		if !reflect.DeepEqual(SecretUser, pgUser.receivedUser) {
-			t.Errorf("user not encrypted: got %v", pgUser.receivedUser)
+		if reflect.DeepEqual(SecretUser.Credentials, pgUser.receivedUser.Credentials) {
+			t.Errorf("user not encrypted: got %v %v", SecretUser.Credentials, pgUser.receivedUser.Credentials)
 		}
 	}
 }
@@ -156,7 +156,7 @@ func TestUserGet(t *testing.T) {
 
 	encryptedSecret, _ := codec.Encrypt(context.TODO(), Secret)
 	encryptedUser := models.User{
-		Credentials: &models.Credentials{
+		Credentials: models.Credentials{
 			Secret: encryptedSecret,
 		},
 		Email: models.Email("hey@email.com"),
@@ -164,7 +164,7 @@ func TestUserGet(t *testing.T) {
 
 	secretUser := models.User{
 		Email: models.Email("hey@email.com"),
-		Credentials: &models.Credentials{
+		Credentials: models.Credentials{
 			Secret: Secret,
 		},
 	}
@@ -222,7 +222,7 @@ func TestUserGetByID(t *testing.T) {
 	encryptedSecret, _ := codec.Encrypt(context.TODO(), base64.New([]byte("HEYEYEYEYYE")))
 	encryptedUser := models.User{
 		ID: "idididid",
-		Credentials: &models.Credentials{
+		Credentials: models.Credentials{
 			Secret: encryptedSecret,
 		},
 		Email: models.Email("hey@email.com"),
@@ -231,7 +231,7 @@ func TestUserGetByID(t *testing.T) {
 	secretUser := models.User{
 		ID:    "idididid",
 		Email: models.Email("hey@email.com"),
-		Credentials: &models.Credentials{
+		Credentials: models.Credentials{
 			Secret: base64.New([]byte("HEYEYEYEYYE")),
 		},
 	}
@@ -289,7 +289,7 @@ func TestUserstList(t *testing.T) {
 	encryptedSecret, _ := codec.Encrypt(context.TODO(), Secret)
 	encryptedUser := models.User{
 		ID: "idididid",
-		Credentials: &models.Credentials{
+		Credentials: models.Credentials{
 			Secret: encryptedSecret,
 		},
 		Email: models.Email("hey@email.com"),
@@ -298,7 +298,7 @@ func TestUserstList(t *testing.T) {
 	secretUser := models.User{
 		ID:    "idididid",
 		Email: models.Email("hey@email.com"),
-		Credentials: &models.Credentials{
+		Credentials: models.Credentials{
 			Secret: Secret,
 		},
 	}

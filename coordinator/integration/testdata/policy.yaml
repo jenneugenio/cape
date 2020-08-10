@@ -5,7 +5,7 @@ transformations:
     type: reversible-tokenizer
     key:
       type: secret
-      value: m5YNKBP-a3GMyy52457ok-4zQHqLuiB3aFD7mPTBpoc
+      name: my-secret
 rules:
   - match:
       name: name

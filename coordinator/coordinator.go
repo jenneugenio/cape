@@ -234,7 +234,7 @@ func (c *Coordinator) doSetup(ctx context.Context, capedb db.Interface) error {
 		return err
 	}
 
-	user := models.NewUser(c.cfg.User.Name, c.cfg.User.Email, creds)
+	user := models.NewUser(c.cfg.User.Name, c.cfg.User.Email, *creds)
 	err = enc.Users().Create(ctx, user)
 	if err != nil {
 		return err

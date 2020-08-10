@@ -63,10 +63,6 @@ type Credentials struct {
 }
 
 func (u *User) GetCredentials() (*primitives.Credentials, error) {
-	if u.Credentials == nil {
-		return nil, nil
-	}
-
 	return &primitives.Credentials{
 		Secret: u.Credentials.Secret,
 		Salt:   u.Credentials.Salt,
@@ -92,12 +88,11 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 
 	// We never want to send Credentials over the wire!
-	// TODO encrypt before putting in database, decrypt before retrieving
-	Credentials *Credentials `json:"credentials" gqlgen:"-"`
+	Credentials Credentials `json:"credentials" gqlgen:"-"`
 }
 
 // NewUser returns a new User struct
-func NewUser(name Name, email Email, creds *Credentials) User {
+func NewUser(name Name, email Email, creds Credentials) User {
 	user := User{
 		ID:          NewID(),
 		Credentials: creds,
@@ -120,7 +115,7 @@ func GenerateUser(name, email string) (primitives.Password, User) {
 
 	c := primitives.GenerateCredentials()
 
-	user := NewUser(n, e, &Credentials{
+	user := NewUser(n, e, Credentials{
 		Secret: c.Secret,
 		Salt:   c.Salt,
 		Alg:    CredentialsAlgType(c.Alg),

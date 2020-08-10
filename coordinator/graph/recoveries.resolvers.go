@@ -110,7 +110,7 @@ func (r *mutationResolver) AttemptRecovery(ctx context.Context, input model.Atte
 		return nil, ErrRecoveryFailed
 	}
 
-	user.Credentials = creds
+	user.Credentials = *creds
 	err = r.Database.Users().Update(ctx, user.ID, *user)
 	if err != nil {
 		logger.Error().Err(err).Msg("Could not update user with new password")

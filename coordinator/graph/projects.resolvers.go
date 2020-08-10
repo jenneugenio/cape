@@ -113,7 +113,7 @@ func (r *mutationResolver) UpdateProjectSpec(ctx context.Context, id *string, la
 	// Insert the spec
 	// TODO -- How do you specify the parent? This concept doesn't make sense until we have proposals & diffing
 	spec := models.NewPolicy(project.ID, nil, request.Rules, request.Transformations)
-	err = r.Database.Projects().CreateProjectSpec(ctx, spec)
+	err = r.Database.Projects().CreateProjectSpec(ctx, spec, r.Database.Secrets())
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func (r *mutationResolver) SuggestProjectPolicy(ctx context.Context, label model
 		UpdatedAt:       time.Now(),
 	}
 
-	err = r.Database.Projects().CreateProjectSpec(ctx, spec)
+	err = r.Database.Projects().CreateProjectSpec(ctx, spec, r.Database.Secrets())
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func (r *mutationResolver) ApproveProjectSuggestion(ctx context.Context, id stri
 		return nil, err
 	}
 
-	projectPolicy, err := r.Database.Projects().GetProjectSpec(ctx, suggestion.PolicyID)
+	projectPolicy, err := r.Database.Projects().GetProjectSpec(ctx, suggestion.PolicyID, r.Database.Secrets())
 	if err != nil {
 		return nil, err
 	}
@@ -338,7 +338,7 @@ func (r *projectResolver) CurrentSpec(ctx context.Context, obj *models.Project) 
 		return nil, nil
 	}
 
-	return r.Database.Projects().GetProjectSpec(ctx, obj.CurrentSpecID)
+	return r.Database.Projects().GetProjectSpec(ctx, obj.CurrentSpecID, r.Database.Secrets())
 }
 
 func (r *projectResolver) Contributors(ctx context.Context, obj *models.Project) ([]*models.Contributor, error) {
@@ -426,7 +426,7 @@ func (r *suggestionResolver) Project(ctx context.Context, obj *models.Suggestion
 }
 
 func (r *suggestionResolver) Policy(ctx context.Context, obj *models.Suggestion) (*models.Policy, error) {
-	return r.Database.Projects().GetProjectSpec(ctx, obj.PolicyID)
+	return r.Database.Projects().GetProjectSpec(ctx, obj.PolicyID, r.Database.Secrets())
 }
 
 // Contributor returns generated.ContributorResolver implementation.

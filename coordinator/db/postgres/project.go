@@ -93,16 +93,39 @@ func (p *pgProject) Update(ctx context.Context, project models.Project) error {
 	return err
 }
 
-func (p *pgProject) CreateProjectSpec(ctx context.Context, spec models.Policy) error {
+func (p *pgProject) CreateProjectSpec(ctx context.Context, spec models.Policy, secretDB db.SecretDB) error {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
 	s := `insert into project_specs (data) values ($1)`
 	_, err := p.pool.Exec(ctx, s, spec)
+	if err != nil {
+		return err
+	}
+
+	for _, transform := range spec.Transformations {
+		for _, arg := range transform.Args {
+			sec, ok := arg.(models.SecretArg)
+			if ok {
+				_, err := secretDB.Get(ctx, sec.Name)
+				if err != nil {
+					if err == db.ErrCannotFindSecret {
+						err := secretDB.Create(ctx, sec)
+						if err != nil {
+							return err
+						}
+						continue
+					}
+					return err
+				}
+			}
+		}
+	}
+
 	return err
 }
 
-func (p *pgProject) GetProjectSpec(ctx context.Context, id string) (*models.Policy, error) {
+func (p *pgProject) GetProjectSpec(ctx context.Context, id string, secretDB db.SecretDB) (*models.Policy, error) {
 	ctx, cancel := context.WithTimeout(ctx, p.timeout)
 	defer cancel()
 
@@ -115,6 +138,20 @@ func (p *pgProject) GetProjectSpec(ctx context.Context, id string) (*models.Poli
 			return nil, db.ErrCannotFindPolicy
 		}
 		return nil, err
+	}
+
+	for _, transform := range spec.Transformations {
+		for i, arg := range transform.Args {
+			sec, ok := arg.(models.SecretArg)
+			if ok {
+				sec2, err := secretDB.Get(ctx, sec.Name)
+				if err != nil {
+					return nil, err
+				}
+
+				transform.Args[i] = sec2
+			}
+		}
 	}
 
 	return &spec, nil

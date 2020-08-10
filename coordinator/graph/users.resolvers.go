@@ -23,7 +23,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 		return nil, err
 	}
 
-	user := models.NewUser(input.Name, input.Email, creds)
+	user := models.NewUser(input.Name, input.Email, *creds)
 
 	err = r.Database.Users().Create(ctx, user)
 	if err != nil {
