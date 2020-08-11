@@ -23,13 +23,13 @@ type ClientTransport interface {
 	SetToken(*base64.Value)
 	Token() *base64.Value
 
-	EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*primitives.Session, error)
-	TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*primitives.Session, error)
+	EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*models.Session, error)
+	TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*models.Session, error)
 
 	Logout(ctx context.Context, authToken *base64.Value) error
 }
 
-func tokenLogin(ctx context.Context, transport ClientTransport, apiToken *auth.APIToken) (*primitives.Session, error) {
+func tokenLogin(ctx context.Context, transport ClientTransport, apiToken *auth.APIToken) (*models.Session, error) {
 	req := LoginRequest{
 		TokenID: &apiToken.TokenID,
 		Secret:  apiToken.Secret.Password(),
@@ -40,7 +40,7 @@ func tokenLogin(ctx context.Context, transport ClientTransport, apiToken *auth.A
 		return nil, err
 	}
 
-	session := &primitives.Session{}
+	session := &models.Session{}
 	err = json.Unmarshal(body, session)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func tokenLogin(ctx context.Context, transport ClientTransport, apiToken *auth.A
 	return session, nil
 }
 
-func emailLogin(ctx context.Context, transport ClientTransport, email models.Email, password primitives.Password) (*primitives.Session, error) {
+func emailLogin(ctx context.Context, transport ClientTransport, email models.Email, password primitives.Password) (*models.Session, error) {
 	req := LoginRequest{
 		Email:  &email,
 		Secret: password,
@@ -61,7 +61,7 @@ func emailLogin(ctx context.Context, transport ClientTransport, email models.Ema
 		return nil, err
 	}
 
-	session := &primitives.Session{}
+	session := &models.Session{}
 	err = json.Unmarshal(body, session)
 	if err != nil {
 		return nil, err

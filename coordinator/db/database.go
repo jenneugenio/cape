@@ -14,6 +14,8 @@ type Interface interface {
 	Contributors() ContributorDB
 	Config() ConfigDB
 	Secrets() SecretDB
+	Tokens() TokensDB
+	Session() SessionDB
 }
 
 // Interfaces
@@ -76,6 +78,19 @@ type SecretDB interface {
 	Create(context.Context, models.SecretArg) error
 	Delete(context.Context, string) (DeleteStatus, error)
 	Get(context.Context, string) (*models.SecretArg, error)
+}
+
+type TokensDB interface {
+	Get(context.Context, string) (*models.Token, error)
+	Create(context.Context, models.Token) error
+	Delete(context.Context, string) error
+	ListByUserID(context.Context, string) ([]models.Token, error)
+}
+
+type SessionDB interface {
+	Get(context.Context, string) (*models.Session, error)
+	Create(context.Context, models.Session) error
+	Delete(context.Context, string) error
 }
 
 // Options

@@ -7,7 +7,6 @@ import (
 
 	"github.com/capeprivacy/cape/cmd/cape/ui"
 	"github.com/capeprivacy/cape/coordinator"
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
@@ -165,7 +164,7 @@ func listTokenCmd(c *cli.Context) error {
 	body := make([][]string, len(tokenIDs))
 
 	for i, t := range tokenIDs {
-		body[i] = []string{t.String()}
+		body[i] = []string{t}
 	}
 
 	u := provider.UI(c.Context)
@@ -184,12 +183,12 @@ func removeTokenCmd(c *cli.Context) error {
 		return err
 	}
 
-	ID, _ := Arguments(c.Context, TokenIDArg).(database.ID)
+	ID, _ := Arguments(c.Context, TokenIDArg).(string)
 	err = client.RemoveToken(c.Context, ID)
 	if err != nil {
 		return err
 	}
 
 	u := provider.UI(c.Context)
-	return u.Template("Removed the token with ID {{ . | toString | faded }} from Cape\n", ID.String())
+	return u.Template("Removed the token with ID {{ . | toString | faded }} from Cape\n", ID)
 }

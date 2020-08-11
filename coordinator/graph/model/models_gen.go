@@ -30,7 +30,7 @@ type CreateTokenRequest struct {
 
 type CreateTokenResponse struct {
 	Secret primitives.Password `json:"secret"`
-	Token  *primitives.Token   `json:"token"`
+	Token  *models.Token       `json:"token"`
 }
 
 type CreateUserRequest struct {

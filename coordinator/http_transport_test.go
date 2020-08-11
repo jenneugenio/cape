@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	goerrors "errors"
+	"github.com/capeprivacy/cape/models"
 	"net"
 	"net/http"
 	"net/http/cookiejar"
@@ -122,7 +123,7 @@ func TestHTTPTransportURL(t *testing.T) {
 }
 
 func TestHTTPTransportTokenLogin(t *testing.T) {
-	wantSess := primitives.Session{}
+	wantSess := models.Session{}
 	ts, clientURL, err := setupGQLTestServer(&gqlResponse{
 		Data: &SessionResponse{
 			Session: wantSess,
@@ -147,7 +148,7 @@ func TestHTTPTransportTokenLogin(t *testing.T) {
 }
 
 func TestHTTPTransportEmailLogin(t *testing.T) {
-	wantSess := primitives.Session{}
+	wantSess := models.Session{}
 	ts, clientURL, err := setupGQLTestServer(&gqlResponse{
 		Data: &SessionResponse{
 			Session: wantSess,

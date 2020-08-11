@@ -2,11 +2,10 @@ package coordinator
 
 import (
 	"context"
+	"github.com/capeprivacy/cape/coordinator/db"
 	"net/http"
 
 	"github.com/capeprivacy/cape/auth"
-	"github.com/capeprivacy/cape/coordinator/database"
-	"github.com/capeprivacy/cape/coordinator/db"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
@@ -25,26 +24,25 @@ type VersionResponse struct {
 
 // VersionHandler returns the version information for this instance of cape.
 func VersionHandler(instanceID string) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusOK, &VersionResponse{
 			InstanceID: instanceID,
 			Version:    version.Version,
 			BuildDate:  version.BuildDate,
 		})
-	})
+	}
 }
 
 type LoginRequest struct {
 	Email   *models.Email       `json:"email"`
-	TokenID *database.ID        `json:"token_id"`
+	TokenID *string             `json:"token_id"`
 	Secret  primitives.Password `json:"secret"`
 }
 
 func LoginHandler(coordinator *Coordinator) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var input LoginRequest
 
-		db := coordinator.backend
 		capedb := coordinator.db
 		cp := coordinator.credentialProducer
 		ta := coordinator.tokenAuth
@@ -57,13 +55,6 @@ func LoginHandler(coordinator *Coordinator) http.HandlerFunc {
 
 		logger := fw.Logger(r.Context())
 
-		if input.TokenID != nil {
-			if err := input.TokenID.Validate(); err != nil {
-				respondWithError(w, r.URL.Path, err)
-				return
-			}
-		}
-
 		if input.Email == nil && input.TokenID == nil {
 			respondWithError(w, r.URL.Path, errors.New(fw.InvalidParametersCause, "An email or token_id must be provided"))
 			return
@@ -73,9 +64,9 @@ func LoginHandler(coordinator *Coordinator) http.HandlerFunc {
 			return
 		}
 
-		provider, err := getCredentialProvider(r.Context(), db, capedb, input)
+		provider, err := getCredentialProvider(r.Context(), capedb, input)
 		if err != nil {
-			logger.Info().Err(err).Msgf("Could not retrieve user for create session request, email: %s token_id: %s", input.Email, input.TokenID)
+			logger.Info().Err(err).Msgf("Could not retrieve user for create session request, email: %s token_id: %v", input.Email, input.TokenID)
 			respondWithError(w, r.URL.Path, auth.ErrAuthentication)
 			return
 		}
@@ -90,7 +81,7 @@ func LoginHandler(coordinator *Coordinator) http.HandlerFunc {
 		err = cp.Compare(input.Secret, &models.Credentials{
 			Secret: creds.Secret,
 			Salt:   creds.Salt,
-			Alg:    models.CredentialsAlgType(creds.Alg),
+			Alg:    creds.Alg,
 		})
 		if err != nil {
 			logger.Info().Err(err).Msgf("Invalid credentials provided")
@@ -98,13 +89,7 @@ func LoginHandler(coordinator *Coordinator) http.HandlerFunc {
 			return
 		}
 
-		session, err := primitives.NewSession(provider)
-		if err != nil {
-			logger.Info().Err(err).Msg("Could not create session")
-			respondWithError(w, r.URL.Path, auth.ErrAuthentication)
-			return
-		}
-
+		session := models.NewSession(provider)
 		token, expiresAt, err := ta.Generate(session.ID)
 		if err != nil {
 			logger.Info().Err(err).Msg("Failed to generate auth token")
@@ -113,7 +98,7 @@ func LoginHandler(coordinator *Coordinator) http.HandlerFunc {
 		}
 
 		session.SetToken(token, expiresAt)
-		err = db.Create(r.Context(), session)
+		err = capedb.Session().Create(r.Context(), session)
 		if err != nil {
 			logger.Error().Err(err).Msg("Failed to create session in database")
 			respondWithError(w, r.URL.Path, auth.ErrAuthentication)
@@ -129,7 +114,7 @@ func LoginHandler(coordinator *Coordinator) http.HandlerFunc {
 		http.SetCookie(w, cookie)
 
 		respondWithJSON(w, http.StatusOK, session)
-	})
+	}
 }
 
 type SetupRequest struct {
@@ -146,9 +131,7 @@ func LogoutHandler(coordinator *Coordinator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		backend := coordinator.backend
 		ta := coordinator.tokenAuth
-
 		var input LogoutRequest
 		err := fw.DecodeJSONBody(w, r, &input)
 		if err != nil {
@@ -156,7 +139,7 @@ func LogoutHandler(coordinator *Coordinator) http.HandlerFunc {
 			return
 		}
 
-		err = doLogout(ctx, backend, ta, input)
+		err = doLogout(ctx, coordinator.db, ta, input)
 		if err != nil {
 			respondWithError(w, r.URL.Path, err)
 			return
@@ -164,10 +147,10 @@ func LogoutHandler(coordinator *Coordinator) http.HandlerFunc {
 	}
 }
 
-func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAuthority, input LogoutRequest) error {
+func doLogout(ctx context.Context, backend db.Interface, ta *auth.TokenAuthority, input LogoutRequest) error {
 	currSession := fw.Session(ctx)
 	if input.Token == nil {
-		err := backend.Delete(ctx, primitives.SessionType, currSession.Session.ID)
+		err := backend.Session().Delete(ctx, currSession.Session.ID)
 		if err != nil {
 			return err
 		}
@@ -189,7 +172,7 @@ func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAutho
 		return err
 	}
 
-	err = backend.Delete(ctx, primitives.SessionType, id)
+	err = backend.Session().Delete(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -197,16 +180,10 @@ func doLogout(ctx context.Context, backend database.Backend, ta *auth.TokenAutho
 	return nil
 }
 
-func getCredentialProvider(ctx context.Context, q database.Querier, capedb db.Interface, input LoginRequest) (primitives.CredentialProvider, error) {
+func getCredentialProvider(ctx context.Context, db db.Interface, input LoginRequest) (models.CredentialProvider, error) {
 	if input.Email != nil {
-		return capedb.Users().Get(ctx, *input.Email)
+		return db.Users().Get(ctx, *input.Email)
 	}
 
-	token := &primitives.Token{}
-	err := q.Get(ctx, *input.TokenID, token)
-	if err != nil {
-		return nil, err
-	}
-
-	return token, nil
+	return db.Tokens().Get(ctx, *input.TokenID)
 }

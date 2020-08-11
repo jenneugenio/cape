@@ -85,11 +85,11 @@ func (m *MockClientTransport) Token() *base64.Value {
 	return m.token
 }
 
-func (m *MockClientTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*primitives.Session, error) {
+func (m *MockClientTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*models.Session, error) {
 	return tokenLogin(ctx, m, apiToken)
 }
 
-func (m *MockClientTransport) EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*primitives.Session, error) {
+func (m *MockClientTransport) EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*models.Session, error) {
 	return emailLogin(ctx, m, email, password)
 }
 

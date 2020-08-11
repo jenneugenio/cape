@@ -15,11 +15,8 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/capeprivacy/cape/auth"
-	"github.com/capeprivacy/cape/coordinator/database"
-	"github.com/capeprivacy/cape/coordinator/db"
 	fw "github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 // RequestIDMiddleware sets a UUID on the response header and request context
@@ -169,7 +166,6 @@ func IsAuthenticatedMiddleware(coordinator *Coordinator) func(http.Handler) http
 			ctx := req.Context()
 
 			ta := coordinator.tokenAuth
-			db := coordinator.backend
 			capedb := coordinator.db
 
 			logger := fw.Logger(ctx)
@@ -189,8 +185,7 @@ func IsAuthenticatedMiddleware(coordinator *Coordinator) func(http.Handler) http
 				return
 			}
 
-			session := &primitives.Session{}
-			err = db.Get(ctx, id, session)
+			session, err := capedb.Session().Get(ctx, id)
 			if err != nil {
 				msg := "Could not authenticate. Unable to find session"
 				logger.Info().Err(err).Msg(msg)
@@ -198,27 +193,19 @@ func IsAuthenticatedMiddleware(coordinator *Coordinator) func(http.Handler) http
 				return
 			}
 
-			cp, err := getCredentialsProvider(ctx, db, capedb, session.UserID)
-			if err != nil {
-				msg := "Could not authenticate. Unable get credentialProvider type"
-				logger.Info().Err(err).Msg(msg)
-				respondWithError(rw, req.URL.Path, auth.ErrAuthentication)
-				return
-			}
-
-			user, err := capedb.Users().GetByID(ctx, cp.GetUserID())
+			user, err := capedb.Users().GetByID(ctx, session.UserID)
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return
 			}
 
-			roles, err := capedb.Roles().GetAll(ctx, cp.GetUserID())
+			roles, err := capedb.Roles().GetAll(ctx, session.UserID)
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return
 			}
 
-			aSession, err := auth.NewSession(user, session, *roles, cp)
+			aSession, err := auth.NewSession(user, session, *roles)
 			if err != nil {
 				respondWithError(rw, req.URL.Path, err)
 				return
@@ -234,21 +221,4 @@ func IsAuthenticatedMiddleware(coordinator *Coordinator) func(http.Handler) http
 			next.ServeHTTP(rw, req)
 		})
 	}
-}
-
-func getCredentialsProvider(ctx context.Context, db database.Backend, capedb db.Interface, id string) (primitives.CredentialProvider, error) {
-	dID, err := database.DecodeFromString(id)
-	if err != nil {
-		user, err := capedb.Users().GetByID(ctx, id)
-		if err != nil {
-			return nil, err
-		}
-
-		return user, nil
-	}
-
-	token := &primitives.Token{}
-	err = db.Get(ctx, dID, token)
-
-	return token, err
 }

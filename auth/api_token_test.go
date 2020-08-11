@@ -42,10 +42,10 @@ func TestAPIToken(t *testing.T) {
 	creds, err := DefaultSHA256Producer.Generate(password)
 	gm.Expect(err).To(gm.BeNil())
 
-	tc, err := primitives.NewToken(userID, &primitives.Credentials{
+	tc := models.NewToken(userID, &models.Credentials{
 		Secret: creds.Secret,
 		Salt:   creds.Salt,
-		Alg:    primitives.CredentialsAlgType(creds.Alg),
+		Alg:    creds.Alg,
 	})
 	gm.Expect(err).To(gm.BeNil())
 

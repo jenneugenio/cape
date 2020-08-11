@@ -1,14 +1,12 @@
 package auth
 
 import (
+	"github.com/capeprivacy/cape/models"
 	"testing"
 	"time"
 
 	gm "github.com/onsi/gomega"
 	"gopkg.in/square/go-jose.v2"
-
-	"github.com/capeprivacy/cape/coordinator/database"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestTokenAuthority(t *testing.T) {
@@ -21,10 +19,7 @@ func TestTokenAuthority(t *testing.T) {
 		tokenAuth, err := NewTokenAuthority(keypair, "coordinator@coordinator.ai")
 		gm.Expect(err).To(gm.BeNil())
 
-		id, err := database.GenerateID(primitives.SessionType)
-		gm.Expect(err).To(gm.BeNil())
-
-		sig, expiresIn, err := tokenAuth.Generate(id)
+		sig, expiresIn, err := tokenAuth.Generate(models.NewID())
 		gm.Expect(err).To(gm.BeNil())
 		gm.Expect(sig).ToNot(gm.BeNil())
 		gm.Expect(expiresIn).To(gm.BeTemporally(">", time.Now().UTC()))
@@ -34,8 +29,7 @@ func TestTokenAuthority(t *testing.T) {
 		tokenAuth, err := NewTokenAuthority(keypair, "coordinator@coordinator.ai")
 		gm.Expect(err).To(gm.BeNil())
 
-		id, err := database.GenerateID(primitives.SessionType)
-		gm.Expect(err).To(gm.BeNil())
+		id := models.NewID()
 
 		sig, expiresIn, err := tokenAuth.Generate(id)
 		gm.Expect(err).To(gm.BeNil())
@@ -51,8 +45,7 @@ func TestTokenAuthority(t *testing.T) {
 		tokenAuth, err := NewTokenAuthority(keypair, "coordinator@coordinator.ai")
 		gm.Expect(err).To(gm.BeNil())
 
-		id, err := database.GenerateID(primitives.SessionType)
-		gm.Expect(err).To(gm.BeNil())
+		id := models.NewID()
 
 		sig, expiresIn, err := tokenAuth.Generate(id)
 		gm.Expect(err).To(gm.BeNil())
@@ -81,8 +74,7 @@ func TestTokenAuthority(t *testing.T) {
 		otherTokenAuth, err := NewTokenAuthority(otherKeypair, "coordinator2@coordinator.ai")
 		gm.Expect(err).To(gm.BeNil())
 
-		id, err := database.GenerateID(primitives.SessionType)
-		gm.Expect(err).To(gm.BeNil())
+		id := models.NewID()
 
 		sig, expiresIn, err := tokenAuth.Generate(id)
 		gm.Expect(err).To(gm.BeNil())

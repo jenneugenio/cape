@@ -7,9 +7,7 @@ import (
 
 	"github.com/capeprivacy/cape/cmd/cape/ui"
 	"github.com/capeprivacy/cape/coordinator"
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestCreateToken(t *testing.T) {
@@ -17,7 +15,7 @@ func TestCreateToken(t *testing.T) {
 
 	password, user := models.GenerateUser("bob", "bob@bob.bob")
 
-	creds := primitives.GenerateCredentials()
+	creds := models.GenerateCredentials()
 
 	me := coordinator.MeResponse{User: &models.User{
 		ID:    user.ID,
@@ -27,13 +25,12 @@ func TestCreateToken(t *testing.T) {
 	t.Run("Can create a token", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		token, err := primitives.NewToken(user.ID, creds)
-		gm.Expect(err).To(gm.BeNil())
+		token := models.NewToken(user.ID, creds)
 
 		resp := coordinator.CreateTokenResponse{
 			Response: &coordinator.CreateTokenMutation{
 				Secret: password,
-				Token:  token,
+				Token:  &token,
 			},
 		}
 
@@ -45,7 +42,7 @@ func TestCreateToken(t *testing.T) {
 				Value: resp,
 			},
 		})
-		err = app.Run([]string{"cape", "tokens", "create"})
+		err := app.Run([]string{"cape", "tokens", "create"})
 		gm.Expect(err).To(gm.BeNil())
 
 		gm.Expect(len(u.Calls)).To(gm.Equal(3))
@@ -60,23 +57,15 @@ func TestCreateToken(t *testing.T) {
 	t.Run("Can list tokens", func(t *testing.T) {
 		gm.RegisterTestingT(t)
 
-		idStrs := []string{
+		IDs := []string{
 			"2018d9x3ntbca95dda3bu9wnrr",
 			"2015338ejcum4rzncvnugucvtc",
 			"2011e949qta0quff3n4yx7ny3r",
 			"201dandy989092yebk2m0143p4",
 		}
-		ids := make([]database.ID, len(idStrs))
-
-		for i, s := range idStrs {
-			ID, err := database.DecodeFromString(s)
-			gm.Expect(err).To(gm.BeNil())
-
-			ids[i] = ID
-		}
 
 		resp := coordinator.ListTokensResponse{
-			IDs: ids,
+			IDs: IDs,
 		}
 
 		app, u := NewHarness([]*coordinator.MockResponse{
@@ -94,7 +83,7 @@ func TestCreateToken(t *testing.T) {
 
 		gm.Expect(u.Calls[0].Name).To(gm.Equal("table"))
 		gm.Expect(u.Calls[0].Args[0]).To(gm.Equal(ui.TableHeader{"Token ID"}))
-		gm.Expect(u.Calls[0].Args[1]).To(gm.Equal(ui.TableBody{{idStrs[0]}, {idStrs[1]}, {idStrs[2]}, {idStrs[3]}}))
+		gm.Expect(u.Calls[0].Args[1]).To(gm.Equal(ui.TableBody{{IDs[0]}, {IDs[1]}, {IDs[2]}, {IDs[3]}}))
 
 		gm.Expect(u.Calls[1].Name).To(gm.Equal("template"))
 		gm.Expect(u.Calls[1].Args[0]).To(gm.Equal("\nFound {{ . | toString | faded }} token{{ . | pluralize \"s\"}}\n"))

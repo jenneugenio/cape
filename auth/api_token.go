@@ -6,7 +6,6 @@ import (
 
 	"github.com/manifoldco/go-base64"
 
-	"github.com/capeprivacy/cape/coordinator/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -42,7 +41,7 @@ func FromPassword(password primitives.Password) (Secret, error) {
 		return Secret([]byte{}), err
 	}
 
-	s := Secret([]byte(*value))
+	s := Secret(*value)
 
 	return s, s.Validate()
 }
@@ -50,13 +49,13 @@ func FromPassword(password primitives.Password) (Secret, error) {
 // APIToken represents a token that is used by a user
 // to authenticate with a coordinator.
 type APIToken struct {
-	TokenID database.ID
+	TokenID string
 	Version byte
 	Secret  Secret
 }
 
 // NewAPIToken returns a new api token from email and url
-func NewAPIToken(secret Secret, tokenCredentialID database.ID) (*APIToken, error) {
+func NewAPIToken(secret Secret, tokenCredentialID string) (*APIToken, error) {
 	return &APIToken{
 		TokenID: tokenCredentialID,
 		Version: tokenVersion,
@@ -101,10 +100,7 @@ func (a *APIToken) Unmarshal(token string) error {
 		return errors.New(BadTokenFormat, "Invalid API Token provided")
 	}
 
-	ID, err := database.DecodeFromString(strs[0])
-	if err != nil {
-		return err
-	}
+	ID := strs[0]
 
 	val, err := base64.NewFromString(strs[1])
 	if err != nil {
@@ -115,38 +111,7 @@ func (a *APIToken) Unmarshal(token string) error {
 
 	a.TokenID = ID
 	a.Version = tokenBytes[0]
-	a.Secret = Secret(tokenBytes[1:])
+	a.Secret = tokenBytes[1:]
 
 	return a.Validate()
-}
-
-// Parse returns an APIToken from a given string and validates the underlying
-// APIToken is sensical.
-func ParseAPIToken(in string) (*APIToken, error) {
-	token := &APIToken{}
-	err := token.Unmarshal(in)
-	if err != nil {
-		return nil, err
-	}
-
-	return token, nil
-}
-
-// GenerateToken should _not_ be used in any production use case. It only
-// exists to simplify the creation of tests for things that take an APIToken as
-// an input.
-func GenerateToken() (*APIToken, error) {
-	password := primitives.GeneratePassword()
-
-	secret, err := FromPassword(password)
-	if err != nil {
-		return nil, err
-	}
-
-	ID, err := database.DeriveID(&primitives.Token{})
-	if err != nil {
-		return nil, err
-	}
-
-	return NewAPIToken(secret, ID)
 }

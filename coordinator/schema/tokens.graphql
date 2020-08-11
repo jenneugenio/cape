@@ -1,5 +1,5 @@
 type Token {
-    id: ID!
+    id: String!
     user_id: String!
 }
 
@@ -13,10 +13,10 @@ input CreateTokenRequest {
 }
 
 extend type Query {
-    tokens(user_id: String!): [ID!]!
+    tokens(user_id: String!): [String!]!
 }
 
 extend type Mutation {
     createToken(input: CreateTokenRequest!): CreateTokenResponse!
-    removeToken(id: ID!): ID!
+    removeToken(id: String!): String!
 }
