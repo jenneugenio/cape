@@ -1,4 +1,4 @@
-package primitives
+package models
 
 type CredentialProvider interface {
 	GetStringID() string

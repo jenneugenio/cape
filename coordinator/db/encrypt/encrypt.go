@@ -25,6 +25,21 @@ func (c *CapeDBEncrypt) Users() db.UserDB               { return &userEncrypt{db
 func (c *CapeDBEncrypt) Contributors() db.ContributorDB { return c.db.Contributors() }
 func (c *CapeDBEncrypt) Projects() db.ProjectsDB        { return c.db.Projects() }
 func (c *CapeDBEncrypt) Config() db.ConfigDB            { return c.db.Config() }
+
 func (c *CapeDBEncrypt) Secrets() db.SecretDB {
 	return &secretEncrypt{db: c.db.Secrets(), codec: c.codec}
+}
+
+func (c *CapeDBEncrypt) Tokens() db.TokensDB {
+	return &tokensEncrypt{
+		db:    c.db.Tokens(),
+		codec: c.codec,
+	}
+}
+
+func (c *CapeDBEncrypt) Session() db.SessionDB {
+	return &sessionEncrypt{
+		db:    c.db.Session(),
+		codec: c.codec,
+	}
 }

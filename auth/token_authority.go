@@ -8,7 +8,6 @@ import (
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 
-	"github.com/capeprivacy/cape/coordinator/database"
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
@@ -34,20 +33,20 @@ func NewTokenAuthority(keypair *Keypair, serviceEmail string) (*TokenAuthority, 
 
 // Verify verifies that a JWT token was signed by the correct private key. Returns
 // the session ID contained inside of the token.
-func (t *TokenAuthority) Verify(signedToken *base64.Value) (database.ID, error) {
+func (t *TokenAuthority) Verify(signedToken *base64.Value) (string, error) {
 	if t.keypair == nil {
-		return database.EmptyID, errors.New(MissingKeyPair, "Missing key pair cannot verify token")
+		return "", errors.New(MissingKeyPair, "Missing key pair cannot verify token")
 	}
 
 	tok, err := jwt.ParseSigned(string(*signedToken))
 	if err != nil {
-		return database.EmptyID, err
+		return "", err
 	}
 
 	claims := jwt.Claims{}
 	err = tok.Claims(t.PublicKey(), &claims)
 	if err != nil {
-		return database.EmptyID, err
+		return "", err
 	}
 
 	err = claims.Validate(jwt.Expected{
@@ -55,10 +54,10 @@ func (t *TokenAuthority) Verify(signedToken *base64.Value) (database.ID, error) 
 		Time:   time.Now().UTC(), // time used to compare expiry and not before
 	})
 	if err != nil {
-		return database.EmptyID, err
+		return "", err
 	}
 
-	return database.DecodeFromString(claims.ID)
+	return claims.ID, nil
 }
 
 // PublicKey returns a copy of the ed25519 PublicKey
@@ -72,7 +71,7 @@ func (t *TokenAuthority) PublicKey() ed25519.PublicKey {
 // - IssuedAt: time the JWT was issued
 // - NotBefore: the JWT will not be accepted before this time has passed
 // - Issuer: the service email of the issuing coordinator
-func (t *TokenAuthority) Generate(sessionID database.ID) (*base64.Value, time.Time, error) {
+func (t *TokenAuthority) Generate(sessionID string) (*base64.Value, time.Time, error) {
 	if t.keypair == nil {
 		return nil, time.Time{}, errors.New(MissingKeyPair, "Missing key pair cannot generate token")
 	}
@@ -86,7 +85,7 @@ func (t *TokenAuthority) Generate(sessionID database.ID) (*base64.Value, time.Ti
 	now := time.Now().UTC()
 	expiresIn := now.Add(TokenDuration)
 	cl := jwt.Claims{
-		ID:        sessionID.String(),
+		ID:        sessionID,
 		Issuer:    t.serviceEmail,
 		IssuedAt:  jwt.NewNumericDate(now),
 		NotBefore: jwt.NewNumericDate(now),

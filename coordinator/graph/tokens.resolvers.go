@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/capeprivacy/cape/auth"
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
@@ -33,46 +32,39 @@ func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTo
 		return nil, err
 	}
 
-	token, err := primitives.NewToken(input.UserID, &primitives.Credentials{
+	token := models.NewToken(input.UserID, &models.Credentials{
 		Secret: creds.Secret,
 		Salt:   creds.Salt,
-		Alg:    primitives.CredentialsAlgType(creds.Alg),
+		Alg:    creds.Alg,
 	})
-	if err != nil {
-		logger.Info().Err(err).Msg("Could not create token")
-		return nil, err
-	}
 
-	err = r.Backend.Create(ctx, token)
+	err = r.Database.Tokens().Create(ctx, token)
 	if err != nil {
-		logger.Info().Err(err).Msg("Could not insert token into database")
 		return nil, err
 	}
 
 	return &model.CreateTokenResponse{
 		Secret: password,
-		Token:  token,
+		Token:  &token,
 	}, nil
 }
 
-func (r *mutationResolver) RemoveToken(ctx context.Context, id database.ID) (database.ID, error) {
+func (r *mutationResolver) RemoveToken(ctx context.Context, id string) (string, error) {
 	currSession := fw.Session(ctx)
 
 	if !currSession.Roles.Global.Can(models.RemoveAnyToken) {
-		return database.EmptyID, errs.New(auth.AuthorizationFailure, "invalid permissions to remove a token")
+		return "", errs.New(auth.AuthorizationFailure, "invalid permissions to remove a token")
 	}
 
-	token := &primitives.Token{}
-	err := r.Backend.Get(ctx, id, token)
+	err := r.Database.Tokens().Delete(ctx, id)
 	if err != nil {
-		return database.EmptyID, err
+		return "", err
 	}
 
-	err = r.Backend.Delete(ctx, primitives.TokenPrimitiveType, id)
 	return id, err
 }
 
-func (r *queryResolver) Tokens(ctx context.Context, userID string) ([]database.ID, error) {
+func (r *queryResolver) Tokens(ctx context.Context, userID string) ([]string, error) {
 	currSession := fw.Session(ctx)
 
 	if currSession.User.ID != userID && !currSession.Roles.Global.Can(models.ListAnyTokens) {
@@ -81,18 +73,15 @@ func (r *queryResolver) Tokens(ctx context.Context, userID string) ([]database.I
 		return nil, errs.New(auth.AuthorizationFailure, "unable to list tokens")
 	}
 
-	var tokens []*primitives.Token
-	filter := database.Filter{Where: database.Where{"user_id": userID}}
-
-	err := r.Backend.Query(ctx, &tokens, filter)
+	tokens, err := r.Database.Tokens().ListByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	ids := make([]database.ID, len(tokens))
+	tokenIDs := make([]string, len(tokens))
 	for i, t := range tokens {
-		ids[i] = t.ID
+		tokenIDs[i] = t.ID
 	}
 
-	return ids, nil
+	return tokenIDs, nil
 }

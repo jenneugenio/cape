@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/capeprivacy/cape/models"
 	"net/http"
 	"runtime/debug"
 	"strings"
@@ -19,7 +20,6 @@ import (
 	"github.com/capeprivacy/cape/coordinator/db"
 	fw "github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 // RequestIDMiddleware sets a UUID on the response header and request context
@@ -189,8 +189,7 @@ func IsAuthenticatedMiddleware(coordinator *Coordinator) func(http.Handler) http
 				return
 			}
 
-			session := &primitives.Session{}
-			err = db.Get(ctx, id, session)
+			session, err := capedb.Session().Get(ctx, id)
 			if err != nil {
 				msg := "Could not authenticate. Unable to find session"
 				logger.Info().Err(err).Msg(msg)
@@ -236,19 +235,15 @@ func IsAuthenticatedMiddleware(coordinator *Coordinator) func(http.Handler) http
 	}
 }
 
-func getCredentialsProvider(ctx context.Context, db database.Backend, capedb db.Interface, id string) (primitives.CredentialProvider, error) {
-	dID, err := database.DecodeFromString(id)
+func getCredentialsProvider(ctx context.Context, db database.Backend, capedb db.Interface, id string) (models.CredentialProvider, error) {
+	// TODO -- not found error here??
+	user, err := capedb.Users().GetByID(ctx, id)
 	if err != nil {
-		user, err := capedb.Users().GetByID(ctx, id)
-		if err != nil {
-			return nil, err
-		}
-
-		return user, nil
+		return nil, err
 	}
 
-	token := &primitives.Token{}
-	err = db.Get(ctx, dID, token)
-
-	return token, err
+	return user, nil
+	//
+	//token, err := capedb.Tokens().Get(ctx, id)
+	//return token, err
 }

@@ -92,7 +92,7 @@ type ComplexityRoot struct {
 		GetProjectSuggestions    func(childComplexity int, label models.Label) int
 		RejectProjectSuggestion  func(childComplexity int, id string) int
 		RemoveContributor        func(childComplexity int, projectLabel models.Label, userEmail models.Email) int
-		RemoveToken              func(childComplexity int, id database.ID) int
+		RemoveToken              func(childComplexity int, id string) int
 		SetOrgRole               func(childComplexity int, userEmail models.Email, roleLabel models.Label) int
 		SetProjectRole           func(childComplexity int, userEmail models.Email, projectLabel models.Label, roleLabel models.Label) int
 		SuggestProjectPolicy     func(childComplexity int, label models.Label, name string, description string, request model.ProjectSpecFile) int
@@ -202,7 +202,7 @@ type MutationResolver interface {
 	SetOrgRole(ctx context.Context, userEmail models.Email, roleLabel models.Label) (*models.Assignment, error)
 	SetProjectRole(ctx context.Context, userEmail models.Email, projectLabel models.Label, roleLabel models.Label) (*models.Assignment, error)
 	CreateToken(ctx context.Context, input model.CreateTokenRequest) (*model.CreateTokenResponse, error)
-	RemoveToken(ctx context.Context, id database.ID) (database.ID, error)
+	RemoveToken(ctx context.Context, id string) (string, error)
 	CreateUser(ctx context.Context, input model.CreateUserRequest) (*model.CreateUserResponse, error)
 }
 type PolicyResolver interface {
@@ -219,7 +219,7 @@ type QueryResolver interface {
 	Project(ctx context.Context, id *string, label *models.Label) (*models.Project, error)
 	ListContributors(ctx context.Context, projectLabel models.Label) ([]*models.Contributor, error)
 	MyRole(ctx context.Context, projectLabel *models.Label) (*models.Role, error)
-	Tokens(ctx context.Context, userID string) ([]database.ID, error)
+	Tokens(ctx context.Context, userID string) ([]string, error)
 	User(ctx context.Context, id string) (*models.User, error)
 	Users(ctx context.Context) ([]*models.User, error)
 }
@@ -493,7 +493,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RemoveToken(childComplexity, args["id"].(database.ID)), true
+		return e.complexity.Mutation.RemoveToken(childComplexity, args["id"].(string)), true
 
 	case "Mutation.setOrgRole":
 		if e.complexity.Mutation.SetOrgRole == nil {
@@ -1175,7 +1175,7 @@ scalar Password
 scalar ModelLabel
 `, BuiltIn: false},
 	&ast.Source{Name: "coordinator/schema/tokens.graphql", Input: `type Token {
-    id: ID!
+    id: String!
     user_id: String!
 }
 
@@ -1189,12 +1189,12 @@ input CreateTokenRequest {
 }
 
 extend type Query {
-    tokens(user_id: String!): [ID!]!
+    tokens(user_id: String!): [String!]!
 }
 
 extend type Mutation {
     createToken(input: CreateTokenRequest!): CreateTokenResponse!
-    removeToken(id: ID!): ID!
+    removeToken(id: String!): String!
 }
 `, BuiltIn: false},
 	&ast.Source{Name: "coordinator/schema/users.graphql", Input: `scalar Name
@@ -1408,9 +1408,9 @@ func (ec *executionContext) field_Mutation_removeContributor_args(ctx context.Co
 func (ec *executionContext) field_Mutation_removeToken_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 database.ID
+	var arg0 string
 	if tmp, ok := rawArgs["id"]; ok {
-		arg0, err = ec.unmarshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, tmp)
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2200,9 +2200,9 @@ func (ec *executionContext) _CreateTokenResponse_token(ctx context.Context, fiel
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*primitives.Token)
+	res := resTmp.(*models.Token)
 	fc.Result = res
-	return ec.marshalNToken2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐToken(ctx, field.Selections, res)
+	return ec.marshalNToken2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐToken(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CreateUserResponse_password(ctx context.Context, field graphql.CollectedField, obj *model.CreateUserResponse) (ret graphql.Marshaler) {
@@ -2988,7 +2988,7 @@ func (ec *executionContext) _Mutation_removeToken(ctx context.Context, field gra
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RemoveToken(rctx, args["id"].(database.ID))
+		return ec.resolvers.Mutation().RemoveToken(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3000,9 +3000,9 @@ func (ec *executionContext) _Mutation_removeToken(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(database.ID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createUser(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3812,9 +3812,9 @@ func (ec *executionContext) _Query_tokens(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]database.ID)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalNID2ᚕgithubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐIDᚄ(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_user(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4502,7 +4502,7 @@ func (ec *executionContext) _Suggestion_updated_at(ctx context.Context, field gr
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Token_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Token) (ret graphql.Marshaler) {
+func (ec *executionContext) _Token_id(ctx context.Context, field graphql.CollectedField, obj *models.Token) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4531,12 +4531,12 @@ func (ec *executionContext) _Token_id(ctx context.Context, field graphql.Collect
 		}
 		return graphql.Null
 	}
-	res := resTmp.(database.ID)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2githubᚗcomᚋcapeprivacyᚋcapeᚋcoordinatorᚋdatabaseᚐID(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Token_user_id(ctx context.Context, field graphql.CollectedField, obj *primitives.Token) (ret graphql.Marshaler) {
+func (ec *executionContext) _Token_user_id(ctx context.Context, field graphql.CollectedField, obj *models.Token) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -6799,7 +6799,7 @@ func (ec *executionContext) _Suggestion(ctx context.Context, sel ast.SelectionSe
 
 var tokenImplementors = []string{"Token"}
 
-func (ec *executionContext) _Token(ctx context.Context, sel ast.SelectionSet, obj *primitives.Token) graphql.Marshaler {
+func (ec *executionContext) _Token(ctx context.Context, sel ast.SelectionSet, obj *models.Token) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, tokenImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -7585,6 +7585,35 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNSuggestion2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐSuggestion(ctx context.Context, sel ast.SelectionSet, v models.Suggestion) graphql.Marshaler {
 	return ec._Suggestion(ctx, sel, &v)
 }
@@ -7659,11 +7688,11 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
-func (ec *executionContext) marshalNToken2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐToken(ctx context.Context, sel ast.SelectionSet, v primitives.Token) graphql.Marshaler {
+func (ec *executionContext) marshalNToken2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐToken(ctx context.Context, sel ast.SelectionSet, v models.Token) graphql.Marshaler {
 	return ec._Token(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNToken2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐToken(ctx context.Context, sel ast.SelectionSet, v *primitives.Token) graphql.Marshaler {
+func (ec *executionContext) marshalNToken2ᚖgithubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐToken(ctx context.Context, sel ast.SelectionSet, v *models.Token) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")

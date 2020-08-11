@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/capeprivacy/cape/models"
 
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/primitives"
 )
 
@@ -45,7 +44,7 @@ var (
 		Description: "The ID for the token.",
 		Required:    true,
 		Processor: func(in string) (interface{}, error) {
-			return database.DecodeFromString(in)
+			return in, nil
 		},
 	}
 

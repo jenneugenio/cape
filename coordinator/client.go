@@ -156,11 +156,11 @@ func (c *Client) Authenticated() bool {
 }
 
 // EmailLogin calls the CreateLoginSession and CreateAuthSession mutations
-func (c *Client) EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*primitives.Session, error) {
+func (c *Client) EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*models.Session, error) {
 	return c.transport.EmailLogin(ctx, email, password)
 }
 
-func (c *Client) TokenLogin(ctx context.Context, token *auth.APIToken) (*primitives.Session, error) {
+func (c *Client) TokenLogin(ctx context.Context, token *auth.APIToken) (*models.Session, error) {
 	return c.transport.TokenLogin(ctx, token)
 }
 
@@ -301,7 +301,7 @@ func (c *Client) GetUsers(ctx context.Context, emails []primitives.Email) ([]*mo
 
 type CreateTokenMutation struct {
 	Secret primitives.Password `json:"secret"`
-	Token  *primitives.Token   `json:"token"`
+	Token  *models.Token       `json:"token"`
 }
 
 type CreateTokenResponse struct {
@@ -309,7 +309,7 @@ type CreateTokenResponse struct {
 }
 
 // CreateToken creates a new API token for the provided user. You can pass nil and it will return a token for you
-func (c *Client) CreateToken(ctx context.Context, user *models.User) (*auth.APIToken, *primitives.Token, error) {
+func (c *Client) CreateToken(ctx context.Context, user *models.User) (*auth.APIToken, *models.Token, error) {
 	// If the user provides no user, we will make a token for the current session user
 	if user == nil {
 		i, err := c.Me(ctx)
@@ -348,11 +348,11 @@ func (c *Client) CreateToken(ctx context.Context, user *models.User) (*auth.APIT
 }
 
 type ListTokensResponse struct {
-	IDs []database.ID `json:"tokens"`
+	IDs []string `json:"tokens"`
 }
 
 // ListTokens lists all of the auth tokens for the provided user
-func (c *Client) ListTokens(ctx context.Context, user *models.User) ([]database.ID, error) {
+func (c *Client) ListTokens(ctx context.Context, user *models.User) ([]string, error) {
 	// If the user provides no user, we will make a token for the current session user
 	if user == nil {
 		i, err := c.Me(ctx)
@@ -382,12 +382,12 @@ func (c *Client) ListTokens(ctx context.Context, user *models.User) ([]database.
 }
 
 // RemoveToken removes the provided token from the database
-func (c *Client) RemoveToken(ctx context.Context, tokenID database.ID) error {
+func (c *Client) RemoveToken(ctx context.Context, tokenID string) error {
 	variables := make(map[string]interface{})
 	variables["id"] = tokenID
 
 	return c.transport.Raw(ctx, `
-		mutation RemoveToken($id: ID!) {
+		mutation RemoveToken($id: String!) {
 			removeToken(id: $id)
 		}
     `, variables, nil)

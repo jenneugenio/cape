@@ -84,16 +84,16 @@ func (c *HTTPTransport) Raw(ctx context.Context, query string, variables map[str
 }
 
 type SessionResponse struct {
-	Session primitives.Session `json:"createSession"`
+	Session models.Session `json:"createSession"`
 }
 
 // TokenLogin enables a user or service to login using an APIToken
-func (c *HTTPTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*primitives.Session, error) {
+func (c *HTTPTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*models.Session, error) {
 	return tokenLogin(ctx, c, apiToken)
 }
 
 // EmailLogin starts step 1 of the login flow using an email & password
-func (c *HTTPTransport) EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*primitives.Session, error) {
+func (c *HTTPTransport) EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*models.Session, error) {
 	return emailLogin(ctx, c, email, password)
 }
 

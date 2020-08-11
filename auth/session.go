@@ -3,24 +3,23 @@ package auth
 import (
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 // Session holds information related to authenticating and
 // authorizing the contained user
 type Session struct {
 	User               *models.User
-	Session            *primitives.Session
+	Session            *models.Session
 	Roles              models.UserRoles
-	CredentialProvider primitives.CredentialProvider
+	CredentialProvider models.CredentialProvider
 }
 
 // NewSession returns a new auth Session
 func NewSession(
 	user *models.User,
-	session *primitives.Session,
+	session *models.Session,
 	roles models.UserRoles,
-	cp primitives.CredentialProvider) (*Session, error) {
+	cp models.CredentialProvider) (*Session, error) {
 	s := &Session{
 		User:               user,
 		Session:            session,

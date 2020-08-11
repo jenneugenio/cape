@@ -58,7 +58,7 @@ models:
   EmailType:
     model: github.com/capeprivacy/cape/primitives.EmailType
   Token:
-    model: github.com/capeprivacy/cape/primitives.Token
+    model: github.com/capeprivacy/cape/models.Token
   Password:
     model: github.com/capeprivacy/cape/primitives.Password
   Project:
