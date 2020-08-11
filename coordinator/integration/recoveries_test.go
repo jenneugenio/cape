@@ -50,10 +50,10 @@ func TestRecoveries(t *testing.T) {
 		mail := h.Mails()
 		gm.Expect(len(mail)).To(gm.Equal(1))
 
-		recovery := mail[0].Arguments["recovery"].(*primitives.Recovery)
+		recovery := mail[0].Arguments["recovery"].(models.Recovery)
 		secret := mail[0].Arguments["secret"].(primitives.Password)
 
-		err = client.AttemptRecovery(ctx, recovery.ID.String(), secret, password)
+		err = client.AttemptRecovery(ctx, recovery.ID, secret, password)
 		gm.Expect(err).To(gm.BeNil())
 
 		userClient, err := h.Client()
@@ -91,9 +91,9 @@ func TestRecoveries(t *testing.T) {
 		mail := h.Mails()
 		gm.Expect(len(mail)).To(gm.Equal(3))
 
-		recovery := mail[2].Arguments["recovery"].(*primitives.Recovery)
+		recovery := mail[2].Arguments["recovery"].(models.Recovery)
 
-		err = client.AttemptRecovery(ctx, recovery.ID.String(), password, password)
+		err = client.AttemptRecovery(ctx, recovery.ID, password, password)
 		gm.Expect(err).ToNot(gm.BeNil())
 	})
 }

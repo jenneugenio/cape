@@ -3,7 +3,6 @@
 package model
 
 import (
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/models"
 	"github.com/capeprivacy/cape/primitives"
 )
@@ -11,7 +10,7 @@ import (
 type AttemptRecoveryRequest struct {
 	NewPassword primitives.Password `json:"new_password"`
 	Secret      primitives.Password `json:"secret"`
-	ID          database.ID         `json:"id"`
+	ID          string              `json:"id"`
 }
 
 type CreateProjectRequest struct {
@@ -44,7 +43,7 @@ type CreateUserResponse struct {
 }
 
 type DeleteRecoveriesRequest struct {
-	Ids []database.ID `json:"ids"`
+	Ids []string `json:"ids"`
 }
 
 type ProjectSpecFile struct {

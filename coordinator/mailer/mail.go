@@ -8,5 +8,5 @@ import (
 )
 
 type Mailer interface {
-	SendAccountRecovery(context.Context, *models.User, *primitives.Recovery, primitives.Password) error
+	SendAccountRecovery(context.Context, models.User, models.Recovery, primitives.Password) error
 }

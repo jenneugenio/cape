@@ -894,7 +894,7 @@ func (c *Client) AttemptRecovery(ctx context.Context, ID string, secret primitiv
 		"id":           ID,
 	}
 
-	query := `mutation attemptRecovery($new_password: Password!, $secret: Password!, $id: ID!) {
+	query := `mutation attemptRecovery($new_password: Password!, $secret: Password!, $id: String!) {
 		attemptRecovery(input: {
 			new_password: $new_password,
 			secret: $secret,
@@ -906,10 +906,10 @@ func (c *Client) AttemptRecovery(ctx context.Context, ID string, secret primitiv
 }
 
 type ListRecoveriesResponse struct {
-	Recoveries []*primitives.Recovery `json:"recoveries"`
+	Recoveries []models.Recovery `json:"recoveries"`
 }
 
-func (c *Client) Recoveries(ctx context.Context) ([]*primitives.Recovery, error) {
+func (c *Client) Recoveries(ctx context.Context) ([]models.Recovery, error) {
 	var resp ListRecoveriesResponse
 	query := `
 		query ListRecoveries() {
@@ -934,7 +934,7 @@ func (c *Client) DeleteRecoveries(ctx context.Context, ids []database.ID) error 
 	}
 
 	query := `
-		mutation DeleteRecoveries($ids: [ID!]!) {
+		mutation DeleteRecoveries($ids: [String!]!) {
 			deleteRecoveries(input: { ids: $ids })
 		}
 	`

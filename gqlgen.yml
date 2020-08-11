@@ -74,7 +74,7 @@ models:
   ProjectDisplayName:
     model: github.com/capeprivacy/cape/models.ProjectDisplayName
   Recovery:
-    model: github.com/capeprivacy/cape/primitives.Recovery
+    model: github.com/capeprivacy/cape/models.Recovery
   Contributor:
     model: github.com/capeprivacy/cape/models.Contributor
   Assignment:

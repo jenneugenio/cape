@@ -32,6 +32,7 @@ func (c *CapePg) Config() db.ConfigDB            { return &pgConfig{c.pool, c.ti
 func (c *CapePg) Secrets() db.SecretDB           { return &pgSecret{c.pool, c.timeout} }
 func (c *CapePg) Tokens() db.TokensDB            { return &pgToken{c.pool, c.timeout} }
 func (c *CapePg) Session() db.SessionDB          { return &pgSession{c.pool, c.timeout} }
+func (c *CapePg) Recoveries() db.RecoveryDB      { return &pgRecovery{c.pool, c.timeout} }
 
 type Pool interface {
 	Exec(_ context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error)

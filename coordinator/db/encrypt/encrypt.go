@@ -43,3 +43,10 @@ func (c *CapeDBEncrypt) Session() db.SessionDB {
 		codec: c.codec,
 	}
 }
+
+func (c *CapeDBEncrypt) Recoveries() db.RecoveryDB {
+	return &recoveriesEncrypt{
+		db:    c.db.Recoveries(),
+		codec: c.codec,
+	}
+}

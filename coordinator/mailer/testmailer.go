@@ -18,7 +18,7 @@ type TestMailer struct {
 }
 
 func (tm *TestMailer) SendAccountRecovery(
-	ctx context.Context, user *models.User, recovery *primitives.Recovery, secret primitives.Password) error {
+	ctx context.Context, user models.User, recovery models.Recovery, secret primitives.Password) error {
 	tm.Mails = append(tm.Mails, &TestMail{
 		To:   user.Email,
 		Type: "account_recovery",
