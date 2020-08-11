@@ -2,8 +2,7 @@ package models
 
 import (
 	"crypto/rand"
-	"fmt"
-
+	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/manifoldco/go-base64"
 )
 
@@ -25,11 +24,11 @@ type Password string
 func (p Password) Validate() error {
 	s := p.String()
 	if len(s) < MinPasswordLength {
-		return fmt.Errorf("passwords must be at least %d characters long", MinPasswordLength)
+		return errors.New(InvalidPasswordCause, "Passwords must be atleast %d characters long", MinPasswordLength)
 	}
 
 	if len(s) > MaxPasswordLength {
-		return fmt.Errorf("passwords cannot be more than %d characters long", MaxPasswordLength)
+		return errors.New(InvalidPasswordCause, "Passwords cannot be more than %d characters long", MaxPasswordLength)
 	}
 
 	return nil
