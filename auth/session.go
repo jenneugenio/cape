@@ -8,23 +8,20 @@ import (
 // Session holds information related to authenticating and
 // authorizing the contained user
 type Session struct {
-	User               *models.User
-	Session            *models.Session
-	Roles              models.UserRoles
-	CredentialProvider models.CredentialProvider
+	User    *models.User
+	Session *models.Session
+	Roles   models.UserRoles
 }
 
 // NewSession returns a new auth Session
 func NewSession(
 	user *models.User,
 	session *models.Session,
-	roles models.UserRoles,
-	cp models.CredentialProvider) (*Session, error) {
+	roles models.UserRoles) (*Session, error) {
 	s := &Session{
-		User:               user,
-		Session:            session,
-		Roles:              roles,
-		CredentialProvider: cp,
+		User:    user,
+		Session: session,
+		Roles:   roles,
 	}
 
 	return s, s.Validate()
