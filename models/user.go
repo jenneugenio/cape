@@ -2,8 +2,6 @@ package models
 
 import (
 	"time"
-
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func (u *User) GetCredentials() (*Credentials, error) {
@@ -51,18 +49,18 @@ func NewUser(name Name, email Email, creds Credentials) User {
 // GenerateUser returns an instantiated user for use in unit testing
 //
 // This function _should only ever_ be used inside of a test.
-func GenerateUser(name, email string) (primitives.Password, User) {
-	password := primitives.GeneratePassword()
+func GenerateUser(name, email string) (Password, User) {
+	password := GeneratePassword()
 
 	n := Name(name)
 	e := Email(email)
 
-	c := primitives.GenerateCredentials()
+	c := GenerateCredentials()
 
 	user := NewUser(n, e, Credentials{
 		Secret: c.Secret,
 		Salt:   c.Salt,
-		Alg:    CredentialsAlgType(c.Alg),
+		Alg:    c.Alg,
 	})
 	return password, user
 }

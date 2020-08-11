@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/capeprivacy/cape/primitives"
+	"github.com/capeprivacy/cape/models"
 )
 
 var (
@@ -14,7 +14,7 @@ var (
 				return in, nil
 			}
 
-			return primitives.NewPassword(in)
+			return models.NewPassword(in)
 		},
 	}
 
@@ -28,7 +28,7 @@ func DBURLEnvVar(required bool) *EnvVar {
 		Required:    required,
 		Description: "The URL for the database.",
 		Processor: func(in string) (interface{}, error) {
-			return primitives.NewDBURL(in)
+			return models.NewDBURL(in)
 		},
 	}
 }

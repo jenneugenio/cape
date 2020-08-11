@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/capeprivacy/cape/models"
 	"os"
 
 	"github.com/urfave/cli/v2"
 
 	"github.com/capeprivacy/cape/cmd/cape/config"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func init() {
@@ -116,8 +116,8 @@ func addCluster(c *cli.Context) error {
 	use := c.Bool("use")
 	cfg := Config(c.Context)
 
-	label := Arguments(c.Context, ClusterLabelArg).(primitives.Label)
-	clusterURL := Arguments(c.Context, ClusterURLArg).(*primitives.URL)
+	label := Arguments(c.Context, ClusterLabelArg).(models.Label)
+	clusterURL := Arguments(c.Context, ClusterURLArg).(*models.URL)
 	cluster, err := cfg.AddCluster(label, clusterURL, "")
 	if err != nil {
 		return err
@@ -168,7 +168,7 @@ func removeCluster(c *cli.Context) error {
 		return err
 	}
 
-	label := Arguments(c.Context, ClusterLabelArg).(primitives.Label)
+	label := Arguments(c.Context, ClusterLabelArg).(models.Label)
 	if !skipConfirm {
 		// TODO -- template doesn't work with confirm right now
 		err := u.Confirm(fmt.Sprintf("Do you want to delete the '%s' cluster from configuration?", label))
@@ -211,7 +211,7 @@ func removeCluster(c *cli.Context) error {
 
 func useCluster(c *cli.Context) error {
 	cfg := Config(c.Context)
-	label := Arguments(c.Context, ClusterLabelArg).(primitives.Label)
+	label := Arguments(c.Context, ClusterLabelArg).(models.Label)
 	err := cfg.Use(label)
 	if err != nil {
 		return err

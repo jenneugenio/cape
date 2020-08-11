@@ -19,9 +19,6 @@ const PasswordByteLength = 24
 var EmptyPassword = Password("")
 
 // Password represents a password used by a user to log into a cape account.
-//
-// This primitive is _only_ used by the command line tool as secrets are
-// *never* passed over the wire.
 type Password string
 
 // Validate returns an error if the given password has an incorrect length.

@@ -7,7 +7,6 @@ import (
 
 	"github.com/capeprivacy/cape/cmd/cape/ui"
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func init() {
@@ -49,7 +48,7 @@ func usersCreateCmd(c *cli.Context) error {
 	provider := GetProvider(c.Context)
 	u := provider.UI(c.Context)
 
-	email := Arguments(c.Context, UserEmailArg).(primitives.Email)
+	email := Arguments(c.Context, UserEmailArg).(models.Email)
 	name, err := getName(c, "Please enter the persons name")
 	if err != nil {
 		return err
@@ -60,7 +59,7 @@ func usersCreateCmd(c *cli.Context) error {
 		return err
 	}
 
-	_, password, err := client.CreateUser(c.Context, name, models.Email(email.Email))
+	_, password, err := client.CreateUser(c.Context, name, email)
 	if err != nil {
 		return err
 	}

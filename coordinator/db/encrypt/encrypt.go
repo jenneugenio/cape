@@ -1,8 +1,8 @@
 package encrypt
 
 import (
-	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/coordinator/db/crypto"
 )
 
 // CapeDBEncrypt is a postgresql implementation of the cape database interface

@@ -15,7 +15,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -2170,9 +2169,9 @@ func (ec *executionContext) _CreateTokenResponse_secret(ctx context.Context, fie
 		}
 		return graphql.Null
 	}
-	res := resTmp.(primitives.Password)
+	res := resTmp.(models.Password)
 	fc.Result = res
-	return ec.marshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPassword(ctx, field.Selections, res)
+	return ec.marshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPassword(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CreateTokenResponse_token(ctx context.Context, field graphql.CollectedField, obj *model.CreateTokenResponse) (ret graphql.Marshaler) {
@@ -2238,9 +2237,9 @@ func (ec *executionContext) _CreateUserResponse_password(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.(primitives.Password)
+	res := resTmp.(models.Password)
 	fc.Result = res
-	return ec.marshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPassword(ctx, field.Selections, res)
+	return ec.marshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPassword(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CreateUserResponse_user(ctx context.Context, field graphql.CollectedField, obj *model.CreateUserResponse) (ret graphql.Marshaler) {
@@ -5841,13 +5840,13 @@ func (ec *executionContext) unmarshalInputAttemptRecoveryRequest(ctx context.Con
 		switch k {
 		case "new_password":
 			var err error
-			it.NewPassword, err = ec.unmarshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPassword(ctx, v)
+			it.NewPassword, err = ec.unmarshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPassword(ctx, v)
 			if err != nil {
 				return it, err
 			}
 		case "secret":
 			var err error
-			it.Secret, err = ec.unmarshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPassword(ctx, v)
+			it.Secret, err = ec.unmarshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPassword(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7356,12 +7355,12 @@ func (ec *executionContext) marshalNNamedTransformation2ᚖgithubᚗcomᚋcapepr
 	return v
 }
 
-func (ec *executionContext) unmarshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPassword(ctx context.Context, v interface{}) (primitives.Password, error) {
+func (ec *executionContext) unmarshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPassword(ctx context.Context, v interface{}) (models.Password, error) {
 	tmp, err := graphql.UnmarshalString(v)
-	return primitives.Password(tmp), err
+	return models.Password(tmp), err
 }
 
-func (ec *executionContext) marshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋprimitivesᚐPassword(ctx context.Context, sel ast.SelectionSet, v primitives.Password) graphql.Marshaler {
+func (ec *executionContext) marshalNPassword2githubᚗcomᚋcapeprivacyᚋcapeᚋmodelsᚐPassword(ctx context.Context, sel ast.SelectionSet, v models.Password) graphql.Marshaler {
 	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {

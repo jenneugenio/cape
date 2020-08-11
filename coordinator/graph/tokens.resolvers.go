@@ -11,7 +11,6 @@ import (
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 	errs "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTokenRequest) (*model.CreateTokenResponse, error) {
@@ -25,7 +24,7 @@ func (r *mutationResolver) CreateToken(ctx context.Context, input model.CreateTo
 		return nil, errs.New(auth.AuthorizationFailure, "invalid permissions to create a token")
 	}
 
-	password := primitives.GeneratePassword()
+	password := models.GeneratePassword()
 	creds, err := r.CredentialProducer.Generate(password)
 	if err != nil {
 		logger.Info().Err(err).Msg("Could not generate credentials")

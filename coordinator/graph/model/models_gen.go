@@ -4,13 +4,12 @@ package model
 
 import (
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 type AttemptRecoveryRequest struct {
-	NewPassword primitives.Password `json:"new_password"`
-	Secret      primitives.Password `json:"secret"`
-	ID          string              `json:"id"`
+	NewPassword models.Password `json:"new_password"`
+	Secret      models.Password `json:"secret"`
+	ID          string          `json:"id"`
 }
 
 type CreateProjectRequest struct {
@@ -28,8 +27,8 @@ type CreateTokenRequest struct {
 }
 
 type CreateTokenResponse struct {
-	Secret primitives.Password `json:"secret"`
-	Token  *models.Token       `json:"token"`
+	Secret models.Password `json:"secret"`
+	Token  *models.Token   `json:"token"`
 }
 
 type CreateUserRequest struct {
@@ -38,8 +37,8 @@ type CreateUserRequest struct {
 }
 
 type CreateUserResponse struct {
-	Password primitives.Password `json:"password"`
-	User     *models.User        `json:"user"`
+	Password models.Password `json:"password"`
+	User     *models.User    `json:"user"`
 }
 
 type DeleteRecoveriesRequest struct {

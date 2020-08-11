@@ -43,7 +43,7 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-// NewConfig returns a new Config primitive
+// NewConfig returns a new Config
 func NewConfig(encryptionKey *base64.Value, authKeypair *base64.Value) (*Config, error) {
 	cfg := &Config{
 		ID:            NewID(),

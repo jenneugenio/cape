@@ -2,8 +2,6 @@ package main
 
 import (
 	"github.com/capeprivacy/cape/models"
-	modelmigration "github.com/capeprivacy/cape/models/migration"
-	"github.com/capeprivacy/cape/primitives"
 	"github.com/urfave/cli/v2"
 )
 
@@ -76,8 +74,7 @@ func rolesSetCmd(c *cli.Context) error {
 		return err
 	}
 
-	depUserEmail := Arguments(c.Context, UserEmailArg).(primitives.Email)
-	userEmail := modelmigration.EmailFromPrimitive(depUserEmail)
+	userEmail := Arguments(c.Context, UserEmailArg).(models.Email)
 	roleLabel := Arguments(c.Context, RoleArg).(models.Label)
 
 	project := c.String("project")

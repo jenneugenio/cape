@@ -10,7 +10,6 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestSessions(t *testing.T) {
@@ -53,7 +52,7 @@ func TestSessions(t *testing.T) {
 
 		email := models.Email("fake@fake.com")
 
-		password, err := primitives.NewPassword("newpasswordwhodis")
+		password, err := models.NewPassword("newpasswordwhodis")
 		gm.Expect(err).To(gm.BeNil())
 
 		session, err := client.EmailLogin(ctx, email, password)
@@ -69,7 +68,7 @@ func TestSessions(t *testing.T) {
 		client, err := h.Client()
 		gm.Expect(err).To(gm.BeNil())
 
-		password, err := primitives.NewPassword("idontknowmypassword")
+		password, err := models.NewPassword("idontknowmypassword")
 		gm.Expect(err).To(gm.BeNil())
 
 		// fail because credentials inside login won't be right

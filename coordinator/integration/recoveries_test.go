@@ -10,7 +10,6 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator/harness"
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestRecoveries(t *testing.T) {
@@ -37,7 +36,7 @@ func TestRecoveries(t *testing.T) {
 	email := models.Email("jerry@jerry.berry")
 	name := models.Name("Jerry Berry")
 
-	password, err := primitives.NewPassword("hellotestingthisout")
+	password, err := models.NewPassword("hellotestingthisout")
 	gm.Expect(err).To(gm.BeNil())
 
 	user, _, err := client.CreateUser(ctx, name, email)
@@ -51,7 +50,7 @@ func TestRecoveries(t *testing.T) {
 		gm.Expect(len(mail)).To(gm.Equal(1))
 
 		recovery := mail[0].Arguments["recovery"].(models.Recovery)
-		secret := mail[0].Arguments["secret"].(primitives.Password)
+		secret := mail[0].Arguments["secret"].(models.Password)
 
 		err = client.AttemptRecovery(ctx, recovery.ID, secret, password)
 		gm.Expect(err).To(gm.BeNil())
@@ -78,7 +77,7 @@ func TestRecoveries(t *testing.T) {
 		mail := h.Mails()
 		gm.Expect(len(mail)).To(gm.Equal(2))
 
-		secret := mail[1].Arguments["secret"].(primitives.Password)
+		secret := mail[1].Arguments["secret"].(models.Password)
 
 		err = client.AttemptRecovery(ctx, user.ID, secret, password)
 		gm.Expect(err).ToNot(gm.BeNil())

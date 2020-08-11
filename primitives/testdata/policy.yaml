@@ -1,9 +1,0 @@
-label: protect-ssn
-rules:
-- action: read
-  effect: deny
-  fields:
-  - card_number
-  sudo: false
-  target: records:creditcards.transactions
-version: 1

@@ -2,13 +2,13 @@ package auth
 
 import (
 	"encoding/json"
+	"github.com/capeprivacy/cape/models"
 	"testing"
 
 	"github.com/manifoldco/go-base64"
 	gm "github.com/onsi/gomega"
 
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestKeypair(t *testing.T) {
@@ -84,11 +84,11 @@ func TestKeypair(t *testing.T) {
 					return
 				}
 
-				gm.Expect(len(kp.salt)).To(gm.Equal(primitives.SaltLength))
+				gm.Expect(len(kp.salt)).To(gm.Equal(models.SaltLength))
 				gm.Expect(len(kp.secret)).To(gm.Equal(SecretLength))
 				gm.Expect(len(kp.PrivateKey)).To(gm.Equal(64))
 				gm.Expect(len(kp.PublicKey)).To(gm.Equal(32))
-				gm.Expect(kp.Alg).To(gm.Equal(primitives.EDDSA))
+				gm.Expect(kp.Alg).To(gm.Equal(models.EDDSA))
 			})
 		}
 	})
@@ -101,7 +101,7 @@ func TestKeypair(t *testing.T) {
 			name   string
 			secret []byte
 			salt   []byte
-			alg    primitives.CredentialsAlgType
+			alg    models.CredentialsAlgType
 			cause  *errors.Cause
 		}{
 			{
@@ -140,7 +140,7 @@ func TestKeypair(t *testing.T) {
 				name:   "wrong alg",
 				salt:   kp.salt,
 				secret: kp.secret,
-				alg:    primitives.SHA256,
+				alg:    models.SHA256,
 				cause:  &BadAlgType,
 			},
 		}

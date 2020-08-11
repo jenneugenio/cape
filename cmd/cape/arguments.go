@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/capeprivacy/cape/models"
-
-	"github.com/capeprivacy/cape/primitives"
 )
 
 var (
@@ -16,7 +14,7 @@ var (
 		Description: "A url for the cluster.",
 		Required:    true,
 		Processor: func(in string) (interface{}, error) {
-			return primitives.NewURL(in)
+			return models.NewURL(in)
 		},
 	}
 
@@ -26,7 +24,7 @@ var (
 		Required:    true,
 		Processor: func(in string) (interface{}, error) {
 			// validates!!
-			return primitives.NewEmail(in)
+			return models.Email(in), nil
 		},
 	}
 
@@ -35,7 +33,7 @@ var (
 		Description: "The email of the user for this token.",
 		Required:    false,
 		Processor: func(in string) (interface{}, error) {
-			return primitives.NewEmail(in)
+			return models.Email(in), nil
 		},
 	}
 
@@ -116,7 +114,7 @@ func LabelArg(f string) *Argument {
 		Required:    true,
 		Processor: func(in string) (interface{}, error) {
 			// NewLabel validates that the label meets label criteria
-			return primitives.NewLabel(in)
+			return models.Label(in), nil
 		},
 	}
 }

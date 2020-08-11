@@ -7,7 +7,6 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 const AdminEmail = models.Email("admin@cape.com")
@@ -18,7 +17,7 @@ const AdminPassword = "iamtheadmin"
 type User struct {
 	Client   *coordinator.Client
 	User     models.User
-	Password primitives.Password
+	Password models.Password
 	Token    *base64.Value
 }
 
@@ -41,7 +40,7 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 		return nil, err
 	}
 
-	password, err := primitives.NewPassword(AdminPassword)
+	password, err := models.NewPassword(AdminPassword)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +66,6 @@ func (m *Manager) Setup(ctx context.Context) (*coordinator.Client, error) {
 }
 
 // URL returns the url of the coordinator
-func (m *Manager) URL() (*primitives.URL, error) {
+func (m *Manager) URL() (*models.URL, error) {
 	return m.h.URL()
 }

@@ -3,11 +3,10 @@ package framework
 import (
 	"context"
 	"fmt"
+	"github.com/capeprivacy/cape/models"
 	"net/http"
 
 	"github.com/rs/zerolog"
-
-	"github.com/capeprivacy/cape/primitives"
 )
 
 // Component represents the business logic and functionality that is served by
@@ -27,7 +26,7 @@ type Component interface {
 // long as they satisfy the needs of the Server
 type Config interface {
 	GetPort() int
-	GetInstanceID() primitives.Label
+	GetInstanceID() models.Label
 	Validate() error
 }
 

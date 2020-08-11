@@ -2,8 +2,8 @@ package encrypt
 
 import (
 	"context"
-	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/coordinator/db/crypto"
 	"github.com/capeprivacy/cape/models"
 )
 

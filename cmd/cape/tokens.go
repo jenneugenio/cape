@@ -9,7 +9,6 @@ import (
 	"github.com/capeprivacy/cape/coordinator"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func init() {
@@ -83,9 +82,9 @@ func init() {
 
 func getUser(ctx context.Context, client *coordinator.Client) (*models.User, error) {
 	var user *models.User
-	identifier, ok := Arguments(ctx, TokenUserArg).(primitives.Email)
+	identifier, ok := Arguments(ctx, TokenUserArg).(models.Email)
 	if ok {
-		users, err := client.GetUsers(ctx, []primitives.Email{identifier})
+		users, err := client.GetUsers(ctx, []models.Email{identifier})
 		if err != nil {
 			return nil, err
 		}

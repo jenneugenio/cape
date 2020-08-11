@@ -2,6 +2,7 @@ package harness
 
 import (
 	"context"
+	"github.com/capeprivacy/cape/models"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -9,13 +10,12 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/capeprivacy/cape/coordinator"
-	"github.com/capeprivacy/cape/coordinator/database"
-	"github.com/capeprivacy/cape/coordinator/database/crypto"
-	"github.com/capeprivacy/cape/coordinator/database/dbtest"
+	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/coordinator/db/crypto"
+	"github.com/capeprivacy/cape/coordinator/db/dbtest"
 	"github.com/capeprivacy/cape/coordinator/mailer"
 	"github.com/capeprivacy/cape/framework"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 var (
@@ -74,12 +74,12 @@ func NewHarness(cfg *Config) (*Harness, error) {
 func (h *Harness) Setup(ctx context.Context) error {
 	logger := framework.TestLogger()
 
-	db, err := dbtest.New(h.cfg.dbURL)
+	database, err := dbtest.New(h.cfg.dbURL)
 	if err != nil {
 		return err
 	}
 
-	err = db.Setup(ctx)
+	err = database.Setup(ctx)
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 		h.component = nil
 		h.manager = nil
 
-		err := db.Teardown(ctx)
+		err := database.Teardown(ctx)
 		if err != nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 		return in
 	}
 
-	migrator, err := database.NewMigrator(db.URL(), h.cfg.Migrations()...)
+	migrator, err := db.NewMigrator(database.URL(), h.cfg.Migrations()...)
 	if err != nil {
 		return cleanup(err)
 	}
@@ -124,7 +124,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 		return cleanup(err)
 	}
 
-	dbURL, err := primitives.DBURLFromURL(db.URL())
+	dbURL, err := models.DBURLFromURL(database.URL())
 	if err != nil {
 		return cleanup(err)
 	}
@@ -147,7 +147,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 		InstanceID:            "cape",
 		Port:                  1, // This port is ignored!
 		RootKey:               keyURL.String(),
-		CredentialProducerAlg: primitives.SHA256,
+		CredentialProducerAlg: models.SHA256,
 		User: &coordinator.UserConfig{
 			Name:     AdminName,
 			Email:    AdminEmail,
@@ -165,7 +165,7 @@ func (h *Harness) Setup(ctx context.Context) error {
 
 	h.logger = logger
 	h.component = coordinator
-	h.db = db
+	h.db = database
 
 	// httptest.NewServer starts listening immediately, it also picks a
 	// randomized port to listen on!
@@ -251,12 +251,12 @@ func (h *Harness) Manager() *Manager {
 }
 
 // URL returns the url to the running coordinator once the harness has been started.
-func (h *Harness) URL() (*primitives.URL, error) {
+func (h *Harness) URL() (*models.URL, error) {
 	if h.server == nil {
 		return nil, errors.New(NotStartedCause, "Harness must be started to retrieve url")
 	}
 
-	return primitives.NewURL(h.server.URL)
+	return models.NewURL(h.server.URL)
 }
 
 // Mails returns a list of emails sent by this server instance

@@ -2,6 +2,7 @@ package main
 
 import (
 	stdbase64 "encoding/base64"
+	"github.com/capeprivacy/cape/models"
 	"html/template"
 	"io/ioutil"
 	"os"
@@ -19,7 +20,6 @@ import (
 	"github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/logging"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 var typeRegistry = map[FormatType]string{
@@ -140,9 +140,9 @@ func getPort(c *cli.Context) (int, error) {
 	return strconv.Atoi(portStr)
 }
 
-func queryDBURL(c *cli.Context) (*primitives.DBURL, error) {
+func queryDBURL(c *cli.Context) (*models.DBURL, error) {
 	validateDBURL := func(input string) error {
-		_, err := primitives.NewDBURL(input)
+		_, err := models.NewDBURL(input)
 		if err != nil {
 			return err
 		}
@@ -160,7 +160,7 @@ func queryDBURL(c *cli.Context) (*primitives.DBURL, error) {
 		return nil, err
 	}
 
-	return primitives.NewDBURL(urlStr)
+	return models.NewDBURL(urlStr)
 }
 
 func configureCoordinatorCmd(c *cli.Context) error {
@@ -176,7 +176,7 @@ func configureCoordinatorCmd(c *cli.Context) error {
 		port = p
 	}
 
-	var dbURL *primitives.DBURL
+	var dbURL *models.DBURL
 	i := EnvVariables(c.Context, capeDBURLNotRequired)
 	if i == nil {
 		u, err := queryDBURL(c)
@@ -186,7 +186,7 @@ func configureCoordinatorCmd(c *cli.Context) error {
 
 		dbURL = u
 	} else {
-		dbURL = i.(*primitives.DBURL)
+		dbURL = i.(*models.DBURL)
 	}
 
 	cfg, err := coordinator.NewConfig(port, dbURL)
@@ -272,7 +272,7 @@ func startCoordinatorCmd(c *cli.Context) error {
 
 	// By default, we always configure Cape to use Argon2ID
 	// _unless_ we're writing unit tests.
-	cfg.CredentialProducerAlg = primitives.Argon2ID
+	cfg.CredentialProducerAlg = models.Argon2ID
 
 	instanceID, err := getInstanceID(c, "coordinator")
 	if err != nil {

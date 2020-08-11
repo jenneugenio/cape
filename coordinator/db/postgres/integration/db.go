@@ -3,8 +3,8 @@ package integration
 import (
 	"context"
 	"fmt"
-	"github.com/capeprivacy/cape/coordinator/database"
-	"github.com/capeprivacy/cape/coordinator/database/dbtest"
+	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/coordinator/db/dbtest"
 	capepg "github.com/capeprivacy/cape/coordinator/db/postgres"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"net/url"
@@ -19,30 +19,30 @@ type TestDB struct {
 }
 
 func (t *TestDB) Setup(ctx context.Context) error {
-	db, err := pgxpool.Connect(ctx, t.RootDBURL.String())
+	database, err := pgxpool.Connect(ctx, t.RootDBURL.String())
 	if err != nil {
 		return err
 	}
-	defer db.Close()
-	_, err = db.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s", t.DBName))
+	defer database.Close()
+	_, err = database.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s", t.DBName))
 	if err != nil {
 		return err
 	}
 
 	// okay now we can create our long lasting connection
-	db, err = pgxpool.Connect(ctx, t.TestDBURL.String())
+	database, err = pgxpool.Connect(ctx, t.TestDBURL.String())
 	if err != nil {
 		return err
 	}
 
-	t.Pool = db
+	t.Pool = database
 
 	migrations := []string{
 		os.Getenv("CAPE_DB_MIGRATIONS"),
 		os.Getenv("CAPE_DB_TEST_MIGRATIONS"),
 	}
 
-	migrator, err := database.NewMigrator(t.TestDBURL, migrations...)
+	migrator, err := db.NewMigrator(t.TestDBURL, migrations...)
 	if err != nil {
 		return err
 	}

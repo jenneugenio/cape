@@ -13,7 +13,6 @@ import (
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.CreateRecoveryRequest) (*string, error) {
@@ -35,7 +34,7 @@ func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.Creat
 
 	logger = logger.With().Str("user_id", user.ID).Logger()
 
-	password := primitives.GeneratePassword()
+	password := models.GeneratePassword()
 
 	creds, err := r.CredentialProducer.Generate(password)
 	if err != nil {

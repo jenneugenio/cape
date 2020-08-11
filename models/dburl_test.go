@@ -1,77 +1,78 @@
-package primitives
+package models
 
 import (
 	"encoding/json"
 	"testing"
 
 	gm "github.com/onsi/gomega"
-
-	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
-func TestNewURL(t *testing.T) {
+func TestDBURL(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	u := "https://my.coordinator.com"
-	t.Run("parses a valid url", func(t *testing.T) {
-		out, err := NewURL(u)
+	good := "postgres://u:p@host.com:5432/hello"
+	t.Run("parses a valid addr", func(t *testing.T) {
+		out, err := NewDBURL(good)
 		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(out.String()).To(gm.Equal(u))
+		gm.Expect(out.String()).To(gm.Equal(good))
 	})
 
 	t.Run("marshal to json", func(t *testing.T) {
-		out, err := NewURL(u)
+		out, err := NewDBURL(good)
 		gm.Expect(err).To(gm.BeNil())
 
 		result, err := json.Marshal(out)
 		gm.Expect(err).To(gm.BeNil())
-
-		gm.Expect(string(result)).To(gm.Equal("\"" + u + "\""))
+		gm.Expect(string(result)).To(gm.Equal("\"" + good + "\""))
 	})
 
 	t.Run("unmarshal from json", func(t *testing.T) {
-		out, err := NewURL(u)
+		out, err := NewDBURL(good)
 		gm.Expect(err).To(gm.BeNil())
 
 		result, err := json.Marshal(out)
 		gm.Expect(err).To(gm.BeNil())
 
-		new := &URL{}
+		new := &DBURL{}
 		err = json.Unmarshal(result, new)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(new.String()).To(gm.Equal(u))
+		gm.Expect(new.String()).To(gm.Equal(good))
 		gm.Expect(new.Validate()).To(gm.BeNil())
 	})
 
 	t.Run("catches bad errors", func(t *testing.T) {
 		tests := map[string]struct {
 			in    string
-			cause errors.Cause
+			cause string
 		}{
 			"missing scheme": {
 				in:    "s",
-				cause: InvalidURLCause,
+				cause: "invalid db url",
 			},
 			"wrong scheme": {
 				in:    "ftp://my.coordinator.com",
-				cause: InvalidURLCause,
+				cause: "invalid db url",
 			},
 			"missing host": {
-				in:    "https://",
-				cause: InvalidURLCause,
+				in:    "postgres://",
+				cause: "invalid db url",
 			},
 			"invalid host": {
 				in:    "postgres://1323",
-				cause: InvalidURLCause,
+				cause: "invalid db url",
+			},
+			"missing path": {
+				in:    "postgres://hello",
+				cause: "invalid db url",
 			},
 		}
 
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				_, err := NewURL(test.in)
-				gm.Expect(errors.FromCause(err, test.cause)).To(gm.BeTrue())
+				_, err := NewDBURL(test.in)
+				gm.Expect(err).ToNot(gm.BeNil())
+				gm.Expect(err.Error()).To(gm.Equal(test.cause))
 			})
 		}
 	})

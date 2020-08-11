@@ -9,9 +9,7 @@ import (
 	errors "github.com/capeprivacy/cape/partyerrors"
 
 	"github.com/capeprivacy/cape/auth"
-	"github.com/capeprivacy/cape/coordinator/database"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 // NetworkCause occurs when the client cannot reach the server
@@ -55,7 +53,7 @@ func (c *Client) Me(ctx context.Context) (*models.User, error) {
 	return resp.User, nil
 }
 
-// UserResponse is a primitive User with an extra Roles field that maps to the
+// UserResponse is a User with an extra Roles field that maps to the
 // GraphQL type.
 type UserResponse struct {
 	*models.User
@@ -92,11 +90,11 @@ func (c *Client) GetUser(ctx context.Context, id string) (*UserResponse, error) 
 }
 
 // CreateUser creates a user and returns it
-func (c *Client) CreateUser(ctx context.Context, name models.Name, email models.Email) (*models.User, primitives.Password, error) {
+func (c *Client) CreateUser(ctx context.Context, name models.Name, email models.Email) (*models.User, models.Password, error) {
 	var resp struct {
 		Response struct {
-			Password primitives.Password `json:"password"`
-			User     *models.User        `json:"user"`
+			Password models.Password `json:"password"`
+			User     *models.User    `json:"user"`
 		} `json:"createUser"`
 	}
 
@@ -118,7 +116,7 @@ func (c *Client) CreateUser(ctx context.Context, name models.Name, email models.
 	`, variables, &resp)
 
 	if err != nil {
-		return nil, primitives.Password(""), err
+		return nil, "", err
 	}
 
 	return resp.Response.User, resp.Response.Password, nil
@@ -156,7 +154,7 @@ func (c *Client) Authenticated() bool {
 }
 
 // EmailLogin calls the CreateLoginSession and CreateAuthSession mutations
-func (c *Client) EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*models.Session, error) {
+func (c *Client) EmailLogin(ctx context.Context, email models.Email, password models.Password) (*models.Session, error) {
 	return c.transport.EmailLogin(ctx, email, password)
 }
 
@@ -252,7 +250,7 @@ func (c *Client) SetProjectRole(ctx context.Context, user models.Email, project 
 }
 
 // GetRoleByLabel returns a specific role by label
-func (c *Client) GetRoleByLabel(ctx context.Context, label primitives.Label) (*models.Role, error) {
+func (c *Client) GetRoleByLabel(ctx context.Context, label models.Label) (*models.Role, error) {
 	var resp struct {
 		Role models.Role `json:"roleByLabel"`
 	}
@@ -276,7 +274,7 @@ func (c *Client) GetRoleByLabel(ctx context.Context, label primitives.Label) (*m
 }
 
 // GetUsers returns all users for the given emails
-func (c *Client) GetUsers(ctx context.Context, emails []primitives.Email) ([]*models.User, error) {
+func (c *Client) GetUsers(ctx context.Context, emails []models.Email) ([]*models.User, error) {
 	var resp struct {
 		Users []*models.User `json:"identities"`
 	}
@@ -300,8 +298,8 @@ func (c *Client) GetUsers(ctx context.Context, emails []primitives.Email) ([]*mo
 }
 
 type CreateTokenMutation struct {
-	Secret primitives.Password `json:"secret"`
-	Token  *models.Token       `json:"token"`
+	Secret models.Password `json:"secret"`
+	Token  *models.Token   `json:"token"`
 }
 
 type CreateTokenResponse struct {
@@ -887,7 +885,7 @@ func (c *Client) CreateRecovery(ctx context.Context, email models.Email) error {
 	return c.transport.Raw(ctx, query, variables, nil)
 }
 
-func (c *Client) AttemptRecovery(ctx context.Context, ID string, secret primitives.Password, newPassword primitives.Password) error {
+func (c *Client) AttemptRecovery(ctx context.Context, ID string, secret models.Password, newPassword models.Password) error {
 	variables := map[string]interface{}{
 		"new_password": newPassword.String(),
 		"secret":       secret.String(),
@@ -928,7 +926,7 @@ func (c *Client) Recoveries(ctx context.Context) ([]models.Recovery, error) {
 	return resp.Recoveries, nil
 }
 
-func (c *Client) DeleteRecoveries(ctx context.Context, ids []database.ID) error {
+func (c *Client) DeleteRecoveries(ctx context.Context, ids []string) error {
 	variables := map[string]interface{}{
 		"ids": ids,
 	}

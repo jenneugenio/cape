@@ -5,12 +5,12 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/json"
+	"github.com/capeprivacy/cape/models"
 
 	"github.com/manifoldco/go-base64"
 	"golang.org/x/crypto/scrypt"
 
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 const (
@@ -36,8 +36,8 @@ type Keypair struct {
 	salt       []byte
 	PrivateKey ed25519.PrivateKey `json:"-"`
 
-	PublicKey ed25519.PublicKey             `json:"-"`
-	Alg       primitives.CredentialsAlgType `json:"-"`
+	PublicKey ed25519.PublicKey         `json:"-"`
+	Alg       models.CredentialsAlgType `json:"-"`
 }
 
 func (k *Keypair) UnmarshalJSON(data []byte) error {
@@ -68,9 +68,9 @@ func (k *Keypair) MarshalJSON() ([]byte, error) {
 // KeypairPackage represents a packaged keypair that can be shared outside of
 // the Auth package.
 type KeypairPackage struct {
-	Secret *base64.Value                 `json:"secret"`
-	Salt   *base64.Value                 `json:"salt"`
-	Alg    primitives.CredentialsAlgType `json:"alg"`
+	Secret *base64.Value             `json:"secret"`
+	Salt   *base64.Value             `json:"salt"`
+	Alg    models.CredentialsAlgType `json:"alg"`
 }
 
 // Validate returns an error if the packaged keypair is invalid
@@ -82,16 +82,16 @@ func (kp *KeypairPackage) Validate() error {
 	salt := []byte(*kp.Salt)
 	secret := []byte(*kp.Secret)
 
-	if len(salt) != primitives.SaltLength {
+	if len(salt) != models.SaltLength {
 		return errors.New(BadSaltLength, "Salt must be at least %d bytes long, saw %d",
-			primitives.SaltLength, len(salt))
+			models.SaltLength, len(salt))
 	}
 
 	if len(secret) < SecretLength {
 		return errors.New(BadSecretLength, "Secret must be at least %d bytes long, saw %d", SecretLength, len(secret))
 	}
 
-	if kp.Alg != primitives.EDDSA {
+	if kp.Alg != models.EDDSA {
 		return errors.New(BadAlgType, "Algorithm %s not recognized", kp.Alg)
 	}
 
@@ -119,9 +119,9 @@ func (k *Keypair) Package() KeypairPackage {
 // DeriveKeypair deterministically dervies a keypair using the provided secret
 // & salt
 func DeriveKeypair(secret []byte, salt []byte) (*Keypair, error) {
-	if len(salt) != primitives.SaltLength {
+	if len(salt) != models.SaltLength {
 		return nil, errors.New(BadSaltLength, "Salt must be at %d bytes long, saw %d",
-			primitives.SaltLength, len(salt))
+			models.SaltLength, len(salt))
 	}
 
 	if len(secret) < SecretLength {
@@ -146,14 +146,14 @@ func DeriveKeypair(secret []byte, salt []byte) (*Keypair, error) {
 		salt:       salt,
 		PrivateKey: sk,
 		PublicKey:  pk,
-		Alg:        primitives.EDDSA,
+		Alg:        models.EDDSA,
 	}, nil
 }
 
 // NewKeypair returns a keypair generated from a newly created secret and salt!
 func NewKeypair() (*Keypair, error) {
 	secret := make([]byte, SecretLength)
-	salt := make([]byte, primitives.SaltLength)
+	salt := make([]byte, models.SaltLength)
 
 	_, err := rand.Read(secret)
 	if err != nil {
