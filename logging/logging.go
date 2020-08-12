@@ -31,6 +31,9 @@ var (
 	// PrettyType represents a logger that prints nicely to stdout
 	PrettyType Type = "pretty"
 
+	// PrettyNoColorType is same as PrettyType but with no color
+	PrettyNoColorType Type = "pretty_no_color"
+
 	// DiscardType represents a logger that does not log anything
 	DiscardType Type = "discard"
 
@@ -46,9 +49,10 @@ const DefaultLevel = "info"
 
 func init() {
 	typeRegistry = map[Type]string{
-		PrettyType:  PrettyType.String(),
-		DiscardType: DiscardType.String(),
-		JSONType:    JSONType.String(),
+		PrettyType:        PrettyType.String(),
+		PrettyNoColorType: PrettyNoColorType.String(),
+		DiscardType:       DiscardType.String(),
+		JSONType:          JSONType.String(),
 	}
 
 	// These levels are the string values for a zerolog.Level
@@ -103,6 +107,11 @@ func Logger(loggerType, logLevel, instanceID string) (*zerolog.Logger, error) {
 	switch t {
 	case PrettyType:
 		out = zerolog.NewConsoleWriter()
+	case PrettyNoColorType:
+		zl := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
+			w.NoColor = true
+		})
+		out = zl
 	case DiscardType:
 		out = ioutil.Discard
 	case JSONType:
