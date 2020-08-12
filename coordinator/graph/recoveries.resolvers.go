@@ -5,11 +5,7 @@ package graph
 
 import (
 	"context"
-	"fmt"
-	"time"
-
 	"github.com/capeprivacy/cape/coordinator/db"
-	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
@@ -116,16 +112,3 @@ func (r *mutationResolver) AttemptRecovery(ctx context.Context, input model.Atte
 	logger.Info().Msg("Successfully recovered account with a new password")
 	return nil, nil
 }
-
-func (r *recoveryResolver) CreatedAt(ctx context.Context, obj *models.Recovery) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *recoveryResolver) UpdatedAt(ctx context.Context, obj *models.Recovery) (*time.Time, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-// Recovery returns generated.RecoveryResolver implementation.
-func (r *Resolver) Recovery() generated.RecoveryResolver { return &recoveryResolver{r} }
-
-type recoveryResolver struct{ *Resolver }
