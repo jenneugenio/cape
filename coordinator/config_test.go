@@ -1,19 +1,19 @@
 package coordinator
 
 import (
+	"github.com/capeprivacy/cape/models"
 	"testing"
 
 	gm "github.com/onsi/gomega"
 
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestCoordinatorConfg(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	t.Run("config validation", func(t *testing.T) {
-		validURL, err := primitives.NewDBURL("postgres://user:pass@host.com/5432")
+		validURL, err := models.NewDBURL("postgres://user:pass@host.com/5432")
 		gm.Expect(err).To(gm.BeNil())
 
 		validCfg, err := NewConfig(8080, validURL)
@@ -40,7 +40,7 @@ func TestCoordinatorConfg(t *testing.T) {
 						RootKey: validCfg.RootKey,
 					}, nil
 				},
-				cause: &primitives.InvalidConfigCause,
+				cause: &models.InvalidConfigCause,
 			},
 			{
 				name: "Missing dburl",

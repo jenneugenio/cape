@@ -30,37 +30,35 @@ models:
   ModelRole:
     model: github.com/capeprivacy/cape/models.Role
   Session:
-    model: github.com/capeprivacy/cape/primitives.Session
-  ID:
-    model: github.com/capeprivacy/cape/coordinator/database.ID
+    model: github.com/capeprivacy/cape/models.Session
   Base64:
-    model: github.com/capeprivacy/cape/primitives.Base64Value
+    model: github.com/capeprivacy/cape/models.Base64Value
   URL:
-    model: github.com/capeprivacy/cape/primitives.URL
+    model: github.com/capeprivacy/cape/models.URL
   DBURL:
-    model: github.com/capeprivacy/cape/primitives.DBURL
+    model: github.com/capeprivacy/cape/models.DBURL
   CredentialsAlgType:
-    model: github.com/capeprivacy/cape/primitives.CredentialsAlgType
+    model: github.com/capeprivacy/cape/models.CredentialsAlgType
   AuthCredentials:
-    model: github.com/capeprivacy/cape/primitives.AuthCredentials
+    model: github.com/capeprivacy/cape/models.AuthCredentials
   Policy:
     model: github.com/capeprivacy/cape/models.Policy
   Label:
-    model: github.com/capeprivacy/cape/primitives.Label
+    model: github.com/capeprivacy/cape/models.Label
   ModelLabel:
     model: github.com/capeprivacy/cape/models.Label
   Email:
-    model: github.com/capeprivacy/cape/primitives.Email
+    model: github.com/capeprivacy/cape/models.Email
   Name:
     model: github.com/capeprivacy/cape/models.Name
   ModelEmail:
     model: github.com/capeprivacy/cape/models.Email
   EmailType:
-    model: github.com/capeprivacy/cape/primitives.EmailType
+    model: github.com/capeprivacy/cape/models.EmailType
   Token:
     model: github.com/capeprivacy/cape/models.Token
   Password:
-    model: github.com/capeprivacy/cape/primitives.Password
+    model: github.com/capeprivacy/cape/models.Password
   Project:
     model: github.com/capeprivacy/cape/models.Project
   PolicyFile:
@@ -74,7 +72,7 @@ models:
   ProjectDisplayName:
     model: github.com/capeprivacy/cape/models.ProjectDisplayName
   Recovery:
-    model: github.com/capeprivacy/cape/primitives.Recovery
+    model: github.com/capeprivacy/cape/models.Recovery
   Contributor:
     model: github.com/capeprivacy/cape/models.Contributor
   Assignment:

@@ -2,8 +2,7 @@ package models
 
 import (
 	"crypto/rand"
-	"fmt"
-
+	errors "github.com/capeprivacy/cape/partyerrors"
 	"github.com/manifoldco/go-base64"
 )
 
@@ -19,20 +18,17 @@ const PasswordByteLength = 24
 var EmptyPassword = Password("")
 
 // Password represents a password used by a user to log into a cape account.
-//
-// This primitive is _only_ used by the command line tool as secrets are
-// *never* passed over the wire.
 type Password string
 
 // Validate returns an error if the given password has an incorrect length.
 func (p Password) Validate() error {
 	s := p.String()
 	if len(s) < MinPasswordLength {
-		return fmt.Errorf("passwords must be at least %d characters long", MinPasswordLength)
+		return errors.New(InvalidPasswordCause, "Passwords must be at least %d characters long", MinPasswordLength)
 	}
 
 	if len(s) > MaxPasswordLength {
-		return fmt.Errorf("passwords cannot be more than %d characters long", MaxPasswordLength)
+		return errors.New(InvalidPasswordCause, "Passwords cannot be more than %d characters long", MaxPasswordLength)
 	}
 
 	return nil

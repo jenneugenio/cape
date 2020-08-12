@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/capeprivacy/cape/models"
-	modelmigration "github.com/capeprivacy/cape/models/migration"
-	"github.com/capeprivacy/cape/primitives"
 	"sigs.k8s.io/yaml"
 
 	"github.com/capeprivacy/cape/cmd/cape/ui"
@@ -291,11 +289,8 @@ func contributorsAdd(c *cli.Context) error {
 		return err
 	}
 
-	depProject := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
-	projectLabel := modelmigration.LabelFromPrimitive(depProject)
-
-	depUser := Arguments(c.Context, UserEmailArg).(primitives.Email)
-	userEmail := modelmigration.EmailFromPrimitive(depUser)
+	projectLabel := Arguments(c.Context, ProjectLabelArg).(models.Label)
+	userEmail := Arguments(c.Context, UserEmailArg).(models.Email)
 
 	roleLabel := Arguments(c.Context, RoleArg).(models.Label)
 
@@ -330,8 +325,7 @@ func contributorsList(c *cli.Context) error {
 		return err
 	}
 
-	dep := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
-	projectLabel := modelmigration.LabelFromPrimitive(dep)
+	projectLabel := Arguments(c.Context, ProjectLabelArg).(models.Label)
 
 	project, err := client.GetProject(c.Context, "", &projectLabel)
 	if err != nil {
@@ -398,8 +392,7 @@ func policyCreate(c *cli.Context) error {
 		return err
 	}
 
-	dep := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
-	project := modelmigration.LabelFromPrimitive(dep)
+	project := Arguments(c.Context, ProjectLabelArg).(models.Label)
 	suggestionName := Arguments(c.Context, SuggestionNameArg).(models.ProjectDisplayName)
 	suggestionDescription := Arguments(c.Context, SuggestionDescriptionArg).(models.ProjectDescription)
 
@@ -442,8 +435,7 @@ func policyList(c *cli.Context) error {
 		return err
 	}
 
-	deprecatedLabel := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
-	projectLabel := modelmigration.LabelFromPrimitive(deprecatedLabel)
+	projectLabel := Arguments(c.Context, ProjectLabelArg).(models.Label)
 
 	suggs, err := client.GetProjectSuggestions(c.Context, projectLabel)
 	if err != nil {
@@ -592,9 +584,7 @@ func policyGet(c *cli.Context) error {
 		return err
 	}
 
-	deprecatedLabel := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
-	label := modelmigration.LabelFromPrimitive(deprecatedLabel)
-
+	label := Arguments(c.Context, ProjectLabelArg).(models.Label)
 	project, err := client.GetProject(c.Context, "", &label)
 	if err != nil {
 		return err
@@ -627,8 +617,7 @@ func policyGet(c *cli.Context) error {
 }
 
 func updateProjectSpec(c *cli.Context, specFile string) error {
-	deprecatedLabel := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
-	projectLabel := modelmigration.LabelFromPrimitive(deprecatedLabel)
+	projectLabel := Arguments(c.Context, ProjectLabelArg).(models.Label)
 
 	bytes, err := ioutil.ReadFile(specFile)
 	if err != nil {
@@ -675,8 +664,7 @@ func projectsUpdate(c *cli.Context) error {
 		return err
 	}
 
-	deprecatedLabel := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
-	label := modelmigration.LabelFromPrimitive(deprecatedLabel)
+	label := Arguments(c.Context, ProjectLabelArg).(models.Label)
 
 	var name *models.ProjectDisplayName
 	var desc *models.ProjectDescription
@@ -718,9 +706,7 @@ func projectsGet(c *cli.Context) error {
 		return err
 	}
 
-	deprecatedLabel := Arguments(c.Context, ProjectLabelArg).(primitives.Label)
-	label := modelmigration.LabelFromPrimitive(deprecatedLabel)
-
+	label := Arguments(c.Context, ProjectLabelArg).(models.Label)
 	project, err := client.GetProject(c.Context, "", &label)
 	if err != nil {
 		return err

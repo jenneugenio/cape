@@ -16,6 +16,7 @@ type Interface interface {
 	Secrets() SecretDB
 	Tokens() TokensDB
 	Session() SessionDB
+	Recoveries() RecoveryDB
 }
 
 // Interfaces
@@ -90,6 +91,12 @@ type TokensDB interface {
 type SessionDB interface {
 	Get(context.Context, string) (*models.Session, error)
 	Create(context.Context, models.Session) error
+	Delete(context.Context, string) error
+}
+
+type RecoveryDB interface {
+	Get(context.Context, string) (*models.Recovery, error)
+	Create(context.Context, models.Recovery) error
 	Delete(context.Context, string) error
 }
 

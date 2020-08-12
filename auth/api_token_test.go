@@ -6,21 +6,20 @@ import (
 	gm "github.com/onsi/gomega"
 
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func TestSecret(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	t.Run("can create secret from password", func(t *testing.T) {
-		password := primitives.GeneratePassword()
+		password := models.GeneratePassword()
 
 		_, err := FromPassword(password)
 		gm.Expect(err).To(gm.BeNil())
 	})
 
 	t.Run("can turn secret into password", func(t *testing.T) {
-		password := primitives.GeneratePassword()
+		password := models.GeneratePassword()
 
 		secret, err := FromPassword(password)
 		gm.Expect(err).To(gm.BeNil())
@@ -34,7 +33,7 @@ func TestAPIToken(t *testing.T) {
 
 	userID := models.NewID()
 
-	password := primitives.GeneratePassword()
+	password := models.GeneratePassword()
 
 	secret, err := FromPassword(password)
 	gm.Expect(err).To(gm.BeNil())

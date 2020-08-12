@@ -1,8 +1,8 @@
 package encrypt
 
 import (
-	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/coordinator/db/crypto"
 )
 
 // CapeDBEncrypt is a postgresql implementation of the cape database interface
@@ -40,6 +40,13 @@ func (c *CapeDBEncrypt) Tokens() db.TokensDB {
 func (c *CapeDBEncrypt) Session() db.SessionDB {
 	return &sessionEncrypt{
 		db:    c.db.Session(),
+		codec: c.codec,
+	}
+}
+
+func (c *CapeDBEncrypt) Recoveries() db.RecoveryDB {
+	return &recoveriesEncrypt{
+		db:    c.db.Recoveries(),
 		codec: c.codec,
 	}
 }

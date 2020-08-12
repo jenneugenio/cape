@@ -52,7 +52,7 @@ See `cmd/flags.go` for examples of declaring flags.
 Similarly, if you declared a URL argument named `MyURLArgument`, you could access it like so
 
 ```go
-URLValue, ok := Arguments(c.Context, MyURLArgument).(primitive.URL)
+URLValue, ok := Arguments(c.Context, MyURLArgument).(models.URL)
 ```
 
 see `cmd/arguments.go` for examples on declaring arguments.

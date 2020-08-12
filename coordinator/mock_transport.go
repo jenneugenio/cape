@@ -10,7 +10,6 @@ import (
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 type MockRequest struct {
@@ -27,14 +26,14 @@ type MockResponse struct {
 // MockClientTransport replaces the default transport on the client so we can
 // return fake Responses for unit testing
 type MockClientTransport struct {
-	Endpoint  *primitives.URL
+	Endpoint  *models.URL
 	Requests  []*MockRequest
 	Responses []*MockResponse
 	Counter   int
 	token     *base64.Value
 }
 
-func NewMockClientTransport(url *primitives.URL, responses []*MockResponse) (*MockClientTransport, error) {
+func NewMockClientTransport(url *models.URL, responses []*MockResponse) (*MockClientTransport, error) {
 	return &MockClientTransport{
 		Endpoint:  url,
 		Responses: responses,
@@ -69,7 +68,7 @@ func (m *MockClientTransport) Raw(ctx context.Context, query string, variables m
 	return nil
 }
 
-func (m *MockClientTransport) URL() *primitives.URL {
+func (m *MockClientTransport) URL() *models.URL {
 	return m.Endpoint
 }
 
@@ -89,7 +88,7 @@ func (m *MockClientTransport) TokenLogin(ctx context.Context, apiToken *auth.API
 	return tokenLogin(ctx, m, apiToken)
 }
 
-func (m *MockClientTransport) EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*models.Session, error) {
+func (m *MockClientTransport) EmailLogin(ctx context.Context, email models.Email, password models.Password) (*models.Session, error) {
 	return emailLogin(ctx, m, email, password)
 }
 

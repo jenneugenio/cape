@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
+	"github.com/capeprivacy/cape/models"
 	"os"
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/capeprivacy/cape/coordinator/database"
-	"github.com/capeprivacy/cape/primitives"
+	"github.com/capeprivacy/cape/coordinator/db"
 )
 
 func updateCmd(c *cli.Context) error {
-	dbURL := EnvVariables(c.Context, capeDBURL).(*primitives.DBURL)
+	dbURL := EnvVariables(c.Context, capeDBURL).(*models.DBURL)
 
 	migrations := c.Args().Slice()
 	if len(migrations) == 0 {
@@ -28,7 +28,7 @@ func updateCmd(c *cli.Context) error {
 		}
 	}
 
-	migrator, err := database.NewMigrator(dbURL.URL, migrations...)
+	migrator, err := db.NewMigrator(dbURL.URL, migrations...)
 	if err != nil {
 		return err
 	}

@@ -9,7 +9,6 @@ import (
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 	"github.com/capeprivacy/cape/version"
 	"github.com/manifoldco/go-base64"
 )
@@ -34,9 +33,9 @@ func VersionHandler(instanceID string) http.HandlerFunc {
 }
 
 type LoginRequest struct {
-	Email   *models.Email       `json:"email"`
-	TokenID *string             `json:"token_id"`
-	Secret  primitives.Password `json:"secret"`
+	Email   *models.Email   `json:"email"`
+	TokenID *string         `json:"token_id"`
+	Secret  models.Password `json:"secret"`
 }
 
 func LoginHandler(coordinator *Coordinator) http.HandlerFunc {
@@ -118,9 +117,9 @@ func LoginHandler(coordinator *Coordinator) http.HandlerFunc {
 }
 
 type SetupRequest struct {
-	Name     models.Name         `json:"name"`
-	Email    models.Email        `json:"email"`
-	Password primitives.Password `json:"password"`
+	Name     models.Name     `json:"name"`
+	Email    models.Email    `json:"email"`
+	Password models.Password `json:"password"`
 }
 
 type LogoutRequest struct {

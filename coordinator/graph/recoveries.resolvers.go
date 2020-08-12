@@ -5,12 +5,14 @@ package graph
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/coordinator/graph/generated"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
-	modelmigrations "github.com/capeprivacy/cape/models/migration"
-	"github.com/capeprivacy/cape/primitives"
+	"github.com/capeprivacy/cape/models"
 )
 
 func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.CreateRecoveryRequest) (*string, error) {
@@ -32,7 +34,7 @@ func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.Creat
 
 	logger = logger.With().Str("user_id", user.ID).Logger()
 
-	password := primitives.GeneratePassword()
+	password := models.GeneratePassword()
 
 	creds, err := r.CredentialProducer.Generate(password)
 	if err != nil {
@@ -40,23 +42,19 @@ func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.Creat
 		return nil, err
 	}
 
-	recovery, err := primitives.NewRecovery(user.ID, &primitives.Credentials{
+	recovery := models.NewRecovery(user.ID, &models.Credentials{
 		Secret: creds.Secret,
 		Salt:   creds.Salt,
-		Alg:    primitives.CredentialsAlgType(creds.Alg),
+		Alg:    creds.Alg,
 	})
-	if err != nil {
-		logger.Info().Err(err).Msg("Could not instantiate recovery")
-		return nil, err
-	}
 
-	err = r.Backend.Create(ctx, recovery)
+	err = r.Database.Recoveries().Create(ctx, recovery)
 	if err != nil {
 		logger.Error().Err(err).Msg("Could not insert recovery into database")
 		return nil, err
 	}
 
-	err = r.Mailer.SendAccountRecovery(ctx, user, recovery, password)
+	err = r.Mailer.SendAccountRecovery(ctx, *user, recovery, password)
 	if err != nil {
 		logger.Error().Err(err).Msg("Could not send recovery email to user")
 		return nil, err
@@ -69,17 +67,9 @@ func (r *mutationResolver) CreateRecovery(ctx context.Context, input model.Creat
 func (r *mutationResolver) AttemptRecovery(ctx context.Context, input model.AttemptRecoveryRequest) (*string, error) {
 	logger := fw.Logger(ctx)
 
-	logger = logger.With().Str("recovery_id", input.ID.String()).Logger()
+	logger = logger.With().Str("recovery_id", input.ID).Logger()
 
-	tx, err := r.Backend.Transaction(ctx)
-	if err != nil {
-		logger.Error().Err(err).Msg("Could not create transaction")
-		return nil, ErrRecoveryFailed
-	}
-	defer tx.Rollback(ctx) // nolint: errcheck
-
-	recovery := &primitives.Recovery{}
-	err = tx.Get(ctx, input.ID, recovery)
+	recovery, err := r.Database.Recoveries().Get(ctx, input.ID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Could not retrieve recovery")
 		return nil, ErrRecoveryFailed
@@ -92,7 +82,7 @@ func (r *mutationResolver) AttemptRecovery(ctx context.Context, input model.Atte
 		return nil, ErrRecoveryFailed
 	}
 
-	err = r.CredentialProducer.Compare(input.Secret, modelmigrations.CredentialsFromPrimitives(recovery.Credentials))
+	err = r.CredentialProducer.Compare(input.Secret, recovery.Credentials)
 	if err != nil {
 		logger.Info().Err(err).Msg("Invalid credentials provided")
 		return nil, ErrRecoveryFailed
@@ -117,18 +107,25 @@ func (r *mutationResolver) AttemptRecovery(ctx context.Context, input model.Atte
 		return nil, ErrRecoveryFailed
 	}
 
-	err = tx.Delete(ctx, primitives.RecoveryType, recovery.ID)
+	err = r.Database.Recoveries().Delete(ctx, recovery.ID)
 	if err != nil {
 		logger.Error().Err(err).Msg("Could not ddelete recovery")
-		return nil, ErrRecoveryFailed
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		logger.Error().Err(err).Msg("Could not commit transaction")
 		return nil, ErrRecoveryFailed
 	}
 
 	logger.Info().Msg("Successfully recovered account with a new password")
 	return nil, nil
 }
+
+func (r *recoveryResolver) CreatedAt(ctx context.Context, obj *models.Recovery) (*time.Time, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *recoveryResolver) UpdatedAt(ctx context.Context, obj *models.Recovery) (*time.Time, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+// Recovery returns generated.RecoveryResolver implementation.
+func (r *Resolver) Recovery() generated.RecoveryResolver { return &recoveryResolver{r} }
+
+type recoveryResolver struct{ *Resolver }

@@ -21,11 +21,11 @@ func TestPassword(t *testing.T) {
 	}{
 		"short password": {
 			in:    Password("abcd"),
-			cause: "passwords must be at least 8 characters long",
+			cause: "invalid_password: Passwords must be at least 8 characters long",
 		},
 		"long password": {
 			in:    Password(base64.New(pw).String()),
-			cause: "passwords cannot be more than 128 characters long",
+			cause: "invalid_password: Passwords cannot be more than 128 characters long",
 		},
 	}
 

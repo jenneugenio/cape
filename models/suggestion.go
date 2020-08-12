@@ -25,7 +25,7 @@ func (ss *SuggestionState) UnmarshalGQL(v interface{}) error {
 	}
 }
 
-// MarshalGQL marshals a primitive.URL to a strong for GraphQL
+// MarshalGQL marshals a URL to a strong for GraphQL
 func (ss SuggestionState) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Itoa(int(ss)))
 }

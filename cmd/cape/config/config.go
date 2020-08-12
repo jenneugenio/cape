@@ -4,6 +4,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/capeprivacy/cape/models"
 	"io"
 	"io/ioutil"
 	"os"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/capeprivacy/cape/coordinator"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 // All files and folders that contain cape cli configuration must only be
@@ -103,7 +103,7 @@ func (c *Config) Print(w io.Writer) error {
 }
 
 // AddCluster attempts to add the cluster to the configuration
-func (c *Config) AddCluster(label primitives.Label, url *primitives.URL, authToken string) (*Cluster, error) {
+func (c *Config) AddCluster(label models.Label, url *models.URL, authToken string) (*Cluster, error) {
 	for _, cluster := range c.Clusters {
 		if cluster.Label == label {
 			return nil, errors.New(ExistingClusterCause, "A cluster labeled %s already exists", label)
@@ -125,7 +125,7 @@ func (c *Config) AddCluster(label primitives.Label, url *primitives.URL, authTok
 }
 
 // RemoveCluster attempts to remove the cluster from configuration
-func (c *Config) RemoveCluster(label primitives.Label) error {
+func (c *Config) RemoveCluster(label models.Label) error {
 	idx, cluster := c.findCluster(label)
 	if cluster == nil {
 		return errors.New(ClusterNotFoundCause, "No cluster named '%s' exists", label)
@@ -150,17 +150,14 @@ func (c *Config) Cluster() (*Cluster, error) {
 }
 
 // HasCluster returns true if the provided label exists, false otherwise
-func (c *Config) HasCluster(clusterLabel primitives.Label) bool {
+func (c *Config) HasCluster(clusterLabel models.Label) bool {
 	idx, _ := c.findCluster(clusterLabel)
 	return idx > -1
 }
 
 // GetCluster returns the cluster by its label
 func (c *Config) GetCluster(clusterStr string) (*Cluster, error) {
-	label, err := primitives.NewLabel(clusterStr)
-	if err != nil {
-		return nil, err
-	}
+	label := models.Label(clusterStr)
 
 	_, cluster := c.findCluster(label)
 	if cluster != nil {
@@ -170,7 +167,7 @@ func (c *Config) GetCluster(clusterStr string) (*Cluster, error) {
 	return nil, errors.New(InvalidConfigCause, "The key 'context.cluster' is set but the cluster does not exist")
 }
 
-func (c *Config) findCluster(label primitives.Label) (int, *Cluster) {
+func (c *Config) findCluster(label models.Label) (int, *Cluster) {
 	for i, cluster := range c.Clusters {
 		if cluster.Label == label {
 			return i, cluster
@@ -181,7 +178,7 @@ func (c *Config) findCluster(label primitives.Label) (int, *Cluster) {
 }
 
 // Use sets the given label as the current cluster or to unset the current cluster by passing an empty label
-func (c *Config) Use(label primitives.Label) error {
+func (c *Config) Use(label models.Label) error {
 	if label == "" {
 		c.Context.Cluster = ""
 		return nil
@@ -223,7 +220,7 @@ func (c *Config) Validate() error {
 
 // Context represents the context section of the command line config
 type Context struct {
-	Cluster primitives.Label `json:"cluster,omitempty"`
+	Cluster models.Label `json:"cluster,omitempty"`
 }
 
 // Validate returns an error if the context is invalid
@@ -231,24 +228,19 @@ func (c *Context) Validate() error {
 	if c.Cluster == "" {
 		return nil
 	}
-
-	return c.Cluster.Validate()
+	return nil
 }
 
 // Cluster represents configuration for a Cape cluster
 type Cluster struct {
-	AuthToken string           `json:"auth_token,omitempty"`
-	URL       *primitives.URL  `json:"url"`
-	Label     primitives.Label `json:"label"`
-	CertFile  string           `json:"tls_cert,omitempty"`
+	AuthToken string       `json:"auth_token,omitempty"`
+	URL       *models.URL  `json:"url"`
+	Label     models.Label `json:"label"`
+	CertFile  string       `json:"tls_cert,omitempty"`
 }
 
 // Validate returns an error if the cluster configuration is invalid
 func (c *Cluster) Validate() error {
-	if err := c.Label.Validate(); err != nil {
-		return err
-	}
-
 	if c.URL == nil {
 		return errors.New(InvalidConfigCause, "Missing url property for '%s' cluster", c.Label)
 	}
@@ -257,7 +249,7 @@ func (c *Cluster) Validate() error {
 }
 
 // GetURL parses the url and returns it
-func (c *Cluster) GetURL() (*primitives.URL, error) {
+func (c *Cluster) GetURL() (*models.URL, error) {
 	if c.URL == nil {
 		return nil, errors.New(InvalidConfigCause, "Missing url property for '%s' cluster", c.Label)
 	}

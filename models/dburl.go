@@ -1,12 +1,10 @@
-package primitives
+package models
 
 import (
 	"fmt"
 	"io"
 	"net/url"
 	"strconv"
-
-	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
 // NewDBURL parses the given string and returns a database url.
@@ -41,22 +39,24 @@ type DBURL struct {
 	*url.URL
 }
 
+var errInvalidDBURL = fmt.Errorf("invalid db url")
+
 // Validate returns an error if the uri is not a valid database uri
 func (d *DBURL) Validate() error {
 	if d.URL == nil {
-		return errors.New(InvalidDBURLCause, "Missing db url")
+		return errInvalidDBURL
 	}
 
 	if d.URL.Scheme != "postgres" {
-		return errors.New(InvalidDBURLCause, "Invalid scheme, only postgres is supported")
+		return errInvalidDBURL
 	}
 
 	if d.URL.Host == "" {
-		return errors.New(InvalidDBURLCause, "A host must be provided")
+		return errInvalidDBURL
 	}
 
 	if d.URL.Path == "" || d.URL.Path == "/" {
-		return errors.New(InvalidDBURLCause, "A database must be provided")
+		return errInvalidDBURL
 	}
 
 	return nil
@@ -85,7 +85,7 @@ func (d *DBURL) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements the JSON.Unmarshaller interface
 func (d *DBURL) UnmarshalJSON(b []byte) error {
 	if len(b) < 2 || b[0] != byte('"') || b[len(b)-1] != byte('"') {
-		return errors.New(InvalidURLCause, "Invalid json provided")
+		return errInvalidDBURL
 	}
 
 	u, err := url.Parse(string(b[1 : len(b)-1]))
@@ -109,7 +109,7 @@ func (d *DBURL) UnmarshalGQL(v interface{}) error {
 		d.URL = u
 		return d.Validate()
 	default:
-		return errors.New(InvalidDBURLCause, "Invalid DBURL value provided, expected a string, got %T", s)
+		return errInvalidDBURL
 	}
 }
 

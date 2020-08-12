@@ -1,5 +1,5 @@
 type Recovery {
-  id: ID!
+  id: String!
   created_at: Time!
   updated_at: Time!
 }
@@ -11,11 +11,11 @@ input CreateRecoveryRequest {
 input AttemptRecoveryRequest {
   new_password: Password!
   secret: Password!
-  id: ID!
+  id: String!
 }
 
 input DeleteRecoveriesRequest {
-  ids: [ID!]!
+  ids: [String!]!
 }
 
 extend type Mutation {

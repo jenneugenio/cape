@@ -18,9 +18,8 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/capeprivacy/cape/auth"
-	"github.com/capeprivacy/cape/coordinator/database"
-	"github.com/capeprivacy/cape/coordinator/database/crypto"
 	"github.com/capeprivacy/cape/coordinator/db"
+	"github.com/capeprivacy/cape/coordinator/db/crypto"
 	"github.com/capeprivacy/cape/coordinator/db/encrypt"
 	capepg "github.com/capeprivacy/cape/coordinator/db/postgres"
 	"github.com/capeprivacy/cape/coordinator/graph"
@@ -28,14 +27,12 @@ import (
 	"github.com/capeprivacy/cape/coordinator/mailer"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 // Coordinator is the central brain of Cape.  It keeps track of system
 // users, policy, etc
 type Coordinator struct {
 	cfg     *Config
-	backend database.Backend
 	handler http.Handler
 	logger  *zerolog.Logger
 	mailer  mailer.Mailer
@@ -48,18 +45,13 @@ type Coordinator struct {
 
 // Setup the coordinator so it's ready to be served!
 func (c *Coordinator) Setup(ctx context.Context) (http.Handler, error) {
-	err := c.backend.Open(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return c.handler, err
+	return c.handler, nil
 }
 
 // Teardown the coordinator taking it back to it's start state!
 func (c *Coordinator) Teardown(ctx context.Context) error {
 	c.pool.Close()
-	return c.backend.Close()
+	return nil
 }
 
 // CertFiles implements the Component interface. Coordinator doesn't support
@@ -86,9 +78,9 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 
 	var cp auth.CredentialProducer
 	switch cfg.CredentialProducerAlg {
-	case primitives.SHA256:
+	case models.SHA256:
 		cp = auth.DefaultSHA256Producer
-	case primitives.Argon2ID:
+	case models.Argon2ID:
 		cp = auth.DefaultArgon2IDProducer
 	default:
 		return nil, errors.New(InvalidConfigCause, "Unknown credential producer algorithm supplied")
@@ -113,7 +105,6 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 	config := generated.Config{
 		Resolvers: &graph.Resolver{
 			Database:           coor.db,
-			Backend:            coor.backend,
 			CredentialProducer: cp,
 			Mailer:             mailer,
 		}}
@@ -171,12 +162,6 @@ func New(cfg *Config, logger *zerolog.Logger, mailer mailer.Mailer) (*Coordinato
 func (c *Coordinator) doSetup(ctx context.Context, capedb db.Interface) error {
 	_, codec, kp, err := getDatabaseConfig(ctx, capedb, c.cfg.RootKey)
 	if err == nil {
-		backend, err := database.New(c.cfg.DB.Addr.ToURL(), c.cfg.InstanceID.String(), codec)
-		if err != nil {
-			return err
-		}
-		c.backend = backend
-
 		ta, err := auth.NewTokenAuthority(kp, c.cfg.InstanceID.String())
 		if err != nil {
 			return err
@@ -213,12 +198,6 @@ func (c *Coordinator) doSetup(ctx context.Context, capedb db.Interface) error {
 	}
 
 	codec = crypto.NewSecretBoxCodec(kms)
-	backend, err := database.New(c.cfg.DB.Addr.ToURL(), c.cfg.InstanceID.String(), codec)
-	if err != nil {
-		return err
-	}
-	c.backend = backend
-
 	ta, err := auth.NewTokenAuthority(kp, c.cfg.InstanceID.String())
 	if err != nil {
 		return err
@@ -228,7 +207,7 @@ func (c *Coordinator) doSetup(ctx context.Context, capedb db.Interface) error {
 	enc := encrypt.New(capedb, codec)
 	c.db = enc
 
-	creds, err := c.credentialProducer.Generate(primitives.Password(c.cfg.User.Password))
+	creds, err := c.credentialProducer.Generate(models.Password(c.cfg.User.Password))
 	if err != nil {
 		c.logger.Info().Err(err).Msg("Could not generate credentials")
 		return err
@@ -246,35 +225,12 @@ func (c *Coordinator) doSetup(ctx context.Context, capedb db.Interface) error {
 		return err
 	}
 
-	err = c.backend.Open(ctx)
-	if err != nil {
-		return err
-	}
-
-	tx, err := c.backend.Transaction(ctx)
-	if err != nil {
-		c.logger.Error().Err(err).Msg("Could not create transaction")
-		return err
-	}
-	defer tx.Rollback(ctx) // nolint: errcheck
-
 	err = enc.Roles().CreateSystemRoles(ctx)
 	if err != nil {
 		return err
 	}
 
 	_, err = enc.Roles().SetOrgRole(ctx, c.cfg.User.Email, models.AdminRole)
-	if err != nil {
-		return err
-	}
-
-	err = tx.Commit(ctx)
-	if err != nil {
-		c.logger.Error().Err(err).Msg("Could not commit transaction")
-		return err
-	}
-
-	err = backend.Close()
 	if err != nil {
 		return err
 	}

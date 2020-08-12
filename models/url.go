@@ -1,4 +1,4 @@
-package primitives
+package models
 
 import (
 	"fmt"
@@ -85,7 +85,7 @@ func (u *URL) UnmarshalGQL(v interface{}) error {
 	}
 }
 
-// MarshalGQL marshals a primitive.URL to a strong for GraphQL
+// MarshalGQL marshals a URL to a strong for GraphQL
 func (u URL) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(u.String()))
 }

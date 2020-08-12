@@ -1,4 +1,4 @@
-package primitives
+package models
 
 import (
 	"encoding/json"
@@ -9,37 +9,39 @@ import (
 	errors "github.com/capeprivacy/cape/partyerrors"
 )
 
-func TestDBURL(t *testing.T) {
+func TestNewURL(t *testing.T) {
 	gm.RegisterTestingT(t)
 
-	good := "postgres://u:p@host.com:5432/hello"
-	t.Run("parses a valid addr", func(t *testing.T) {
-		out, err := NewDBURL(good)
+	u := "https://my.coordinator.com"
+	t.Run("parses a valid url", func(t *testing.T) {
+		out, err := NewURL(u)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(out.String()).To(gm.Equal(good))
+
+		gm.Expect(out.String()).To(gm.Equal(u))
 	})
 
 	t.Run("marshal to json", func(t *testing.T) {
-		out, err := NewDBURL(good)
+		out, err := NewURL(u)
 		gm.Expect(err).To(gm.BeNil())
 
 		result, err := json.Marshal(out)
 		gm.Expect(err).To(gm.BeNil())
-		gm.Expect(string(result)).To(gm.Equal("\"" + good + "\""))
+
+		gm.Expect(string(result)).To(gm.Equal("\"" + u + "\""))
 	})
 
 	t.Run("unmarshal from json", func(t *testing.T) {
-		out, err := NewDBURL(good)
+		out, err := NewURL(u)
 		gm.Expect(err).To(gm.BeNil())
 
 		result, err := json.Marshal(out)
 		gm.Expect(err).To(gm.BeNil())
 
-		new := &DBURL{}
+		new := &URL{}
 		err = json.Unmarshal(result, new)
 		gm.Expect(err).To(gm.BeNil())
 
-		gm.Expect(new.String()).To(gm.Equal(good))
+		gm.Expect(new.String()).To(gm.Equal(u))
 		gm.Expect(new.Validate()).To(gm.BeNil())
 	})
 
@@ -50,29 +52,25 @@ func TestDBURL(t *testing.T) {
 		}{
 			"missing scheme": {
 				in:    "s",
-				cause: InvalidDBURLCause,
+				cause: InvalidURLCause,
 			},
 			"wrong scheme": {
 				in:    "ftp://my.coordinator.com",
-				cause: InvalidDBURLCause,
+				cause: InvalidURLCause,
 			},
 			"missing host": {
-				in:    "postgres://",
-				cause: InvalidDBURLCause,
+				in:    "https://",
+				cause: InvalidURLCause,
 			},
 			"invalid host": {
 				in:    "postgres://1323",
-				cause: InvalidDBURLCause,
-			},
-			"missing path": {
-				in:    "postgres://hello",
-				cause: InvalidDBURLCause,
+				cause: InvalidURLCause,
 			},
 		}
 
 		for name, test := range tests {
 			t.Run(name, func(t *testing.T) {
-				_, err := NewDBURL(test.in)
+				_, err := NewURL(test.in)
 				gm.Expect(errors.FromCause(err, test.cause)).To(gm.BeTrue())
 			})
 		}

@@ -20,7 +20,6 @@ import (
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 // HTTPTransport is a ClientTransport that interacts with the Coordinator via
@@ -28,13 +27,13 @@ import (
 type HTTPTransport struct {
 	client     *graphql.Client
 	authToken  *base64.Value
-	url        *primitives.URL
+	url        *models.URL
 	httpClient *http.Client
 }
 
 // NewHTTPTransport returns a ClientTransport configured to make requests via
 // GraphQL over HTTP
-func NewHTTPTransport(coordinatorURL *primitives.URL, authToken *base64.Value, certFile string) ClientTransport {
+func NewHTTPTransport(coordinatorURL *models.URL, authToken *base64.Value, certFile string) ClientTransport {
 	// this function never actually returns an error...
 	jar, _ := cookiejar.New(nil)
 	httpClient := &http.Client{Jar: jar}
@@ -59,7 +58,7 @@ func NewHTTPTransport(coordinatorURL *primitives.URL, authToken *base64.Value, c
 }
 
 // URL returns the underlying URL used by this Transport
-func (c *HTTPTransport) URL() *primitives.URL {
+func (c *HTTPTransport) URL() *models.URL {
 	return c.url
 }
 
@@ -93,7 +92,7 @@ func (c *HTTPTransport) TokenLogin(ctx context.Context, apiToken *auth.APIToken)
 }
 
 // EmailLogin starts step 1 of the login flow using an email & password
-func (c *HTTPTransport) EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*models.Session, error) {
+func (c *HTTPTransport) EmailLogin(ctx context.Context, email models.Email, password models.Password) (*models.Session, error) {
 	return emailLogin(ctx, c, email, password)
 }
 

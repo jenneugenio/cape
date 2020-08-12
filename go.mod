@@ -8,7 +8,6 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/Masterminds/squirrel v1.4.0
 	github.com/NYTimes/gziphandler v1.1.1
-	github.com/badoux/checkmail v0.0.0-20181210160741-9661bd69e9ad
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/felixge/httpsnoop v1.0.1

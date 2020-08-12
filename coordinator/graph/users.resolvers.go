@@ -10,12 +10,11 @@ import (
 	"github.com/capeprivacy/cape/coordinator/graph/model"
 	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUserRequest) (*model.CreateUserResponse, error) {
 	logger := fw.Logger(ctx)
-	password := primitives.GeneratePassword()
+	password := models.GeneratePassword()
 
 	creds, err := r.CredentialProducer.Generate(password)
 	if err != nil {
@@ -30,19 +29,7 @@ func (r *mutationResolver) CreateUser(ctx context.Context, input model.CreateUse
 		return nil, err
 	}
 
-	tx, err := r.Backend.Transaction(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	defer tx.Rollback(ctx) // nolint: errcheck
-
 	_, err = r.Database.Roles().SetOrgRole(ctx, user.Email, models.UserRole)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.Commit(ctx)
 	if err != nil {
 		return nil, err
 	}

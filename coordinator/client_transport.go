@@ -8,7 +8,6 @@ import (
 
 	"github.com/capeprivacy/cape/auth"
 	"github.com/capeprivacy/cape/models"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 // ClientTransport is an interface that describes how a coordinator client should communicate with a coordinator
@@ -19,11 +18,11 @@ type ClientTransport interface {
 	Post(url string, req interface{}) ([]byte, error)
 
 	Authenticated() bool
-	URL() *primitives.URL
+	URL() *models.URL
 	SetToken(*base64.Value)
 	Token() *base64.Value
 
-	EmailLogin(ctx context.Context, email models.Email, password primitives.Password) (*models.Session, error)
+	EmailLogin(ctx context.Context, email models.Email, password models.Password) (*models.Session, error)
 	TokenLogin(ctx context.Context, apiToken *auth.APIToken) (*models.Session, error)
 
 	Logout(ctx context.Context, authToken *base64.Value) error
@@ -50,7 +49,7 @@ func tokenLogin(ctx context.Context, transport ClientTransport, apiToken *auth.A
 	return session, nil
 }
 
-func emailLogin(ctx context.Context, transport ClientTransport, email models.Email, password primitives.Password) (*models.Session, error) {
+func emailLogin(ctx context.Context, transport ClientTransport, email models.Email, password models.Password) (*models.Session, error) {
 	req := LoginRequest{
 		Email:  &email,
 		Secret: password,

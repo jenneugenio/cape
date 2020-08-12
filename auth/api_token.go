@@ -2,12 +2,12 @@ package auth
 
 import (
 	"fmt"
+	"github.com/capeprivacy/cape/models"
 	"strings"
 
 	"github.com/manifoldco/go-base64"
 
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 const (
@@ -31,11 +31,11 @@ func (s Secret) String() string {
 	return string(s)
 }
 
-func (s Secret) Password() primitives.Password {
-	return primitives.Password(base64.New(s).String())
+func (s Secret) Password() models.Password {
+	return models.Password(base64.New(s).String())
 }
 
-func FromPassword(password primitives.Password) (Secret, error) {
+func FromPassword(password models.Password) (Secret, error) {
 	value, err := base64.NewFromString(password.String())
 	if err != nil {
 		return Secret([]byte{}), err

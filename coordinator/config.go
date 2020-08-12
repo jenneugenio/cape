@@ -6,19 +6,18 @@ import (
 	"github.com/manifoldco/go-base64"
 	"sigs.k8s.io/yaml"
 
-	"github.com/capeprivacy/cape/coordinator/database/crypto"
+	"github.com/capeprivacy/cape/coordinator/db/crypto"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 // Config represents the configuration that needs to be provided to the
 // Coordinator.
 type Config struct {
-	Version    int              `json:"version"`
-	DB         *DBConfig        `json:"db" envconfig:"DB_URL"`
-	InstanceID primitives.Label `json:"instance_id,omitempty"`
-	Port       int              `json:"port"`
+	Version    int          `json:"version"`
+	DB         *DBConfig    `json:"db" envconfig:"DB_URL"`
+	InstanceID models.Label `json:"instance_id,omitempty"`
+	Port       int          `json:"port"`
 
 	// RootKey is used to encrypt/decrypt EncryptionKey and should
 	// be stored in a separate config file in a secret or
@@ -31,7 +30,7 @@ type Config struct {
 	//
 	// In future when we support more than one production algorithm we can
 	// expose this feature to customers.
-	CredentialProducerAlg primitives.CredentialsAlgType `json:"-"`
+	CredentialProducerAlg models.CredentialsAlgType `json:"-"`
 
 	// CertFile contains a path to the coordinators Certificate file.
 	CertFile string `json:"tls_cert,omitempty" envconfig:"TLS_CERT"`
@@ -60,13 +59,13 @@ type CorsConfig struct {
 
 // DBConfig represent the database configuration
 type DBConfig struct {
-	Addr *primitives.DBURL `json:"addr"`
+	Addr *models.DBURL `json:"addr"`
 }
 
 // Decode implements envconfig.Decoder for decoding
 // environment variables
 func (db *DBConfig) Decode(value string) error {
-	addr, err := primitives.NewDBURL(value)
+	addr, err := models.NewDBURL(value)
 	if err != nil {
 		return err
 	}
@@ -92,7 +91,7 @@ func (c *Config) GetPort() int {
 
 // GetInstanceID returns the instance id to satisfy the framework.Component
 // interface
-func (c *Config) GetInstanceID() primitives.Label {
+func (c *Config) GetInstanceID() models.Label {
 	return c.InstanceID
 }
 
@@ -158,7 +157,7 @@ func LoadConfig(filePath string) (*Config, error) {
 	return cfg, nil
 }
 
-func NewConfig(port int, dbURL *primitives.DBURL) (*Config, error) {
+func NewConfig(port int, dbURL *models.DBURL) (*Config, error) {
 	key, err := crypto.GenerateKey()
 	if err != nil {
 		return nil, err

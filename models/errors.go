@@ -1,4 +1,4 @@
-package primitives
+package models
 
 import (
 	errors "github.com/capeprivacy/cape/partyerrors"

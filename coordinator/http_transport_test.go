@@ -17,7 +17,6 @@ import (
 
 	"github.com/capeprivacy/cape/auth"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 type gqlResponse struct {
@@ -25,12 +24,12 @@ type gqlResponse struct {
 	Err  []string    `json:"errors"`
 }
 
-func setupGQLTestServer(resp *gqlResponse) (*httptest.Server, *primitives.URL, error) {
+func setupGQLTestServer(resp *gqlResponse) (*httptest.Server, *models.URL, error) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(resp)
 	}))
 
-	clientURL, err := primitives.NewURL(ts.URL)
+	clientURL, err := models.NewURL(ts.URL)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -38,7 +37,7 @@ func setupGQLTestServer(resp *gqlResponse) (*httptest.Server, *primitives.URL, e
 	return ts, clientURL, nil
 }
 
-func createHTTPTransport(ts *httptest.Server, clientURL *primitives.URL, client *http.Client) *HTTPTransport {
+func createHTTPTransport(ts *httptest.Server, clientURL *models.URL, client *http.Client) *HTTPTransport {
 	if client == nil {
 		client = ts.Client()
 	}
@@ -160,7 +159,7 @@ func TestHTTPTransportEmailLogin(t *testing.T) {
 	defer ts.Close()
 
 	ct := createHTTPTransport(ts, clientURL, nil)
-	gotSess, err := ct.EmailLogin(context.TODO(), "", primitives.EmptyPassword)
+	gotSess, err := ct.EmailLogin(context.TODO(), "", models.EmptyPassword)
 	if err != nil {
 		t.Errorf("email login returned unexpected error: %v", err)
 	}

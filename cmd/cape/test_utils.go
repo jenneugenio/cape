@@ -5,7 +5,7 @@ import (
 	"github.com/capeprivacy/cape/cmd/cape/config"
 	"github.com/capeprivacy/cape/cmd/cape/ui"
 	"github.com/capeprivacy/cape/coordinator"
-	"github.com/capeprivacy/cape/primitives"
+	"github.com/capeprivacy/cape/models"
 	"github.com/urfave/cli/v2"
 )
 
@@ -35,12 +35,9 @@ func NewHarness(responses []*coordinator.MockResponse) (*cli.App, *ui.Mock) {
 }
 
 func (t *Harness) mockBeforeMiddleware(c *cli.Context) error {
-	l, err := primitives.NewLabel("my-cool-cluster")
-	if err != nil {
-		return nil
-	}
+	l := models.Label("my-cool-cluster")
 
-	u, err := primitives.NewURL("http://cape.com")
+	u, err := models.NewURL("http://cape.com")
 	if err != nil {
 		return err
 	}
@@ -83,7 +80,7 @@ func (mp *MockProvider) UI(ctx context.Context) ui.UI {
 
 // Client implements Client from the Provider interface
 func (mp *MockProvider) Client(ctx context.Context) (*coordinator.Client, error) {
-	url, err := primitives.NewURL("http://localhost:8080")
+	url, err := models.NewURL("http://localhost:8080")
 	if err != nil {
 		return nil, err
 	}

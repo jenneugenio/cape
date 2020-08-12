@@ -15,7 +15,6 @@ import (
 	"github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 	errors "github.com/capeprivacy/cape/partyerrors"
-	"github.com/capeprivacy/cape/primitives"
 )
 
 func setupSignalWatcher(server *framework.Server, logger *zerolog.Logger) (*framework.SignalWatcher, error) {
@@ -68,7 +67,7 @@ func commandNotFound(c *cli.Context, command string) {
 	os.Exit(1)
 }
 
-func getInstanceID(c *cli.Context, serviceType string) (primitives.Label, error) {
+func getInstanceID(c *cli.Context, serviceType string) (models.Label, error) {
 	instanceID := c.String("instance-id")
 	if instanceID != "" {
 		return formatInstanceID(instanceID, serviceType)
@@ -83,8 +82,8 @@ func getInstanceID(c *cli.Context, serviceType string) (primitives.Label, error)
 	return formatInstanceID(base32.EncodeToString(source), serviceType)
 }
 
-func formatInstanceID(serviceType, instanceID string) (primitives.Label, error) {
-	return primitives.NewLabel(fmt.Sprintf("cape-%s-%s", serviceType, instanceID))
+func formatInstanceID(serviceType, instanceID string) (models.Label, error) {
+	return models.Label(fmt.Sprintf("cape-%s-%s", serviceType, instanceID)), nil
 }
 
 func getName(c *cli.Context, question string) (models.Name, error) {
@@ -114,35 +113,34 @@ func getName(c *cli.Context, question string) (models.Name, error) {
 	return models.Name(nameStr), nil
 }
 
-func getEmail(c *cli.Context, in string) (primitives.Email, error) {
+func getEmail(c *cli.Context, in string) (models.Email, error) {
 	if in != "" {
-		return primitives.NewEmail(in)
+		return models.Email(in), nil
 	}
 
 	emailStr := c.String("email")
 	if emailStr != "" {
-		return primitives.NewEmail(emailStr)
+		return models.Email(emailStr), nil
 	}
 
 	provider := GetProvider(c.Context)
 	u := provider.UI(c.Context)
 
 	out, err := u.Question("Please enter your email address", func(input string) error {
-		_, err := primitives.NewEmail(input)
-		return err
+		return nil
 	})
 	if err != nil {
-		return primitives.Email{Email: ""}, err
+		return "", err
 	}
 
-	return primitives.NewEmail(out)
+	return models.Email(out), nil
 }
 
-func getPassword(c *cli.Context) (primitives.Password, error) {
+func getPassword(c *cli.Context) (models.Password, error) {
 	// Password can be nil as it's an _optional_ environment variable. Nil
-	// cannot be cast to a primitives.Password so we need to check here to see
+	// cannot be cast to a models.Password so we need to check here to see
 	// if the casting worked.
-	pw, ok := EnvVariables(c.Context, capePasswordVar).(primitives.Password)
+	pw, ok := EnvVariables(c.Context, capePasswordVar).(models.Password)
 	if ok && pw != "" {
 		return pw, nil
 	}
@@ -154,12 +152,12 @@ func getPassword(c *cli.Context) (primitives.Password, error) {
 	// manipulation. If we could just reuse the `.Validate()` function that'd
 	// be awesome butthat's not how the promptui ValidatorFunc works!
 	out, err := u.Secret("Please enter a password", func(input string) error {
-		_, err := primitives.NewPassword(input)
+		_, err := models.NewPassword(input)
 		return err
 	})
 	if err != nil {
 		return pw, err
 	}
 
-	return primitives.NewPassword(out)
+	return models.NewPassword(out)
 }
