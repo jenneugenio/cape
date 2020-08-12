@@ -24,7 +24,7 @@ type Password string
 func (p Password) Validate() error {
 	s := p.String()
 	if len(s) < MinPasswordLength {
-		return errors.New(InvalidPasswordCause, "Passwords must be atleast %d characters long", MinPasswordLength)
+		return errors.New(InvalidPasswordCause, "Passwords must be at least %d characters long", MinPasswordLength)
 	}
 
 	if len(s) > MaxPasswordLength {
