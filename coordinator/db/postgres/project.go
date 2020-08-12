@@ -37,7 +37,7 @@ func (p *pgProject) GetByID(ctx context.Context, ID string) (*models.Project, er
 	err = row.Scan(project)
 	if err != nil {
 		if err.Error() == pgx.ErrNoRows.Error() {
-			return nil, db.ErrNoRows
+			return nil, db.ErrCannotFindProject
 		}
 		return nil, err
 	}
