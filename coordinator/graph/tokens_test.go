@@ -3,29 +3,11 @@ package graph
 import (
 	"context"
 	"github.com/capeprivacy/cape/auth"
-	"github.com/capeprivacy/cape/coordinator/db"
 	"github.com/capeprivacy/cape/coordinator/graph/model"
-	fw "github.com/capeprivacy/cape/framework"
 	"github.com/capeprivacy/cape/models"
 	gm "github.com/onsi/gomega"
 	"testing"
-	"time"
 )
-
-type testDatabase struct {
-	tokensDB tokensDB
-}
-
-func (t testDatabase) Roles() db.RoleDB               { panic("implement me") }
-func (t testDatabase) Users() db.UserDB               { panic("implement me") }
-func (t testDatabase) Projects() db.ProjectsDB        { panic("implement me") }
-func (t testDatabase) Contributors() db.ContributorDB { panic("implement me") }
-func (t testDatabase) Config() db.ConfigDB            { panic("implement me") }
-func (t testDatabase) Secrets() db.SecretDB           { panic("implement me") }
-func (t testDatabase) Session() db.SessionDB          { panic("implement me") }
-func (t testDatabase) Recoveries() db.RecoveryDB      { panic("implement me") }
-
-func (t testDatabase) Tokens() db.TokensDB { return &t.tokensDB }
 
 type tokensDB struct {
 	// you can set return token as a default token to return in this test
@@ -56,67 +38,12 @@ func (t *tokensDB) ListByUserID(ctx context.Context, s string) ([]models.Token, 
 	return nil, nil
 }
 
-func resolverContext(ctx context.Context, opts *ctxOptions) context.Context {
-	if opts == nil {
-		opts = &ctxOptions{}
-	}
-
-	opts.FillDefaults()
-
-	// put a logger on the ctx
-	l := fw.TestLogger()
-	ctx = context.WithValue(ctx, fw.LoggerContextKey, *l)
-
-	session := &models.Session{
-		ID:        models.NewID(),
-		UserID:    opts.userID,
-		OwnerID:   models.NewID(),
-		ExpiresAt: time.Now().Add(5 * time.Minute),
-		Token:     nil,
-	}
-
-	authSession := auth.Session{
-		User: &models.User{
-			ID:    opts.userID,
-			Email: "user@cape.com",
-			Name:  "User McPerson",
-		},
-		Session: session,
-		Roles: models.UserRoles{
-			Global: models.Role{
-				ID:    opts.role.String(),
-				Label: opts.role,
-			},
-		},
-	}
-
-	// put the session on the ctx
-	ctx = context.WithValue(ctx, fw.SessionContextKey, &authSession)
-
-	return ctx
-}
-
-type ctxOptions struct {
-	role   models.Label
-	userID string
-}
-
-func (c *ctxOptions) FillDefaults() {
-	if c.role.String() == "" {
-		c.role = models.AdminRole
-	}
-
-	if c.userID == "" {
-		c.userID = "admin"
-	}
-}
-
 func TestTokensCreate(t *testing.T) {
 	gm.RegisterTestingT(t)
 
 	resolver := &Resolver{
 		Database: testDatabase{
-			tokensDB: tokensDB{},
+			tokensDB: &tokensDB{},
 		},
 		CredentialProducer: &auth.SHA256Producer{},
 	}
