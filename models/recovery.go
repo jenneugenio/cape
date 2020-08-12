@@ -14,6 +14,8 @@ type Recovery struct {
 	UserID      string       `json:"user_id"`
 	Credentials *Credentials `json:"-" gqlgen:"-"`
 	ExpiresAt   time.Time    `json:"expires_at"`
+	CreatedAt   time.Time    `json:"created_at"`
+	UpdatedAt   time.Time    `json:"updated_at"`
 }
 
 func (r *Recovery) Validate() error {
@@ -46,6 +48,8 @@ func NewRecovery(userID string, creds *Credentials) Recovery {
 		UserID:      userID,
 		Credentials: creds,
 		ExpiresAt:   time.Now().UTC().Add(RecoveryExpiration),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 
 	return r
